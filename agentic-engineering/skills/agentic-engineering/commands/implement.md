@@ -70,11 +70,11 @@ Prompt: *"Story complete. Run `/ae-review` before moving to the next story."*
 
 ### Gotchas
 
-- **Don't skip ARCH's plan "because the story is small."** Small stories still produce file lists and test plans. Skipping the plan means implementing from pattern-matching, which is how wrong-architecture code lands.
-- **Don't write the test after the implementation and call it TDD.** If the test was written after and passes immediately, you haven't proven it catches anything. Write the test first, run it, see it fail with a clear error, then implement.
-- **Don't touch files outside ARCH's "Files to modify" list.** If during implementation you realize another file needs changes, stop and update the plan first — don't silently widen scope.
-- **Don't mark the story complete on "implementation done."** It's complete when: code works, tests pass, acceptance criteria verified, PROGRESS.md updated. Marking early means review happens on stale STORIES.md state.
-- **Don't treat acceptance criteria as goals.** They're checks. If the code satisfies every criterion but feels wrong, that's a signal the PRD was incomplete — flag it, don't ship on a technicality.
-- **Don't write pseudo-tests.** `assert result is not None` passes for correct and incorrect implementations. Every test needs to fail when the logic is wrong — mentally run the implementation with broken logic and check whether your test catches it.
+- **No plan skip for small stories.** File list + test plan required. Skip → pattern-match → wrong arch.
+- **No test-after-implementation.** Write test → watch fail → implement → watch pass. Test written after proves nothing.
+- **No files outside ARCH's plan.** New file needed? Update plan first. Never silently widen scope.
+- **Complete ≠ implementation done.** Code works + tests pass + criteria verified + PROGRESS.md updated. Early mark = review on stale state.
+- **Criteria are checks, not goals.** Satisfies all but feels wrong → PRD was incomplete. Flag it, don't ship on technicality.
+- **No pseudo-tests.** `assert result is not None` proves nothing. Every test must fail when logic is broken.
 
 ---

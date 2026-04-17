@@ -145,23 +145,7 @@ Run the full feature inventory (same as default Phase 1), then document all undo
 
 ### Phase 4 — PROD Review
 
-**PROD** reads every generated file:
-```
-PROD — Docs Review:
-
-Readable by new team member:
-✅ [file] — clear
-⚠️ [file] — [what's confusing]
-
-Accurate to actual behaviour:
-✅ [file] — accurate
-⚠️ [file] — [what seems off]
-
-Missing:
-- [anything a new dev would need]
-```
-
-SCRIBE fixes issues PROD flags.
+**PROD** reads every generated file and flags: confusing sections (readable by new team member?), inaccuracies (matches actual behaviour?), gaps (anything a new dev would need?). SCRIBE fixes all flagged issues.
 
 ### Phase 5 — Complete
 

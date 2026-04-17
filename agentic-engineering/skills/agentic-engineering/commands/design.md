@@ -56,20 +56,12 @@ Order of operations:
 5. Modals and overlays
 
 #### If design tool = `figma`
-UX creates frames via Figma MCP. Requires Figma paid plan + MCP server configured.
-```
-UX — Figma Progress:
-✅ [Screen] — mobile done
-⏳ [Screen] — in progress
-```
+UX creates frames via Figma MCP (requires paid plan + MCP configured).
 
 #### If design tool = `pencil`
-UX creates frames in Pencil.dev via its local MCP server. Pencil must be running in the IDE (VS Code extension or desktop app). Design files are saved as `.pen` files in the project repo — Git-friendly and version controlled alongside code.
-```
-UX — Pencil Progress:
-✅ [Screen] — mobile done
-⏳ [Screen] — in progress
-```
+UX creates frames in Pencil.dev via local MCP (must be running in IDE). `.pen` files saved in repo — Git-friendly.
+
+Both tools report progress as: `✅ [Screen] — done` / `⏳ [Screen] — in progress`.
 
 #### If design tool = `none`
 UX produces detailed Markdown wireframe specs instead:

@@ -125,10 +125,10 @@ Git:        ✅ committed on [branch name]
 
 ### Gotchas
 
-- **Scope creep is the #1 failure of `/ae-fix`.** While investigating the bug, you'll notice other things — a related bit of dead code, an adjacent file that could use refactoring. Resist all of it. One bug, one fix, one commit. Log observations to `improvements.md`.
-- **Don't fix the symptom.** If user report is "the page shows wrong total" and you find the total is wrong because an upstream calculation is wrong — fix the calculation, not the display. If the root cause is in a different module, that's still what gets fixed.
-- **The regression test must actually fail before the fix.** Write the test first, watch it fail, then apply the fix and watch it pass. A test written after the fix that doesn't demonstrate the bug is worthless — it proves nothing about whether the bug can recur.
-- **Don't confirm "I see the bug" without reproducing it.** Guessing at the bug from the description is a path to fixing something unrelated. If you can't reproduce, ask the user for more specifics — don't invent a hypothesis and run with it.
-- **Don't run `/ae-fix` on `main`.** The GIT check prompts you. If you override it, you're likely about to commit a fix with no PR — that means no review, no trail, and a changelog entry attached to nothing reviewable.
+- **One bug, one fix, one commit.** Notice other things during investigation? Log to `improvements.md`. Resist all scope creep.
+- **Fix root cause, not symptom.** Wrong total from upstream calc → fix calc, not display. Root cause in different module → still fix there.
+- **Regression test must fail before fix.** Write test → watch fail → fix → watch pass. Test written after proves nothing.
+- **Reproduce before confirming.** Can't reproduce → ask user, don't invent hypothesis.
+- **No `/ae-fix` on `main`.** Override GIT check → no PR, no review, no trail.
 
 ---

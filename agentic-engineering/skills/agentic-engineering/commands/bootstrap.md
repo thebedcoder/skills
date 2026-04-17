@@ -28,23 +28,7 @@ User picks one. ARCH proceeds to the stack selection for that type.
 
 ARCH presents options layer by layer. Each layer shows 2-3 options with a recommended default and a one-line reason. User confirms or overrides each one before moving to the next.
 
-Format per layer:
-```
-ARCH — [Layer]: [Feature Name]
-
-Option A: [name] ← recommended
-  Why: [one line justification]
-  Best for: [when to choose this]
-
-Option B: [name]
-  Why: [one line]
-  Best for: [when to choose this]
-
-Option C: [name] (if applicable)
-  ...
-
-Your choice: [A / B / C, or press enter for default]
-```
+Format per layer: present 2–3 options with recommended default, one-line why, and best-for note. Ask for choice (A/B/C or enter for default).
 
 #### Web App layers
 1. **Framework** — Next.js (App Router) · Vite + React

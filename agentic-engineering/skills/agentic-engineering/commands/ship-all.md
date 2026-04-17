@@ -115,10 +115,10 @@ not one per story.
 
 ### Gotchas
 
-- **Forgetting to compact is the single biggest failure mode.** After 3-4 stories without compaction, the main context fills with plan outputs, review results, and fix discussions. Quality degrades sharply. The compact step runs automatically between stories — don't "optimize" it away because stories are small.
-- **Don't batch commit multiple stories into one commit.** Each story ships with its own commit(s). Users need to revert a single story without touching the others.
-- **Parallel `[P]` markers are a suggestion for you, not an instruction to self.** Ship-all still runs sequentially — it surfaces parallel groups upfront so the user can optionally open parallel sessions. Don't try to interleave multiple stories in one session.
-- **If blockers keep recurring across stories, stop.** Three stories in a row producing the same class of blocker (e.g., missing rate limits, missing error handling) means the constitution or conventions need updating — not another round of fixes. Pause the session and surface the pattern.
-- **Don't generate one mega-PR description covering everything.** The final PR description should show the commits, not regurgitate each story's PRD. Users can read the commits.
+- **Compact is non-negotiable.** After 3-4 stories, context fills → quality degrades. Never skip because "stories are small."
+- **One story = its own commit(s).** No batching. Users must revert a story without touching others.
+- **`[P]` markers are user-facing suggestions, not self-instructions.** Ship-all runs sequentially. No interleaving stories in one session.
+- **Recurring blockers → stop and fix the pattern.** Same blocker class 3 stories in a row → update constitution/conventions, not more fixes.
+- **PR description = commits, not PRD regurgitation.** Show the log. Users can read.
 
 ---

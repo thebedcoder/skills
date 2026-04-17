@@ -73,40 +73,25 @@ description: What's changed in this project
 <!-- Run /ae-ship to pick up and implement a backlog item -->
 ```
 
-**PROD** generates `./docs/CONSTITUTION.md` by asking the user:
-- What are the non-negotiable technical standards? (e.g. test coverage threshold, API format, error handling pattern)
-- What architectural principles must always be followed? (e.g. "all features must be standalone libraries before integrating")
-- Any security, compliance, or performance requirements?
-- Any patterns that are explicitly forbidden?
+**PROD** generates `./docs/CONSTITUTION.md` by asking: non-negotiable tech standards, architectural principles, security/compliance requirements, forbidden patterns.
 
 Constitution format:
 ```markdown
 # Project Constitution
-<!-- Non-negotiable principles. Agents: check every PRD and review against these. -->
-<!-- Principles must be specific and verifiable — not vague like "write good code" -->
+<!-- Non-negotiable. Agents: check every PRD and review against these. Specific + verifiable only. -->
 
-## Article I: Testing
-[e.g. No implementation code before failing tests are written and approved]
+## Article I: [Topic]
+[Principle — specific, testable]
 
-## Article II: Architecture
-[e.g. Every feature must begin as a standalone module]
+## Article II: [Topic]
+[Principle]
 
-## Article III: API Design
-[e.g. All APIs must follow JSON:API specification]
-
-## Article IV: Security
-[e.g. No secrets in code — use environment variables only]
-
-## Article V: Performance
-[e.g. API responses must complete in <200ms for p95]
-
-## Article VI: Code Style
-[e.g. Follow conventions in CLAUDE.md — no exceptions without documented justification]
+(add articles as needed)
 
 ## Governance
-- Constitution supersedes all other guidelines
-- Violations must be documented and justified — never silently ignored
-- REQ checks every story against the constitution during /ae-review
+- Constitution supersedes all guidelines
+- Violations documented and justified — never silently ignored
+- REQ checks every story against constitution during /ae-review
 ```
 
 ⚠️ **Human checkpoint:** Show CLAUDE.md and CONSTITUTION.md drafts together. Ask for edits before saving. *"The constitution must be specific and verifiable — vague principles like 'write high quality code' give agents nothing to check against."*
@@ -159,8 +144,8 @@ Constitution format:
 - none: SCRIBE produces detailed Markdown wireframe specs instead
 
 ## Docs Structure
-- Index:        ./docs/INDEX.md           ← read this first every session
-- Constitution: ./docs/CONSTITUTION.md    ← read at session start — non-negotiable principles
+- Index:        ./docs/INDEX.md
+- Constitution: ./docs/CONSTITUTION.md
 - Features:     ./docs/features/[name]/PRD.md|EPICS.md|STORIES.md|PROGRESS.md
 - Reviews:      ./docs/features/[name]/reviews/
 - Specs:        ./docs/specs/
@@ -177,57 +162,15 @@ Constitution format:
 
 5. ⚠️ **Human checkpoint:** Show the generated CLAUDE.md. Ask for edits before saving.
 
-6. **ARCH** presents the rules library and asks which to include:
+6. **ARCH** reads `~/.claude/skills/agentic-engineering/rules-library/README.md`, presents rules grouped by type, and pre-suggests matches based on the captured stack.
 
-Read `~/.claude/skills/agentic-engineering/rules-library/README.md` to get the current list of available rules. Present them grouped:
+Stack rules: `react-typescript` · `nextjs-app-router` · `react-native` · `python-fastapi` · `python-django` · `node-express` · `go` · `rust` · `flutter` · `swiftui` · `ios-native` · `android-native`
 
-```
-ARCH — Rule Selection
+Cross-cutting: `testing-conventions` · `git-conventions` · `api-design` · `secrets-management`
 
-Based on your stack, here are relevant rules from the library.
-These will be copied to ./.claude/rules/ in your project and
-auto-load when Claude Code works on matching files.
+User confirms, adds, or removes. Reply 'none' to skip. For each selected rule, copy from `~/.claude/skills/agentic-engineering/rules-library/<name>.md` to `./.claude/rules/` (create dir if needed).
 
-Stack rules (pick only those matching your actual stack):
-  [ ] react-typescript       React + TypeScript conventions
-  [ ] nextjs-app-router      Next.js 13+ app directory
-  [ ] react-native           React Native (Expo or bare)
-  [ ] python-fastapi         FastAPI API conventions
-  [ ] python-django          Django conventions
-  [ ] node-express           Node + Express API
-  [ ] go                     Go conventions
-  [ ] rust                   Rust conventions
-  [ ] flutter                Flutter cross-platform
-  [ ] swiftui                SwiftUI-first iOS/macOS
-  [ ] ios-native             iOS with UIKit or mixed
-  [ ] android-native         Android Kotlin/Java
-
-Cross-cutting rules (apply regardless of stack):
-  [ ] testing-conventions    Test file standards
-  [ ] git-conventions        Commit format, branch names, PR flow
-  [ ] api-design             REST conventions
-  [ ] secrets-management     Secret handling, env vars, rotation
-
-Reply with the list of rules to include, or 'none' to skip.
-You can always add rules later by copying from the library to ./.claude/rules/.
-```
-
-Based on the tech stack captured earlier, **ARCH** pre-suggests the obvious picks (e.g., for a Next.js + FastAPI project: `nextjs-app-router`, `python-fastapi`, plus the three cross-cutting rules). The user confirms, adds, or removes from the suggestion.
-
-For each selected rule:
-- Create `./.claude/rules/` directory if it doesn't exist
-- Copy the file from `~/.claude/skills/agentic-engineering/rules-library/<name>.md` to `./.claude/rules/<name>.md`
-
-**ARCH** confirms:
-```
-ARCH — Rules installed:
-  - ./.claude/rules/nextjs-app-router.md
-  - ./.claude/rules/python-fastapi.md
-  - ./.claude/rules/git-conventions.md
-  - ./.claude/rules/secrets-management.md
-
-Edit any of these to match your project's specifics. Delete any that don't fit.
-```
+**ARCH** confirms installed rules and notes: *"Edit any to match your project. Delete any that don't fit."*
 
 7. **GIT** stages and commits the scaffold:
 ```

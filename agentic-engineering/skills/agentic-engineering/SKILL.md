@@ -52,15 +52,15 @@ When an agent speaks, prefix output with their name. All agents follow Caveman r
 |---|---|---|
 | 🏗 **ARCH** | Architecture, planning, code structure | Suspicious of shortcuts and hidden debt |
 | 📋 **PROD** | PRD, stories, acceptance criteria | Challenges vague or unmeasurable specs |
-| 🎨 **UX** | Design flows, mockups, fidelity review | Never skips empty/error/loading states — uses reference checklist |
-| 🔴 **RED** | Bug hunting, null safety, async, logic errors | Assumes code is broken — traces execution paths |
-| 🔧 **FIXER** | Root cause analysis, surgical fixes | Allergic to scope creep — one bug, one fix |
-| ✅ **REQ** | Requirements + constitution audit | Binary — criterion met or it isn't. Constitution violations are blockers |
+| 🎨 **UX** | Design flows, mockups, fidelity review | Never skips empty/error/loading states |
+| 🔴 **RED** | Bug hunting, null safety, async, logic errors | Assumes code is broken |
+| 🔧 **FIXER** | Root cause analysis, surgical fixes | One bug, one fix |
+| ✅ **REQ** | Requirements + constitution audit | Binary. Constitution violations = blockers |
 | 🧪 **TEST** | Test coverage and quality | Flags tests that prove nothing |
 | 📖 **DOC** | Convention alignment, CLAUDE.md drift | Notices code/docs mismatch |
-| 🔐 **SEC** | Security vulnerability review | High-confidence exploitable findings only — no noise |
-| ✍️ **SCRIBE** | MDX documentation authoring | Writes for humans first, AI agents second |
-| 🔀 **GIT** | Commits, branches, PR descriptions | Conventional commits, no vague messages |
+| 🔐 **SEC** | Security vulnerability review | High-confidence only, no noise |
+| ✍️ **SCRIBE** | MDX documentation authoring | Humans first |
+| 🔀 **GIT** | Commits, branches, PR descriptions | Conventional commits only |
 
 ## Caveman Communication Rules
 
@@ -80,64 +80,4 @@ Apply to all agent internal output (plans, reports, reviews). NOT to human check
 - **Read only files relevant to current story** — not the whole project
 - **Never re-read** files already in context
 
-## Docs Structure (reference)
-
-```
-./docs/
-  INDEX.md                          ← read first every session
-  CHANGELOG.md                      ← agent changelog — prepend after every ship/fix, newest first
-  CONSTITUTION.md                   ← non-negotiable principles — read at session start, check during review
-  BACKLOG.md                        ← bugs, ideas, improvements waiting to be promoted
-  /features/[name]/
-    PRD.md | EPICS.md | STORIES.md | PROGRESS.md | /reviews/
-    data-model.md                   ← optional, generated when feature touches DB
-  improvements.md
-  /specs/
-
-./app-docs/
-  index.mdx
-  CHANGELOG.mdx                     ← user-facing changelog — updated by SCRIBE
-  /features/[name].mdx
-  /guides/
-```
-
-## Changelog Rules
-
-Two changelogs are maintained in parallel. Both are updated automatically by agents — never skip this step.
-
-### Agent changelog — `./docs/CHANGELOG.md`
-
-Written by agents. Terse. One line per action. Caveman rules apply.
-Purpose: lets agents know what's been done without re-reading the whole codebase.
-**Always read this file at session start alongside INDEX.md.**
-
-Prepend format (newest first — insert after the `# Agent Changelog` header):
-```markdown
-## YYYY-MM-DD
-
-- [STORY-XXX] feat([feature]): [what was implemented] — [key files]
-- [STORY-XXX] review: [clean / N blockers fixed] — RED/REQ/TEST/DOC
-- [STORY-XXX] docs: [feature].mdx updated
-- [FIX] fix([scope]): [what was broken → what was fixed] — [file:line]
-- [DOC] doc: [feature] documented via /ae-doc
-```
-
-### User changelog — `./app-docs/CHANGELOG.mdx`
-
-Written by SCRIBE. Human-readable. Groups changes by date. No technical jargon.
-Purpose: onboarding, stakeholder updates, tracking visible progress.
-
-Append format (prepend to top of file, newest first):
-```mdx
-## [Month YYYY]
-
-### Added
-- **[Feature name]** — [plain-English description of what users can now do]
-
-### Fixed
-- [Plain-English description of what was broken and is now fixed]
-
-### Improved
-- [Plain-English description of enhancement]
-```
 

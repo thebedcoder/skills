@@ -51,8 +51,8 @@ Ask: *"Should I fix the blockers now, or do you want to review them first?"*
 
 ### Gotchas
 
-- **Sequential dispatch is the #1 failure.** Spawning one agent, waiting for its result, spawning the next — this defeats the purpose. The five subagents must be spawned in a single batched tool call so they actually run in parallel. If you find yourself with 5 separate tool calls each containing one Task, stop and re-batch.
-- **Don't summarize the story before dispatching.** The reviewers read the files themselves. Paraphrasing the story's intent into the subagent prompt wastes tokens and drifts meaning.
-- **Resist merging findings prematurely.** If ae-red and ae-sec both flag the same line, keep both voices in the raw output before deduping. Their reasoning differs and sometimes one has context the other missed.
-- **Don't add a 6th reviewer ad-hoc.** If a story reveals a new review dimension that's missing, that's a skill change — flag it to the user, don't improvise.
-- **Constitution violations are always blockers.** Never downgrade them to "should-fix" because the fix looks expensive. That's the point of the constitution.
+- **Sequential dispatch = failure.** Five subagents in one batched tool call. Never spawn-wait-spawn. 5 separate calls → re-batch.
+- **No story summary before dispatch.** Reviewers read files themselves. Paraphrase → token waste + meaning drift.
+- **Don't merge findings early.** ae-red + ae-sec flag same line → keep both voices. Reasoning differs, context varies.
+- **No 6th reviewer ad-hoc.** New dimension missing → skill change, not improvisation. Flag it.
+- **Constitution violations = always blockers.** Never downgrade to "should-fix." Fix cost is irrelevant.

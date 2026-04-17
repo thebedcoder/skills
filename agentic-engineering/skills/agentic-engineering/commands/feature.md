@@ -60,33 +60,7 @@ Any option that seems simpler but creates user confusion?]
 
 **PROD** generates the PRD and saves to `./docs/features/[feature-name]/PRD.md`.
 
-Mark any unclear items explicitly with `[NEEDS CLARIFICATION]`:
-
-```markdown
-# PRD: [Feature Name]
-**Status:** Draft
-**Approach:** [chosen]
-
-## Problem
-[What user pain does this solve?]
-
-## Goals
-[Measurable outcomes that define success]
-
-## Non-Goals
-[Explicitly out of scope]
-
-## User Flows
-[Step-by-step user experience]
-[NEEDS CLARIFICATION]: [anything ambiguous about the flow]
-
-## Acceptance Criteria
-- [ ] [Specific, testable criterion]
-- [ ] [NEEDS CLARIFICATION]: [criterion that needs more detail]
-
-## Technical Notes
-[ARCH's architecture decisions, constraints, dependencies]
-```
+Sections: Status · Approach · Problem · Goals · Non-Goals · User Flows · Acceptance Criteria · Technical Notes. Mark unclear items `[NEEDS CLARIFICATION]` inline — all will be surfaced together in Stage 2b.
 
 **ARCH** reviews the PRD for technical issues:
 ```
@@ -138,29 +112,9 @@ If clean → continue automatically.
 
 ### Stage 2d: Data Model (if applicable)
 
-If the feature touches the database or changes existing data structures, **ARCH** generates `./docs/features/[feature-name]/data-model.md`:
+If feature touches DB, **ARCH** generates `./docs/features/[feature-name]/data-model.md`: new entities (name, fields, constraints), modified entities (entity, change, reason), migrations required, API contracts if applicable.
 
-```markdown
-# Data Model: [Feature Name]
-
-## New entities
-| Entity | Fields | Notes |
-|--------|--------|-------|
-| [name] | [field: type] | [constraints] |
-
-## Modified entities
-| Entity | Change | Reason |
-|--------|--------|--------|
-| [name] | [what changes] | [why] |
-
-## Migrations required
-- [migration description]
-
-## API contracts (if applicable)
-[Request/response shapes for new endpoints]
-```
-
-If no DB changes → skip this step silently.
+If no DB changes → skip silently.
 
 ---
 
@@ -217,11 +171,11 @@ chore([feature-name]): add PRD, epics and stories
 
 ### Gotchas
 
-- **Don't generate three "approaches" that are minor variations.** If Options A, B, C differ only in library choice or file naming, you're giving the user no real decision. Options should represent genuinely different architectural bets (e.g., "server-rendered vs. SPA with API" vs. "three shades of SPA").
-- **Don't hide `[NEEDS CLARIFICATION]` items in technical jargon.** Every marker should be a question a non-technical stakeholder could understand. "Should this be idempotent?" → "If the user submits twice, do we charge them twice?"
-- **Don't treat the constitution check as ceremonial.** If a principle in CONSTITUTION.md genuinely conflicts with the approach, the approach has to change. Adjusting the constitution instead is a red flag — principles are supposed to be inconvenient sometimes.
-- **Stories aren't just requirements split into smaller requirements.** Each story is a deployable slice that changes user-observable behavior. "Set up the database schema" is not a story — it's part of the first story that uses the schema. Infrastructure-only stories are a smell.
-- **`[P]` markers need real independence.** Two stories that both modify the same file aren't parallel, even if they're logically independent. Trace the file paths before tagging.
-- **Don't force 5+ stories when 2 would do.** Over-decomposition creates coordination overhead. If a story is clearly under 2 hours and testable, don't split it for its own sake.
+- **Three approaches ≠ three variations.** A/B/C must represent genuinely different architectural bets, not library swaps or naming choices.
+- **No jargon in `[NEEDS CLARIFICATION]` items.** Must be stakeholder-readable: "idempotent?" → "charge twice on double submit?"
+- **Constitution check is not ceremonial.** Conflict found → approach changes. Adjusting constitution to fit approach is a red flag.
+- **Stories = deployable slices, not split requirements.** "Set up DB schema" is not a story. Infrastructure-only stories are a smell.
+- **`[P]` requires real file-path independence.** Same file modified by both → not parallel, even if logically independent.
+- **Don't over-decompose.** Under 2hrs + testable → don't split. Coordination overhead > value.
 
 ---

@@ -122,20 +122,7 @@ SCRIBE — Doc complete:
 While ARCH and RED were reading the code, they noted anything worth flagging.
 These are saved to `./docs/improvements.md` — **not** shown inline during the doc flow.
 
-Append to `./docs/improvements.md`:
-
-```markdown
-## [Feature Name] — [date]
-
-### 🏗 ARCH — Refactoring Suggestions
-- [suggestion] — [file:line] — [why + rough effort: S/M/L]
-
-### 🔴 RED — Potential Issues
-- [issue] — [file:line] — [severity: low/medium/high] — [description]
-
-### 💡 General Improvements
-- [improvement] — [rationale]
-```
+Append to `./docs/improvements.md` (format: `## [Feature] — [date]` header, then ARCH refactoring suggestions, RED potential issues, and general improvements — each with file:line and effort/severity).
 
 At the end of the command, tell the user:
 ```
