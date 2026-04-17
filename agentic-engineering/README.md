@@ -120,8 +120,8 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/ae-note [desc]` | Capture bug/idea/improvement to BACKLOG.md |
 | `/ae-doc [feature]` | Document a feature interactively with Q&A |
 | `/ae-doc-all [--full]` | Document multiple features (`--full` adds guides + index) |
-| `/ae-status` | Progress overview across all features + backlog |
-| `/ae-analyze [question]` | Answer any question — searches docs and codebase |
+| `/ae-status` | Progress overview across all features + backlog (runs in forked context) |
+| `/ae-analyze [question]` | Answer any question — searches docs and codebase (runs in forked context) |
 
 ---
 
@@ -203,6 +203,54 @@ Long sessions stay lean through three mechanisms:
 - **Caveman rules** — agent-to-agent output drops filler words (~75% token reduction), technical terms kept exact
 - **Mandatory `/compact`** between stories in `ship-all` and `plan-all`
 - **On-demand loading** — only the command file for the current command is loaded into context, not the full skill
+
+### Context forking
+
+`/ae-status` and `/ae-analyze` use `context: fork` — they run in an isolated subagent context. The main conversation only sees the final result, not the intermediate tool calls and file reads. This keeps the main context lean on long sessions where you might check status or run analysis queries repeatedly.
+
+Other commands (`/ae-ship`, `/ae-feature`, `/ae-design`) stay in the main context because they have human checkpoints that require conversation continuity.
+
+### Built-in gotchas
+
+Each command file documents the specific failure modes Claude tends toward when executing it — things like dispatching review subagents sequentially instead of batched, scope-creeping during bug fixes, or writing tests after the implementation and calling it TDD. These aren't generic warnings; they're patterns observed in practice and written directly into the skill so Claude course-corrects before hitting them.
+
+Command files are also framed as goals and constraints rather than rigid step-by-step instructions. This gives Claude room to orchestrate intelligently while keeping the non-negotiables (human checkpoints, output formats, quality gates) locked in.
+
+---
+
+## Rules library
+
+Every project gets path-scoped rules in `./.claude/rules/` that auto-load when Claude Code works with matching files. During `/ae-init`, ARCH shows a curated library of starter rules — pick the ones that match your stack and drop them in.
+
+**Stack rules** — activate on file pattern:
+
+| Rule | Stack |
+|---|---|
+| `react-typescript` | React + TypeScript |
+| `nextjs-app-router` | Next.js 13+ app directory |
+| `react-native` | React Native (Expo or bare) |
+| `python-fastapi` | FastAPI APIs |
+| `python-django` | Django web apps |
+| `node-express` | Node + Express APIs |
+| `go` | Go projects |
+| `rust` | Rust projects |
+| `flutter` | Flutter apps |
+| `swiftui` | SwiftUI-first iOS/macOS |
+| `ios-native` | iOS with UIKit |
+| `android-native` | Android Kotlin/Java |
+
+**Cross-cutting rules** — apply regardless of stack:
+
+| Rule | Covers |
+|---|---|
+| `testing-conventions` | What to test, mocks, fixtures, flaky test policy |
+| `git-conventions` | Conventional commits, branch names, PR flow |
+| `api-design` | REST conventions, status codes, pagination, errors |
+| `secrets-management` | Env var handling, rotation, never-in-code policy |
+
+Rules are starting points — copy what fits, edit as needed, delete what doesn't. Each rule is under 2KB so the context budget stays reasonable.
+
+You can add your own rules any time by dropping a markdown file with YAML frontmatter into `./.claude/rules/`. See `~/.claude/skills/agentic-engineering/rules-library/README.md` for the full reference.
 
 ---
 
@@ -303,7 +351,8 @@ Restart Claude Code. Commands appear in the `/` palette immediately.
 ├── skills/
 │   └── agentic-engineering/
 │       ├── SKILL.md              ← 95-line router
-│       └── commands/             ← 16 command files, loaded on demand
+│       ├── commands/             ← 16 command files, loaded on demand
+│       └── rules-library/        ← 16 rule templates for /ae-init to offer
 ├── agents/
 │   ├── ae-red/                   ← bug hunter
 │   │   ├── AGENT.md

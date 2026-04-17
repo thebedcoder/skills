@@ -55,7 +55,7 @@ test([feature-name]): STORY-XXX — add tests
 
 **Phase 2 — Backend Review** *(automatic, no pause)*
 Run the full `/ae-review` flow immediately after implementation.
-- RED, REQ, TEST, DOC each run their pass
+- RED, REQ, TEST, DOC, SEC run in parallel
 - Produce consolidated fix list
 
 If **blockers** are found → **pause and surface them:**
@@ -84,8 +84,9 @@ feat([feature-name]): STORY-XXX — frontend implementation
 ```
 
 **Phase 4 — Frontend Review** *(automatic, no pause)*
-Run the full `/ae-review` flow on the frontend code.
-- Same 4-agent pass
+Run the full `/ae-review` flow on the frontend code, then spawn ae-ux for the fidelity check.
+- 5-agent parallel review pass
+- ae-ux checks fidelity against design handoff
 - If blockers found → pause and surface, same pattern as Phase 2
 - If blockers were fixed → **GIT** commits:
 ```
@@ -220,5 +221,14 @@ SCRIBE — Docs Update:
 - The single "go" at the start (you're approving the full plan upfront)
 - Any blocker pause mid-chain
 - Nothing else — warnings and non-blockers are logged to the review file, not surfaced during the chain
+
+### Gotchas
+
+- **Don't silently expand scope.** The chain implements exactly one story. If during implementation a related bug surfaces in adjacent code, note it to BACKLOG.md — never fix it "while you're there". One story, one commit chain.
+- **Don't skip Phase 2 on the assumption "I wrote the tests, it'll pass review."** RED and SEC routinely find things the author missed. Always run the review, even if it feels redundant.
+- **Don't treat "fixed" as self-attested.** When the user replies "fixed" after a blocker pause, re-run the review to confirm. The fix may have introduced a new issue or not addressed the root cause.
+- **Don't commit before the review completes.** If you commit the implementation before Phase 2 finishes and it finds blockers, the fix commit history gets muddled. Implementation commits happen at end of Phase 1 — fixes from Phase 2 are separate commits.
+- **Don't generate the PR description from imagination.** Generate it from the actual commits made during this chain — read `git log` for the branch, not the plan. Users push PRs with wrong descriptions when this step hallucinates.
+- **Frontend phase skipped cleanly when the story has no UI.** Check the story for UI components before running Phase 3. A backend-only story should go directly from Phase 2 to Phase 5.
 
 ---

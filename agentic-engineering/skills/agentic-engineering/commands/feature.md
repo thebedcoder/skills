@@ -215,4 +215,13 @@ Never suggest `/ae-implement` — that's an internal command.
 chore([feature-name]): add PRD, epics and stories
 ```
 
+### Gotchas
+
+- **Don't generate three "approaches" that are minor variations.** If Options A, B, C differ only in library choice or file naming, you're giving the user no real decision. Options should represent genuinely different architectural bets (e.g., "server-rendered vs. SPA with API" vs. "three shades of SPA").
+- **Don't hide `[NEEDS CLARIFICATION]` items in technical jargon.** Every marker should be a question a non-technical stakeholder could understand. "Should this be idempotent?" → "If the user submits twice, do we charge them twice?"
+- **Don't treat the constitution check as ceremonial.** If a principle in CONSTITUTION.md genuinely conflicts with the approach, the approach has to change. Adjusting the constitution instead is a red flag — principles are supposed to be inconvenient sometimes.
+- **Stories aren't just requirements split into smaller requirements.** Each story is a deployable slice that changes user-observable behavior. "Set up the database schema" is not a story — it's part of the first story that uses the schema. Infrastructure-only stories are a smell.
+- **`[P]` markers need real independence.** Two stories that both modify the same file aren't parallel, even if they're logically independent. Trace the file paths before tagging.
+- **Don't force 5+ stories when 2 would do.** Over-decomposition creates coordination overhead. If a story is clearly under 2 hours and testable, don't split it for its own sake.
+
 ---

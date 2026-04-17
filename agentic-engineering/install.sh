@@ -15,6 +15,10 @@ mkdir -p ~/.claude/commands
 echo "  → Copying skill..."
 cp -r "$SCRIPT_DIR/skills/agentic-engineering" ~/.claude/skills/
 
+# Install rules library — /ae-init reads from this to offer rule templates
+echo "  → Copying rules library..."
+cp -r "$SCRIPT_DIR/rules-library" ~/.claude/skills/agentic-engineering/
+
 # Patch SKILL.md for Claude Code CLI — hide /agentic-engineering from command palette
 # (user-invocable: false is valid in CLI but rejected by claude.ai packager, so we add it post-install)
 SKILL_FILE="$HOME/.claude/skills/agentic-engineering/SKILL.md"

@@ -177,11 +177,63 @@ Constitution format:
 
 5. ⚠️ **Human checkpoint:** Show the generated CLAUDE.md. Ask for edits before saving.
 
-6. **GIT** stages and commits the scaffold:
+6. **ARCH** presents the rules library and asks which to include:
+
+Read `~/.claude/skills/agentic-engineering/rules-library/README.md` to get the current list of available rules. Present them grouped:
+
 ```
-chore: initialise project structure, CLAUDE.md and CONSTITUTION.md
+ARCH — Rule Selection
+
+Based on your stack, here are relevant rules from the library.
+These will be copied to ./.claude/rules/ in your project and
+auto-load when Claude Code works on matching files.
+
+Stack rules (pick only those matching your actual stack):
+  [ ] react-typescript       React + TypeScript conventions
+  [ ] nextjs-app-router      Next.js 13+ app directory
+  [ ] react-native           React Native (Expo or bare)
+  [ ] python-fastapi         FastAPI API conventions
+  [ ] python-django          Django conventions
+  [ ] node-express           Node + Express API
+  [ ] go                     Go conventions
+  [ ] rust                   Rust conventions
+  [ ] flutter                Flutter cross-platform
+  [ ] swiftui                SwiftUI-first iOS/macOS
+  [ ] ios-native             iOS with UIKit or mixed
+  [ ] android-native         Android Kotlin/Java
+
+Cross-cutting rules (apply regardless of stack):
+  [ ] testing-conventions    Test file standards
+  [ ] git-conventions        Commit format, branch names, PR flow
+  [ ] api-design             REST conventions
+  [ ] secrets-management     Secret handling, env vars, rotation
+
+Reply with the list of rules to include, or 'none' to skip.
+You can always add rules later by copying from the library to ./.claude/rules/.
 ```
 
-7. **PROD** summarizes what was created and prompts: *"Run `/ae-feature [name]` to start your first feature."*
+Based on the tech stack captured earlier, **ARCH** pre-suggests the obvious picks (e.g., for a Next.js + FastAPI project: `nextjs-app-router`, `python-fastapi`, plus the three cross-cutting rules). The user confirms, adds, or removes from the suggestion.
+
+For each selected rule:
+- Create `./.claude/rules/` directory if it doesn't exist
+- Copy the file from `~/.claude/skills/agentic-engineering/rules-library/<name>.md` to `./.claude/rules/<name>.md`
+
+**ARCH** confirms:
+```
+ARCH — Rules installed:
+  - ./.claude/rules/nextjs-app-router.md
+  - ./.claude/rules/python-fastapi.md
+  - ./.claude/rules/git-conventions.md
+  - ./.claude/rules/secrets-management.md
+
+Edit any of these to match your project's specifics. Delete any that don't fit.
+```
+
+7. **GIT** stages and commits the scaffold:
+```
+chore: initialise project structure, CLAUDE.md, CONSTITUTION.md, and project rules
+```
+
+8. **PROD** summarizes what was created and prompts: *"Run `/ae-feature [name]` to start your first feature."*
 
 ---

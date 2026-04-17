@@ -11,16 +11,16 @@ mkdir -p ~/.claude/agents
 
 # Install skill
 echo "  → Copying skill..."
-cp -r "$SCRIPT_DIR/skills/jobs-to-be-done-megaskill" ~/.claude/skills/
+cp -r "$SCRIPT_DIR/skills/jtbd" ~/.claude/skills/
 
 # Patch SKILL.md for Claude Code CLI — hide from command palette
 # (user-invocable: false is valid in CLI but rejected by claude.ai packager, so added post-install)
-SKILL_FILE="$HOME/.claude/skills/jobs-to-be-done-megaskill/SKILL.md"
+SKILL_FILE="$HOME/.claude/skills/jtbd/SKILL.md"
 if ! grep -q "user-invocable" "$SKILL_FILE"; then
   python3 -c "
 with open('$SKILL_FILE', 'r') as f:
     content = f.read()
-content = content.replace('---\n# Jobs to Be Done', 'user-invocable: false\n---\n# Jobs to Be Done', 1)
+content = content.replace('---\n# Jobs to Be Done', 1), 'user-invocable: false\n---\n# Jobs to Be Done', 1)
 with open('$SKILL_FILE', 'w') as f:
     f.write(content)
 "
@@ -38,9 +38,9 @@ echo ""
 echo "✅ Done. Restart Claude Code to pick up the changes."
 echo ""
 echo "Usage:"
-echo "  /jobs-to-be-done-megaskill <product brief>   — full chain from a brief"
-echo "  /jobs-to-be-done-megaskill MODE 3            — jump to a specific mode"
-echo "  /jobs-to-be-done-megaskill                   — show mode guide"
+echo "  /jtbd <product brief>   — full chain from a brief"
+echo "  /jtbd MODE 3            — jump to a specific mode"
+echo "  /jtbd                   — show mode guide"
 echo ""
 echo "Agents installed:"
 echo "  jtbd-researcher   — market intelligence (MODE 0)"

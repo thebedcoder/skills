@@ -172,7 +172,7 @@ Restart Claude Code. The skill is available immediately.
 ```
 ~/.claude/
 ├── skills/
-│   └── jobs-to-be-done-megaskill/
+│   └── jtbd/
 │       ├── SKILL.md              ← router + mode guide + mental model
 │       └── commands/             ← 6 mode files, loaded on demand
 └── agents/
@@ -195,7 +195,7 @@ Restart Claude Code. The skill is available immediately.
 
 ### Option B — Claude.ai
 
-Upload `jobs-to-be-done-megaskill.skill` via **Settings → Customize → Skills → Upload**.
+Upload `jtbd.skill` via **Settings → Customize → Skills → Upload**.
 
 ---
 
@@ -203,13 +203,13 @@ Upload `jobs-to-be-done-megaskill.skill` via **Settings → Customize → Skills
 
 ```bash
 # Full chain from a brief
-/jobs-to-be-done-megaskill Relaty — a personal relationship manager that sends AI-personalized messages on important occasions
+/jtbd Relaty — a personal relationship manager that sends AI-personalized messages on important occasions
 
 # Jump to a specific mode
-/jobs-to-be-done-megaskill MODE 3
+/jtbd MODE 3
 
 # Show the mode guide
-/jobs-to-be-done-megaskill
+/jtbd
 ```
 
 ---
@@ -217,7 +217,7 @@ Upload `jobs-to-be-done-megaskill.skill` via **Settings → Customize → Skills
 ## Example session
 
 ```
-You:      /jobs-to-be-done-megaskill Relaty — personal relationship manager, AI messages for birthdays
+You:      /jtbd Relaty — personal relationship manager, AI messages for birthdays
 
           → RESEARCHER runs in parallel while main thread generates hypotheses
           → Research report + focus job + four forces returned

@@ -68,4 +68,12 @@ Git: X commits (chore: add PRD, epics and stories per feature)
 Ready to build. Run /ae:ship-all to implement all planned stories.
 ```
 
+### Gotchas
+
+- **Don't plan ten features in one session without compacting.** Each feature's planning output — three approach options, a PRD, stories — is substantial. Context fills fast. Compact between features, same as ship-all compacts between stories.
+- **Don't produce cookie-cutter approach options across features.** If every feature's Option A is "server-rendered with forms", Option B is "SPA with API", you're pattern-matching instead of thinking about what this specific feature needs. Features with different user contexts need different option sets.
+- **Don't silently merge related features.** If two planned features overlap substantially, surface it to the user as "these could be one feature or need clearer scope" — don't decide unilaterally.
+- **Plan-all generates docs, not decisions.** If the user approves all the PRDs without engagement, that's a problem with the session, not a success. The clarification pass should surface real ambiguities; if it doesn't, the PRDs are probably vague.
+- **Constitution violations found during plan-all must pause the session.** Don't continue planning additional features while one has unresolved constitution conflicts.
+
 ---
