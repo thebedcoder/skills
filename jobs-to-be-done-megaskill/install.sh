@@ -20,7 +20,7 @@ if ! grep -q "user-invocable" "$SKILL_FILE"; then
   python3 -c "
 with open('$SKILL_FILE', 'r') as f:
     content = f.read()
-content = content.replace('---\n# Jobs to Be Done', 1), 'user-invocable: false\n---\n# Jobs to Be Done', 1)
+content = content.replace('---\n# Jobs to Be Done', 'user-invocable: false\n---\n# Jobs to Be Done', 1)
 with open('$SKILL_FILE', 'w') as f:
     f.write(content)
 "

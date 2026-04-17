@@ -8,10 +8,10 @@
 
 ## Gotchas
 
-- Scripts often open with slow builds ("Hey guys, I wanted to share...") — the hook must be the very first thing, no warm-up
-- CTA defaults to "Sign up" or "Learn more" — always frame as the desired outcome ("Start remembering what matters")
-- SCRIPTWRITER agents tend to write all 3 angles with the same hook energy — Pain angle should feel empathetic, Outcome should feel aspirational, Proof should feel matter-of-fact
-- Threads posts often end up sounding like ads — the product mention should feel like an afterthought in the final line, not the point
+- Hook = first line. No slow builds ("Hey guys...").
+- CTA defaults to "Sign up"/"Learn more". Frame as desired outcome instead.
+- 3 angles ≠ same hook energy. Pain = empathetic. Outcome = aspirational. Proof = matter-of-fact.
+- Threads → product mention as afterthought, not the point.
 
 ---
 

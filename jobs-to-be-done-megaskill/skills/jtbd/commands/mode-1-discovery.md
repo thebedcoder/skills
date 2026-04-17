@@ -8,10 +8,10 @@
 
 ## Gotchas
 
-- Reviews skew negative — don't over-weight Push forces; actively look for Pull signals in 4–5 star reviews
-- Interview transcripts often bury the real struggling moment in minute 20 — read fully before extracting
-- "I want a feature that does X" is not a desired outcome; reframe as "Reduce the time it takes to accomplish X"
-- If sources conflict on the same force, report the conflict — don't average it away
+- Reviews skew negative. Don't over-weight Push. Look for Pull in 4–5★ reviews.
+- Transcripts bury struggling moment late. Read fully before extracting.
+- "Feature that does X" ≠ desired outcome. Reframe: "Reduce time to accomplish X."
+- Sources conflict on same force → report it, don't average.
 
 ---
 

@@ -8,9 +8,11 @@
 
 ## Gotchas
 
-- The most common mistake: writing personas that look like "Sarah, 32, marketing manager" — that's demographic, not JTBD. The persona should be "Someone who just realized their contacts app doesn't know what matters to the people in it"
-- Voice samples often end up too polished — keep the awkward run-on sentences, the specific frustrations; that's what makes copy resonate
-- Don't invent a primary persona if the research doesn't clearly indicate one; say so
+- Demographic ≠ JTBD persona. "Sarah, 32, marketing manager" is wrong. Segment by situation/struggling moment.
+- Voice samples go too polished. Keep awkward run-ons and specific frustrations — that's what resonates.
+- No primary persona if research doesn't indicate one. Say so.
+- Messaging implications must be specific. "Talk about frustration" = useless. "Lead with the moment they sent a generic birthday message" = useful.
+- Research thin → say so in confidence note. Don't pad with guesses.
 
 ---
 
@@ -38,12 +40,5 @@ MESSAGING:
   Hook: [...] | Fear to defuse: [...] | Proof needed: [...] | CTA framing: [...]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
-
----
-
-## Gotchas
-
-- Messaging implications are only useful if they're specific — "talk about their frustration" is not useful; "lead with the moment they sent a generic birthday message and felt nothing" is
-- If research is thin, say so in the confidence note rather than padding personas with guesses
 
 After output: checkpoint + export prompt.

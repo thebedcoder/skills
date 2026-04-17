@@ -15,10 +15,10 @@ Pull              → Benefits section   |  Desired outcomes → Feature-outcome
 
 ## Gotchas
 
-- COPYWRITER agents often default to feature-forward copy for Hero and Value Prop — check that every headline leads with an outcome or struggling moment, never the product name or a feature
-- Social Proof testimonials often end up generic ("Great product!") — each one must map to a specific Force; if placeholder, mark it clearly
-- FAQ answers frequently re-pitch features instead of defusing anxiety — each answer must end with a concrete de-risking mechanism
-- Consistency check is not optional: a mismatched CTA verb between Hero and Final CTA creates subconscious friction
+- COPYWRITER defaults to feature-forward. Every headline must lead with outcome/struggling moment, never product name or feature.
+- Testimonials go generic. Each must map to a specific Force. Placeholders → mark clearly.
+- FAQ answers re-pitch features. Each must end with concrete de-risking mechanism.
+- Consistency check non-optional. Mismatched CTA verbs = subconscious friction.
 
 ---
 

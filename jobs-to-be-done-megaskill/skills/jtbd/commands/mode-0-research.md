@@ -8,10 +8,10 @@
 
 ## Gotchas
 
-- Claude defaults to vague job statements like "users want to be more productive" — push for the specific struggling moment, not a category
-- Opportunity scores often cluster around 12–14; force yourself to find real outliers (>15) or the scoring is useless
-- RESEARCHER may return competitor marketing copy instead of customer voice — only use quotes that reveal frustration or desired outcomes
-- Don't conflate emotional job with desired outcome; "feel less anxious" is emotional, "reduce the likelihood of forgetting" is a desired outcome
+- Vague job statements → push for specific struggling moment, not category.
+- Scores cluster 12–14. Force outliers >15 or scoring is useless.
+- RESEARCHER may return marketing copy. Only use quotes revealing frustration or desired outcomes.
+- Emotional job ≠ desired outcome. "Feel less anxious" = emotional. "Reduce forgetting likelihood" = outcome.
 
 ---
 

@@ -8,9 +8,9 @@
 
 ## Gotchas
 
-- The most dangerous competitor is usually Tier 3 (workarounds) or Tier 4 (do-nothing), not Tier 1 — don't let direct competitors dominate the analysis
-- Differentiation matrix cells often end up all ✅ for your product — be honest about ⚠️ and ❌; the gaps are where users churn
-- Positioning statements often come out generic ("only tool that does X and Y") — the formula works only if X is something competitors genuinely can't claim
+- Most dangerous = Tier 3/4 (workarounds/do-nothing), not Tier 1. Don't let direct dominate.
+- Matrix defaults to all ✅. Be honest about ⚠️ and ❌. Gaps = where users churn.
+- Positioning goes generic. Formula works only if X is genuinely unclaimable by competitors.
 
 ---
 
