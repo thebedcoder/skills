@@ -1,23 +1,23 @@
 ## `/ae-init` — Project Initialization
 
-**Agents active: ARCH, PROD**
+**Agents:** ARCH, PROD
 
 ### Steps
 
-1. **ARCH** checks for existing `./docs/` and `./CLAUDE.md`. If found, asks whether to reinitialize or update.
+1. **ARCH** checks for existing `./docs/` + `./CLAUDE.md`. Found → asks reinitialize or update.
 
-2. **PROD** asks for project context if CLAUDE.md doesn't exist:
-   - Project name and one-line description
-   - Who are the users and what problem does this solve?
+2. **PROD** asks project context if CLAUDE.md missing:
+   - Project name + one-line description
+   - Users + problem solved
    - Tech stack (languages, frameworks, DB, infra)
-   - Code conventions and test framework
-   - Design tool: **Figma** (requires paid MCP) or **Pencil.dev** (free, IDE-native, .pen files live in repo — pencil.dev) or **None** (Markdown wireframe specs)
+   - Code conventions + test framework
+   - Design tool: **Figma** (paid MCP) / **Pencil.dev** (free, IDE-native, `.pen` files in repo — pencil.dev) / **None** (Markdown wireframe specs)
 
-3. **ARCH** designs the folder structure and creates it:
+3. **ARCH** designs folder structure + creates:
 
 ```
 ./docs/
-  INDEX.md                      ← agent navigation file — always read first
+  INDEX.md                      ← agent navigation — always read first
   CHANGELOG.md                  ← agent changelog — prepend after every ship/fix, newest first
   BACKLOG.md                    ← bugs, ideas, improvements to implement later
   CONSTITUTION.md               ← non-negotiable project principles — agents check before every review
@@ -31,14 +31,16 @@
   improvements.md               ← ARCH/RED suggestions (appended over time)
   /specs/                       ← cross-feature and design handoff specs
 
-./app-docs/
-  index.mdx                     ← project overview
-  CHANGELOG.mdx                 ← user-facing changelog
-  /features/                    ← one .mdx per feature
-  /guides/                      ← onboarding, setup, conventions
+./app-docs/                     ← END-USER product documentation (like "Docs" section of a landing page)
+  index.mdx                     ← docs landing page the user sees first
+  CHANGELOG.mdx                 ← product release notes, written to end users
+  /features/                    ← one .mdx per user-facing feature — overview + how-to + tutorial + FAQ
+  /guides/                      ← user guides (getting-started, shortcuts, troubleshooting). NOT dev onboarding.
 ```
 
-**ARCH** seeds both changelog files immediately:
+> **app-docs vs docs:** users vs builders. Strict separation — no paths/code in app-docs, no tutorials in docs.
+
+**ARCH** seeds changelog files immediately:
 
 `./docs/CHANGELOG.md`:
 ```markdown
@@ -49,21 +51,21 @@
 - [INIT] project initialised
 ```
 
-`./app-docs/CHANGELOG.mdx`:
+`./app-docs/CHANGELOG.mdx` — product release notes, written to end users:
 ```mdx
 ---
-title: Changelog
-description: What's changed in this project
+title: What's new
+description: Product updates and changes — what you can now do in the app
 ---
 
-# Changelog
+# What's new
 
-<!-- SCRIBE: prepend new entries at top, newest first -->
+<!-- SCRIBE: prepend new entries at top, newest first. Write like release notes to end users — no file paths or internals. -->
 
 ## [Month YYYY]
 
 ### Added
-- Project initialised
+- Welcome! This is where new features and improvements will be announced as they ship.
 ```
 
 **ARCH** seeds `./docs/BACKLOG.md`:
@@ -73,7 +75,7 @@ description: What's changed in this project
 <!-- Run /ae-ship to pick up and implement a backlog item -->
 ```
 
-**PROD** generates `./docs/CONSTITUTION.md` by asking: non-negotiable tech standards, architectural principles, security/compliance requirements, forbidden patterns.
+**PROD** generates `./docs/CONSTITUTION.md` by asking: non-negotiable tech standards, architectural principles, security/compliance, forbidden patterns.
 
 Constitution format:
 ```markdown
@@ -94,9 +96,9 @@ Constitution format:
 - REQ checks every story against constitution during /ae-review
 ```
 
-⚠️ **Human checkpoint:** Show CLAUDE.md and CONSTITUTION.md drafts together. Ask for edits before saving. *"The constitution must be specific and verifiable — vague principles like 'write high quality code' give agents nothing to check against."*
+⚠️ **Human checkpoint:** Show CLAUDE.md + CONSTITUTION.md drafts together. Ask for edits before saving. *"The constitution must be specific and verifiable — vague principles like 'write high quality code' give agents nothing to check against."*
 
-**`./docs/INDEX.md`** is the single file every agent reads at session start. ARCH generates it:
+**`./docs/INDEX.md`** — single file every agent reads at session start. ARCH generates:
 
 ```markdown
 # Docs Index
@@ -106,7 +108,7 @@ Constitution format:
 - Read ./docs/CHANGELOG.md to see what's already been done
 - Read ./docs/CONSTITUTION.md for non-negotiable project principles
 - Go to ./docs/features/[name]/ for feature-specific PRD, stories, and progress
-- Go to ./app-docs/ for human-readable documentation
+- Go to ./app-docs/ for END-USER product documentation (how to use the app — don't write internal notes here)
 - Go to ./docs/improvements.md for ARCH/RED improvement suggestions
 
 ## Features
@@ -149,7 +151,7 @@ Constitution format:
 - Features:     ./docs/features/[name]/PRD.md|EPICS.md|STORIES.md|PROGRESS.md
 - Reviews:      ./docs/features/[name]/reviews/
 - Specs:        ./docs/specs/
-- App Docs:     ./app-docs/
+- App Docs:     ./app-docs/   (end-user product documentation — not internal reference)
 
 ## Agent Rules
 - Always read ./docs/INDEX.md and ./docs/CONSTITUTION.md first every session
@@ -160,23 +162,23 @@ Constitution format:
 - Constitution violations must be flagged — never silently ignored
 ```
 
-5. ⚠️ **Human checkpoint:** Show the generated CLAUDE.md. Ask for edits before saving.
+5. ⚠️ **Human checkpoint:** Show generated CLAUDE.md. Ask for edits before saving.
 
-6. **ARCH** reads `~/.claude/skills/agentic-engineering/rules-library/README.md`, presents rules grouped by type, and pre-suggests matches based on the captured stack.
+6. **ARCH** reads `~/.claude/skills/agentic-engineering/rules-library/README.md`, presents rules grouped by type, pre-suggests matches from captured stack.
 
 Stack rules: `react-typescript` · `nextjs-app-router` · `react-native` · `python-fastapi` · `python-django` · `node-express` · `go` · `rust` · `flutter` · `swiftui` · `ios-native` · `android-native`
 
 Cross-cutting: `testing-conventions` · `git-conventions` · `api-design` · `secrets-management`
 
-User confirms, adds, or removes. Reply 'none' to skip. For each selected rule, copy from `~/.claude/skills/agentic-engineering/rules-library/<name>.md` to `./.claude/rules/` (create dir if needed).
+User confirms/adds/removes. Reply 'none' to skip. Per selected rule, copy from `~/.claude/skills/agentic-engineering/rules-library/<name>.md` to `./.claude/rules/` (create dir if needed).
 
-**ARCH** confirms installed rules and notes: *"Edit any to match your project. Delete any that don't fit."*
+**ARCH** confirms installed + notes: *"Edit any to match your project. Delete any that don't fit."*
 
-7. **GIT** stages and commits the scaffold:
+7. **GIT** stages + commits scaffold:
 ```
 chore: initialise project structure, CLAUDE.md, CONSTITUTION.md, and project rules
 ```
 
-8. **PROD** summarizes what was created and prompts: *"Run `/ae-feature [name]` to start your first feature."*
+8. **PROD** summarizes created + prompts: *"Run `/ae-feature [name]` to start your first feature."*
 
 ---

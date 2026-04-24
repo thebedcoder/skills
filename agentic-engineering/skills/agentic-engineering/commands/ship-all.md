@@ -1,18 +1,16 @@
 ## `/ae-ship-all` — Ship All Unchecked Stories
 
-**Loops `/ae-ship` across every unchecked story across all active features**
+Loops `/ae-ship` across every unchecked story in all active features.
 
-Read `./docs/INDEX.md`, `./docs/CONSTITUTION.md`, then scan feature `STORIES.md` files for unchecked stories.
+Read `./docs/INDEX.md`, `./docs/CONSTITUTION.md`, then scan feature `STORIES.md` files.
 
-Use when you want to build out all remaining stories in a feature without manually
-triggering `/ae-ship` each time. You stay in the loop — every story pauses for plan
-approval before code is written. Only the mechanical chaining is automatic.
+Use to ship all remaining stories without manual trigger. User stays in loop — every story pauses for plan approval before code. Only mechanical chaining is automatic.
 
 ---
 
-### How it runs
+### On start
 
-**On start**, PROD gives you a session overview, grouping `[P]` parallel stories together:
+PROD shows session overview, grouping `[P]` parallel stories:
 
 ```
 PROD — Ship-All Session: [Feature Name]
@@ -35,11 +33,11 @@ Reply 'go' to start, or 'stop' at any plan prompt to end the session.
 
 ---
 
-**For each story**, the loop runs:
+### Per story
 
 **Step 1 — Plan** *(always pauses)*
 
-ARCH and PROD generate the implementation plan as in `/ae-ship`.
+ARCH + PROD generate plan as in `/ae-ship`.
 
 ```
 ━━━ STORY-XXX ([X] of [Y]) ━━━
@@ -53,12 +51,11 @@ PROD — Plan Review:
 Reply 'go' to ship · 'skip' to skip this story · 'stop' to end session
 ```
 
-**Step 2 — Ship chain** *(runs automatically on 'go')*
+**Step 2 — Ship chain** *(automatic on 'go')*
 
-Runs the full `/ae-ship` chain for this story:
-implement → review → frontend → review → docs → git commits
+Full `/ae-ship` chain: implement → review → frontend → review → docs → git commits.
 
-Pauses only if review blockers are found, same as `/ae-ship`.
+Pauses only on review blockers, same as `/ae-ship`.
 
 **Step 3 — Story complete + compact**
 
@@ -67,13 +64,13 @@ Pauses only if review blockers are found, same as `/ae-ship`.
 [1 line of what was built]
 ```
 
-Before moving to next story, run:
+Before next story:
 ```
 /compact Focus on: [feature name], STORY-XXX complete, next story is STORY-XXX,
 branch [name], any open blockers. Discard: file contents read, review reports, diffs.
 ```
 
-Then proceed to next story plan.
+Then next story plan.
 
 ---
 
@@ -100,25 +97,25 @@ Git: [X] commits on [branch]
 PR desc: ✅ updated to cover all shipped stories
 ```
 
-**GIT** generates a single PR description covering all stories shipped in the session,
-not one per story.
+**GIT** generates single PR desc covering all shipped stories — not one per story.
 
 ---
 
 ### Guardrails
 
-- **Never skips plan approval.** The 'go' prompt is non-negotiable between stories.
-- **Compact between every story.** Non-negotiable — context must be cleared before next story starts.
-- **Blocker pauses propagate.** If a review finds blockers mid-chain, the session pauses exactly as in `/ae-ship`. After fixing, the session resumes from where it stopped.
-- **'stop' is always available** at any plan prompt — it ends the session cleanly without abandoning in-progress work.
+- **Never skip plan approval.** 'go' prompt non-negotiable between stories.
+- **Compact between every story.** Mandatory — context must clear before next story.
+- **Blocker pauses propagate.** Review finds blockers → pause exactly as in `/ae-ship`. After fix, resumes.
+- **'stop' always available** at any plan prompt — ends session cleanly.
 - **Skipped stories stay unchecked** in `STORIES.md` so `/ae-status` reflects reality.
 
 ### Gotchas
 
-- **Compact is non-negotiable.** After 3-4 stories, context fills → quality degrades. Never skip because "stories are small."
-- **One story = its own commit(s).** No batching. Users must revert a story without touching others.
-- **`[P]` markers are user-facing suggestions, not self-instructions.** Ship-all runs sequentially. No interleaving stories in one session.
-- **Recurring blockers → stop and fix the pattern.** Same blocker class 3 stories in a row → update constitution/conventions, not more fixes.
-- **PR description = commits, not PRD regurgitation.** Show the log. Users can read.
+- **Compact non-negotiable.** After 3-4 stories, context fills → quality drops. Never skip because "stories are small."
+- **One story = its own commit(s).** No batching. User must revert story without touching others.
+- **`[P]` markers are user-facing suggestions, not self-instructions.** Ship-all runs sequential. No interleaving.
+- **Recurring blockers → stop + fix pattern.** Same blocker class 3 stories in row → update constitution/conventions, not more fixes.
+- **PR description = commits, not PRD.** Show log. Users can read.
+- **Test runners non-watch mode.** Ship-all multiplies ship's test invocations by every story. Leaked worker from STORY-001 still chews CPU at STORY-008. `vitest run`, `go test ./...`. See SKILL.md "Test Execution Rules."
 
 ---

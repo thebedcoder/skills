@@ -1,8 +1,8 @@
 ## `/ae-status` — Progress Overview
 
-**Agent active: PROD**
+**Agent:** PROD
 
-Read `./docs/INDEX.md`, `./docs/BACKLOG.md`, then scan all `./docs/features/*/STORIES.md` and `PROGRESS.md` files.
+Read `./docs/INDEX.md`, `./docs/BACKLOG.md`, then scan all `./docs/features/*/STORIES.md` + `PROGRESS.md`.
 
 ```
 ━━━ PROJECT STATUS ━━━

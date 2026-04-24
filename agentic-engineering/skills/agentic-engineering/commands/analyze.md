@@ -1,9 +1,8 @@
 ## `/ae-analyze` — Project Intelligence
 
-**Agent active: ARCH (lead), PROD (product lens)**
+**Agents:** ARCH (lead), PROD (product lens)
 
-Use this to answer any question about the project — its features, status, architecture,
-gaps, or implementation details. Searches docs, app-docs, and codebase as needed.
+Use to answer any question about the project — features, status, architecture, gaps, implementation. Searches docs, app-docs, codebase as needed.
 
 Question received: $ARGUMENTS
 
@@ -11,9 +10,9 @@ Question received: $ARGUMENTS
 
 ### How to answer
 
-**Step 1 — Classify the question**
+**Step 1 — Classify question**
 
-Determine what kind of answer is needed:
+Determine answer type:
 - **Status / coverage** — "which features lack X?" → cross-reference INDEX.md + app-docs + docs/features/
 - **Implementation** — "how does X work?" → read codebase + app-docs
 - **Planning** — "what's left to build?" → read STORIES.md files via INDEX.md
@@ -22,20 +21,22 @@ Determine what kind of answer is needed:
 
 **Step 2 — Gather information**
 
-Read in this order, stopping when you have enough to answer well:
+Read in order, stopping when you have enough:
 
-1. `./docs/INDEX.md` — feature list and status
-2. `./app-docs/` — human-readable feature docs
-3. `./docs/features/*/` — PRDs, stories, progress per feature
-4. Codebase files — only if docs don't have the answer
+1. `./docs/INDEX.md` — feature list + status
+2. `./app-docs/` — end-user product docs (useful for "what can a user do?" — not architecture)
+3. `./docs/features/*/` — PRDs, stories, progress per feature (engineering source of truth)
+4. Codebase files — only if docs don't have answer
+
+Note: `./app-docs/` written for users of the app, not dev team — prefer `./docs/` + codebase for architecture, data flow, implementation questions.
 
 **Step 3 — Answer**
 
-Give a direct, specific answer. No filler.
+Direct, specific. No filler.
 
-Format depends on question type:
+Format per question type:
 
-**For gap/coverage questions** (e.g. "which features lack designs?"):
+**Gap/coverage** (e.g. "which features lack designs?"):
 ```
 ARCH — Analysis: [question]
 
@@ -46,10 +47,10 @@ Gap found:
 Complete:
 - [feature]: [what's covered]
 
-Recommendation: [what to do about the gaps, if obvious]
+Recommendation: [what to do about gaps, if obvious]
 ```
 
-**For how-it-works questions** (e.g. "how do we process payments?"):
+**How-it-works** (e.g. "how do we process payments?"):
 ```
 ARCH — Analysis: [question]
 
@@ -65,7 +66,7 @@ Edge cases / notes:
 - [anything non-obvious]
 ```
 
-**For planning questions** (e.g. "what's left to build?"):
+**Planning** (e.g. "what's left to build?"):
 ```
 PROD — Analysis: [question]
 
@@ -76,12 +77,11 @@ PROD — Analysis: [question]
 Priority recommendation: [if applicable]
 ```
 
-**For open-ended questions**, synthesize from all sources and be honest about what's
-documented vs. what had to be inferred from code.
+**Open-ended** → synthesize from all sources. Be honest about documented vs inferred from code.
 
 ---
 
-### If the answer isn't findable
+### If answer not findable
 
 Say so directly:
 ```

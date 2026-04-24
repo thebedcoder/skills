@@ -15,69 +15,77 @@ description: >
 
 # Agentic Engineering
 
-A structured, phase-gated SDLC workflow powered by named specialist agents.
-Each command loads its own instruction file — only what's needed is read.
+Phase-gated SDLC workflow. Named specialist agents. On-demand command loading.
 
-## How to use this skill
+## How to use
 
-When a command is invoked, read the corresponding file from `commands/` before doing anything else.
-The file contains the full instructions for that command.
+Command invoked → read matching file from `commands/` first. File holds full instructions.
 
 ## Command → File Map
 
-| Command | File | What it does |
+| Command | File | Does |
 |---|---|---|
-| `ae-bootstrap` | `commands/bootstrap.md` | Scaffold new project — stack, deps, structure |
-| `/ae-init` | `commands/init.md` | Create docs scaffold + CLAUDE.md |
-| `/ae-feature [name]` | `commands/feature.md` | Research + PRD + stories for a feature |
-| `/ae-design` | `commands/design.md` | Generate mockups via Figma/Pencil/Markdown |
-| `/ae-implement` | `commands/implement.md` | Implement next unchecked story with tests |
-| `/ae-review` | `commands/review.md` | 4-agent parallel code review |
-| `/ae-ship` | `commands/ship.md` | Full story chain: implement→review→frontend→review→docs |
-| `/ae-ship-all` | `commands/ship-all.md` | Loop ship across all unchecked stories |
-| `/ae-fix [description]` | `commands/fix.md` | Diagnose + fix bug + review, chained |
+| `/ae-bootstrap` | `commands/bootstrap.md` | Scaffold project — stack, deps, structure |
+| `/ae-init` | `commands/init.md` | Docs scaffold + CLAUDE.md |
+| `/ae-feature [name]` | `commands/feature.md` | Research + PRD + stories |
+| `/ae-design` | `commands/design.md` | Mockups via Figma/Pencil/Markdown |
+| `/ae-implement` | `commands/implement.md` | Next unchecked story + tests |
+| `/ae-review` | `commands/review.md` | 5-agent parallel review |
+| `/ae-ship` | `commands/ship.md` | Full chain: implement→review→frontend→review→docs |
+| `/ae-ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories |
+| `/ae-fix [description]` | `commands/fix.md` | Diagnose → fix → review |
 | `/ae-plan-all` | `commands/plan-all.md` | Plan all unplanned epics from INDEX.md |
-| `/ae-doc [feature]` | `commands/doc.md` | Interactively document one feature with Q&A |
-| `/ae-doc-all` | `commands/doc-all.md` | Document multiple features. Use `--full` on new projects to also build guides and index |
-| `/ae-status` | `commands/status.md` | Progress overview across all features |
-| `/ae-note [description]` | `commands/note.md` | Capture a bug, idea, or improvement for later |
-| `/ae-analyze` | `commands/analyze.md` | Answer any question about the project — searches docs and codebase |
-| `/ae-frontend` | `commands/frontend.md` | Implement frontend from design handoff |
+| `/ae-doc [feature]` | `commands/doc.md` | Document one feature with Q&A |
+| `/ae-doc-all` | `commands/doc-all.md` | Document many features. `--full` = new project (+ guides + index) |
+| `/ae-status` | `commands/status.md` | Progress overview |
+| `/ae-note [description]` | `commands/note.md` | Capture bug/idea/improvement |
+| `/ae-analyze` | `commands/analyze.md` | Answer project question — searches docs + code |
+| `/ae-frontend` | `commands/frontend.md` | Frontend from design handoff |
 
 ## Agent Roster
 
-When an agent speaks, prefix output with their name. All agents follow Caveman rules for internal output.
+Agent speaks → prefix output with name. Internal output = caveman rules.
 
 | Agent | Role | Bias |
 |---|---|---|
-| 🏗 **ARCH** | Architecture, planning, code structure | Suspicious of shortcuts and hidden debt |
-| 📋 **PROD** | PRD, stories, acceptance criteria | Challenges vague or unmeasurable specs |
-| 🎨 **UX** | Design flows, mockups, fidelity review | Never skips empty/error/loading states |
-| 🔴 **RED** | Bug hunting, null safety, async, logic errors | Assumes code is broken |
-| 🔧 **FIXER** | Root cause analysis, surgical fixes | One bug, one fix |
-| ✅ **REQ** | Requirements + constitution audit | Binary. Constitution violations = blockers |
-| 🧪 **TEST** | Test coverage and quality | Flags tests that prove nothing |
-| 📖 **DOC** | Convention alignment, CLAUDE.md drift | Notices code/docs mismatch |
-| 🔐 **SEC** | Security vulnerability review | High-confidence only, no noise |
-| ✍️ **SCRIBE** | MDX documentation authoring | Humans first |
-| 🔀 **GIT** | Commits, branches, PR descriptions | Conventional commits only |
+| 🏗 **ARCH** | Architecture, planning, structure | Suspects shortcuts + hidden debt |
+| 📋 **PROD** | PRD, stories, acceptance | Challenges vague specs |
+| 🎨 **UX** | Design flows, mockups, fidelity | Never skips empty/error/loading |
+| 🔴 **RED** | Bugs — null/async/logic | Assumes code broken |
+| 🔧 **FIXER** | Root cause, surgical fixes | One bug, one fix |
+| ✅ **REQ** | Requirements + constitution | Binary. Constitution violation = blocker |
+| 🧪 **TEST** | Test coverage + quality | Flags tests that prove nothing |
+| 📖 **DOC** | Convention alignment, CLAUDE.md drift | Notices mismatch |
+| 🔐 **SEC** | Security — high-confidence only | No noise |
+| ✍️ **SCRIBE** | End-user product docs in `./app-docs/` | Writes for app users, not dev team |
+| 🔀 **GIT** | Commits, branches, PR desc | Conventional only |
 
 ## Caveman Communication Rules
 
-Apply to all agent internal output (plans, reports, reviews). NOT to human checkpoints, code, commits, or MDX docs.
+Apply to all agent internal output (plans, reports, reviews). NOT to human checkpoints, code, commits, MDX docs.
 
 - **Drop:** articles (a/an/the), filler (just/really/basically), pleasantries, hedging
 - **Keep:** technical terms exact, code blocks unchanged, file paths verbatim
 - **Pattern:** `[thing] [problem/action] [reason]. [next step].`
-- **Fragments OK.** Short synonyms: fix not "implement a solution", use not "utilize"
-- During `ship-all` and `plan-all`: **ultra** mode — arrows for causality (X → Y), one word when enough
+- **Fragments OK.** Short synonyms: fix not "implement solution", use not "utilize"
+- During `ship-all` / `plan-all`: **ultra** mode — arrows for causality (X → Y), one word when enough
 
-## Context Management Rules
+## Context Management
 
-- **Compact between stories** in `ship-all` and `plan-all` — mandatory, not optional
+- **Compact between stories** in `ship-all` + `plan-all` — mandatory
 - **Compact instruction:** `/compact Focus on: current feature, last story done, next story, branch, blockers, last changelog entry, constitution key points. Discard: file contents, review reports, diffs.`
-- **Read INDEX.md, CHANGELOG.md, and CONSTITUTION.md first** every session — never scan codebase to orient
-- **Read only files relevant to current story** — not the whole project
+- **Read INDEX.md, CHANGELOG.md, CONSTITUTION.md first** every session — no codebase scan to orient
+- **Read only files relevant to current story** — not whole project
 - **Never re-read** files already in context
 
+## Test Execution Rules (ALL commands)
 
+Non-watch mode only. Watch workers outlive Bash timeout → pile up across chained phases → system freeze.
+
+- **Vitest:** `vitest run` / `npx vitest run` — **never** bare `vitest` / `npx vitest`
+- **Jest:** `jest` (default non-watch) — **never** `--watch` / `--watchAll`
+- **Pytest:** `pytest` — never `pytest-watch` / `ptw`
+- **Go:** `go test ./...` — no watcher wrapper
+- **Other:** pass explicit one-shot / non-watch flag
+
+Applies to main conversation + every subagent dispatched by review, fix, ship, ship-all. No exceptions, even "quick checks."

@@ -1,28 +1,28 @@
 ## `/ae-review` — Multi-Agent Code Review
 
-**Goal:** Produce a consolidated fix list for the current story by running five specialist reviewers on the changed code in parallel.
+**Goal:** Consolidated fix list for current story. Five specialist reviewers run parallel on changed code.
 
 **Inputs (read first):**
-- `./CLAUDE.md`, `./docs/INDEX.md`, `./docs/CONSTITUTION.md` — orient on the current feature
-- `./docs/features/[feature-name]/PROGRESS.md` — identify files changed in the last story
-- `./docs/features/[feature-name]/STORIES.md` — locate the story's acceptance criteria
+- `./CLAUDE.md`, `./docs/INDEX.md`, `./docs/CONSTITUTION.md` — orient on current feature
+- `./docs/features/[feature-name]/PROGRESS.md` — files changed in last story
+- `./docs/features/[feature-name]/STORIES.md` — story's acceptance criteria
 
 **Constraints:**
-- All five subagents dispatched **in a single tool-call batch** (not sequentially)
-- Each subagent gets only the files it needs — pass paths, not full content
-- Consolidate results into one fix list before reporting to the user
+- All five subagents dispatched **in single tool-call batch** — not sequentially
+- Each subagent gets only files it needs — pass paths, not full content
+- Consolidate into one fix list before reporting
 
 ### The five reviewers
 
 | Agent | Receives | Looks for |
 |---|---|---|
-| **ae-red** | changed implementation files + git diff | runtime errors, null safety, async bugs, logic errors, resource leaks |
+| **ae-red** | changed impl files + git diff | runtime errors, null safety, async bugs, logic, resource leaks |
 | **ae-req** | STORIES.md + CONSTITUTION.md + changed files | acceptance criteria met, constitution violations |
-| **ae-test** | changed files + their test files | coverage gaps, tests that wouldn't catch regressions |
-| **ae-doc** | CLAUDE.md + changed files + related app-docs | convention drift, docs that need updating |
-| **ae-sec** | changed implementation files + git diff | high-confidence exploitable vulnerabilities |
+| **ae-test** | changed files + test files | coverage gaps, tests that wouldn't catch regressions |
+| **ae-doc** | CLAUDE.md + changed files + related app-docs | convention drift, docs needing update |
+| **ae-sec** | changed impl files + git diff | high-confidence exploitable vulnerabilities |
 
-Each reviewer loads its own reference files on demand. Don't instruct them how to review — they know.
+Each reviewer loads own reference files on demand. Don't instruct how to review — they know.
 
 ### Output
 
@@ -55,4 +55,4 @@ Ask: *"Should I fix the blockers now, or do you want to review them first?"*
 - **No story summary before dispatch.** Reviewers read files themselves. Paraphrase → token waste + meaning drift.
 - **Don't merge findings early.** ae-red + ae-sec flag same line → keep both voices. Reasoning differs, context varies.
 - **No 6th reviewer ad-hoc.** New dimension missing → skill change, not improvisation. Flag it.
-- **Constitution violations = always blockers.** Never downgrade to "should-fix." Fix cost is irrelevant.
+- **Constitution violations = always blockers.** Never downgrade to "should-fix." Fix cost irrelevant.

@@ -1,13 +1,14 @@
 ## `/ae-doc-all` — Document All Features
 
-Documents multiple features interactively. Supports two modes:
+Output → `./app-docs/` = **end-user product documentation**. Not internal reference.
 
-- **Default** — select from existing features to document or update
-- **`--full`** — for projects with no app-docs yet. Runs full codebase reconnaissance first, builds guides, then documents all features. Replaces `/ae-init-docs`.
+Modes:
+- **Default** — select from existing features to document/update
+- **`--full`** — no app-docs yet. Reconnaissance, builds landing + user guides, documents all user-facing features. Replaces `/ae-init-docs`.
 
-Detect which mode to use:
-- If `./app-docs/` doesn't exist or is empty → suggest `--full` automatically
-- Otherwise → run default mode
+Detect:
+- `./app-docs/` missing or empty → suggest `--full`
+- Otherwise → default mode
 
 ---
 
@@ -15,7 +16,7 @@ Detect which mode to use:
 
 ### Phase 1 — Feature Inventory
 
-ARCH scans the codebase and cross-references `./app-docs/features/`:
+ARCH scans codebase + cross-references `./app-docs/features/`:
 
 ```
 ARCH — Feature Inventory:
@@ -24,7 +25,7 @@ Undocumented (no MDX file exists):
   1. [feature] — [files] — complexity: S/M/L
   2. [feature] — [files] — complexity: S/M/L
 
-Stale (MDX exists but code has changed significantly):
+Stale (MDX exists but code changed significantly):
   3. [feature] — [last updated: date] — [what changed]
 
 Up to date (skip):
@@ -47,14 +48,14 @@ Which features do you want to document?
 
 ### Phase 3 — Doc Loop
 
-For each selected feature, run the full `/ae-doc` flow:
-- ARCH reads the code
-- SCRIBE asks Q&A questions, waits for answers
-- Write the MDX to `./app-docs/features/[name].mdx`
+Per selected feature, run full `/ae-doc` flow:
+- ARCH reads code
+- SCRIBE asks Q&A, waits
+- Write MDX to `./app-docs/features/[name].mdx`
 - Append improvements to `./docs/improvements.md`
 - GIT commit
 
-Between each feature:
+Between features:
 ```
 ✅ [feature] documented ([X] of [Y])
 Next: [feature name] — questions coming up.
@@ -74,11 +75,11 @@ Git: X commits
 
 ## Full Mode (`--full`)
 
-Use on projects with no `./app-docs/` yet, or to fully rebuild from scratch.
+Use on projects with no `./app-docs/` yet, or to rebuild from scratch.
 
 ### Phase 1 — Codebase Reconnaissance
 
-**ARCH** does a full structural read:
+**ARCH** does structural read:
 
 ```
 ARCH — Codebase Map:
@@ -91,76 +92,93 @@ Entry points:
 Feature areas identified:
   - [area] — [what it does, key files]
 
-Architectural patterns:
-  - [pattern] — [where used]
-
-External dependencies worth documenting:
+External dependencies worth noting:
   - [service/lib] — [how used]
 
 Unclear (need closer reading):
   - [area] — [why ambiguous]
 ```
 
-**PROD** translates to user-facing context:
+**PROD** separates user-facing from internal. Only user-facing → app-docs entries:
 ```
-PROD — Feature Translation:
-[Which areas are user-facing vs. internal infrastructure?
-Any feature ARCH missed because it's spread across files?]
+PROD — User-Facing Translation:
+
+User-facing features (will get app-docs pages):
+  - [feature] — [what the user can do]
+  - [feature] — [what the user can do]
+
+Internal only (skip app-docs):
+  - [area] — [why — e.g. background job, infra, dev tooling]
+
+Features spread across files ARCH may have missed:
+  - [feature]
 ```
 
 ⚠️ **Human checkpoint:** *"Does this capture everything? Reply 'approved' or correct anything."*
 
-### Phase 2 — Build Guides
+### Phase 2 — Build Docs Landing + User Guides
 
-SCRIBE creates `./app-docs/guides/` before feature docs:
+SCRIBE creates `./app-docs/guides/` with **end-user guides** (not dev onboarding):
 
-- **`getting-started.mdx`** — setup instructions from README, package.json scripts, config files
-- **`architecture.mdx`** — ARCH's structural map rewritten for humans: layers, data flow, key decisions
-- **`conventions.mdx`** — coding conventions from CLAUDE.md, linting config, and observed patterns
+- **`getting-started.mdx`** — user sign-up/install/first-use walkthrough. (Dev setup → `README.md` + `./docs/`.)
+- **Other user guides** — e.g. `account-settings.mdx`, `shortcuts.mdx`, `troubleshooting.mdx`. Only if real user questions. Skip if none.
 
-Also creates `./app-docs/index.mdx`:
+**Do not** create `architecture.mdx` / `conventions.mdx` — engineering concerns → `./docs/`.
+
+Create `./app-docs/index.mdx` — **docs landing page**:
 ```mdx
 ---
-title: [Project Name]
-description: [One sentence]
+title: [Product name] Docs
+description: [One sentence — what product does, written to the user]
 last_updated: [date]
 ---
 
-# [Project Name]
+# [Product name] Docs
 
-[2-3 sentence overview.]
+[2-3 sentence plain-English welcome. What product is, who it's for, where to start.]
+
+## Get started
+- [Getting started](./guides/getting-started.mdx) — [one-line hook]
 
 ## Features
-- [Feature name](./features/[name].mdx) — [one line]
+- [Feature name](./features/[name].mdx) — [one-line user-facing description]
+- [Feature name](./features/[name].mdx) — [one-line user-facing description]
 
 ## Guides
-- [Getting Started](./guides/getting-started.mdx)
-- [Architecture](./guides/architecture.mdx)
-- [Conventions](./guides/conventions.mdx)
+- [Guide title](./guides/[name].mdx) — [one-line hook]
+
+(Omit any section with no entries. Don't leave empty headers.)
 ```
 
-### Phase 3 — Document All Features
+### Phase 3 — Document All User-Facing Features
 
-Run the full feature inventory (same as default Phase 1), then document all undocumented features using the `/ae-doc` flow — no selection step, documents everything found.
+Per PROD's user-facing list (internal-only skipped), run `/ae-doc` flow — ARCH reads code, SCRIBE Q&A, writes MDX.
 
 ### Phase 4 — PROD Review
 
-**PROD** reads every generated file and flags: confusing sections (readable by new team member?), inaccuracies (matches actual behaviour?), gaps (anything a new dev would need?). SCRIBE fixes all flagged issues.
+**PROD** reads every generated file + flags:
+- **Engineering leakage** — file paths, function names, code blocks, jargon snuck into app-docs. Remove/reword.
+- **Unreachable capabilities** — bullets or steps not exposed to user.
+- **Missing workflows** — common user tasks not covered.
+- **Confusing sections** — would first-time user follow this?
+
+SCRIBE fixes all flagged.
 
 ### Phase 5 — Complete
 
 **GIT** commits:
 ```
-docs: initialise app-docs from codebase analysis
+docs: initialise end-user app-docs from codebase analysis
 ```
 
 ```
 ━━━ DOC-ALL --FULL COMPLETE ━━━
 
-Guides created:    getting-started, architecture, conventions
+Landing page:        ./app-docs/index.mdx
+User guides created: [list]
 Features documented: X
-index.mdx:         ✅ created
+Internal-only areas skipped: Y
 
-⚠️ Review ./app-docs/ and correct anything that feels off.
+⚠️ Review ./app-docs/ as if you were a first-time user of the product.
 SCRIBE will keep docs updated after every /ae-ship and /ae-fix.
 ```

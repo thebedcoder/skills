@@ -29,7 +29,8 @@ Commands are handled by a cast of named specialist agents. Each has a distinct r
 │ ✅ REQ    │ Requirements + constitution    │ Binary — met or not    │
 │ 🧪 TEST   │ Coverage & test quality        │ Flags useless tests    │
 │ 📖 DOC    │ Convention alignment           │ Notices code drift     │
-│ ✍️ SCRIBE  │ MDX documentation             │ Humans first           │
+│ ✍️ SCRIBE  │ End-user product docs (MDX)   │ Writes for app users,  │
+│           │                                │ not the dev team       │
 │ 🔀 GIT    │ Commits, branches, PRs         │ Conventional always    │
 │ 🔐 SEC    │ Security vulnerabilities       │ High-confidence only   │
 └───────────┴────────────────────────────────┴────────────────────────┘
@@ -89,7 +90,8 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │    │  + ae-ux    │  🎨 fidelity check — states/forms/a11y/responsive │
 │    └──────┬──────┘                                                   │
 │           │                                                          │
-│    ✍️ SCRIBE  updates app-docs + both changelogs                     │
+│    ✍️ SCRIBE  updates end-user app-docs + both changelogs            │
+│              (final step before commit — keeps product docs in sync)  │
 │    🔀 GIT    commits with conventional message + PR description      │
 │                                                                      │
 │  /ae-ship-all — chains /ae-ship across all stories                   │
@@ -147,12 +149,14 @@ your-project/
 │           ├── PROGRESS.md
 │           ├── data-model.md    ← generated when feature touches DB
 │           └── reviews/         ← review output per story
-└── app-docs/
-    ├── index.mdx
-    ├── CHANGELOG.mdx            ← human-readable changelog
-    ├── features/
-    └── guides/
+└── app-docs/                   ← END-USER product documentation (like a landing-page "Docs" section)
+    ├── index.mdx               ← docs landing page the user opens first
+    ├── CHANGELOG.mdx           ← product release notes, written to users
+    ├── features/               ← one .mdx per user-facing feature: overview + how-to + tutorial + FAQ
+    └── guides/                 ← user guides (getting-started, shortcuts, troubleshooting)
 ```
+
+> `./docs/` is for people who **build** the app. `./app-docs/` is for people who **use** the app. They never overlap — no file paths or code in app-docs, no user tutorials in docs. SCRIBE updates app-docs as the final step of every `/ae-ship` and `/ae-fix` so the published docs always match what the app can actually do.
 
 ---
 
@@ -194,8 +198,8 @@ Stories tagged `[P]` have no dependencies on other stories. `/ae-ship-all` surfa
 
 Both maintained automatically — never skip this step:
 
-- **`./docs/CHANGELOG.md`** — agent-readable, terse, one line per action. Read at every session start alongside INDEX.md to orient without scanning the codebase.
-- **`./app-docs/CHANGELOG.mdx`** — human-readable, release-style. For stakeholders, onboarding, and team visibility.
+- **`./docs/CHANGELOG.md`** — agent-readable engineering log, terse, one line per action. Read at every session start alongside INDEX.md to orient without scanning the codebase. Every ship/fix appends here.
+- **`./app-docs/CHANGELOG.mdx`** — **product release notes, written to end users.** Only gets an entry when a ship or fix actually changed something a user can see. Pure internal refactors do not appear here — they stay in the engineering log.
 
 ### Context management
 

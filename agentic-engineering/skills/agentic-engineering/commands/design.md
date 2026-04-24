@@ -1,20 +1,20 @@
 ## `/ae-design` — UI/UX Design
 
-**Agents active: UX (lead), PROD (flow validator)**
+**Agents:** UX (lead), PROD (flow validator)
 
-Read `./CLAUDE.md` and `./docs/features/[feature-name]/PRD.md` before starting. The PRD must be approved before running this command.
+Read `./CLAUDE.md` + `./docs/features/[feature-name]/PRD.md` before starting. PRD must be approved before running.
 
-**UX** reads the `Design Tool` field from `./CLAUDE.md` and confirms:
+**UX** reads `Design Tool` from `./CLAUDE.md` + confirms:
 ```
 UX — Design Tool: [figma | pencil | none]
-[One line confirming which tool will be used and why]
+[One line confirming which tool + why]
 ```
 
 ---
 
 ### Stage 1: Flow Mapping
 
-**PROD** extracts the user flows from the PRD and lists every screen needed:
+**PROD** extracts user flows from PRD + lists every screen:
 
 ```
 PROD — Screen Inventory: [Feature Name]
@@ -32,39 +32,39 @@ States per screen (must be designed):
   - [any feature-specific states]
 ```
 
-**UX** reviews and challenges the list:
+**UX** reviews + challenges:
 ```
 UX — Flow Review:
 [Any screens PROD missed?
-Any transition or modal that needs its own frame?
-Any state that will be painful to implement without a design?]
+Any transition or modal needing own frame?
+Any state painful to implement without design?]
 ```
 
-⚠️ **Human checkpoint:** Confirm the screen list before any design work starts.
+⚠️ **Human checkpoint:** Confirm screen list before any design work.
 
 ---
 
 ### Stage 2: Mobile Design
 
-**UX** generates mobile-first mockups using the configured design tool.
+**UX** generates mobile-first mockups using configured tool.
 
-Order of operations:
-1. Main screens (the happy path, fully populated)
+Order:
+1. Main screens (happy path, fully populated)
 2. Empty states (first-time user, no data)
 3. Loading states (skeleton screens, not spinners where possible)
-4. Error states (what goes wrong and how the user recovers)
-5. Modals and overlays
+4. Error states (what goes wrong + how user recovers)
+5. Modals + overlays
 
-#### If design tool = `figma`
-UX creates frames via Figma MCP (requires paid plan + MCP configured).
+#### `figma`
+UX creates frames via Figma MCP (paid plan + MCP required).
 
-#### If design tool = `pencil`
-UX creates frames in Pencil.dev via local MCP (must be running in IDE). `.pen` files saved in repo — Git-friendly.
+#### `pencil`
+UX creates frames in Pencil.dev via local MCP (must be running in IDE). `.pen` files in repo — Git-friendly.
 
-Both tools report progress as: `✅ [Screen] — done` / `⏳ [Screen] — in progress`.
+Both tools progress: `✅ [Screen] — done` / `⏳ [Screen] — in progress`.
 
-#### If design tool = `none`
-UX produces detailed Markdown wireframe specs instead:
+#### `none`
+UX produces detailed Markdown wireframe specs:
 
 ```markdown
 ## Screen: [Name]
@@ -88,13 +88,13 @@ States:
 
 ### Stage 3: Desktop Adaptation
 
-**UX** extends approved mobile designs to desktop layout using the same tool.
+**UX** extends approved mobile → desktop using same tool.
 
 ```
 UX — Desktop Notes:
-[What changes from mobile to desktop for each screen?
-Any layout that needs a fundamentally different treatment at wider widths?
-Any mobile pattern that breaks on desktop?]
+[What changes mobile → desktop per screen?
+Any layout needing fundamentally different treatment at wider widths?
+Any mobile pattern breaking on desktop?]
 ```
 
 ⚠️ **Human checkpoint:** *"Desktop designs are ready. Reply 'approved' when ready to proceed."*
@@ -103,7 +103,7 @@ Any mobile pattern that breaks on desktop?]
 
 ### Stage 4: Design Handoff
 
-**UX** produces a handoff spec saved to `./docs/specs/[feature-name]-design.md`:
+**UX** produces handoff spec → `./docs/specs/[feature-name]-design.md`:
 
 ```markdown
 # Design Handoff: [Feature Name]
@@ -128,16 +128,16 @@ Any mobile pattern that breaks on desktop?]
 - [anything non-obvious about transitions or animations]
 
 ## Open Questions
-- [anything left for the developer to decide]
+- [anything left for developer to decide]
 ```
 
 **PROD** signs off:
 ```
 PROD — Handoff Review:
-[Does this design cover every user flow in the PRD?
-Any acceptance criterion that the design doesn't address?]
+[Does design cover every user flow in PRD?
+Any acceptance criterion design doesn't address?]
 ```
 
-After approval, prompt: *"Design complete. Run `/ae-ship` to start building."*
+After approval: *"Design complete. Run `/ae-ship` to start building."*
 
 ---

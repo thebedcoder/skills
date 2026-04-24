@@ -1,21 +1,21 @@
 ## `/ae-frontend` — Frontend Implementation
 
-**Agents active: ARCH (structure), UX (fidelity check), PROD (UX validation)**
+**Agents:** ARCH (structure), UX (fidelity), PROD (UX validation)
 
-Read `./CLAUDE.md`, the target story, and `./docs/specs/[feature-name]-design.md`.
-If `/ae-design` hasn't been run yet, prompt the user to run it first or confirm they want to proceed without designs.
+Read `./CLAUDE.md`, target story, `./docs/specs/[feature-name]-design.md`.
+No `/ae-design` yet → prompt user to run it first or confirm proceeding without designs.
 
 ### Steps
 
-1. **UX** reads the design handoff spec and summarises what needs to be built:
+1. **UX** reads design handoff spec + summarises:
 ```
 UX — Design Brief: STORY-XXX
-[Key screens and states this story covers]
-[Any interaction notes from the handoff spec]
-[Anything the developer needs to watch out for]
+[Key screens + states this story covers]
+[Interaction notes from handoff spec]
+[What developer needs to watch for]
 ```
 
-2. **ARCH** audits the existing design system and lists what's available to reuse vs. what needs building:
+2. **ARCH** audits design system. Lists reuse vs build:
 
 ```
 ARCH — Frontend Plan: STORY-XXX
@@ -33,51 +33,51 @@ Responsive:
   - [mobile / tablet / desktop notes from UX handoff]
 ```
 
-3. **PROD** reviews the plan against user flow:
+3. **PROD** reviews plan vs user flow:
 ```
 PROD — UX Review:
-[Does this deliver every screen and state in the design handoff?
+[Does this deliver every screen + state in handoff?
 Any interaction state missing — loading, empty, error?
-Any shortcut that would diverge from the approved design?]
+Any shortcut diverging from approved design?]
 ```
 
-⚠️ **Human checkpoint:** Show all three agents. Ask: *"Reply 'go' to implement."*
+⚠️ **Human checkpoint:** Show all three. Ask: *"Reply 'go' to implement."*
 
-4. Implement following ARCH's plan, pixel-faithful to the design handoff.
+4. Implement per ARCH's plan, pixel-faithful to handoff.
 
-5. **ae-ux** runs a structured fidelity review:
+5. **ae-ux** runs structured fidelity review.
 
-Spawn `ae-ux` as a subagent, passing:
-- `./docs/specs/[feature-name]-design.md` — the approved design handoff
-- All changed frontend files for this story
+Spawn `ae-ux` subagent. Pass:
+- `./docs/specs/[feature-name]-design.md` — approved handoff
+- All changed frontend files for story
 
-ae-ux loads its reference files based on what the story contains and returns a structured report:
+ae-ux loads own references based on story + returns structured report:
 ```
 UX — Fidelity Check: STORY-XXX
 
-BLOCKERS (user cannot complete the task):
+BLOCKERS (user cannot complete task):
 1. [issue] — [file:component] — [fix]
 
-POLISH (noticeable but not blocking):
+POLISH (noticeable, not blocking):
 1. [issue] — [file:component] — [fix]
 
-CLEAN: [what was checked and done well]
+CLEAN: [what was checked + done well]
 ```
 
-6. **PROD** does a final UX spot-check:
+6. **PROD** final UX spot-check:
 ```
 PROD — Final Check:
-[Does the overall experience feel right end-to-end?
-Anything that works technically but feels wrong to use?]
+[Does experience feel right end-to-end?
+Anything technically working but wrong to use?]
 ```
 
 ---
 
-## Core Principles (Always Enforced)
+## Core Principles
 
-1. **Never skip a human checkpoint.** Every gate exists for a reason.
-2. **Agents challenge each other.** PROD challenges ARCH. RED assumes failure. This tension is the point.
+1. **Never skip human checkpoint.** Every gate exists for reason.
+2. **Agents challenge each other.** PROD vs ARCH. RED assumes failure. Tension is the point.
 3. **One story at a time.** No batching.
-4. **Tests are not optional.** Done = implemented + tested.
-5. **Docs stay in sync.** PROGRESS.md, STORIES.md, and reviews must reflect reality.
-6. **Plan before code.** ARCH shows a plan. PROD validates it. Then you build.
+4. **Tests not optional.** Done = implemented + tested.
+5. **Docs stay in sync.** PROGRESS.md, STORIES.md, reviews reflect reality.
+6. **Plan before code.** ARCH plans. PROD validates. Then build.

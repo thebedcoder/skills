@@ -1,9 +1,8 @@
 ## `/ae-note` — Capture Backlog Item
 
-**Agents active: FIXER (bugs), PROD (ideas/improvements)**
+**Agents:** FIXER (bugs), PROD (ideas/improvements)
 
-Use to quickly capture anything you want to implement later without interrupting
-current work. Saves to `./docs/BACKLOG.md` with enough context to act on later.
+Use to quickly capture anything to implement later without interrupting current work. Saves to `./docs/BACKLOG.md` with enough context to act on later.
 
 Input received: $ARGUMENTS
 
@@ -11,29 +10,29 @@ Input received: $ARGUMENTS
 
 ### Phase 1 — Classify
 
-Determine the type from the description:
+Determine type from description:
 - **bug** — something broken or behaving incorrectly
 - **idea** — new capability or feature not yet planned
 - **improvement** — existing feature that could work better
 
-If unclear, ask: *"Is this a bug, idea, or improvement?"*
+Unclear → ask: *"Is this a bug, idea, or improvement?"*
 
 ---
 
 ### Phase 2 — Quick Investigation
 
-**For bugs** — FIXER does a fast read of the codebase:
+**Bugs** — FIXER does fast codebase read:
 ```
 FIXER — Quick Investigation:
 
 Likely location: [file(s) most likely involved]
 Probable cause: [hypothesis from reading code — caveman rules]
 Complexity: S / M / L
-Can reproduce with: [how to trigger it, if determinable from code]
+Can reproduce with: [how to trigger, if determinable from code]
 Risk if left unfixed: low / medium / high
 ```
 
-**For ideas/improvements** — PROD does a quick assessment:
+**Ideas/improvements** — PROD does quick assessment:
 ```
 PROD — Quick Assessment:
 
@@ -44,15 +43,15 @@ Value: low / medium / high
 Dependencies: [anything that needs to exist first]
 ```
 
-If the codebase read reveals the item is already fixed or implemented, say so and skip saving.
+Codebase read reveals item already fixed or implemented → say so + skip saving.
 
 ---
 
 ### Phase 3 — Write to BACKLOG.md
 
-Generate a unique ID: `NOTE-XXX` (increment from last item in BACKLOG.md).
+Generate unique ID: `NOTE-XXX` (increment from last item).
 
-Prepend to `./docs/BACKLOG.md` (newest first, after the header):
+Prepend to `./docs/BACKLOG.md` (newest first, after header):
 
 ```markdown
 ## NOTE-XXX: [short title] — [date]

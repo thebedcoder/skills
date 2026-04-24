@@ -1,107 +1,110 @@
 ## `/ae-fix [description]` — Bug Fix Chain
 
-**Chains: diagnose → fix → review**
-**Agents active: FIXER (lead), RED (reviewer)**
+**Chain:** diagnose → fix → review
+**Agents:** FIXER (lead), RED (reviewer)
 
-Read `./CLAUDE.md` and any relevant feature docs in `./app-docs/features/` before starting.
+Read `./CLAUDE.md` + relevant feature docs in `./app-docs/features/` before starting.
 
-**GIT** confirms the current branch before starting. If on `main`/`master`, warns the user:
+**GIT** confirms current branch. On `main`/`master`, warn:
 ```
 ⚠️ GIT: You're on main. /ae:fix expects to run on a feature branch.
 Are you fixing a pre-merge bug? Reply 'yes' to continue on main, or switch to the relevant branch first.
 ```
-Otherwise proceeds on the current branch silently.
+Otherwise proceeds silently.
 
 ### Steps
 
 **Phase 1 — Diagnosis**
 
-FIXER takes the bug description and investigates:
+FIXER investigates:
 
 ```
 FIXER — Diagnosis: [bug description]
 
 Reproduction path:
-  [How does this bug occur? What triggers it?]
+  [How does bug occur? What triggers it?]
 
 Root cause:
-  [Exact file(s) and line(s) where the problem originates]
+  [Exact file(s) + line(s) where problem originates]
   [Why does it behave this way?]
 
 Blast radius:
-  [What else could be affected by this bug or by fixing it?]
+  [What else could be affected by bug or by fixing it?]
 
 Fix plan:
   [Exactly what will change — file, function, line-level detail]
-  [What will NOT change — FIXER explicitly lists scope boundaries]
+  [What will NOT change — explicit scope boundaries]
 
 Risk:
-  [Could this fix break anything else?]
+  [Could fix break anything else?]
 ```
 
 ⚠️ **Human checkpoint:** Show diagnosis. Ask: *"Does this match what you're seeing? Reply 'go' to fix."*
 
 **Phase 2 — Fix** *(automatic after 'go')*
 
-FIXER applies the minimal surgical fix. Rules:
-- Change only what the diagnosis identified
+FIXER applies minimal surgical fix. Rules:
+- Change only what diagnosis identified
 - No refactoring unrelated code
 - No "while I'm here" improvements
-- Add or update a test that would have caught this bug
+- Add/update test that would have caught this bug
 
 **Phase 3 — Review** *(automatic)*
 
-RED runs a focused review on the changed code only:
+RED runs focused review on changed code only:
 
 ```
 RED — Fix Review:
 
-Does the fix actually resolve the root cause? [yes/no — explanation]
-Does the fix introduce any new risks? [yes/no — detail]
-Is the test sufficient to prevent regression? [yes/no — detail]
-Blast radius check: [anything adjacent that should be re-tested?]
+Does fix actually resolve root cause? [yes/no — explanation]
+Does fix introduce new risks? [yes/no — detail]
+Is test sufficient to prevent regression? [yes/no — detail]
+Blast radius check: [anything adjacent to re-test?]
 ```
 
-If RED raises concerns → pause and surface them:
+RED raises concerns → pause:
 ```
 ⚠️ FIX PAUSED — RED has concerns
 [RED's findings]
 Proceed anyway? Reply 'override' or 'revise'.
 ```
 
-If clean → continue automatically.
+Clean → continue.
 
-**Phase 4 — Docs + Changelogs** *(automatic)*
+**Phase 4 — End-user docs + Changelogs** *(automatic — final step before fix commit)*
 
-Spawn **ae-scribe** subagent to check if the bug touched any documented behaviour in `./app-docs/`:
-- If yes → update the relevant MDX to reflect correct behaviour or add an edge case note
-- If no → logs "no doc update needed"
+`./app-docs/` updated only if user-facing behaviour changed.
+
+Spawn **ae-scribe** subagent:
+- User-noticeable change (UI response, workflow outcome, visible error, API shape they consume)? Yes → update feature MDX. No → returns `no user-facing change, app-docs unchanged`.
 
 Prepend to both changelogs (newest first):
 
-`./docs/CHANGELOG.md` (insert after header line, terse):
+`./docs/CHANGELOG.md` (after header, terse):
 ```markdown
 ## [date]
 - [FIX] fix([scope]): [what was broken → what was fixed] — [file:line]
 - [FIX] test: regression test added — [test location]
 ```
 
-`./app-docs/CHANGELOG.mdx` (insert after frontmatter + title, human-readable):
+`./app-docs/CHANGELOG.mdx` (after frontmatter + title, **product release note to end users**):
 ```mdx
 ## [Month YYYY]
 
 ### Fixed
-- [Plain-English description of what was broken and is now fixed]
+- [Plain-English, user-perspective — what they saw wrong, what they now see. No file paths / stack traces.]
 ```
 
-**GIT** commits everything:
+SCRIBE reported "no user-facing change" → skip `### Fixed` entry entirely. Internal-only fixes stay in `docs/CHANGELOG.md` (engineering log), never surface in `app-docs/CHANGELOG.mdx`.
+
+**GIT** commits:
 ```
 fix([scope]): [short description of what was broken and how it's fixed]
 test([scope]): add regression test for [bug description]
-docs([scope]): update edge case notes    ← only if docs were changed
+docs([scope]): update edge case notes    ← only if docs changed
 ```
 
-**GIT** outputs a note for the existing PR (not a new PR description):
+**GIT** outputs note for existing PR (not new PR description):
 ```markdown
 ### Fix applied to this PR
 
@@ -125,9 +128,9 @@ Git:        ✅ committed on [branch name]
 
 ### Gotchas
 
-- **One bug, one fix, one commit.** Notice other things during investigation? Log to `improvements.md`. Resist all scope creep.
+- **One bug, one fix, one commit.** Notice other things during investigation? → `improvements.md`. Resist scope creep.
 - **Fix root cause, not symptom.** Wrong total from upstream calc → fix calc, not display. Root cause in different module → still fix there.
-- **Regression test must fail before fix.** Write test → watch fail → fix → watch pass. Test written after proves nothing.
+- **Regression test must fail before fix.** Test → watch fail → fix → watch pass. After-the-fact proves nothing.
 - **Reproduce before confirming.** Can't reproduce → ask user, don't invent hypothesis.
 - **No `/ae-fix` on `main`.** Override GIT check → no PR, no review, no trail.
 

@@ -1,16 +1,16 @@
 ## `/ae-plan-all` — Plan All Epics
 
-**Agents active: PROD (lead), ARCH (validator)**
+**Agents:** PROD (lead), ARCH (validator)
 
-Use after `/ae-bootstrap` or when you have epics in `./docs/INDEX.md` but no stories yet.
-Runs `/ae-feature` for each unplanned epic in sequence, pausing for human approval at the PRD step.
-After completion, run `/ae-ship-all` to implement everything.
+Use after `/ae-bootstrap` or when epics exist in `./docs/INDEX.md` but no stories yet.
+Runs `/ae-feature` for each unplanned epic in sequence, pausing at PRD step for approval.
+After completion, run `/ae-ship-all` to implement.
 
 ---
 
 ### Phase 1 — Epic Inventory
 
-PROD reads `./docs/INDEX.md` and identifies all epics without stories:
+PROD reads `./docs/INDEX.md` + identifies epics without stories:
 
 ```
 PROD — Epic Inventory:
@@ -31,7 +31,7 @@ Total to plan: X epics
 
 ### Phase 2 — Planning Loop
 
-For each selected epic, run the full `/ae-feature` flow:
+Per selected epic, run full `/ae-feature` flow:
 
 **Between epics — compact:**
 ```
@@ -70,10 +70,10 @@ Ready to build. Run /ae:ship-all to implement all planned stories.
 
 ### Gotchas
 
-- **Compact between features, not just stories.** Each feature's planning output is substantial. Context fills fast without compaction.
-- **No cookie-cutter approaches.** A/B/C must differ by architecture, not library swap. Different user context → different option sets.
-- **No silently merging overlapping features.** Surface it: "these could be one or need clearer scope." Don't decide unilaterally.
-- **Plan-all generates docs, not decisions.** User approves all PRDs without engagement → PRDs are vague. Clarification pass must surface real ambiguities.
-- **Constitution violations pause the session.** Don't plan next feature while one has unresolved conflicts.
+- **Compact between features, not just stories.** Each feature's planning output substantial. Context fills fast without compaction.
+- **No cookie-cutter approaches.** A/B/C differ by architecture, not library swap. Different user context → different option sets.
+- **No silently merging overlapping features.** Surface: "these could be one or need clearer scope." Don't decide unilaterally.
+- **Plan-all generates docs, not decisions.** User approves all PRDs without engagement → PRDs vague. Clarification pass must surface real ambiguities.
+- **Constitution violations pause session.** Don't plan next feature while one has unresolved conflicts.
 
 ---

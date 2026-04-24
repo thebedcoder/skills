@@ -1,130 +1,81 @@
 ## `/ae-doc [feature]` — Interactive Feature Documentation
 
-**Agents active: SCRIBE (lead), ARCH (analysis), RED (improvement spotter)**
+**Agents:** SCRIBE (lead), ARCH (analysis), RED (improvement spotter)
 
-Use when you want to document a specific existing feature properly — with Q&A to fill in
-anything that can't be inferred from code alone. ARCH and RED piggyback on the deep read
-to surface improvement suggestions, saved separately so they don't interrupt the doc flow.
+`./app-docs/` = **end-user product documentation**. Reader = app user. Not dev team. Not AI context.
 
-If `[feature]` is not provided, SCRIBE lists undocumented or stale features from
-`./app-docs/features/` and asks which one to document.
+Use to document existing feature with Q&A for what code alone can't infer. ARCH + RED surface improvement suggestions on the side (saved separately).
+
+`[feature]` missing → SCRIBE lists undocumented/stale features + asks which one.
 
 ---
 
-### Phase 1 — Code Read
+### Phase 1 — Code Read → user-reachable capabilities
 
-ARCH does a thorough read of all files related to the feature:
+ARCH reads feature code. Translates into **user-reachable capabilities**, not architecture map.
 
 ```
 ARCH — Feature Read: [feature name]
 
-Files identified:
-  - [path] — [role in this feature]
-  - [path] — [role in this feature]
+User-reachable capabilities (things a user can actually do):
+  - [Capability 1 — phrased as user action] — [entry point in UI / API]
+  - [Capability 2] — [entry point]
 
-What I can determine from code alone:
-  - [behaviour 1]
-  - [behaviour 2]
+Primary workflow (step-by-step user journey):
+  1. [What user does / sees]
+  2. [Next step]
+  3. [Outcome]
 
-What I cannot determine from code:
-  - [ambiguity 1] — [why it's unclear]
-  - [ambiguity 2] — [why it's unclear]
+Secondary workflows (if any):
+  - [Shorter description of alternate path]
+
+Behaviours a user would care about but might not discover:
+  - [Non-obvious limit, shortcut, or edge case]
+
+Questions I can't answer from code alone:
+  - [Ambiguity 1 — e.g. "gated behind flag user sees?"]
+  - [Ambiguity 2 — e.g. "what user sees when X fails?"]
 ```
 
 ---
 
 ### Phase 2 — Q&A
 
-SCRIBE asks targeted questions about everything ARCH flagged as ambiguous.
-Questions are grouped and asked together — not one by one.
+SCRIBE asks questions on ARCH's ambiguities. Grouped + asked together. Frame from user's perspective.
 
 ```
 SCRIBE — Questions about [feature name]:
 
-About behaviour:
+About what the user sees:
   1. [question]
   2. [question]
 
-About edge cases:
+About edge cases the user might hit:
   3. [question]
 
-About intent / history:
+About intent — who is this for, why use it:
   4. [question]
-  5. [question]
 
 Answer any you know. Skip any that aren't important. I'll note gaps in the docs.
 ```
 
-Wait for answers before proceeding.
+Wait for answers.
 
 ---
 
-### Phase 3 — Write Documentation
+### Phase 3 — Write End-User Documentation
 
-SCRIBE writes or updates `./app-docs/features/[feature-name].mdx`:
-
-```mdx
----
-title: [Feature Name]
-description: [One sentence]
-status: stable | beta | deprecated
-last_updated: [date]
----
-
-# [Feature Name]
-
-[2-3 sentence plain-English overview. Written for a new team member on day one.]
-
-## What it does
-
-[User-facing description. No code.]
-
-## How it works
-
-[Technical overview. Key files, key functions, data flow.]
-
-## Key files
-
-| File | Purpose |
-|------|---------|
-| `[path]` | [what it does] |
-
-## Configuration
-
-[Any env vars, feature flags, or config values that affect this feature — if any]
-
-## Edge cases & known behaviour
-
-[Non-obvious behaviour, limits, gotchas — including answers from Q&A]
-
-## Known gaps
-
-[Anything SCRIBE couldn't determine and the user didn't clarify — honest about uncertainty]
-
-## Related features
-
-[Links to connected feature docs]
-```
-
-SCRIBE's self-check:
-```
-SCRIBE — Doc complete:
-✅ Readable by a new team member: yes / [note]
-✅ Useful as AI context: yes / [note]
-✅ Q&A answers incorporated: yes
-✅ Gaps documented honestly: yes / none
-```
+SCRIBE writes/updates `./app-docs/features/[feature-name].mdx`. Full template + self-check → `ae-scribe.md`. Structure: frontmatter → intro → **What you can do** → **How to use it** (numbered, real UI labels) → **Tips** → **FAQ** (only if real recurring Qs) → **Related**. No file paths / function names / code blocks.
 
 ---
 
 ### Phase 4 — Improvement Suggestions (saved, not surfaced)
 
-While ARCH and RED were reading the code, they noted anything worth flagging.
-These are saved to `./docs/improvements.md` — **not** shown inline during the doc flow.
+ARCH + RED note anything flagworthy → `./docs/improvements.md`. Never leak into `./app-docs/`.
 
-Append to `./docs/improvements.md` (format: `## [Feature] — [date]` header, then ARCH refactoring suggestions, RED potential issues, and general improvements — each with file:line and effort/severity).
+Append format: `## [Feature] — [date]` header, then ARCH refactoring suggestions, RED potential issues, general improvements — each with file:line + effort/severity.
 
-At the end of the command, tell the user:
+End of command:
 ```
 Improvements and potential issues saved to ./docs/improvements.md — review when ready.
 ```
@@ -133,9 +84,9 @@ Improvements and potential issues saved to ./docs/improvements.md — review whe
 
 ### Phase 5 — Git
 
-GIT commits the doc:
+GIT commits:
 ```
-docs([feature-name]): document [feature name] with Q&A
+docs([feature-name]): document [feature name] for end users
 ```
 
 ---

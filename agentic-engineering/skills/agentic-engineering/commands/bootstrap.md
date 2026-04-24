@@ -1,34 +1,34 @@
 ## `/ae-bootstrap` — New Project Setup
 
-**Agents active: ARCH (lead), PROD (feature planning)**
+**Agents:** ARCH (lead), PROD (feature planning)
 
-Use this on a blank or near-blank repo. Runs before `/ae-init`.
-Sets up the actual project — package structure, base dependencies, tooling, config — then plans the core features to build first.
+Use on blank or near-blank repo. Runs before `/ae-init`.
+Sets up project — package structure, base deps, tooling, config — then plans core features to build first.
 
-After bootstrap completes, run `/ae-init` to add the docs scaffold, then `/ae-feature` to start building.
+After bootstrap, run `/ae-init` for docs scaffold, then `/ae-feature` to start building.
 
 ---
 
 ### Phase 1 — Project Type
 
-ARCH asks a single question: *"What kind of project is this?"*
+ARCH asks: *"What kind of project is this?"*
 
-Options presented:
+Options:
 - **Web app** — Next.js / React
 - **API / Backend** — Node.js or Python
 - **CLI tool** — Node.js or Python
 - **Fullstack monorepo** — frontend + backend + shared packages
 - **Flutter** — mobile / cross-platform
 
-User picks one. ARCH proceeds to the stack selection for that type.
+User picks. ARCH proceeds to stack selection for type.
 
 ---
 
 ### Phase 2 — Stack Selection (per layer)
 
-ARCH presents options layer by layer. Each layer shows 2-3 options with a recommended default and a one-line reason. User confirms or overrides each one before moving to the next.
+ARCH presents options layer by layer. Each layer shows 2-3 options with recommended default + one-line reason. User confirms or overrides each before next.
 
-Format per layer: present 2–3 options with recommended default, one-line why, and best-for note. Ask for choice (A/B/C or enter for default).
+Format per layer: 2–3 options with recommended default, one-line why, best-for note. Ask for choice (A/B/C or enter for default).
 
 #### Web App layers
 1. **Framework** — Next.js (App Router) · Vite + React
@@ -79,7 +79,7 @@ Format per layer: present 2–3 options with recommended default, one-line why, 
 
 ### Phase 3 — Confirmed Stack Summary
 
-After all layers are chosen, ARCH produces a summary for final confirmation:
+After all layers chosen, ARCH produces summary for final confirmation:
 
 ```
 ARCH — Confirmed Stack: [Project Name]
@@ -111,24 +111,24 @@ Config files to generate:
 
 On 'go', ARCH executes:
 
-1. **Creates folder structure** appropriate to the project type and chosen stack
+1. **Creates folder structure** per project type + chosen stack
 2. **Generates config files** — tsconfig, eslint, prettier, tailwind, env.example, .gitignore, etc.
-3. **Installs dependencies** — runs the appropriate package manager command
-4. **Writes base boilerplate** — entry points, root layout, base router, health check endpoint, etc. Minimal but runnable — `npm run dev` (or equivalent) should work after this step
-5. **Sets up testing** — test config, one passing smoke test to confirm the setup works
-6. **Initialises git** — if no `.git` exists yet:
+3. **Installs dependencies** — runs appropriate package manager command
+4. **Writes base boilerplate** — entry points, root layout, base router, health check endpoint, etc. Minimal but runnable — `npm run dev` (or equivalent) should work after this
+5. **Sets up testing** — test config, one passing smoke test
+6. **Initialises git** — no `.git` yet:
 ```
 git init
 git add .
 git commit -m "chore: bootstrap [project-type] project with [key choices]"
 ```
-If `.git` already exists:
+`.git` exists:
 ```
 git add .
 git commit -m "chore: bootstrap [project-type] project with [key choices]"
 ```
 
-ARCH logs progress as it goes:
+ARCH logs progress:
 ```
 ARCH — Scaffolding:
 ✅ Folder structure created
@@ -145,11 +145,11 @@ ARCH — Scaffolding:
 
 **PROD** asks: *"What are the core features this product needs to deliver its main value? List them in rough priority order — we'll plan them as epics."*
 
-User provides a rough list. PROD and ARCH then:
+User provides rough list. PROD + ARCH then:
 
-1. **PROD** shapes each item into a properly scoped epic with a one-line description
-2. **ARCH** flags any epic with significant architectural implications — things that should influence folder structure or data model before any feature work starts
-3. Together they produce a prioritised epic roadmap:
+1. **PROD** shapes each item into properly-scoped epic with one-line description
+2. **ARCH** flags any epic with significant architectural implications — things that should influence folder structure or data model before feature work starts
+3. Together produce prioritised epic roadmap:
 
 ```
 PROD — Epic Roadmap: [Project Name]
@@ -168,7 +168,7 @@ NICE TO HAVE (v2+):
 
 ⚠️ **Human checkpoint:** *"Does this roadmap capture your vision? Adjust priorities or add missing epics. Reply 'approved' when ready."*
 
-On approval, PROD saves the roadmap to `./docs/INDEX.md` (appended as the initial feature list) and creates placeholder folders under `./docs/features/` for each epic.
+On approval, PROD saves roadmap → `./docs/INDEX.md` (appended as initial feature list) + creates placeholder folders under `./docs/features/` per epic.
 
 ---
 
