@@ -54,8 +54,10 @@
       "type": "object",
       "required": ["provider", "api_key_env"],
       "properties": {
-        "provider": { "type": "string", "enum": ["anthropic"] },
+        "provider": { "type": "string", "enum": ["anthropic", "openai", "azure_openai", "openai_compatible"] },
         "api_key_env": { "type": "string" },
+        "base_url": { "type": ["string", "null"], "description": "OpenAI-compatible endpoint or Azure resource URL." },
+        "api_version": { "type": ["string", "null"], "description": "Azure OpenAI api_version, e.g. 2024-02-15-preview." },
         "model_summarize": { "type": "string" },
         "model_extract": { "type": "string" },
         "model_synthesize": { "type": "string" },

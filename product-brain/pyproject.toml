@@ -11,7 +11,6 @@ requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "product-brain authors" }]
 dependencies = [
-    "anthropic>=0.40",
     "fastapi>=0.110",
     "httpx>=0.27",
     "pydantic>=2.6",
@@ -20,6 +19,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.40"]
+all = ["anthropic>=0.40", "openai>=1.40"]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",

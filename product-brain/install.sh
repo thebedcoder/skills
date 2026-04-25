@@ -15,11 +15,12 @@ echo "  - Copying slash command stubs to ~/.claude/commands/"
 cp "$SCRIPT_DIR/commands/"pb-*.md ~/.claude/commands/
 
 if command -v pip >/dev/null 2>&1; then
-  echo "  - Installing Python package (pip install -e .)"
-  pip install -e "$SCRIPT_DIR" >/dev/null
+  echo "  - Installing Python package (pip install -e .[all])"
+  echo "    (use [anthropic] or [openai] alone if you only need one provider)"
+  pip install -e "$SCRIPT_DIR[all]" >/dev/null
 else
   echo "  - pip not found; skipping Python package install."
-  echo "    Install manually: pip install -e $SCRIPT_DIR"
+  echo "    Install manually: pip install -e $SCRIPT_DIR[anthropic]   # or [openai] or [all]"
 fi
 
 echo

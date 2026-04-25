@@ -32,6 +32,7 @@ Product Brain produces that second view automatically by mining `git log + PR hi
 | **Headless bot** | Webhook + worker. PM types `/brain groom` in an Aha comment; bot replies with scoped plan, estimate (with references), edge cases, and draft sub-tickets. Edits in place, never spams. |
 | **PM adapter interface** | Abstract base class. Aha implementation included. Swap for Linear/Jira/etc. |
 | **Test-management adapter (optional)** | TestRail integration adds `qa_edges`, `stability_signals`, and `coverage_gaps` to records. Pluggable for Zephyr/Xray/qTest. |
+| **Pluggable LLM backend** | Anthropic, OpenAI, Azure OpenAI, or any OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, OpenRouter, Groq, ...). Config-only switch. Engineer-side AI tools (Claude Code, Copilot Chat, Codex, Cursor) integrate via the universal CLI. See [docs/integrations.md](docs/integrations.md). |
 
 ---
 
@@ -297,6 +298,7 @@ The bot replies with a structured comment, edits in place on re-runs, and create
 | File | Topic |
 |---|---|
 | [docs/setup.md](docs/setup.md) | Click-by-click setup (Aha, TestRail, GitHub, brain repo, bot, hooks, smoke test, troubleshooting) |
+| [docs/integrations.md](docs/integrations.md) | LLM providers (Anthropic / OpenAI / Azure / local) + engineer-side AI tools (Claude Code / Copilot Chat / Codex / Cursor) |
 | [docs/architecture.md](docs/architecture.md) | System architecture, building blocks, data flow |
 | [docs/manifest-schema.md](docs/manifest-schema.md) | manifest and ticket-record schemas |
 | [docs/binding.md](docs/binding.md) | brain repo layout, binding source repos, hook setup |

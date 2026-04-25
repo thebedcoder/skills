@@ -20,7 +20,9 @@ cd ~/tools/product-brain
 The installer:
 - copies the skill to `~/.claude/skills/product-brain/`
 - copies slash command stubs to `~/.claude/commands/`
-- runs `pip install -e .`
+- runs `pip install -e .[all]` (installs both anthropic and openai SDKs)
+
+Skill + slash commands are Claude-Code-specific bonuses. The CLI works for any AI tool — see [integrations.md](integrations.md) for Copilot Chat, Codex, Cursor, and other patterns.
 
 Verify:
 ```bash

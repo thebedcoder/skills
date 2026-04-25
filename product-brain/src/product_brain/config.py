@@ -16,8 +16,10 @@ class RepoConfig:
 
 @dataclass
 class LLMConfig:
-    provider: str = "anthropic"
+    provider: str = "anthropic"           # anthropic | openai | azure_openai | openai_compatible
     api_key_env: str = "ANTHROPIC_API_KEY"
+    base_url: Optional[str] = None        # openai_compatible (Ollama, vLLM, ...) OR Azure endpoint
+    api_version: Optional[str] = None     # Azure OpenAI api_version
     model_summarize: str = "claude-haiku-4-5-20251001"
     model_extract: str = "claude-haiku-4-5-20251001"
     model_synthesize: str = "claude-sonnet-4-6"

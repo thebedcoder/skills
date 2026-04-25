@@ -47,12 +47,54 @@ github:
   api_key_env: GITHUB_TOKEN
 
 llm:
-  provider: anthropic              # only "anthropic" is implemented
+  # provider: anthropic | openai | azure_openai | openai_compatible
+  # See docs/integrations.md for backend-specific examples (Copilot/Azure,
+  # local models via Ollama/LM Studio/vLLM, OpenRouter/Groq/Together, etc).
+  provider: anthropic
   api_key_env: ANTHROPIC_API_KEY
-  model_summarize: claude-haiku-4-5-20251001     # cheap, used for backfill/incremental prose
-  model_extract:   claude-haiku-4-5-20251001     # edge-case extraction
-  model_synthesize: claude-sonnet-4-6            # final groom output (interactive + bot)
+  # base_url: omit for hosted Anthropic/OpenAI; set for openai_compatible
+  #           (e.g. http://localhost:11434/v1 for Ollama) or Azure endpoint.
+  # base_url: http://localhost:11434/v1
+  # api_version: 2024-02-15-preview      # Azure OpenAI only
+  model_summarize:  claude-haiku-4-5-20251001     # cheap, used for backfill/incremental prose
+  model_extract:    claude-haiku-4-5-20251001     # edge-case extraction (JSON-strict)
+  model_synthesize: claude-sonnet-4-6             # final groom output (interactive + bot)
   max_input_tokens_per_ticket: 8000
+
+# --- alternative llm: blocks (commented examples) ---
+#
+# OpenAI direct:
+#   provider: openai
+#   api_key_env: OPENAI_API_KEY
+#   model_summarize:  gpt-4o-mini
+#   model_extract:    gpt-4o-mini
+#   model_synthesize: gpt-4o
+#
+# Azure OpenAI (most enterprise Copilot orgs):
+#   provider: azure_openai
+#   api_key_env: AZURE_OPENAI_API_KEY
+#   base_url: https://yourco.openai.azure.com
+#   api_version: 2024-02-15-preview
+#   model_summarize:  gpt-4o-mini-deployment      # your Azure deployment names
+#   model_extract:    gpt-4o-mini-deployment
+#   model_synthesize: gpt-4o-deployment
+#
+# Local models via Ollama (or LM Studio / vLLM / llama.cpp):
+#   provider: openai_compatible
+#   api_key_env: OPENAI_API_KEY                   # any value works; Ollama ignores it
+#   base_url: http://localhost:11434/v1
+#   model_summarize:  llama3.1:8b-instruct
+#   model_extract:    llama3.1:8b-instruct        # 7B-8B often fail strict JSON; see docs
+#   model_synthesize: llama3.1:70b-instruct
+#
+# Hybrid (recommended for local): synthesize locally, mine on hosted (JSON discipline):
+#   provider: openai_compatible
+#   base_url: http://localhost:11434/v1
+#   model_summarize:  llama3.1:70b-instruct
+#   model_synthesize: llama3.1:70b-instruct
+#   model_extract:    gpt-4o-mini    # NOTE: requires switching providers; not yet supported
+#                                    # per-task. Use anthropic/openai for now and accept
+#                                    # the cost; track in roadmap.
 
 estimate:
   unit: days
