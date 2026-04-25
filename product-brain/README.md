@@ -38,88 +38,9 @@ Product Brain produces that second view automatically by mining `git log + PR hi
 
 ## How it works
 
-Three phases. Data flows in continuously as engineers merge code; the index sits in each repo; data flows out on demand when a PM (or engineer) asks for a plan.
+Three phases. Data flows in continuously as engineers merge code; the index sits in the brain repo; data flows out on demand when a PM (or engineer) asks for a plan.
 
-```
-┌────────────── 1. DEVELOPMENT (continuous, source repos) ─────────────┐
-│                                                                       │
-│   engineer commits "AHA-1234: add 2FA" → PR → review → merge to main │
-│                              │                                        │
-│       Source repos:          ▼                                        │
-│       flutter-app   ┌────────────────────────────┐                   │
-│       react-app  ───┤ post-merge hook            │                   │
-│       backend       │   OR GitHub Action         │                   │
-│                     └────────────┬───────────────┘                   │
-│                                  │ POST {repo, head_sha}             │
-│                                  ▼                                    │
-│                         brain-bot /webhook/source-merge               │
-│                                  │                                    │
-│                                  ▼                                    │
-│                         ┌──────────────────┐                          │
-│                         │ queue (SQLite)   │                          │
-│                         └────────┬─────────┘                          │
-│                                  ▼                                    │
-│                    ┌─────────────────────────────┐                    │
-│                    │ worker                       │                   │
-│                    │  • git pull source repo      │                   │
-│                    │  • run incremental backfill  │                   │
-│                    │  • commit + push brain repo  │                   │
-│                    └──────────────┬──────────────┘                    │
-└───────────────────────────────────┼───────────────────────────────────┘
-                                    │ writes one record
-                                    ▼
-┌──────────── 2. CENTRAL BRAIN REPO (one per company) ─────────────────┐
-│                                                                       │
-│  company-product-brain/                                               │
-│  ├── config.yaml                  bound source repos + adapters       │
-│  ├── repos/                                                           │
-│  │   ├── flutter/                                                     │
-│  │   │   ├── manifest.md                                              │
-│  │   │   └── tickets/AHA-1100.md, AHA-1234.md, AHA-1500.md            │
-│  │   ├── react/                                                       │
-│  │   │   ├── manifest.md                                              │
-│  │   │   └── tickets/AHA-1234.md, AHA-1500.md                         │
-│  │   └── backend/                                                     │
-│  │       ├── manifest.md                                              │
-│  │       └── tickets/AHA-1100.md, AHA-1234.md, AHA-1500.md            │
-│  ├── audit.sqlite                                                     │
-│  └── queue.sqlite                                                     │
-│                                                                       │
-│  each record =  YAML front-matter (mechanical: files, SHAs, dates)    │
-│              +  prose (LLM-generated, citation-validated)             │
-│                                                                       │
-│  Source repos NEVER modified.                                         │
-└──────────────────────────────┬───────────────────────────────────────┘
-                               │ reads on demand
-                               ▼
-┌──────────────── 3. PLANNING (per query) ─────────────────────────────┐
-│                                                                       │
-│   PM types  "/brain groom"  in Aha comment on AHA-1500               │
-│                  │                                                    │
-│                  ▼                                                    │
-│       Aha webhook ──► bot /webhook/aha (verify signature)            │
-│                  │                                                    │
-│                  ▼                                                    │
-│            ┌───────────┐                                              │
-│            │  queue    │ (SQLite, per-ticket lock)                    │
-│            └─────┬─────┘                                              │
-│                  ▼                                                    │
-│   ┌─────────────────────────────────────────────────────┐            │
-│   │ worker                                               │            │
-│   │  1. fetch ticket + siblings + label matches (Aha)    │            │
-│   │  2. read records for those IDs across repos/         │            │
-│   │  3. hotspot-cluster        (deterministic + 1 LLM)   │            │
-│   │  4. estimate w/ refs       (similarity + churn)      │            │
-│   │  5. dedup edge cases       (1 LLM across records)    │            │
-│   │  6. render groom output                              │            │
-│   └────────────────────────┬────────────────────────────┘            │
-│                            ▼                                          │
-│           bot posts/edits Aha comment (in place)                      │
-│                            ▼                                          │
-│      PM sees: scope · estimate · edges · risks · drafts               │
-│                                                                       │
-└───────────────────────────────────────────────────────────────────────┘
-```
+![lifecycle](assets/lifecycle.png)
 
 Engineers also reach the planning phase via slash commands inside Claude Code (`/pb-groom AHA-1500`), which run the same building blocks and skip the bot. Same logic, two front doors.
 
@@ -127,39 +48,7 @@ Engineers also reach the planning phase via slash commands inside Claude Code (`
 
 ## Architecture at a glance
 
-```
-                   ┌──────────────────────────────────────────┐
-                   │             PM tool (Aha)                │
-                   │   tickets · comments · webhooks          │
-                   └───────────────┬──────────────────────────┘
-                                   │ PMAdapter (abstract)
-                                   ▼
-   ┌────────────────────────────────────────────────────────────────┐
-   │                       product-brain                             │
-   │                                                                 │
-   │  ┌──────────┐   ┌──────────────┐   ┌─────────────┐              │
-   │  │ backfill │──▶│  index       │──▶│  blocks      │             │
-   │  │ git+PR+  │   │  read/write  │   │  hotspot     │             │
-   │  │ summary  │   │  rename track│   │  estimate    │             │
-   │  └──────────┘   └──────────────┘   │  edge_mine   │             │
-   │                                    │  render      │             │
-   │  ┌──────────┐   ┌──────────────┐   └──────┬──────┘              │
-   │  │ incr.    │   │ repair       │          │                      │
-   │  │ (hook)   │   │ (nightly)    │          ▼                      │
-   │  └──────────┘   └──────────────┘   ┌──────────────┐              │
-   │                                    │ slash cmds   │              │
-   │                                    │ + headless   │              │
-   │                                    │ bot          │              │
-   │                                    └──────────────┘              │
-   └────────────────────────────────────────────────────────────────┘
-              │                                     │
-              ▼                                     ▼
-   ┌────────────────────────┐         ┌──────────────────────────┐
-   │  .product-brain/       │         │  Aha comment thread       │
-   │  tickets/AHA-1234.md   │         │  🧠 product-brain · groom │
-   │  (one per repo)        │         │  scope · estimate · edges │
-   └────────────────────────┘         └──────────────────────────┘
-```
+![architecture](assets/architecture.png)
 
 See [docs/architecture.md](docs/architecture.md) for detail.
 
@@ -290,6 +179,22 @@ Comment on any ticket with the opt-in label `brain:on`:
 ```
 
 The bot replies with a structured comment, edits in place on re-runs, and creates draft sub-tickets when asked.
+
+### Workflow at a glance
+
+**Engineer side** — picking up and shipping a ticket:
+
+![engineer workflow](assets/engineer-workflow.png)
+
+**PM side** — grooming a feature in Aha:
+
+![PM workflow](assets/pm-workflow.png)
+
+**Bot internals** — what happens when `/brain groom` is typed:
+
+![bot flow](assets/bot-flow.png)
+
+For a complete walkthrough with sample data, slide deck, and one-pager, see the [demo folder](demo/).
 
 ---
 
