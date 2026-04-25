@@ -21,6 +21,11 @@
     },
     "ticket_regex": { "type": "string", "default": "AHA-\\d+" },
     "pm_adapter": { "type": "string", "enum": ["aha", "linear", "jira"] },
+    "test_adapter": {
+      "type": ["string", "null"],
+      "enum": ["testrail", "zephyr", "xray", null],
+      "description": "Optional. If set, ticket records gain test_cases, qa_edges, stability_signals, coverage_gaps."
+    },
     "aha": {
       "type": "object",
       "required": ["subdomain", "api_key_env"],
@@ -28,6 +33,17 @@
         "subdomain": { "type": "string" },
         "api_key_env": { "type": "string" },
         "workspace": { "type": "string" }
+      }
+    },
+    "testrail": {
+      "type": "object",
+      "properties": {
+        "base_url": { "type": "string", "description": "https://yourco.testrail.io" },
+        "user_email": { "type": "string" },
+        "api_key_env": { "type": "string" },
+        "project_id": { "type": "integer" },
+        "refs_field": { "type": "string", "description": "Custom field on cases that holds ticket IDs (default: refs)" },
+        "run_history_window_days": { "type": "integer", "minimum": 1 }
       }
     },
     "github": {

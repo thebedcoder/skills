@@ -10,14 +10,14 @@ from __future__ import annotations
 from collections import Counter
 from typing import Optional
 
-from .adapters import get as get_adapter
+from .adapters import get as get_adapter, get_test as get_test_adapter
 from .blocks.edge_mine import dedup_edge_cases
 from .blocks.estimate import estimate_effort
 from .blocks.hotspot import cluster_hotspots
 from .blocks.render import render_groom
 from .config import Config
 from .index import read_records
-from .models import TicketRecord
+from .models import EdgeCaseBullet, TicketRecord
 
 
 def _scope_by_repo(records_by_repo: dict[str, dict[str, TicketRecord]]) -> dict[str, list[str]]:
@@ -91,6 +91,30 @@ def run_command(config: Config, command: str, ticket_id: str, args: str = "") ->
 
     edge_groups = dedup_edge_cases(flat)
 
+    qa_records: list[TicketRecord] = []
+    for r in flat:
+        if r.qa_edges:
+            clone = TicketRecord(ticket=r.ticket, repo=r.repo)
+            clone.edge_cases_handled = r.qa_edges
+            qa_records.append(clone)
+    qa_groups = dedup_edge_cases(qa_records) if qa_records else []
+
+    aggregated_stability: list[str] = []
+    for r in flat:
+        for s in r.stability_signals:
+            aggregated_stability.append(f"{r.ticket}: {s}")
+    aggregated_stability = aggregated_stability[:8]
+
+    aggregated_gaps: list[dict] = []
+    for r in flat:
+        for g in r.coverage_gaps:
+            aggregated_gaps.append({
+                "edge": g.edge,
+                "edge_source": f"{g.edge_source} (from {r.ticket})",
+                "rationale": g.rationale,
+            })
+    aggregated_gaps = aggregated_gaps[:8]
+
     risks: list[dict] = []
     for r in flat:
         if r.duration_days and r.duration_days > 14:
@@ -102,10 +126,26 @@ def run_command(config: Config, command: str, ticket_id: str, args: str = "") ->
     drafts = _drafts_from_scope(scope, ticket.title)
 
     if command == "edges":
-        body = "## Edge cases\n\n" + "\n".join(
-            f"- {g['text']}     [{g['frequency']}: {', '.join(g['tickets'])}]"
-            for g in edge_groups
-        ) if edge_groups else "## Edge cases\n_(no validated bullets)_"
+        sections = []
+        if edge_groups:
+            sections.append("## Edge cases\n\n" + "\n".join(
+                f"- {g['text']}     [{g['frequency']}: {', '.join(g['tickets'])}]"
+                for g in edge_groups
+            ))
+        else:
+            sections.append("## Edge cases\n_(no validated bullets)_")
+        if qa_groups:
+            sections.append("## QA-verified edges\n\n" + "\n".join(
+                f"- {g['text']}     [{g['frequency']}: {', '.join(g['tickets'])}]"
+                for g in qa_groups
+            ))
+        if aggregated_stability:
+            sections.append("## Stability signals\n\n" + "\n".join(f"- {s}" for s in aggregated_stability))
+        if aggregated_gaps:
+            sections.append("## Coverage gaps\n\n" + "\n".join(
+                f"- {g['edge']}\n  source: {g['edge_source']}" for g in aggregated_gaps
+            ))
+        body = "\n\n".join(sections)
     elif command == "estimate":
         if estimate.references:
             body = (
@@ -130,9 +170,17 @@ def run_command(config: Config, command: str, ticket_id: str, args: str = "") ->
             edge_groups=edge_groups, risks=risks,
             reviewers=reviewers, drafts=drafts,
             mode="groom",
+            qa_edge_groups=qa_groups,
+            stability_signals=aggregated_stability,
+            coverage_gaps=aggregated_gaps,
         )
 
-    summary = f"{command} on {ticket_id}: {len(candidates)} refs, {len(edge_groups)} edge groups, est={estimate.low}-{estimate.high}{estimate.unit}"
+    summary = (
+        f"{command} on {ticket_id}: {len(candidates)} refs, "
+        f"{len(edge_groups)} edge groups, {len(qa_groups)} QA groups, "
+        f"{len(aggregated_stability)} stability flags, {len(aggregated_gaps)} gaps, "
+        f"est={estimate.low}-{estimate.high}{estimate.unit}"
+    )
     model = config.llm.model_synthesize
     cost = 0.0
     return body, summary, model, cost

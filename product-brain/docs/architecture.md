@@ -128,10 +128,15 @@ user: /pb-groom AHA-1234
 | Stale prose | Repair flags records where `last_commit` >12 months and current code drifted. |
 | LLM cost runaway | Hard caps: per-groom ≤5 LLM calls; per-backfill ≤1 call/ticket. |
 
+## Test-management integration (optional)
+
+When `test_adapter` is configured (see [test-adapter.md](test-adapter.md)), records gain four additional fields — `test_cases`, `qa_edges`, `stability_signals`, `coverage_gaps` — and groom output gains three sections that surface QA-discovered edges, evidence-based risk from run history, and code-vs-QA coverage gaps. None of this is required; the system runs as before without it.
+
 ## See also
 
 - [manifest-schema.md](manifest-schema.md): the per-repo manifest and per-ticket record schemas
 - [backfill.md](backfill.md): backfill phases and edge cases
 - [edge-case-mining.md](edge-case-mining.md): citation discipline detail
-- [pm-adapter.md](pm-adapter.md): writing a new adapter
+- [pm-adapter.md](pm-adapter.md): writing a new PM adapter
+- [test-adapter.md](test-adapter.md): TestRail and writing a new test adapter
 - [bot.md](bot.md): headless bot architecture

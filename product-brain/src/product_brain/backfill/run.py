@@ -6,13 +6,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from ..adapters import get as get_adapter
+from ..adapters import get as get_adapter, get_test as get_test_adapter
 from ..config import Config
 from ..index import read_records, read_manifest, write_record, write_manifest
 from ..models import Commit, FileChange, Manifest, TicketRecord, EdgeCaseBullet
 from .git_log import diff_stat, group_by_ticket, parse_git_log
 from .pr_enrichment import enrich
 from .summarize import llm_call_factory
+from ..blocks.coverage_gap import detect_gaps
 from ..blocks.edge_mine import mine_per_ticket
 
 
@@ -82,6 +83,7 @@ def backfill_repo(
     by_ticket = group_by_ticket(commits)
 
     adapter = get_adapter(config.pm_adapter, config)
+    test_adapter = get_test_adapter(config.test_adapter, config)
     llm_call = None if skip_llm else llm_call_factory(config, model=config.llm.model_summarize)
 
     existing = read_records(repo_path, repo_name)
@@ -110,6 +112,24 @@ def backfill_repo(
         except Exception:
             pass
 
+        test_cases = []
+        run_history = []
+        if test_adapter is not None:
+            try:
+                test_cases = test_adapter.fetch_cases_for_ticket(ticket_id)
+                for c in test_cases:
+                    runs = test_adapter.fetch_run_history(c.id)
+                    run_history.extend(runs)
+                    failures = sum(1 for r in runs if r.status in ("failed", "blocked"))
+                    c.recent_failures = failures
+                    if runs:
+                        last = max(runs, key=lambda r: r.timestamp or 0)
+                        c.last_status = last.status
+                        c.last_run = last.timestamp
+            except Exception:
+                test_cases = []
+                run_history = []
+
         first_dt = ticket_commits[0].date
         last_dt = ticket_commits[-1].date
         duration = (last_dt - first_dt).total_seconds() / 86400.0
@@ -137,6 +157,7 @@ def backfill_repo(
             pr_open_to_merge_days=round(pr_open_to_merge, 2) if pr_open_to_merge is not None else None,
             manual_sections=["Edge cases (manual)"],
             manual_body=(prev.manual_body if prev else ""),
+            test_cases=test_cases,
             repo=repo_name,
         )
 
@@ -146,11 +167,17 @@ def backfill_repo(
                 pm_description=(ticket_meta.description if ticket_meta else ""),
                 llm_call=llm_call,
                 linked_bugs=[],
+                test_cases=test_cases,
+                run_history=run_history,
             )
             record.what_shipped = mined["what_shipped"]
             record.key_decisions = mined["key_decisions"]
             record.edge_cases_handled = mined["edge_cases_handled"]
             record.known_gaps = mined["known_gaps"]
+            record.qa_edges = mined.get("qa_edges", [])
+            record.stability_signals = mined.get("stability_signals", [])
+            if test_cases and record.edge_cases_handled:
+                record.coverage_gaps = detect_gaps(record.edge_cases_handled, test_cases, llm_call)
             bullets_dropped += dropped
 
         all_files[ticket_id] = {f.path for f in files}

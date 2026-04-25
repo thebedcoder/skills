@@ -9,11 +9,15 @@ Ranked by signal quality (highest first):
 | Source | Why it's good | Captured by |
 |---|---|---|
 | **PR review comments** | Reviewers literally write "what about expired tokens?" verbatim. | `pr_enrichment` phase |
+| **TestRail / test-mgmt cases** | QA's explicit catalog of cases — including manual/exploratory ones dev never wrote tests for. | `test_adapter.fetch_cases_for_ticket` (optional) |
+| **TestRail run history** | "This case has failed 5× in 90d." Evidence-based risk — unique signal. | `test_adapter.fetch_run_history` (optional) |
 | **Test names added in this ticket** | `test_password_reset_with_expired_token` is a labeled edge case. | `git log` + parse test files |
 | **Commit messages with edge-case verbs** | "fix", "handle", "guard against", "race", "edge case" | regex over commit subjects/bodies |
 | **Code comments added in the diff** | `// user disabled 2FA but still has session` | parse + lines starting with `//`/`#`/`/*` |
 | **PM ticket description** | What the PM thought to ask for; usually misses what reviewers caught. | `pm_adapter.fetch_ticket` |
 | **Bug tickets referencing this ticket later** | "regression from AHA-1234" — retroactive but high-fidelity | `repair` populates `linked_bugs` |
+
+If a test adapter is configured (see [test-adapter.md](test-adapter.md)), records gain three additional sections — `## QA-verified edges`, `## Stability signals`, `## Coverage gaps` — backed by the test cases linked to each ticket and their run history.
 
 ## Two-pass extraction
 

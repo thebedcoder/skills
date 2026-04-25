@@ -62,6 +62,16 @@ class AhaConfig:
 
 
 @dataclass
+class TestRailConfig:
+    base_url: str = ""
+    user_email: str = ""
+    api_key_env: str = "TESTRAIL_API_KEY"
+    project_id: int = 0
+    refs_field: str = "refs"
+    run_history_window_days: int = 90
+
+
+@dataclass
 class GitHubConfig:
     api_key_env: str = "GITHUB_TOKEN"
 
@@ -82,7 +92,9 @@ class Config:
     repos: list[RepoConfig]
     pm_adapter: str
     ticket_regex: str = r"AHA-\d+"
+    test_adapter: Optional[str] = None
     aha: AhaConfig = field(default_factory=AhaConfig)
+    testrail: TestRailConfig = field(default_factory=TestRailConfig)
     github: GitHubConfig = field(default_factory=GitHubConfig)
     llm: LLMConfig = field(default_factory=LLMConfig)
     estimate: EstimateConfig = field(default_factory=EstimateConfig)
@@ -103,6 +115,9 @@ class Config:
 
     def aha_api_key(self) -> str:
         return os.environ[self.aha.api_key_env]
+
+    def testrail_api_key(self) -> Optional[str]:
+        return os.environ.get(self.testrail.api_key_env)
 
     def github_token(self) -> Optional[str]:
         return os.environ.get(self.github.api_key_env)
@@ -137,7 +152,9 @@ def _load_from(path: Path) -> Config:
         repos=repos,
         pm_adapter=raw["pm_adapter"],
         ticket_regex=raw.get("ticket_regex", r"AHA-\d+"),
+        test_adapter=raw.get("test_adapter"),
         aha=AhaConfig(**raw.get("aha", {})),
+        testrail=TestRailConfig(**raw.get("testrail", {})),
         github=GitHubConfig(**raw.get("github", {})),
         llm=LLMConfig(**raw.get("llm", {})),
         estimate=EstimateConfig(**raw.get("estimate", {})),

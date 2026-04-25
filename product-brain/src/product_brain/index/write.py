@@ -44,6 +44,25 @@ def _front_matter_dict(record: TicketRecord) -> dict:
         "duration_days": round(record.duration_days, 2),
         "pr_open_to_merge_days": (round(record.pr_open_to_merge_days, 2) if record.pr_open_to_merge_days is not None else None),
         "manual_sections": record.manual_sections,
+        "test_cases": [
+            {
+                "id": c.id,
+                "title": c.title,
+                "automation": c.automation,
+                "type": c.type,
+                "suite": c.suite,
+                "linked_tickets": c.linked_tickets,
+                "last_status": c.last_status,
+                "last_run": _to_iso(c.last_run),
+                "recent_failures": c.recent_failures,
+                "url": c.url,
+            }
+            for c in record.test_cases
+        ],
+        "coverage_gaps": [
+            {"edge": g.edge, "edge_source": g.edge_source, "rationale": g.rationale}
+            for g in record.coverage_gaps
+        ],
     }
 
 
@@ -61,6 +80,12 @@ def render(record: TicketRecord) -> str:
     decisions = "\n".join(f"- {d}" for d in record.key_decisions) or "_(none)_"
     edges = _render_bullets(record.edge_cases_handled)
     gaps = _render_bullets(record.known_gaps)
+    qa_edges = _render_bullets(record.qa_edges)
+    stability = "\n".join(f"- {s}" for s in record.stability_signals) or "_(none)_"
+    coverage = "\n".join(
+        f"- {g.edge}\n  source: {g.edge_source}\n  rationale: {g.rationale}"
+        for g in record.coverage_gaps
+    ) or "_(none)_"
     manual = record.manual_body or f"\n{_MANUAL_SENTINEL}\n## Edge cases (manual)\n\n<!-- Engineers may add hand-written edge cases here. Not LLM-managed. -->\n"
 
     return f"""---
@@ -82,6 +107,18 @@ def render(record: TicketRecord) -> str:
 ## Known gaps
 
 {gaps}
+
+## QA-verified edges
+
+{qa_edges}
+
+## Stability signals
+
+{stability}
+
+## Coverage gaps
+
+{coverage}
 
 {manual.strip()}
 """

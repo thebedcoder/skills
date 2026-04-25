@@ -7,7 +7,7 @@ from typing import Optional
 
 import yaml
 
-from ..models import EdgeCaseBullet, FileChange, Manifest, TicketRecord
+from ..models import CoverageGap, EdgeCaseBullet, FileChange, Manifest, TestCase, TicketRecord
 
 
 _FRONT_RE = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.DOTALL)
@@ -66,6 +66,39 @@ def _parse_files(raw_files) -> list[FileChange]:
     return out
 
 
+def _parse_test_cases(raw) -> list[TestCase]:
+    out: list[TestCase] = []
+    for c in raw or []:
+        if not isinstance(c, dict):
+            continue
+        out.append(TestCase(
+            id=c.get("id", ""),
+            title=c.get("title", ""),
+            automation=c.get("automation", "unknown"),
+            type=c.get("type", "functional"),
+            suite=c.get("suite", ""),
+            linked_tickets=list(c.get("linked_tickets") or []),
+            last_status=c.get("last_status"),
+            last_run=_parse_dt(c.get("last_run")),
+            recent_failures=int(c.get("recent_failures", 0) or 0),
+            url=c.get("url", ""),
+        ))
+    return out
+
+
+def _parse_coverage_gaps(raw) -> list[CoverageGap]:
+    out: list[CoverageGap] = []
+    for g in raw or []:
+        if not isinstance(g, dict):
+            continue
+        out.append(CoverageGap(
+            edge=g.get("edge", ""),
+            edge_source=g.get("edge_source", ""),
+            rationale=g.get("rationale", ""),
+        ))
+    return out
+
+
 def _split_manual(body: str) -> tuple[str, str]:
     if _MANUAL_SENTINEL in body:
         before, after = body.split(_MANUAL_SENTINEL, 1)
@@ -106,6 +139,14 @@ def read_record(path: Path, repo: str = "") -> TicketRecord:
         ],
         edge_cases_handled=_parse_bullets_with_source(_section(body_managed, "Edge cases handled")),
         known_gaps=_parse_bullets_with_source(_section(body_managed, "Known gaps")),
+        test_cases=_parse_test_cases(front.get("test_cases")),
+        qa_edges=_parse_bullets_with_source(_section(body_managed, "QA-verified edges")),
+        stability_signals=[
+            line.lstrip("- ").strip()
+            for line in _section(body_managed, "Stability signals").splitlines()
+            if line.strip().startswith("-")
+        ],
+        coverage_gaps=_parse_coverage_gaps(front.get("coverage_gaps")),
         manual_body=manual_body,
         repo=repo,
     )

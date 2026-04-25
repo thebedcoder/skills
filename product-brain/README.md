@@ -31,6 +31,7 @@ Product Brain produces that second view automatically by mining `git log + PR hi
 | **Slash commands** | `/pb-groom`, `/pb-plan`, `/pb-edges`, `/pb-related`, `/pb-draft-tickets`, `/pb-sync` — used inside Claude Code by engineers. |
 | **Headless bot** | Webhook + worker. PM types `/brain groom` in an Aha comment; bot replies with scoped plan, estimate (with references), edge cases, and draft sub-tickets. Edits in place, never spams. |
 | **PM adapter interface** | Abstract base class. Aha implementation included. Swap for Linear/Jira/etc. |
+| **Test-management adapter (optional)** | TestRail integration adds `qa_edges`, `stability_signals`, and `coverage_gaps` to records. Pluggable for Zephyr/Xray/qTest. |
 
 ---
 
@@ -283,6 +284,7 @@ The bot replies with a structured comment, edits in place on re-runs, and create
 | [docs/backfill.md](docs/backfill.md) | Backfill algorithm, phases, failure modes |
 | [docs/edge-case-mining.md](docs/edge-case-mining.md) | Where edge cases come from, citation discipline |
 | [docs/pm-adapter.md](docs/pm-adapter.md) | Abstract PM adapter interface; writing a new adapter |
+| [docs/test-adapter.md](docs/test-adapter.md) | Optional TestRail integration; QA-verified edges, stability signals, coverage gaps |
 | [docs/bot.md](docs/bot.md) | Headless Aha bot setup, triggers, spam prevention |
 | [docs/howto-engineer.md](docs/howto-engineer.md) | Engineer workflow: picking up a ticket, using slash commands |
 | [docs/howto-pm.md](docs/howto-pm.md) | PM workflow: grooming, drafting, estimating |

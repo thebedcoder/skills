@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from ..models import Commit, EdgeCaseBullet, PullRequest, TicketRecord
+from ..models import Commit, EdgeCaseBullet, PullRequest, RunResult, TestCase, TicketRecord
 
 
 _VERB_PATTERNS = re.compile(
@@ -27,6 +27,8 @@ class Signals:
     added_code_comments: list[dict]
     pm_description: str
     linked_bug_tickets: list[str]
+    test_cases: list[dict]
+    test_run_history: list[dict]
 
 
 def gather_signals(
@@ -35,6 +37,8 @@ def gather_signals(
     prs: list[PullRequest],
     pm_description: str,
     linked_bugs: Optional[list[str]] = None,
+    test_cases: Optional[list[TestCase]] = None,
+    run_history: Optional[list[RunResult]] = None,
 ) -> Signals:
     pr_comments = []
     for pr in prs:
@@ -64,6 +68,23 @@ def gather_signals(
 
     code_comments = _scan_diff_comments(repo_path, commits)
 
+    test_case_payload = [
+        {
+            "id": c.id, "title": c.title, "automation": c.automation,
+            "type": c.type, "last_status": c.last_status,
+            "recent_failures": c.recent_failures,
+        }
+        for c in (test_cases or [])
+    ]
+    run_payload = [
+        {
+            "case_id": r.case_id, "status": r.status,
+            "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+            "comment": r.comment,
+        }
+        for r in (run_history or [])
+    ]
+
     return Signals(
         pr_review_comments=pr_comments,
         added_test_names=test_names,
@@ -71,6 +92,8 @@ def gather_signals(
         added_code_comments=code_comments,
         pm_description=pm_description or "",
         linked_bug_tickets=linked_bugs or [],
+        test_cases=test_case_payload,
+        test_run_history=run_payload,
     )
 
 
@@ -118,7 +141,11 @@ _EXTRACT_PROMPT = """You extract edge cases that were considered or handled in t
 
 Use ONLY the SIGNALS below. For each edge case:
   - Quote or closely paraphrase from a signal.
-  - Cite the source EXACTLY as one of: "pr#N review @user", "test_name", "commit <sha7>", or "<path>:<line> TODO".
+  - Cite the source EXACTLY as one of:
+      "pr#N review @user", "test_name", "commit <sha7>",
+      "<path>:<line> TODO", or "TR-C-NNNN".
+  - For QA edges (from test_cases): the case title must be specific enough
+    to support a concrete edge claim. Skip generic titles like "test login works".
   - If signals don't support N bullets, return fewer (or zero).
   - DO NOT extrapolate from the feature description.
 
@@ -127,7 +154,8 @@ Output STRICT JSON, no commentary:
   "what_shipped": "one paragraph from PR/commits, no invention",
   "key_decisions": ["..."],
   "edge_cases_handled": [{"text": "...", "source": "..."}],
-  "known_gaps": [{"text": "...", "source": "..."}]
+  "known_gaps": [{"text": "...", "source": "..."}],
+  "qa_edges": [{"text": "...", "source": "TR-C-NNNN (automation, last_status)"}]
 }
 
 SIGNALS:
@@ -143,13 +171,18 @@ def extract_with_llm(signals: Signals, llm_call) -> dict:
         "added_code_comments": signals.added_code_comments[:50],
         "pm_description": signals.pm_description[:2000],
         "linked_bug_tickets": signals.linked_bug_tickets,
+        "test_cases": signals.test_cases[:50],
+        "test_run_history": signals.test_run_history[:50],
     }
     prompt = _EXTRACT_PROMPT % {"signals": json.dumps(payload, indent=2)}
     raw = llm_call(prompt)
     try:
         return json.loads(_first_json_object(raw))
     except (ValueError, json.JSONDecodeError):
-        return {"what_shipped": "", "key_decisions": [], "edge_cases_handled": [], "known_gaps": []}
+        return {
+            "what_shipped": "", "key_decisions": [],
+            "edge_cases_handled": [], "known_gaps": [], "qa_edges": [],
+        }
 
 
 def _first_json_object(s: str) -> str:
@@ -171,18 +204,19 @@ def validate_citations(
     bullets: list[EdgeCaseBullet],
     repo_path: Path,
     pr_numbers_seen: set[int],
+    known_test_case_ids: Optional[set[str]] = None,
 ) -> tuple[list[EdgeCaseBullet], int]:
     kept: list[EdgeCaseBullet] = []
     dropped = 0
     for b in bullets:
-        if _validate_one(b.source, repo_path, pr_numbers_seen):
+        if _validate_one(b.source, repo_path, pr_numbers_seen, known_test_case_ids or set()):
             kept.append(b)
         else:
             dropped += 1
     return kept, dropped
 
 
-def _validate_one(source: str, repo: Path, pr_numbers: set[int]) -> bool:
+def _validate_one(source: str, repo: Path, pr_numbers: set[int], test_case_ids: set[str]) -> bool:
     s = source.strip()
     m = re.match(r"pr#(\d+)", s)
     if m:
@@ -195,6 +229,9 @@ def _validate_one(source: str, repo: Path, pr_numbers: set[int]) -> bool:
             return True
         except subprocess.CalledProcessError:
             return False
+    m = re.match(r"(TR-C-\d+)", s)
+    if m:
+        return m.group(1) in test_case_ids
     if s.startswith("test_") or "::" in s:
         name = s.split("::")[-1]
         try:
@@ -219,24 +256,61 @@ def mine_per_ticket(
     pm_description: str,
     llm_call,
     linked_bugs: Optional[list[str]] = None,
+    test_cases: Optional[list[TestCase]] = None,
+    run_history: Optional[list[RunResult]] = None,
 ) -> tuple[dict, int]:
-    signals = gather_signals(repo_path, commits, prs, pm_description, linked_bugs)
+    signals = gather_signals(
+        repo_path, commits, prs, pm_description, linked_bugs,
+        test_cases=test_cases, run_history=run_history,
+    )
     extracted = extract_with_llm(signals, llm_call)
 
     pr_numbers = {pr.number for pr in prs}
+    case_ids = {c.id for c in (test_cases or [])}
+
     raw_edges = [EdgeCaseBullet(text=e["text"], source=e["source"])
                  for e in extracted.get("edge_cases_handled", []) if e.get("source")]
     raw_gaps = [EdgeCaseBullet(text=e["text"], source=e["source"])
                 for e in extracted.get("known_gaps", []) if e.get("source")]
-    edges, dropped_e = validate_citations(raw_edges, repo_path, pr_numbers)
-    gaps, dropped_g = validate_citations(raw_gaps, repo_path, pr_numbers)
+    raw_qa = [EdgeCaseBullet(text=e["text"], source=e["source"])
+              for e in extracted.get("qa_edges", []) if e.get("source")]
+    edges, dropped_e = validate_citations(raw_edges, repo_path, pr_numbers, case_ids)
+    gaps, dropped_g = validate_citations(raw_gaps, repo_path, pr_numbers, case_ids)
+    qa, dropped_q = validate_citations(raw_qa, repo_path, pr_numbers, case_ids)
+
+    stability = stability_signals(test_cases or [], run_history or [])
 
     return {
         "what_shipped": extracted.get("what_shipped", ""),
         "key_decisions": extracted.get("key_decisions", []),
         "edge_cases_handled": edges,
         "known_gaps": gaps,
-    }, (dropped_e + dropped_g)
+        "qa_edges": qa,
+        "stability_signals": stability,
+    }, (dropped_e + dropped_g + dropped_q)
+
+
+def stability_signals(test_cases: list[TestCase], runs: list[RunResult]) -> list[str]:
+    out: list[str] = []
+    by_case: dict[str, list[RunResult]] = {}
+    for r in runs:
+        by_case.setdefault(r.case_id, []).append(r)
+
+    case_titles = {c.id: c.title for c in test_cases}
+    for case_id, results in by_case.items():
+        failures = [r for r in results if r.status in ("failed", "blocked")]
+        if len(failures) >= 3:
+            title = case_titles.get(case_id, "(no linked case in this record)")
+            out.append(
+                f"{case_id} ({title}): "
+                f"{len(failures)} failures/blocks in window — structurally fragile"
+            )
+
+    for c in test_cases:
+        if c.recent_failures >= 3 and not any(c.id in s for s in out):
+            out.append(f"{c.id} ({c.title}): {c.recent_failures} recent failures")
+
+    return out
 
 
 def dedup_edge_cases(records: list[TicketRecord], llm_call=None) -> list[dict]:

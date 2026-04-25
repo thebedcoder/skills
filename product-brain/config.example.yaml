@@ -19,6 +19,18 @@ aha:
   api_key_env: AHA_API_KEY         # env var holding the API token
   workspace: ""                    # optional workspace ID; empty = default
 
+# Optional test-management adapter. Set null/omit to skip TestRail features
+# (qa_edges, stability_signals, coverage_gaps). Cases must reference ticket
+# IDs in the configured `refs_field` for per-ticket lookup to work.
+test_adapter: testrail             # testrail | null (zephyr/xray pluggable)
+testrail:
+  base_url: https://yourco.testrail.io
+  user_email: bot@yourcompany.com
+  api_key_env: TESTRAIL_API_KEY
+  project_id: 7
+  refs_field: refs                 # custom field on cases holding ticket IDs
+  run_history_window_days: 90      # window for stability signals + recent failures
+
 # GitHub access for PR enrichment. Token needs `repo:read` scope on configured repos.
 github:
   api_key_env: GITHUB_TOKEN

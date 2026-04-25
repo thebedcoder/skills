@@ -90,6 +90,39 @@
       "type": "array",
       "items": { "type": "string" },
       "description": "Section names the LLM must NOT overwrite (e.g. 'Edge cases (manual)')."
+    },
+    "test_cases": {
+      "type": "array",
+      "description": "Test cases linked to this ticket (e.g. via TestRail refs). Mechanical, populated from the test adapter.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "description": "Adapter-prefixed case ID, e.g. TR-C-4521" },
+          "title": { "type": "string" },
+          "automation": { "type": "string", "enum": ["manual", "automated", "semi", "unknown"] },
+          "type": { "type": "string", "description": "functional | security | performance | accessibility | ..." },
+          "suite": { "type": "string" },
+          "linked_tickets": { "type": "array", "items": { "type": "string" } },
+          "last_status": { "type": ["string", "null"], "enum": ["passed", "failed", "blocked", "retest", "untested", "unknown", null] },
+          "last_run": { "type": ["string", "null"], "format": "date-time" },
+          "recent_failures": { "type": "integer", "minimum": 0, "description": "Failures+blocks in run-history window." },
+          "url": { "type": "string" }
+        }
+      }
+    },
+    "coverage_gaps": {
+      "type": "array",
+      "description": "Code-mined edges with no matching QA test case. Populated by coverage_gap detection.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "edge": { "type": "string" },
+          "edge_source": { "type": "string", "description": "Original citation of the code edge." },
+          "rationale": { "type": "string" }
+        }
+      }
     }
   }
 }

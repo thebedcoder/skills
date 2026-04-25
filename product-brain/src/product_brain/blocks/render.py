@@ -14,6 +14,9 @@ def render_groom(
     drafts: list[dict],
     mode: str = "groom",
     change_note: Optional[str] = None,
+    qa_edge_groups: Optional[list[dict]] = None,
+    stability_signals: Optional[list[str]] = None,
+    coverage_gaps: Optional[list[dict]] = None,
 ) -> str:
     lines: list[str] = []
     lines.append(f"# {ticket_id} — {title}")
@@ -48,6 +51,27 @@ def render_groom(
         lines.append("")
     else:
         lines.append("## Edge cases\n_(no validated bullets)_\n")
+
+    if qa_edge_groups:
+        lines.append("## QA-verified edges (from related tickets' test suites)\n")
+        for g in qa_edge_groups:
+            lines.append(f"- {g['text']}     [{g['frequency']}: {', '.join(g['tickets'])}]")
+        lines.append("")
+
+    if stability_signals:
+        lines.append("## Stability signals (from test run history)\n")
+        for s in stability_signals:
+            lines.append(f"- {s}")
+        lines.append("")
+
+    if coverage_gaps:
+        lines.append("## Coverage gaps (handled in code, not in QA suite)\n")
+        for g in coverage_gaps:
+            lines.append(f"- {g['edge']}")
+            lines.append(f"  source: {g['edge_source']}")
+            if g.get("rationale"):
+                lines.append(f"  rationale: {g['rationale']}")
+        lines.append("")
 
     if risks:
         lines.append("## Risks\n")

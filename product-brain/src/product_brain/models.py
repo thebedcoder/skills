@@ -99,6 +99,39 @@ class EdgeCaseBullet:
 
 
 @dataclass
+class TestCase:
+    id: str
+    title: str
+    preconditions: str = ""
+    steps: list[str] = field(default_factory=list)
+    expected: str = ""
+    automation: str = "unknown"
+    type: str = "functional"
+    suite: str = ""
+    linked_tickets: list[str] = field(default_factory=list)
+    last_status: Optional[str] = None
+    last_run: Optional[datetime] = None
+    recent_failures: int = 0
+    url: str = ""
+
+
+@dataclass
+class RunResult:
+    case_id: str
+    status: str
+    run_id: str = ""
+    timestamp: Optional[datetime] = None
+    comment: str = ""
+
+
+@dataclass
+class CoverageGap:
+    edge: str
+    edge_source: str
+    rationale: str = ""
+
+
+@dataclass
 class TicketRecord:
     ticket: str
     title: str = ""
@@ -123,6 +156,10 @@ class TicketRecord:
     key_decisions: list[str] = field(default_factory=list)
     edge_cases_handled: list[EdgeCaseBullet] = field(default_factory=list)
     known_gaps: list[EdgeCaseBullet] = field(default_factory=list)
+    test_cases: list[TestCase] = field(default_factory=list)
+    qa_edges: list[EdgeCaseBullet] = field(default_factory=list)
+    stability_signals: list[str] = field(default_factory=list)
+    coverage_gaps: list[CoverageGap] = field(default_factory=list)
     manual_body: str = ""
     repo: str = ""
 
