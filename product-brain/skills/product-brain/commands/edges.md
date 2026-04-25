@@ -1,14 +1,15 @@
 # /pb-edges &lt;ticket-id&gt;
 
-Edge-case-only output. Useful when the engineer/PM just wants the gotcha checklist.
+Edges-only output. Engineers/PMs wanting just the gotcha checklist.
 
 ## Steps
 
-1. Validate `ticket-id`.
-2. `aha-fetch(ticket_id)` and `aha-fetch related` (siblings + label matches, cap 30).
-3. `index-read` for `[ticket_id] + related_ids` across all repos.
-4. `edge-case-mine(records)` — aggregate, dedup, validate citations, theme.
-5. Render edge-case section only.
+1. Validate ticket-id.
+2. `aha-fetch(ticket_id)` + `aha-fetch related` (siblings + label, cap 30).
+3. `index-read` for `[ticket_id] + related_ids`.
+4. `edge-case-mine.dedup(records)` — aggregate, dedup, validate citations, theme.
+5. If `test_adapter` set: also emit QA edges + stability signals + coverage gaps.
+6. Render edge sections only.
 
 ## Output contract
 
@@ -20,10 +21,19 @@ Mined from N related tickets across &lt;repos&gt;.
 - &lt;bullet&gt;     [N/M records: AHA-..., AHA-...]
   source: pr#789 review @bob | test_foo_bar | def456
 
+## QA-verified edges                  (if test_adapter set)
+- &lt;bullet&gt;     [TR-C-NNNN]
+
+## Stability signals                  (if test_adapter set)
+- TR-C-NNNN: N fails / window
+
+## Coverage gaps                      (if test_adapter set)
+- &lt;edge&gt; — no QA case match
+
 ## Known gaps in nearby work
-- &lt;bullet&gt;     [stale: AHA-... still flags this]
+- &lt;bullet&gt;     [stale: AHA-...]
 ```
 
-## Failure handling
+## Failures
 
-- If &lt;3 related tickets: print "low signal — limited mining material" and emit whatever bullets do validate.
+- `<3` related tickets → "low signal — limited mining material". Emit whatever validates.

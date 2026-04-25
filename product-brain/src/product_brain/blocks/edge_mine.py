@@ -137,21 +137,19 @@ def _scan_diff_comments(repo: Path, commits: list[Commit]) -> list[dict]:
     return out
 
 
-_EXTRACT_PROMPT = """You extract edge cases that were considered or handled in this ticket.
+_EXTRACT_PROMPT = """Extract edge cases handled in this ticket.
 
-Use ONLY the SIGNALS below. For each edge case:
-  - Quote or closely paraphrase from a signal.
-  - Cite the source EXACTLY as one of:
-      "pr#N review @user", "test_name", "commit <sha7>",
-      "<path>:<line> TODO", or "TR-C-NNNN".
-  - For QA edges (from test_cases): the case title must be specific enough
-    to support a concrete edge claim. Skip generic titles like "test login works".
-  - If signals don't support N bullets, return fewer (or zero).
-  - DO NOT extrapolate from the feature description.
+Rules:
+- Use ONLY SIGNALS below. No invention.
+- Quote or close-paraphrase from a signal.
+- Cite source EXACTLY: "pr#N review @user" | "test_name" | "commit <sha7>" | "<path>:<line> TODO" | "TR-C-NNNN".
+- QA edges (from test_cases): case title must be specific. Skip generic ("test login works").
+- Signals don't support N bullets → return fewer / zero. Do not pad.
+- Do not extrapolate from feature description.
 
-Output STRICT JSON, no commentary:
+Output STRICT JSON only:
 {
-  "what_shipped": "one paragraph from PR/commits, no invention",
+  "what_shipped": "one paragraph from PR/commits",
   "key_decisions": ["..."],
   "edge_cases_handled": [{"text": "...", "source": "..."}],
   "known_gaps": [{"text": "...", "source": "..."}],

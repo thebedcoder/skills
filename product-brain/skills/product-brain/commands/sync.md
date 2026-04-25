@@ -1,35 +1,35 @@
 # /pb-sync [--repo &lt;name&gt;] [--since &lt;sha-or-date&gt;] [--full]
 
-Refresh the product-brain index. Normally the post-merge hook keeps it current; use this when:
+Refresh index. Hook keeps it current normally. Use when:
 
-- The hook was missed (CI failure, bypassed merge)
+- Hook missed (CI failure, bypassed merge)
 - Bulk catch-up after vacation
-- After changing prompts/templates and wanting prose regenerated
+- After prompt/template changes → regen prose
 
-## Inputs
-- `--repo &lt;name&gt;`: limit to one repo. Default: all configured.
-- `--since &lt;sha&gt;` or `--since &lt;YYYY-MM-DD&gt;`: only update tickets touched after this point. Default: incremental from last indexed SHA.
-- `--full`: rebuild all records from scratch. Equivalent to `product-brain backfill --force`.
+## Args
+- `--repo &lt;name&gt;`: limit to one repo. Default: all.
+- `--since &lt;sha&gt;` or `&lt;YYYY-MM-DD&gt;`: from this point forward. Default: from `manifest.last_indexed_sha`.
+- `--full`: rebuild all records. Equivalent to `product-brain backfill --force`.
 
 ## Steps
 
-For each target repo:
+Per target repo:
 
 1. `git pull` (warn if dirty).
-2. Identify the range:
-   - `--full`: all of `git log --all`.
-   - `--since`: from the given SHA/date forward.
-   - default: from `manifest.last_indexed_sha` (stored in `.product-brain/manifest.md`) to HEAD.
-3. Run the backfill pipeline (phases 1–6) over the range. See `docs/backfill.md`.
-4. Update `manifest.last_indexed_sha` to current HEAD.
-5. Run `repair.py` validation pass on the updated records to drop bullets with broken citations.
-6. Print a summary: `&lt;N&gt; tickets updated, &lt;M&gt; new, &lt;K&gt; edge-case bullets dropped (failed validation)`.
+2. Range:
+   - `--full` → all of `git log --all`
+   - `--since` → from given SHA/date forward
+   - default → `manifest.last_indexed_sha` to HEAD
+3. Run backfill phases 1-6 over range. See `docs/backfill.md`.
+4. Update `manifest.last_indexed_sha` → current HEAD.
+5. Run `repair.py` validation pass on updated records. Drop bullets w/ broken citations.
+6. Print summary: `&lt;N&gt; updated, &lt;M&gt; new, &lt;K&gt; bullets dropped`.
 
-## When to call this from interactive Claude Code
+## When to call interactively
 
-Almost never — engineers shouldn't be running sync. It exists so engineers can self-serve catch-up when they notice stale records during `/pb-groom`.
+Almost never. Engineers self-serve catch-up when noticing stale records during `/pb-groom`.
 
-The bot worker calls the same logic inline before any groom run if `manifest.last_indexed_sha != git HEAD`.
+Bot worker calls same logic inline if `manifest.last_indexed_sha != HEAD` before any groom.
 
 ## Output contract
 

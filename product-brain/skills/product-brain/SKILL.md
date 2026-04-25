@@ -1,57 +1,52 @@
 ---
 name: product-brain
 description: |
-  Use when the user wants to plan, groom, estimate, or surface edge cases for
-  a project-management ticket or proposed feature, AND the request contains a
-  ticket ID matching the configured pattern (e.g. AHA-\d+) OR an explicit
-  planning verb: groom, plan, estimate, scope, edge cases, related tickets,
-  draft tickets.
+  Trigger when user wants to plan, groom, estimate, or surface edge cases for
+  a PM ticket or proposed feature, AND request contains a ticket ID matching
+  configured pattern (e.g. AHA-\d+) OR explicit planning verb: groom, plan,
+  estimate, scope, edge cases, related tickets, draft tickets.
 
-  Trigger examples:
+  Trigger:
     - "Groom AHA-1234"
-    - "What edge cases should we consider for AHA-1234?"
-    - "Plan password reset for the auth area"
+    - "Edge cases for AHA-1234?"
+    - "Plan password reset for auth"
     - "Estimate AHA-1234"
-    - "Show me tickets related to AHA-1234"
-    - "Draft sub-tickets for the password reset feature"
+    - "Tickets related to AHA-1234"
+    - "Draft sub-tickets for password reset"
 
-  DO NOT trigger for:
-    - Bug investigation: "AHA-1234 is broken"
-    - Code review: "review my PR for AHA-1234"
-    - Plain lookup: "what does AHA-1234 do?" (use index-read directly via grep)
-    - Anything not involving planning/grooming/estimation
+  Skip:
+    - "AHA-1234 is broken" (bug, not planning)
+    - "Review my PR for AHA-1234" (review, not planning)
+    - "What does AHA-1234 do?" (lookup → grep instead)
 ---
 
 # Product Brain
 
-Cross-repo memory + planning over a ticket-keyed code index.
+Cross-repo memory + planning over ticket-keyed code index.
 
-## Building blocks (composed by each command)
+## Blocks (composed per command)
 
-| Block | Purpose |
+| Block | Job |
 |---|---|
-| `aha-fetch` | Pull ticket(s) and metadata from the configured PM adapter. |
-| `index-read` | Read `.product-brain/tickets/AHA-XXXX.md` records across configured repos. |
-| `hotspot-cluster` | Deterministic frequency + co-change clustering on record front-matter. LLM only for theming. |
-| `estimate` | Similarity-weighted average of past tickets' churn. Always shows references and a confidence label. |
-| `edge-case-mine` | Two-pass mining: extract per ticket from PR threads/tests/commits with citation discipline; dedup at query time. |
-| `code-verify` | Optional subagent fan-out into repos when the index is stale or stakes are high. Hard cap of 3 subagents. |
-| `render` | Format the standard groom/plan/edges output. |
+| `aha-fetch` | Pull ticket(s) from PM adapter |
+| `index-read` | Read `.product-brain/tickets/AHA-XXXX.md` across repos |
+| `hotspot-cluster` | Frequency + co-change clustering on front-matter. Deterministic + 1 LLM for theming |
+| `estimate` | Similarity-weighted churn average. Always shows refs + confidence |
+| `edge-case-mine` | Per-ticket extract w/ citation rule (cached) + cross-ticket dedup |
+| `qa-mine` | Test cases linked to ticket → qa_edges + stability signals (if test_adapter set) |
+| `coverage-gap` | Code edges with no QA case match |
+| `code-verify` | Subagent fan-out, gated. Cap 3 |
+| `render` | Template fill |
 
-## Operating principles
+## Rules
 
-1. **Citation-or-drop.** Every edge case must cite a real source (PR comment, test name, commit SHA). Validated at write time.
-2. **Front-matter is mechanical, prose is LLM.** Structured fields (files, SHAs, dates, owners) come from `git` + GitHub. Prose is regenerable; front-matter is reproducible.
-3. **Show your work on estimates.** Always render the reference tickets, similarity scores, and a confidence label. Black-box estimates lose trust on first miss.
-4. **On-demand reads, not perpetual sync.** The index is read on every command. Subagent code-verify is gated, not default.
+1. **Cite-or-drop.** Every edge bullet cites real source (PR comment, test name, SHA, TR-C-NNNN). Validated at write.
+2. **Front-matter mechanical, prose LLM.** Files/SHAs/dates from git+PM. Prose regenerable; front-matter reproducible.
+3. **Show estimate refs.** Reference tickets, similarities, confidence label. Never black-box.
+4. **Read on demand.** Index read every command. `code-verify` gated.
 
-## Configuration
+## Config
 
-The skill reads `config.yaml` (see `config.example.yaml`) for:
-- `repos`: list of repos with `.product-brain/` indexes
-- `pm_adapter`: which adapter to call (aha, linear, jira, ...)
-- `llm`: model selection per task
-- `estimate`: similarity thresholds and confidence cutoffs
-- `backfill.workflow`: squash | merge | rebase
+`config.yaml` provides: `repos`, `pm_adapter`, `test_adapter` (optional), `llm`, `estimate` thresholds, `backfill.workflow`.
 
-See the `commands/` directory for the per-command playbook.
+See `commands/` for per-command playbooks.

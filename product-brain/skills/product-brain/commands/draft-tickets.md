@@ -1,22 +1,22 @@
 # /pb-draft-tickets &lt;feature description or parent-ticket-id&gt;
 
-Propose sub-tickets for a feature, scoped per repo, ready for PM review.
+Propose sub-tickets per repo, ready for PM review.
 
-## Inputs
-- Either a parent ticket ID (`AHA-1234`) — sub-tickets will be drafted under it.
-- Or a free-text description — sub-tickets are returned as a checklist; PM can paste into the PM tool or invoke `/brain draft-tickets` from a comment to actually create them.
+## Args
+- Parent ticket ID (`AHA-1234`) → drafts under it.
+- Or free-text → drafts returned as checklist; PM pastes or invokes `/brain draft-tickets` to create.
 
 ## Steps
 
-1. If parent ticket ID: `aha-fetch(id)` for context.
-2. Predict per-repo scope (same step as `/pb-plan` step 1).
+1. Parent ID → `aha-fetch(id)` for context.
+2. Predict per-repo scope (same as `/pb-plan` step 1).
 3. Find references via `/pb-related` logic to anchor estimates.
-4. Per repo with non-empty scope, draft one ticket:
+4. Per repo w/ non-empty scope, draft:
    - title: `&lt;repo&gt;: &lt;short summary&gt;`
-   - description: areas, predicted files, est range, edge-case checklist, link to top reference ticket
-   - estimated effort: from `estimate` block
-   - acceptance criteria: 3–5 bullets seeded from manifest conventions and edge-case mining
-5. Output the drafts. **Do not push to the PM tool unless invoked from the bot.** Interactive mode prints them; bot mode calls `pm_adapter.create_ticket(draft, parent=...)`.
+   - description: areas, predicted files, est range, edge checklist, top-ref link
+   - effort: from `estimate` block
+   - acceptance: 3-5 bullets seeded from manifest conventions + edge mining
+5. Output drafts. Interactive: print only. Bot: `pm_adapter.create_ticket(draft, parent=...)`.
 
 ## Output contract
 
@@ -26,11 +26,11 @@ Propose sub-tickets for a feature, scoped per repo, ready for PM review.
 ## Parent: AHA-XXXX (or "&lt;feature description&gt;")
 
 ### Draft 1 — backend: reset endpoints
-- **Effort:** 2–3d (medium confidence; ref: AHA-1100)
+- **Effort:** 2-3d (medium confidence; ref: AHA-1100)
 - **Files:** api/auth/, services/email/
 - **Acceptance:**
-  - POST /auth/reset/request returns 202 with rate-limit header
-  - POST /auth/reset/confirm validates token, returns generic error on expired
+  - POST /auth/reset/request returns 202 w/ rate-limit header
+  - POST /auth/reset/confirm validates token, generic error on expired
   - Tokens hashed at rest
 - **Edge cases:** rate-limit, token replay, locked accounts
 - **Reference:** AHA-1100
@@ -44,5 +44,5 @@ Propose sub-tickets for a feature, scoped per repo, ready for PM review.
 
 ## Bot vs interactive
 
-- Interactive (`/pb-draft-tickets`): prints to stdout/Claude Code only. PM acts on it.
-- Bot (`/brain draft-tickets`): creates drafts in the PM tool with status = `config.bot.draft_status` (default "Bot-draft"), parent set to the source ticket. Bot never assigns owners.
+- Interactive (`/pb-draft-tickets`): stdout/Claude Code only. PM acts.
+- Bot (`/brain draft-tickets`): creates drafts in PM tool, status=`config.bot.draft_status` (default "Bot-draft"), parent=source ticket. Never assigns owners.

@@ -6,26 +6,16 @@ import re
 from ..models import CoverageGap, EdgeCaseBullet, TestCase
 
 
-_DETECT_PROMPT = """You compare CODE-MINED edges (handled in implementation) to
-QA TEST CASE TITLES that exist for this ticket.
-
-Identify edges that have NO matching QA case — i.e. behaviors handled in
-code that QA never formalized as a test case.
+_DETECT_PROMPT = """Compare CODE-MINED edges to QA CASE TITLES. Find edges with NO matching case.
 
 Rules:
-  - Match by meaning, not exact wording. "rate-limit reset requests" matches
-    "Reset endpoint rejects too-frequent requests".
-  - Skip code-mined edges that ARE covered by a case.
-  - DO NOT invent edges. Use only the inputs.
-  - Return zero gaps if every code edge has a matching case.
+- Match by meaning, not wording. "rate-limit reset requests" ≈ "Reset endpoint rejects too-frequent requests".
+- Skip code edges that ARE covered.
+- No invention. Inputs only.
+- Every code edge covered → return zero gaps.
 
-Output STRICT JSON, no commentary:
-{
-  "gaps": [
-    {"edge": "<from code edges>", "edge_source": "<original citation>",
-     "rationale": "no QA case found matching this behavior"}
-  ]
-}
+Output STRICT JSON only:
+{"gaps": [{"edge": "...", "edge_source": "...", "rationale": "no QA case found matching"}]}
 
 CODE EDGES:
 %(edges)s
