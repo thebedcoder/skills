@@ -34,6 +34,79 @@ Product Brain produces that second view automatically by mining `git log + PR hi
 
 ---
 
+## How it works
+
+Three phases. Data flows in continuously as engineers merge code; the index sits in each repo; data flows out on demand when a PM (or engineer) asks for a plan.
+
+```
+┌─────────────────── 1. DEVELOPMENT (continuous) ──────────────────────┐
+│                                                                       │
+│   engineer commits "AHA-1234: add 2FA" → PR → review → merge to main │
+│                              │                                        │
+│                              ▼                                        │
+│              ┌──────────────────────────┐                            │
+│              │ post-merge git hook  OR  │                            │
+│              │ CI workflow on main push │                            │
+│              └────────────┬─────────────┘                            │
+│                           ▼                                           │
+│              ┌────────────────────────────┐                          │
+│              │ incremental                │                          │
+│              │  • parse commit + diff     │                          │
+│              │  • fetch PR review threads │                          │
+│              │  • extract edge cases      │                          │
+│              │  • validate every citation │                          │
+│              └────────────┬───────────────┘                          │
+└───────────────────────────┼───────────────────────────────────────────┘
+                            │ writes/updates one record
+                            ▼
+┌──────────── 2. INDEX (per repo, committed in-tree) ───────────────────┐
+│                                                                        │
+│  flutter-app/.product-brain/tickets/                                   │
+│    AHA-1100.md   AHA-1234.md   AHA-1500.md                             │
+│  react-app/.product-brain/tickets/                                     │
+│    AHA-1234.md   AHA-1500.md                                           │
+│  backend/.product-brain/tickets/                                       │
+│    AHA-1100.md   AHA-1234.md   AHA-1500.md                             │
+│                                                                        │
+│  each record =  YAML front-matter (mechanical: files, SHAs, dates)     │
+│              +  prose (LLM-generated, citation-validated)              │
+│                                                                        │
+└────────────────────────────┬───────────────────────────────────────────┘
+                             │ reads on demand
+                             ▼
+┌──────────────── 3. PLANNING (per query) ──────────────────────────────┐
+│                                                                        │
+│   PM types  "/brain groom"  in Aha comment on AHA-1500                │
+│                  │                                                     │
+│                  ▼                                                     │
+│       Aha webhook ──► bot /webhook/aha  (verify signature)            │
+│                  │                                                     │
+│                  ▼                                                     │
+│            ┌───────────┐                                               │
+│            │  queue    │  (SQLite, per-ticket lock)                    │
+│            └─────┬─────┘                                               │
+│                  ▼                                                     │
+│   ┌─────────────────────────────────────────────────────┐             │
+│   │ worker                                               │             │
+│   │  1. fetch ticket + siblings + label matches  (Aha)   │             │
+│   │  2. read records for those IDs across all 3 repos    │             │
+│   │  3. hotspot-cluster        (deterministic + 1 LLM)   │             │
+│   │  4. estimate w/ refs       (similarity + churn)      │             │
+│   │  5. dedup edge cases       (1 LLM across records)    │             │
+│   │  6. render groom output                              │             │
+│   └────────────────────────┬────────────────────────────┘             │
+│                            ▼                                           │
+│           bot posts/edits Aha comment (in place)                       │
+│                            ▼                                           │
+│      PM sees: scope · estimate · edges · risks · drafts                │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+Engineers also reach the planning phase via slash commands inside Claude Code (`/pb-groom AHA-1500`), which run the same building blocks and skip the bot. Same logic, two front doors.
+
+---
+
 ## Architecture at a glance
 
 ```
