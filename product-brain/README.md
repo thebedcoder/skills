@@ -166,6 +166,10 @@ See [docs/architecture.md](docs/architecture.md) for detail.
 
 ## Quick start
 
+For the full click-by-click (Aha API key, TestRail token, GitHub token, bot host setup, smoke test, troubleshooting), see **[docs/setup.md](docs/setup.md)**.
+
+What follows is the condensed overview.
+
 ### 1. Install the tool
 
 ```bash
@@ -292,6 +296,7 @@ The bot replies with a structured comment, edits in place on re-runs, and create
 
 | File | Topic |
 |---|---|
+| [docs/setup.md](docs/setup.md) | Click-by-click setup (Aha, TestRail, GitHub, brain repo, bot, hooks, smoke test, troubleshooting) |
 | [docs/architecture.md](docs/architecture.md) | System architecture, building blocks, data flow |
 | [docs/manifest-schema.md](docs/manifest-schema.md) | manifest and ticket-record schemas |
 | [docs/binding.md](docs/binding.md) | brain repo layout, binding source repos, hook setup |
