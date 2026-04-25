@@ -9,6 +9,52 @@ from . import __version__
 from .config import load as load_config
 
 
+def _cmd_init(args):
+    from .init import init_repo
+
+    repo_path = Path(args.path).resolve() if args.path else Path.cwd()
+    ticket_regex = args.ticket_regex
+    llm_call = None
+
+    config = None
+    if args.use_config:
+        try:
+            config = load_config(args.config)
+        except FileNotFoundError:
+            pass
+
+    if config:
+        if args.repo:
+            try:
+                rc = config.repo(args.repo)
+                repo_path = rc.path
+            except KeyError:
+                pass
+        ticket_regex = ticket_regex or config.ticket_regex
+
+    if not args.no_llm and config:
+        try:
+            from .backfill.summarize import llm_call_factory
+            llm_call = llm_call_factory(config, model=config.llm.model_summarize)
+        except Exception:
+            llm_call = None
+
+    manifest = init_repo(
+        repo_path=repo_path,
+        ticket_regex=ticket_regex or r"AHA-\d+",
+        repo_name=args.repo,
+        llm_call=llm_call,
+        force=args.force,
+    )
+    print(f"wrote {repo_path / '.product-brain' / 'manifest.md'}")
+    print(f"  repo:         {manifest.repo}")
+    print(f"  workflow:     {manifest.workflow}")
+    print(f"  languages:    {', '.join(manifest.languages) or '(none detected)'}")
+    print(f"  entry_points: {', '.join(manifest.entry_points) or '(none detected)'}")
+    print(f"  ignore_paths: {len(manifest.ignore_paths)} entries")
+    print(f"  prose body:   {'LLM-generated' if llm_call else 'placeholder (edit by hand)'}")
+
+
 def _cmd_backfill(args):
     from .backfill.run import backfill_repo
     config = load_config(args.config)
@@ -82,6 +128,16 @@ def main():
     parser.add_argument("--config", help="path to config.yaml")
     parser.add_argument("--version", action="version", version=__version__)
     sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("init", help="bootstrap .product-brain/manifest.md from repo introspection")
+    p.add_argument("--path", help="repo path; defaults to cwd")
+    p.add_argument("--repo", help="repo name (used in manifest.repo and to look up config)")
+    p.add_argument("--ticket-regex", help="override ticket regex; default from config or AHA-\\d+")
+    p.add_argument("--no-llm", action="store_true", help="skip LLM prose generation")
+    p.add_argument("--no-config", dest="use_config", action="store_false", default=True,
+                   help="skip loading config.yaml; use defaults")
+    p.add_argument("--force", action="store_true", help="overwrite existing manifest")
+    p.set_defaults(func=_cmd_init)
 
     p = sub.add_parser("backfill", help="rebuild ticket records from git log")
     p.add_argument("--repo")

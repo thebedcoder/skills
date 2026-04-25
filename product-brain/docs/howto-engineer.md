@@ -90,9 +90,11 @@ If estimates are systemically off, look at the audit log for similarity scores. 
 ### "How do I run the index on a new repo?"
 
 1. Add the repo to `config.yaml` under `repos:`.
-2. Create `<repo>/.product-brain/manifest.md` (template at `skills/product-brain/templates/manifest.md`).
+2. From inside the repo: `product-brain init` (autodetects languages, entry points, workflow; LLM-summarizes README + package files into the manifest prose if `ANTHROPIC_API_KEY` is set). Use `--no-llm` to skip prose, `--force` to overwrite an existing manifest.
 3. `product-brain backfill --repo <name>`
 4. `<path-to-product-brain>/scripts/install-post-merge-hook.sh` from inside the repo.
+
+If the repo doesn't have READMEs or docs for `init` to summarize, that's fine — the manifest gets placeholder prose. `/pb-plan` quality is reduced (it can't predict scope as precisely) but `/pb-groom` and the rest are unaffected.
 
 ## When NOT to use Product Brain
 

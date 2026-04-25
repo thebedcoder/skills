@@ -165,7 +165,17 @@ The installer:
 
 ### 2. Configure each repo
 
-In each repo you want indexed (e.g. `flutter-app`, `react-app`, `backend`), create `.product-brain/manifest.md`:
+The fastest path is the `init` command. From inside each repo:
+
+```bash
+product-brain init               # autodetects languages, entry points, workflow
+product-brain init --no-llm      # skip prose generation, leave placeholders
+product-brain init --force       # overwrite existing manifest
+```
+
+This writes `.product-brain/manifest.md` with detected fields and (if `ANTHROPIC_API_KEY` is set) an LLM-generated prose body summarizing your top-level READMEs and package files. No agentic-engineering setup or pre-existing docs required.
+
+Or hand-author the manifest from the template at `skills/product-brain/templates/manifest.md`:
 
 ```yaml
 ---
