@@ -1,0 +1,68 @@
+# Product Brain orchestrator config.
+# Copy to config.yaml and edit for your setup.
+
+# Repos to index. Paths are resolved relative to this config file.
+repos:
+  - { name: flutter, path: ../flutter-app }
+  - { name: react,   path: ../react-app }
+  - { name: backend, path: ../backend }
+
+# Ticket ID regex used everywhere (commit message parsing, comment commands, etc).
+# Default matches things like AHA-1234. Override per-repo via manifest.md if needed.
+ticket_regex: 'AHA-\d+'
+
+# Which PM adapter to use. Must match a class registered in adapters/.
+pm_adapter: aha
+
+aha:
+  subdomain: yourcompany           # https://<subdomain>.aha.io
+  api_key_env: AHA_API_KEY         # env var holding the API token
+  workspace: ""                    # optional workspace ID; empty = default
+
+# GitHub access for PR enrichment. Token needs `repo:read` scope on configured repos.
+github:
+  api_key_env: GITHUB_TOKEN
+
+llm:
+  provider: anthropic              # only "anthropic" is implemented
+  api_key_env: ANTHROPIC_API_KEY
+  model_summarize: claude-haiku-4-5-20251001     # cheap, used for backfill/incremental prose
+  model_extract:   claude-haiku-4-5-20251001     # edge-case extraction
+  model_synthesize: claude-sonnet-4-6            # final groom output (interactive + bot)
+  max_input_tokens_per_ticket: 8000
+
+estimate:
+  unit: days
+  reference_window_days: 90
+  min_similarity: 0.4
+  min_references_for_medium: 4
+  min_references_for_high: 6
+
+backfill:
+  workflow: squash                 # squash | merge | rebase
+  pr_enrichment: true              # fetch PR review threads (recommended)
+  symbol_extraction: false         # diff hunk header parsing; off by default
+
+# Bot config — see docs/bot.md
+bot:
+  enabled: false                   # start manual-only; flip after a month of dogfooding
+  host: 0.0.0.0
+  port: 8088
+  webhook_signing_secret_env: AHA_WEBHOOK_SECRET
+  allowed_users:                   # who can issue /brain commands in Aha comments
+    - pm@example.com
+    - lead@example.com
+  cooldown_hours: 24               # min hours between auto-runs on the same ticket
+  opt_in_label: brain:on           # ticket must carry this label for auto-triggers
+  kill_switch_label: brain:off
+  quiet_hours_utc: [22, 7]         # [start_hour, end_hour] for auto-posts; manual bypasses
+  draft_status: "Bot-draft"        # status used when bot creates draft sub-tickets
+
+# Audit log location. Used by both CLI and bot. Append-only.
+audit:
+  path: ./audit.sqlite
+
+# Job queue for the bot worker. SQLite is fine until ~100s of jobs/day.
+queue:
+  backend: sqlite
+  path: ./queue.sqlite
