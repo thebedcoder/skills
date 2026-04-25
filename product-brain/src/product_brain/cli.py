@@ -10,49 +10,75 @@ from .config import load as load_config
 
 
 def _cmd_init(args):
-    from .init import init_repo
+    from .init_brain import init_brain_repo
 
-    repo_path = Path(args.path).resolve() if args.path else Path.cwd()
-    ticket_regex = args.ticket_regex
-    llm_call = None
+    target = Path(args.path or ".").resolve()
+    result = init_brain_repo(target, force=args.force)
+    print(f"initialized brain repo at {result['brain_path']}")
+    print(f"  config: {result['config']}")
+    print(f"  next:   {result['next']}")
+
+
+def _cmd_bind(args):
+    from .bind import add_to_config, bind_repo
+
+    config_path = args.config
+    if config_path:
+        config_dir = Path(config_path).parent.resolve()
+    else:
+        config_dir = Path.cwd().resolve()
+        config_path = str(config_dir / "config.yaml")
+
+    source_path = Path(args.source).resolve()
+    repo_name = args.name or source_path.name
 
     config = None
-    if args.use_config:
-        try:
-            config = load_config(args.config)
-        except FileNotFoundError:
-            pass
-
-    if config:
-        if args.repo:
-            try:
-                rc = config.repo(args.repo)
-                repo_path = rc.path
-            except KeyError:
-                pass
+    llm_call = None
+    ticket_regex = args.ticket_regex
+    try:
+        config = load_config(config_path)
         ticket_regex = ticket_regex or config.ticket_regex
-
-    if not args.no_llm and config:
-        try:
+        if not args.no_llm:
             from .backfill.summarize import llm_call_factory
-            llm_call = llm_call_factory(config, model=config.llm.model_summarize)
-        except Exception:
-            llm_call = None
+            try:
+                llm_call = llm_call_factory(config, model=config.llm.model_summarize)
+            except Exception:
+                llm_call = None
+    except FileNotFoundError:
+        pass
 
-    manifest = init_repo(
-        repo_path=repo_path,
+    manifest = bind_repo(
+        brain_root=config_dir,
+        source_path=source_path,
+        repo_name=repo_name,
         ticket_regex=ticket_regex or r"AHA-\d+",
-        repo_name=args.repo,
         llm_call=llm_call,
         force=args.force,
     )
-    print(f"wrote {repo_path / '.product-brain' / 'manifest.md'}")
-    print(f"  repo:         {manifest.repo}")
+
+    if config is not None:
+        add_to_config(config_dir, repo_name, source_path)
+
+    print(f"bound {source_path} as '{repo_name}'")
+    print(f"  manifest:     {config_dir}/repos/{repo_name}/manifest.md")
     print(f"  workflow:     {manifest.workflow}")
     print(f"  languages:    {', '.join(manifest.languages) or '(none detected)'}")
     print(f"  entry_points: {', '.join(manifest.entry_points) or '(none detected)'}")
-    print(f"  ignore_paths: {len(manifest.ignore_paths)} entries")
     print(f"  prose body:   {'LLM-generated' if llm_call else 'placeholder (edit by hand)'}")
+
+
+def _cmd_migrate(args):
+    from .migrate import migrate_source
+
+    config = load_config(args.config)
+    repo_cfg = config.repo(args.repo)
+    result = migrate_source(
+        brain_root=config.brain_root,
+        source_path=repo_cfg.path,
+        repo_name=args.repo,
+        remove_from_source=args.remove_from_source,
+    )
+    print(json.dumps(result, indent=2))
 
 
 def _cmd_backfill(args):
@@ -82,8 +108,8 @@ def _cmd_repair(args):
 
 
 def _cmd_incremental(args):
-    from .incremental import run_for_current_commit
-    sys.exit(run_for_current_commit(Path(args.repo or ".").resolve()))
+    from .incremental import run_for_source
+    sys.exit(run_for_source(args.repo, args.since, args.config))
 
 
 def _cmd_bot_serve(args):
@@ -129,15 +155,24 @@ def main():
     parser.add_argument("--version", action="version", version=__version__)
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    p = sub.add_parser("init", help="bootstrap .product-brain/manifest.md from repo introspection")
-    p.add_argument("--path", help="repo path; defaults to cwd")
-    p.add_argument("--repo", help="repo name (used in manifest.repo and to look up config)")
+    p = sub.add_parser("init", help="bootstrap an empty brain repo (config.yaml, repos/, .gitignore, README)")
+    p.add_argument("--path", help="where to create the brain repo; defaults to cwd")
+    p.add_argument("--force", action="store_true", help="overwrite existing config.yaml")
+    p.set_defaults(func=_cmd_init)
+
+    p = sub.add_parser("bind", help="bind a source repo into this brain (writes manifest, updates config)")
+    p.add_argument("source", help="path to the source git repo")
+    p.add_argument("--name", help="short name for the repo; defaults to source dir name")
     p.add_argument("--ticket-regex", help="override ticket regex; default from config or AHA-\\d+")
     p.add_argument("--no-llm", action="store_true", help="skip LLM prose generation")
-    p.add_argument("--no-config", dest="use_config", action="store_false", default=True,
-                   help="skip loading config.yaml; use defaults")
     p.add_argument("--force", action="store_true", help="overwrite existing manifest")
-    p.set_defaults(func=_cmd_init)
+    p.set_defaults(func=_cmd_bind)
+
+    p = sub.add_parser("migrate", help="copy legacy in-repo .product-brain/ into the brain repo layout")
+    p.add_argument("--repo", required=True, help="repo name (must be in config)")
+    p.add_argument("--remove-from-source", action="store_true",
+                   help="delete .product-brain/ from source after copy")
+    p.set_defaults(func=_cmd_migrate)
 
     p = sub.add_parser("backfill", help="rebuild ticket records from git log")
     p.add_argument("--repo")
@@ -157,8 +192,9 @@ def main():
     p.add_argument("--repo")
     p.set_defaults(func=_cmd_repair)
 
-    p = sub.add_parser("incremental", help="post-merge hook target")
-    p.add_argument("--repo", help="repo path; defaults to cwd")
+    p = sub.add_parser("incremental", help="post-merge target: update one repo's records")
+    p.add_argument("--repo", required=True, help="repo name (must be in config)")
+    p.add_argument("--since", help="git SHA; default: parent of HEAD")
     p.set_defaults(func=_cmd_incremental)
 
     p = sub.add_parser("run", help="run a command (groom, estimate, edges, ...) for a ticket")

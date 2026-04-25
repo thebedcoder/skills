@@ -1,9 +1,11 @@
 # Manifest and ticket record schemas
 
-Two artifacts live in each indexed repo:
+Two artifacts live in the central brain repo, one set per bound source repo:
 
-- `.product-brain/manifest.md` — one per repo
-- `.product-brain/tickets/<TICKET_ID>.md` — one per ticket touched in this repo
+- `repos/<repo-name>/manifest.md` — one per bound repo
+- `repos/<repo-name>/tickets/<TICKET_ID>.md` — one per ticket touched in that repo
+
+Source repos are NOT modified. See [binding.md](binding.md) for the brain repo layout.
 
 JSON-Schema files: `skills/product-brain/schemas/{manifest,ticket-record,config}.schema.json`.
 

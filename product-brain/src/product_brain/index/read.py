@@ -152,8 +152,16 @@ def read_record(path: Path, repo: str = "") -> TicketRecord:
     )
 
 
-def read_records(repo_path: Path, repo: str, ticket_ids: Optional[list[str]] = None) -> dict[str, TicketRecord]:
-    base = repo_path / ".product-brain" / "tickets"
+def _tickets_dir(brain_root: Path, repo_name: str) -> Path:
+    return brain_root / "repos" / repo_name / "tickets"
+
+
+def _manifest_path(brain_root: Path, repo_name: str) -> Path:
+    return brain_root / "repos" / repo_name / "manifest.md"
+
+
+def read_records(brain_root: Path, repo_name: str, ticket_ids: Optional[list[str]] = None) -> dict[str, TicketRecord]:
+    base = _tickets_dir(brain_root, repo_name)
     if not base.exists():
         return {}
     out: dict[str, TicketRecord] = {}
@@ -161,29 +169,29 @@ def read_records(repo_path: Path, repo: str, ticket_ids: Optional[list[str]] = N
         for tid in ticket_ids:
             p = base / f"{tid}.md"
             if p.exists():
-                out[tid] = read_record(p, repo=repo)
+                out[tid] = read_record(p, repo=repo_name)
     else:
         for p in sorted(base.glob("*.md")):
-            rec = read_record(p, repo=repo)
+            rec = read_record(p, repo=repo_name)
             out[rec.ticket] = rec
     return out
 
 
-def list_records(repo_path: Path) -> list[str]:
-    base = repo_path / ".product-brain" / "tickets"
+def list_records(brain_root: Path, repo_name: str) -> list[str]:
+    base = _tickets_dir(brain_root, repo_name)
     if not base.exists():
         return []
     return sorted(p.stem for p in base.glob("*.md"))
 
 
-def read_manifest(repo_path: Path) -> Optional[Manifest]:
-    p = repo_path / ".product-brain" / "manifest.md"
+def read_manifest(brain_root: Path, repo_name: str) -> Optional[Manifest]:
+    p = _manifest_path(brain_root, repo_name)
     if not p.exists():
         return None
     text = p.read_text()
     front, body = _split_front_matter(text)
     return Manifest(
-        repo=front.get("repo", repo_path.name),
+        repo=front.get("repo", repo_name),
         ticket_regex=front.get("ticket_regex", r"AHA-\d+"),
         workflow=front.get("workflow", "squash"),
         languages=list(front.get("languages") or []),
@@ -197,8 +205,8 @@ def read_manifest(repo_path: Path) -> Optional[Manifest]:
     )
 
 
-def write_manifest(repo_path: Path, manifest: Manifest) -> None:
-    p = repo_path / ".product-brain" / "manifest.md"
+def write_manifest(brain_root: Path, manifest: Manifest) -> None:
+    p = _manifest_path(brain_root, manifest.repo)
     p.parent.mkdir(parents=True, exist_ok=True)
     front = {
         "repo": manifest.repo,

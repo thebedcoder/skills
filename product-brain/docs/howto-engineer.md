@@ -56,8 +56,11 @@ PR reviews remain the source of truth for new edge cases. Mention them in review
 
 ### "How do I see what the index has on a ticket?"
 
+From the brain repo:
+
 ```bash
-cat <repo>/.product-brain/tickets/AHA-1234.md
+cat repos/backend/tickets/AHA-1234.md
+grep -l "auth/login.py" repos/*/tickets/*.md
 ```
 
 Plain markdown. Read it like any doc.
@@ -75,8 +78,10 @@ Add the label `brain:off` (or whatever `config.bot.kill_switch_label` is set to)
 
 ### "I want to know all tickets that touched `auth/login.py`."
 
+From the brain repo:
+
 ```bash
-grep -l "auth/login.py" <repo>/.product-brain/tickets/*.md
+grep -l "auth/login.py" repos/*/tickets/*.md
 ```
 
 The index is grep-friendly by design.
@@ -89,12 +94,23 @@ If estimates are systemically off, look at the audit log for similarity scores. 
 
 ### "How do I run the index on a new repo?"
 
-1. Add the repo to `config.yaml` under `repos:`.
-2. From inside the repo: `product-brain init` (autodetects languages, entry points, workflow; LLM-summarizes README + package files into the manifest prose if `ANTHROPIC_API_KEY` is set). Use `--no-llm` to skip prose, `--force` to overwrite an existing manifest.
-3. `product-brain backfill --repo <name>`
-4. `<path-to-product-brain>/scripts/install-post-merge-hook.sh` from inside the repo.
+From the brain repo:
 
-If the repo doesn't have READMEs or docs for `init` to summarize, that's fine — the manifest gets placeholder prose. `/pb-plan` quality is reduced (it can't predict scope as precisely) but `/pb-groom` and the rest are unaffected.
+```bash
+product-brain bind ../new-repo --name new-repo
+product-brain backfill --repo new-repo
+git add . && git commit -m "bind: new-repo" && git push
+```
+
+Then in the source repo, install the post-merge hook to fire the bot on future merges:
+
+```bash
+cd ../new-repo
+/path/to/product-brain/scripts/install-post-merge-hook.sh new-repo \
+  https://brain-bot.example.com/webhook/source-merge
+```
+
+`bind` autodetects languages/entry points/workflow; LLM-summarizes README + package files into the manifest prose if `ANTHROPIC_API_KEY` is set. Use `--no-llm` to skip prose. If the source repo has no READMEs, manifest prose is placeholders — `/pb-plan` quality drops slightly but everything else is unaffected.
 
 ## When NOT to use Product Brain
 

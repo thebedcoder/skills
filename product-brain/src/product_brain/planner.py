@@ -67,7 +67,7 @@ def run_command(config: Config, command: str, ticket_id: str, args: str = "") ->
 
     records_by_repo: dict[str, dict[str, TicketRecord]] = {}
     for repo_cfg in config.repos:
-        records_by_repo[repo_cfg.name] = read_records(repo_cfg.path, repo_cfg.name, related_ids)
+        records_by_repo[repo_cfg.name] = read_records(config.brain_root, repo_cfg.name, related_ids)
 
     flat: list[TicketRecord] = []
     for recs in records_by_repo.values():

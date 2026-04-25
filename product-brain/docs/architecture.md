@@ -45,18 +45,22 @@
 
 ## Three-layer model
 
-### Layer 1: Index
+### Layer 1: Index — central brain repo
 
-Per repo, committed in-tree:
+One brain repo holds records for all bound source repos. Source repos are NOT modified.
 
 ```
-.product-brain/
-  manifest.md            front-matter: ticket_regex, workflow, entry_points,
-                         last_indexed_sha, ...
-  tickets/
-    AHA-1234.md          one record per ticket touched in this repo
-  index.json             optional fast lookup: {ticket: [files], file: [tickets]}
+company-product-brain/
+  config.yaml
+  repos/
+    <repo-name>/
+      manifest.md          front-matter: ticket_regex, workflow,
+                           entry_points, last_indexed_sha, ...
+      tickets/
+        AHA-1234.md        one record per ticket touched in this repo
 ```
+
+See [binding.md](binding.md) for the bind workflow.
 
 **Front-matter is mechanical.** Files, SHAs, dates, authors, related-tickets — all derived from `git` + GitHub. A re-run produces identical front-matter regardless of LLM availability.
 
@@ -68,9 +72,9 @@ A manual section (`## Edge cases (manual)`) below a sentinel comment is never ov
 
 | Job | When | What it does |
 |---|---|---|
-| **backfill** | One-shot, rerunnable | Walk `git log --all`, group commits by ticket, generate one record per ticket. ~$0.005/ticket with Haiku. |
-| **incremental** | Post-merge git hook | Update one ticket record per merge to main. ~1 small LLM call. |
-| **repair** | Nightly cron | Validate citations, reconcile renames, refresh `related_tickets` and `linked_bugs`, mark stale gaps. |
+| **backfill** | One-shot, rerunnable | Walk source repo's `git log --all`, group commits by ticket, write records into the brain repo. ~$0.005/ticket with Haiku. |
+| **incremental** | Source repo post-merge hook → bot webhook → worker | Update one ticket record per merge; bot commits/pushes brain repo. ~1 small LLM call. |
+| **repair** | Nightly cron on brain host | Validate citations, reconcile renames, refresh `related_tickets` and `linked_bugs`, mark stale gaps. |
 
 Front-matter and prose live together but are produced separately. Front-matter is reproducible from git/PM data alone; prose uses the LLM.
 
@@ -93,7 +97,7 @@ A `/pb-groom` invocation: ~3 LLM calls + 1 PM-adapter call + optional ≤3 subag
 
 ## Cross-repo joins
 
-A feature touches all 3 repos. We do not maintain consolidated cross-repo records. Instead, each repo has its own per-ticket record; the planner aggregates at query time during `index-read`. This avoids a sync target. If future query latency becomes the bottleneck, an aggregated record can be generated on demand.
+A feature touches all 3 repos. We do not maintain consolidated cross-repo records. Instead, each repo has its own per-ticket record under `repos/<name>/tickets/`; the planner aggregates at query time during `index-read`. Since all records live under one brain repo, joins are trivial — `grep` across `repos/*/tickets/AHA-1234.md` works directly.
 
 ## Why no vector DB
 
@@ -139,4 +143,5 @@ When `test_adapter` is configured (see [test-adapter.md](test-adapter.md)), reco
 - [edge-case-mining.md](edge-case-mining.md): citation discipline detail
 - [pm-adapter.md](pm-adapter.md): writing a new PM adapter
 - [test-adapter.md](test-adapter.md): TestRail and writing a new test adapter
+- [binding.md](binding.md): brain repo layout, binding source repos, hook setup
 - [bot.md](bot.md): headless bot architecture

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import time
 import traceback
 import uuid
@@ -7,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Callable, Optional
 
 from ..adapters import get as get_adapter
+from ..backfill.run import backfill_repo
 from ..config import Config
 from ..models import TicketDraft
 from ..planner import run_command
@@ -16,7 +18,38 @@ from .cooldown import in_quiet_hours, within_cooldown
 from .queue import Job, Queue
 
 
+def _commit_brain_repo(config: Config, repo_name: str, summary: dict) -> None:
+    brain = str(config.brain_root)
+    subprocess.run(["git", "-C", brain, "add", f"repos/{repo_name}"], check=False)
+    msg = f"sync({repo_name}): {summary.get('written', 0)} updated, {summary.get('created', 0)} new"
+    r = subprocess.run(["git", "-C", brain, "commit", "-m", msg], capture_output=True)
+    if r.returncode != 0:
+        return
+    for attempt in range(3):
+        subprocess.run(["git", "-C", brain, "pull", "--rebase"], capture_output=True)
+        push = subprocess.run(["git", "-C", brain, "push"], capture_output=True)
+        if push.returncode == 0:
+            return
+        time.sleep(2 ** attempt)
+
+
+def _process_source_merge(job: Job, config: Config, queue: Queue, audit: AuditLog) -> None:
+    repo_name = job.payload.get("repo")
+    since_sha = job.payload.get("since_sha")
+    summary = backfill_repo(config, repo_name, since=since_sha)
+    _commit_brain_repo(config, repo_name, summary)
+    audit.append(AuditEntry(
+        id=str(uuid.uuid4()), timestamp=time.time(), trigger=job.trigger,
+        ticket_id=job.ticket_id, command=job.command, requester=job.requester,
+        output_summary=str(summary), model="", cost_usd=0.0,
+    ))
+    queue.complete(job.id)
+
+
 def _process_job(job: Job, config: Config, queue: Queue, audit: AuditLog) -> None:
+    if job.command == "source-merge":
+        return _process_source_merge(job, config, queue, audit)
+
     adapter = get_adapter(config.pm_adapter, config)
     now = datetime.now(timezone.utc)
 

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hmac
+import hashlib
+import os
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -19,6 +22,41 @@ def build_app(config: Config, queue: Optional[Queue] = None) -> FastAPI:
     @app.get("/healthz")
     def healthz():
         return {"ok": True, "queue": queue.depth()}
+
+    @app.post("/webhook/source-merge")
+    async def webhook_source_merge(request: Request):
+        body = await request.body()
+        secret = os.environ.get("PRODUCT_BRAIN_SOURCE_MERGE_SECRET", "")
+        sent = request.headers.get("X-PB-Signature", "")
+        if secret:
+            mac = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(sent, mac):
+                raise HTTPException(status_code=401, detail="invalid signature")
+
+        import json
+        try:
+            payload = json.loads(body)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="invalid json")
+
+        repo_name = payload.get("repo")
+        head_sha = payload.get("head_sha")
+        since_sha = payload.get("since_sha")
+        if not repo_name:
+            raise HTTPException(status_code=400, detail="missing repo")
+        try:
+            config.repo(repo_name)
+        except KeyError:
+            raise HTTPException(status_code=400, detail=f"unknown repo: {repo_name}")
+
+        queue.enqueue(
+            ticket_id=f"source:{repo_name}",
+            command="source-merge",
+            trigger=f"source-merge:{repo_name}@{(head_sha or '?')[:7]}",
+            requester="ci",
+            payload={"repo": repo_name, "head_sha": head_sha, "since_sha": since_sha},
+        )
+        return {"status": "queued", "repo": repo_name}
 
     @app.post("/webhook/aha")
     async def webhook_aha(request: Request):

@@ -1,9 +1,9 @@
-"""Bootstrap .product-brain/manifest.md from repo introspection.
+"""Bind a source repo into the central brain repo.
 
-Detects languages, entry points, workflow, ignore paths from the repo
-itself. Optional LLM step summarizes top-level README + package files
-into the manifest prose body. Without LLM (or no API key), prose is
-left as a placeholder for hand-authoring.
+Detects languages, entry points, workflow, ignore paths from the source
+repo via git. Writes the manifest into `<brain_root>/repos/<name>/manifest.md`
+(NOT into the source repo). Optional LLM step summarizes top-level README +
+package files into the manifest prose body.
 """
 
 from __future__ import annotations
@@ -12,6 +12,8 @@ import subprocess
 from collections import Counter
 from pathlib import Path
 from typing import Optional
+
+import yaml
 
 from .index import write_manifest
 from .models import Manifest
@@ -162,25 +164,27 @@ def _gather_prose_inputs(repo: Path, max_chars: int = 8000) -> str:
     return "\n\n".join(parts)
 
 
-def init_repo(
-    repo_path: Path,
+def bind_repo(
+    brain_root: Path,
+    source_path: Path,
+    repo_name: str,
     ticket_regex: str = r"AHA-\d+",
-    repo_name: Optional[str] = None,
     llm_call=None,
     force: bool = False,
 ) -> Manifest:
-    repo_path = repo_path.resolve()
-    if not (repo_path / ".git").exists():
-        raise ValueError(f"{repo_path} is not a git repo")
+    source_path = source_path.resolve()
+    brain_root = brain_root.resolve()
+    if not (source_path / ".git").exists():
+        raise ValueError(f"{source_path} is not a git repo")
 
-    target = repo_path / ".product-brain" / "manifest.md"
+    target = brain_root / "repos" / repo_name / "manifest.md"
     if target.exists() and not force:
         raise FileExistsError(f"{target} already exists; pass --force to overwrite")
 
-    languages = detect_languages(repo_path)
-    entry_points = detect_entry_points(repo_path, languages)
-    workflow = detect_workflow(repo_path)
-    ignore_paths = detect_ignore_paths(repo_path)
+    languages = detect_languages(source_path)
+    entry_points = detect_entry_points(source_path, languages)
+    workflow = detect_workflow(source_path)
+    ignore_paths = detect_ignore_paths(source_path)
 
     body = (
         "## What this repo is\n\n"
@@ -191,7 +195,7 @@ def init_repo(
         "_(optional: legacy/frozen/foreign-owned dirs)_\n"
     )
     if llm_call is not None:
-        inputs = _gather_prose_inputs(repo_path)
+        inputs = _gather_prose_inputs(source_path)
         if inputs:
             try:
                 generated = llm_call(_PROSE_PROMPT % {"inputs": inputs}, max_tokens=800)
@@ -201,7 +205,7 @@ def init_repo(
                 pass
 
     manifest = Manifest(
-        repo=repo_name or repo_path.name,
+        repo=repo_name,
         ticket_regex=ticket_regex,
         workflow=workflow,
         languages=languages,
@@ -213,5 +217,36 @@ def init_repo(
         index_cutoff_date="",
         body=body,
     )
-    write_manifest(repo_path, manifest)
+    write_manifest(brain_root, manifest)
     return manifest
+
+
+def add_to_config(brain_root: Path, repo_name: str, source_path: Path) -> None:
+    """Append `{name, path}` to config.yaml's repos[] if not present."""
+    config_path = brain_root / "config.yaml"
+    if not config_path.exists():
+        raise FileNotFoundError(f"{config_path} not found; run `product-brain init` first")
+    raw = yaml.safe_load(config_path.read_text()) or {}
+    repos = raw.get("repos") or []
+    rel = _try_relative(source_path, brain_root)
+    entry = {"name": repo_name, "path": rel}
+    for existing in repos:
+        if existing.get("name") == repo_name:
+            existing["path"] = rel
+            break
+    else:
+        repos.append(entry)
+    raw["repos"] = repos
+    config_path.write_text(yaml.safe_dump(raw, sort_keys=False))
+
+
+def _try_relative(target: Path, base: Path) -> str:
+    target = target.resolve()
+    base = base.resolve()
+    try:
+        return str(Path("..") / Path(target.name)) if target.parent != base else str(target.relative_to(base))
+    except ValueError:
+        try:
+            return str(target.relative_to(base))
+        except ValueError:
+            return str(target)

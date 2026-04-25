@@ -124,8 +124,10 @@ def render(record: TicketRecord) -> str:
 """
 
 
-def write_record(repo_path: Path, record: TicketRecord) -> Path:
-    base = repo_path / ".product-brain" / "tickets"
+def write_record(brain_root: Path, record: TicketRecord) -> Path:
+    if not record.repo:
+        raise ValueError("TicketRecord.repo must be set before write_record")
+    base = brain_root / "repos" / record.repo / "tickets"
     base.mkdir(parents=True, exist_ok=True)
     p = base / f"{record.ticket}.md"
     p.write_text(render(record))

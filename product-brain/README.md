@@ -1,8 +1,8 @@
 # Product Brain
 
-> A cross-repo memory + planning layer that ties project-management tickets to real shipped code, so feature planning, grooming, and estimation are grounded in what was actually built — not just what the spec said.
+> A central memory + planning layer that ties project-management tickets to real shipped code across all your product repos, so feature planning, grooming, and estimation are grounded in what was actually built — not just what the spec said.
 
-Product Brain reads `git log` (where every commit references a ticket ID), enriches with PR review threads, and emits one markdown record per ticket per repo. A skill, a CLI, and a headless bot all consume that index to answer questions like:
+Product Brain lives in **one central repo** that bind one or more source repos. It reads each source repo's `git log` (where every commit references a ticket ID), enriches with PR review threads, and emits one markdown record per ticket per repo — all stored in the central brain. **Source repos are never modified.** A skill, a CLI, and a headless bot consume that index to answer questions like:
 
 - "Groom AHA-1234 — what's the scope across our 3 sub-products, what edges did we hit on similar work, and how long should it take?"
 - "Plan 'password reset' — predict touched areas, find related shipped tickets, draft sub-tickets."
@@ -24,9 +24,9 @@ Product Brain produces that second view automatically by mining `git log + PR hi
 
 | Component | What it does |
 |---|---|
-| **Per-repo index** | `.product-brain/tickets/AHA-XXXX.md` files, one per ticket touched in that repo. Front-matter is mechanical (files, SHAs, dates); prose is LLM-generated and citation-validated. |
-| **Backfill CLI** | One-shot rebuild from `git log --all`. Idempotent. |
-| **Incremental hook** | Post-merge git hook updates one record per merge. ~1 small LLM call. |
+| **Central brain repo** | One repo (e.g. `company-product-brain/`) holds `repos/<name>/{manifest.md, tickets/AHA-XXXX.md}` for every bound source repo. Source repos stay untouched. |
+| **Backfill CLI** | One-shot rebuild from each source repo's `git log --all`. Idempotent. |
+| **Incremental hook** | Post-merge hook (or GitHub Action) in each source repo notifies the bot, which updates one record per merge. ~1 small LLM call. |
 | **Repair job** | Nightly: validates citations, flags stale gaps, reconciles renames. |
 | **Slash commands** | `/pb-groom`, `/pb-plan`, `/pb-edges`, `/pb-related`, `/pb-draft-tickets`, `/pb-sync` — used inside Claude Code by engineers. |
 | **Headless bot** | Webhook + worker. PM types `/brain groom` in an Aha comment; bot replies with scoped plan, estimate (with references), edge cases, and draft sub-tickets. Edits in place, never spams. |
@@ -40,68 +40,84 @@ Product Brain produces that second view automatically by mining `git log + PR hi
 Three phases. Data flows in continuously as engineers merge code; the index sits in each repo; data flows out on demand when a PM (or engineer) asks for a plan.
 
 ```
-┌─────────────────── 1. DEVELOPMENT (continuous) ──────────────────────┐
+┌────────────── 1. DEVELOPMENT (continuous, source repos) ─────────────┐
 │                                                                       │
 │   engineer commits "AHA-1234: add 2FA" → PR → review → merge to main │
 │                              │                                        │
-│                              ▼                                        │
-│              ┌──────────────────────────┐                            │
-│              │ post-merge git hook  OR  │                            │
-│              │ CI workflow on main push │                            │
-│              └────────────┬─────────────┘                            │
-│                           ▼                                           │
-│              ┌────────────────────────────┐                          │
-│              │ incremental                │                          │
-│              │  • parse commit + diff     │                          │
-│              │  • fetch PR review threads │                          │
-│              │  • extract edge cases      │                          │
-│              │  • validate every citation │                          │
-│              └────────────┬───────────────┘                          │
-└───────────────────────────┼───────────────────────────────────────────┘
-                            │ writes/updates one record
-                            ▼
-┌──────────── 2. INDEX (per repo, committed in-tree) ───────────────────┐
-│                                                                        │
-│  flutter-app/.product-brain/tickets/                                   │
-│    AHA-1100.md   AHA-1234.md   AHA-1500.md                             │
-│  react-app/.product-brain/tickets/                                     │
-│    AHA-1234.md   AHA-1500.md                                           │
-│  backend/.product-brain/tickets/                                       │
-│    AHA-1100.md   AHA-1234.md   AHA-1500.md                             │
-│                                                                        │
-│  each record =  YAML front-matter (mechanical: files, SHAs, dates)     │
-│              +  prose (LLM-generated, citation-validated)              │
-│                                                                        │
-└────────────────────────────┬───────────────────────────────────────────┘
-                             │ reads on demand
-                             ▼
-┌──────────────── 3. PLANNING (per query) ──────────────────────────────┐
-│                                                                        │
-│   PM types  "/brain groom"  in Aha comment on AHA-1500                │
-│                  │                                                     │
-│                  ▼                                                     │
-│       Aha webhook ──► bot /webhook/aha  (verify signature)            │
-│                  │                                                     │
-│                  ▼                                                     │
-│            ┌───────────┐                                               │
-│            │  queue    │  (SQLite, per-ticket lock)                    │
-│            └─────┬─────┘                                               │
-│                  ▼                                                     │
-│   ┌─────────────────────────────────────────────────────┐             │
-│   │ worker                                               │             │
-│   │  1. fetch ticket + siblings + label matches  (Aha)   │             │
-│   │  2. read records for those IDs across all 3 repos    │             │
-│   │  3. hotspot-cluster        (deterministic + 1 LLM)   │             │
-│   │  4. estimate w/ refs       (similarity + churn)      │             │
-│   │  5. dedup edge cases       (1 LLM across records)    │             │
-│   │  6. render groom output                              │             │
-│   └────────────────────────┬────────────────────────────┘             │
-│                            ▼                                           │
-│           bot posts/edits Aha comment (in place)                       │
-│                            ▼                                           │
-│      PM sees: scope · estimate · edges · risks · drafts                │
-│                                                                        │
-└────────────────────────────────────────────────────────────────────────┘
+│       Source repos:          ▼                                        │
+│       flutter-app   ┌────────────────────────────┐                   │
+│       react-app  ───┤ post-merge hook            │                   │
+│       backend       │   OR GitHub Action         │                   │
+│                     └────────────┬───────────────┘                   │
+│                                  │ POST {repo, head_sha}             │
+│                                  ▼                                    │
+│                         brain-bot /webhook/source-merge               │
+│                                  │                                    │
+│                                  ▼                                    │
+│                         ┌──────────────────┐                          │
+│                         │ queue (SQLite)   │                          │
+│                         └────────┬─────────┘                          │
+│                                  ▼                                    │
+│                    ┌─────────────────────────────┐                    │
+│                    │ worker                       │                   │
+│                    │  • git pull source repo      │                   │
+│                    │  • run incremental backfill  │                   │
+│                    │  • commit + push brain repo  │                   │
+│                    └──────────────┬──────────────┘                    │
+└───────────────────────────────────┼───────────────────────────────────┘
+                                    │ writes one record
+                                    ▼
+┌──────────── 2. CENTRAL BRAIN REPO (one per company) ─────────────────┐
+│                                                                       │
+│  company-product-brain/                                               │
+│  ├── config.yaml                  bound source repos + adapters       │
+│  ├── repos/                                                           │
+│  │   ├── flutter/                                                     │
+│  │   │   ├── manifest.md                                              │
+│  │   │   └── tickets/AHA-1100.md, AHA-1234.md, AHA-1500.md            │
+│  │   ├── react/                                                       │
+│  │   │   ├── manifest.md                                              │
+│  │   │   └── tickets/AHA-1234.md, AHA-1500.md                         │
+│  │   └── backend/                                                     │
+│  │       ├── manifest.md                                              │
+│  │       └── tickets/AHA-1100.md, AHA-1234.md, AHA-1500.md            │
+│  ├── audit.sqlite                                                     │
+│  └── queue.sqlite                                                     │
+│                                                                       │
+│  each record =  YAML front-matter (mechanical: files, SHAs, dates)    │
+│              +  prose (LLM-generated, citation-validated)             │
+│                                                                       │
+│  Source repos NEVER modified.                                         │
+└──────────────────────────────┬───────────────────────────────────────┘
+                               │ reads on demand
+                               ▼
+┌──────────────── 3. PLANNING (per query) ─────────────────────────────┐
+│                                                                       │
+│   PM types  "/brain groom"  in Aha comment on AHA-1500               │
+│                  │                                                    │
+│                  ▼                                                    │
+│       Aha webhook ──► bot /webhook/aha (verify signature)            │
+│                  │                                                    │
+│                  ▼                                                    │
+│            ┌───────────┐                                              │
+│            │  queue    │ (SQLite, per-ticket lock)                    │
+│            └─────┬─────┘                                              │
+│                  ▼                                                    │
+│   ┌─────────────────────────────────────────────────────┐            │
+│   │ worker                                               │            │
+│   │  1. fetch ticket + siblings + label matches (Aha)    │            │
+│   │  2. read records for those IDs across repos/         │            │
+│   │  3. hotspot-cluster        (deterministic + 1 LLM)   │            │
+│   │  4. estimate w/ refs       (similarity + churn)      │            │
+│   │  5. dedup edge cases       (1 LLM across records)    │            │
+│   │  6. render groom output                              │            │
+│   └────────────────────────┬────────────────────────────┘            │
+│                            ▼                                          │
+│           bot posts/edits Aha comment (in place)                      │
+│                            ▼                                          │
+│      PM sees: scope · estimate · edges · risks · drafts               │
+│                                                                       │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
 Engineers also reach the planning phase via slash commands inside Claude Code (`/pb-groom AHA-1500`), which run the same building blocks and skip the bot. Same logic, two front doors.
@@ -150,7 +166,7 @@ See [docs/architecture.md](docs/architecture.md) for detail.
 
 ## Quick start
 
-### 1. Install
+### 1. Install the tool
 
 ```bash
 git clone <this-repo>
@@ -163,19 +179,36 @@ The installer:
 - copies slash command stubs to `~/.claude/commands/`
 - installs the Python package into the active environment (`pip install -e .`)
 
-### 2. Configure each repo
+### 2. Create the central brain repo
 
-The fastest path is the `init` command. From inside each repo:
+In a sibling directory to your source repos:
 
 ```bash
-product-brain init               # autodetects languages, entry points, workflow
-product-brain init --no-llm      # skip prose generation, leave placeholders
-product-brain init --force       # overwrite existing manifest
+mkdir company-product-brain && cd company-product-brain
+product-brain init
 ```
 
-This writes `.product-brain/manifest.md` with detected fields and (if `ANTHROPIC_API_KEY` is set) an LLM-generated prose body summarizing your top-level READMEs and package files. No agentic-engineering setup or pre-existing docs required.
+This creates `config.yaml`, `repos/`, `.gitignore`, `README.md`, and `git init`s the directory. Edit `config.yaml` to fill in your Aha (or other PM tool) credentials.
 
-Or hand-author the manifest from the template at `skills/product-brain/templates/manifest.md`:
+### 3. Bind source repos
+
+For each source repo you want indexed:
+
+```bash
+product-brain bind ../flutter-app --name flutter
+product-brain bind ../react-app   --name react
+product-brain bind ../backend     --name backend
+```
+
+Each `bind` call:
+- detects languages, entry points, workflow from the source repo
+- writes `repos/<name>/manifest.md` into the brain
+- appends `{name, path}` to `config.yaml`
+- (with `ANTHROPIC_API_KEY`) generates manifest prose from the source repo's README + package files
+
+Source repos are not modified. Use `--no-llm` to skip prose; `--force` to overwrite.
+
+For repos with hand-authored conventions, you can still use the manifest template at `skills/product-brain/templates/manifest.md`:
 
 ```yaml
 ---
@@ -200,66 +233,36 @@ One paragraph describing the repo's purpose for the planning agent.
 Anything an engineer joining the team would want to know.
 ```
 
-See [docs/manifest-schema.md](docs/manifest-schema.md) for the full schema.
+See [docs/manifest-schema.md](docs/manifest-schema.md) for the full schema and [docs/binding.md](docs/binding.md) for the bind workflow.
 
-### 3. Configure the orchestrator
+### 4. Backfill
 
-In the directory where you'll run product-brain (typically a `product-brain` repo of its own, or anywhere central):
-
-```bash
-cp config.example.yaml config.yaml
-cp .env.example .env
-# fill in API keys
-```
-
-Edit `config.yaml`:
-
-```yaml
-repos:
-  - { name: flutter,  path: ../flutter-app }
-  - { name: react,    path: ../react-app }
-  - { name: backend,  path: ../backend }
-
-pm_adapter: aha
-aha:
-  subdomain: yourcompany
-  api_key_env: AHA_API_KEY
-
-llm:
-  provider: anthropic
-  model: claude-haiku-4-5-20251001       # cheap for backfill prose
-  api_key_env: ANTHROPIC_API_KEY
-
-estimate:
-  unit: days
-  reference_window_days: 90
-  min_similarity: 0.4
-
-bot:
-  enabled: false                          # start manual-only
-  allowed_users: [pm@example.com, lead@example.com]
-  cooldown_hours: 24
-  opt_in_label: brain:on
-```
-
-### 4. Backfill an existing repo
+From the brain repo directory:
 
 ```bash
 product-brain backfill --repo backend
+product-brain backfill                    # all bound repos
 ```
 
-This walks `git log --all`, extracts ticket IDs, enriches with PR data, and writes records into `backend/.product-brain/tickets/`.
+Walks each source repo's `git log --all`, extracts ticket IDs, enriches with PR data, writes records into `repos/backend/tickets/` inside the brain. Commit the brain repo when done.
 
-Cost: with Haiku, ~$0.005/ticket × N tickets. A 5-year repo with 500 tickets ≈ $2.50 and ~10 minutes.
+Cost: with Haiku, ~$0.005/ticket × N tickets. 5-year repo with 500 tickets ≈ $2.50 and ~10 minutes.
 
-### 5. Install the post-merge hook in each repo
+### 5. Wire incremental updates
+
+Two ways to keep the brain current after merges:
+
+**Bot webhook (recommended)** — install a post-merge hook in each source repo that POSTs the bot. Bot pulls source, runs incremental, commits and pushes the brain repo:
 
 ```bash
-cd backend
-/path/to/product-brain/scripts/install-post-merge-hook.sh
+cd ../backend
+/path/to/product-brain/scripts/install-post-merge-hook.sh \
+  backend https://brain-bot.example.com/webhook/source-merge
 ```
 
-After this, every merge to main updates exactly one ticket record.
+**GitHub Actions** — drop `scripts/github-action.yml` into each source repo's `.github/workflows/`. Same flow, runs in CI on every push to main.
+
+Either way, source repos never get a `.product-brain/` directory — only a small hook or workflow file that fires a webhook.
 
 ### 6. Use it
 
@@ -290,7 +293,8 @@ The bot replies with a structured comment, edits in place on re-runs, and create
 | File | Topic |
 |---|---|
 | [docs/architecture.md](docs/architecture.md) | System architecture, building blocks, data flow |
-| [docs/manifest-schema.md](docs/manifest-schema.md) | `.product-brain/manifest.md` and `tickets/*.md` schemas |
+| [docs/manifest-schema.md](docs/manifest-schema.md) | manifest and ticket-record schemas |
+| [docs/binding.md](docs/binding.md) | brain repo layout, binding source repos, hook setup |
 | [docs/backfill.md](docs/backfill.md) | Backfill algorithm, phases, failure modes |
 | [docs/edge-case-mining.md](docs/edge-case-mining.md) | Where edge cases come from, citation discipline |
 | [docs/pm-adapter.md](docs/pm-adapter.md) | Abstract PM adapter interface; writing a new adapter |

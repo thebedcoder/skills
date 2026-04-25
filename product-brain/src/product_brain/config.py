@@ -110,6 +110,19 @@ class Config:
                 return r
         raise KeyError(f"repo not configured: {name}")
 
+    @property
+    def brain_root(self) -> Path:
+        return self.config_dir
+
+    def repo_dir(self, name: str) -> Path:
+        return self.brain_root / "repos" / name
+
+    def tickets_dir(self, name: str) -> Path:
+        return self.repo_dir(name) / "tickets"
+
+    def manifest_path(self, name: str) -> Path:
+        return self.repo_dir(name) / "manifest.md"
+
     def llm_api_key(self) -> str:
         return os.environ[self.llm.api_key_env]
 

@@ -71,22 +71,23 @@ def backfill_repo(
     skip_llm: bool = False,
 ) -> dict:
     repo_cfg = config.repo(repo_name)
-    repo_path: Path = repo_cfg.path
-    manifest = read_manifest(repo_path) or Manifest(repo=repo_name)
+    source_path: Path = repo_cfg.path
+    brain_root: Path = config.brain_root
+    manifest = read_manifest(brain_root, repo_name) or Manifest(repo=repo_name)
     ticket_regex = manifest.ticket_regex or config.ticket_regex
     workflow = manifest.workflow or config.backfill.workflow
 
     if since is None and not force and manifest.last_indexed_sha:
         since = manifest.last_indexed_sha
 
-    commits = parse_git_log(repo_path, ticket_regex, workflow=workflow, since=since)
+    commits = parse_git_log(source_path, ticket_regex, workflow=workflow, since=since)
     by_ticket = group_by_ticket(commits)
 
     adapter = get_adapter(config.pm_adapter, config)
     test_adapter = get_test_adapter(config.test_adapter, config)
     llm_call = None if skip_llm else llm_call_factory(config, model=config.llm.model_summarize)
 
-    existing = read_records(repo_path, repo_name)
+    existing = read_records(brain_root, repo_name)
     all_files: dict[str, set[str]] = {tid: {f.path for f in rec.files} for tid, rec in existing.items()}
 
     written = 0
@@ -94,14 +95,14 @@ def backfill_repo(
     bullets_dropped = 0
 
     for ticket_id, ticket_commits in by_ticket.items():
-        files = _aggregate_files(ticket_commits, repo_path)
+        files = _aggregate_files(ticket_commits, source_path)
         last_sha = ticket_commits[-1].sha
         prev = existing.get(ticket_id)
         if not force and prev and prev.shas and prev.shas[-1] == last_sha:
             continue
 
         prs = enrich(
-            repo_path, ticket_id, ticket_commits,
+            source_path, ticket_id, ticket_commits,
             config.github_token(),
             enabled=config.backfill.pr_enrichment,
         )
@@ -163,7 +164,7 @@ def backfill_repo(
 
         if not skip_llm:
             mined, dropped = mine_per_ticket(
-                repo_path, ticket_commits, prs,
+                source_path, ticket_commits, prs,
                 pm_description=(ticket_meta.description if ticket_meta else ""),
                 llm_call=llm_call,
                 linked_bugs=[],
@@ -181,24 +182,25 @@ def backfill_repo(
             bullets_dropped += dropped
 
         all_files[ticket_id] = {f.path for f in files}
-        write_record(repo_path, record)
+        write_record(brain_root, record)
         if prev:
             written += 1
         else:
             created += 1
 
     for ticket_id, files_set in list(all_files.items()):
-        rec_path = repo_path / ".product-brain" / "tickets" / f"{ticket_id}.md"
+        rec_path = brain_root / "repos" / repo_name / "tickets" / f"{ticket_id}.md"
         if not rec_path.exists():
             continue
-        rec = read_records(repo_path, repo_name, [ticket_id])[ticket_id]
+        rec = read_records(brain_root, repo_name, [ticket_id])[ticket_id]
         related = _compute_related(ticket_id, files_set, all_files)
         if related != rec.related_tickets:
             rec.related_tickets = related
-            write_record(repo_path, rec)
+            write_record(brain_root, rec)
 
-    manifest.last_indexed_sha = _head_sha(repo_path)
-    write_manifest(repo_path, manifest)
+    manifest.last_indexed_sha = _head_sha(source_path)
+    manifest.repo = repo_name
+    write_manifest(brain_root, manifest)
 
     return {
         "repo": repo_name,

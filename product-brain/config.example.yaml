@@ -1,7 +1,18 @@
 # Product Brain orchestrator config.
-# Copy to config.yaml and edit for your setup.
+# This file lives at the root of your central brain repo (e.g. company-product-brain/).
+#
+# Brain repo layout:
+#   company-product-brain/
+#     config.yaml                <- this file
+#     repos/
+#       flutter/{manifest.md, tickets/}
+#       react/{manifest.md, tickets/}
+#       backend/{manifest.md, tickets/}
+#
+# Source repos are NEVER modified — index data lives only in this brain repo.
+# `path` in each entry below points at the source git repo (used for git log,
+# diffs, citation validation). Resolved relative to this config file.
 
-# Repos to index. Paths are resolved relative to this config file.
 repos:
   - { name: flutter, path: ../flutter-app }
   - { name: react,   path: ../react-app }
