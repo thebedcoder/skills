@@ -2,7 +2,7 @@
 
 TypeScript port of the Python implementation in [`../product-brain/`](../product-brain/). Same design, same commands, same brain-repo layout — just a different runtime so the team can own it in their primary stack.
 
-**Status: scaffold only.** Folder structure and types are in place; module bodies are stubs that point at their Python source.
+**Status: feature-parity port complete.** All 36 modules ported. `tsc --noEmit` clean, `npm audit` clean, `vitest` 6/6 passing on pure-math blocks. CLI builds and runs.
 
 ---
 
@@ -40,9 +40,11 @@ All versions are the latest as of the scaffold date.
 
 ```
 npm audit:  0 vulnerabilities (info: 0, low: 0, moderate: 0, high: 0, critical: 0)
+tsc --noEmit:  0 errors  (strict mode + verbatimModuleSyntax + isolatedModules)
+vitest:        6/6 passing  (clusterHotspots, estimateEffort, stabilitySignals, dedupEdgeCases)
 ```
 
-Re-run anytime via `npm run audit`.
+Re-run anytime via `npm run audit`, `npm run typecheck`, `npm test`.
 
 ---
 
