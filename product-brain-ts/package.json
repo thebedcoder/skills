@@ -19,7 +19,8 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "audit": "npm audit --audit-level=moderate --omit=dev"
+    "audit": "npm audit --audit-level=moderate --omit=dev",
+    "screenshots": "tsx scripts/screenshots.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.91.1",
