@@ -2,7 +2,7 @@
 
 TypeScript port of the Python implementation in [`../product-brain/`](../product-brain/). Same design, same commands, same brain-repo layout — just a different runtime so the team can own it in their primary stack.
 
-**Status: feature-parity port complete.** All 36 modules ported. `tsc --noEmit` clean, `npm audit` clean, `vitest` 6/6 passing on pure-math blocks. CLI builds and runs.
+**Status: feature-parity port complete + tested.** All 36 modules ported. `tsc --noEmit` clean, `npm audit --omit=dev` clean, `vitest` **125/125 passing** across 17 test files. CLI builds and runs.
 
 ---
 
@@ -39,12 +39,38 @@ All versions are the latest as of the scaffold date.
 ### Security audit
 
 ```
-npm audit:  0 vulnerabilities (info: 0, low: 0, moderate: 0, high: 0, critical: 0)
-tsc --noEmit:  0 errors  (strict mode + verbatimModuleSyntax + isolatedModules)
-vitest:        6/6 passing  (clusterHotspots, estimateEffort, stabilitySignals, dedupEdgeCases)
+npm audit --omit=dev:  0 vulnerabilities  (runtime deps are clean)
+tsc --noEmit:          0 errors  (strict mode + verbatimModuleSyntax + isolatedModules)
+vitest:                125/125 passing across 17 test files
 ```
 
-Re-run anytime via `npm run audit`, `npm run typecheck`, `npm test`.
+Re-run anytime via `npm run audit`, `npm run typecheck`, `npm test`. Coverage report via `npm run test:coverage`.
+
+**Dev-deps note:** `vitest`/`vite` ship transitive moderate-severity advisories at the time of writing. Vitest is dev-only (not in any production bundle), so we audit with `--omit=dev`. Runtime deps (`@anthropic-ai/sdk`, `openai`, `fastify`, `better-sqlite3`, `js-yaml`, `commander`, `zod`, `pino`, `dotenv`) are clean.
+
+### Test coverage
+
+| Module | Tests | Coverage notes |
+|---|---|---|
+| `blocks/hotspot` | 4 | 99.28% (deterministic clustering) |
+| `blocks/estimate` | 8 | 100% (similarity + estimateEffort) |
+| `blocks/edge-mine` | 9 | stabilitySignals, dedupEdgeCases, validateCitations |
+| `blocks/coverage-gap` | 5 | 97.10% (heuristic + LLM-refined paths) |
+| `blocks/render` | 6 | 92.40% (groom output template) |
+| `records/read` + `write` | 8 | 92–98% (round-trip including manual sections) |
+| `bot/queue` | 9 | 100% (atomic claim, depth, recent) |
+| `bot/audit` | 4 | 100% (append, lastForTicket, tail) |
+| `bot/cooldown` | 7 | 100% (cooldown + quiet hours wrap-around) |
+| `bot/commands` | 10 | 100% (parseBrainCommand, all 9 verbs) |
+| `bot/comment` | 11 | 100% (header, locate, contentHash) |
+| `adapters/aha` | 13 | HTTP-mocked: fetchTicket, search, postComment, HMAC, parseWebhook |
+| `adapters/testrail` | 7 | HTTP-mocked: fetchCase, fetchCasesForTicket, fetchRunHistory |
+| `init-brain` | 5 | 94% (skeleton creation, --force, git init) |
+| `bind` | 11 | 79% (language/entry-point detection on real git fixtures) |
+| `migrate` | 5 | 100% (legacy → brain copy with --remove-from-source) |
+| `planner` | 3 | 75% (groom/estimate/related with mocked adapter + seeded records) |
+
+**Not yet covered:** `cli.ts`, `config.ts`, `incremental.ts`, `repair.ts`, `backfill/*` (heavy git+LLM+GitHub I/O), `bot/webhook.ts` + `worker.ts` (Fastify + adapter integration), `llm/*` (SDK wrappers). Listed for future expansion if/when behavior changes warrant deeper integration tests.
 
 ---
 
