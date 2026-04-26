@@ -12,6 +12,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "build:bundle": "tsx scripts/build-bundle.ts",
+    "release": "npm run build:bundle && tsx scripts/release.ts",
     "dev": "tsx src/cli.ts",
     "start": "node dist/cli.js",
     "test": "vitest run",
@@ -41,6 +43,7 @@
     "@typescript-eslint/eslint-plugin": "8.59.0",
     "@typescript-eslint/parser": "8.59.0",
     "@vitest/coverage-v8": "^2.1.9",
+    "esbuild": "^0.28.0",
     "eslint": "10.2.1",
     "tsx": "4.21.0",
     "typescript": "6.0.3",
