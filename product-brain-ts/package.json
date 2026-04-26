@@ -3,7 +3,9 @@
   "version": "0.1.0-ts.0",
   "description": "Cross-repo memory + planning over a ticket-keyed code index. TypeScript port of the Python implementation.",
   "type": "module",
-  "license": "MIT",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Artem Hetman",
   "engines": {
     "node": ">=20.18.0"
   },

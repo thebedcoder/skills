@@ -1,21 +1,32 @@
-MIT License
+PROPRIETARY SOFTWARE LICENSE
 
-Copyright (c) 2026 Artem Hetman
+Copyright (c) 2026 Artem Hetman. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This software, including its source code, documentation, configuration files,
+and any other materials in this repository (collectively, the "Software"), is
+the proprietary and confidential property of Artem Hetman ("the Owner").
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+NO LICENSE IS GRANTED. Without prior written permission from the Owner, you
+are NOT permitted to:
+
+  - copy, reproduce, or distribute the Software, in source or binary form;
+  - modify, adapt, translate, or create derivative works of the Software;
+  - publish, sublicense, sell, rent, lease, or otherwise make the Software
+    available to any third party;
+  - use the Software for any commercial, production, or revenue-generating
+    purpose;
+  - reverse engineer, decompile, or disassemble the Software.
+
+Access to this repository, if granted, is limited to the personal,
+non-production review of the Software by the recipient and does not transfer
+any ownership, license, or other rights.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+OWNER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM, OUT
+OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+For licensing inquiries (commercial use, redistribution, integration), contact
+the Owner directly.
