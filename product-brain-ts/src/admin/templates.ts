@@ -1,6 +1,8 @@
 // Server-rendered HTML helpers. Tagged template literal `html` does HTML escaping
 // of interpolated values; pre-rendered HTML can be passed via `raw()` to opt out.
 
+import { STYLES } from "./styles.js";
+
 const ESCAPE_RE = /[&<>"']/g;
 const ESCAPE_MAP: Record<string, string> = {
   "&": "&amp;",
@@ -63,12 +65,7 @@ export function layout(opts: LayoutOpts): string {
     <meta charset="utf-8" />
     <title>${opts.title} · product-brain admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-    <style>
-      body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
-      .num { font-variant-numeric: tabular-nums; }
-    </style>
+    <style>${raw(STYLES)}</style>
   </head>
   <body class="bg-slate-50 text-slate-900 min-h-screen">
     <header class="bg-white border-b border-slate-200">

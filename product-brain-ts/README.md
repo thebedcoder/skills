@@ -24,6 +24,10 @@ Auth is HTTP Basic; user defaults to `admin`, override via `ADMIN_USER`.
 | Queue | `/admin/queue` | Live counts per state, pending+claimed jobs, recent failures with error excerpt |
 | Settings | `/admin/settings` | Whitelisted, zod-validated edit form for `bot.*`, `estimate.*`, `llm.model_*`. Writes to `config.yaml`; restart bot to pick up |
 
+**Styling:** self-contained — a hand-rolled ~5KB stylesheet (`src/admin/styles.ts`) is inlined into the page so the admin works in air-gapped, proxy-restricted, or any other no-CDN environment. Adding new layout patterns means appending to `styles.ts`; the templates already use Tailwind-style class names so it scales.
+
+**Screenshots:** see `screenshots/`. Re-render anytime with `npx tsx scripts/screenshots.ts` (uses Playwright to capture each page against a temp brain repo seeded with realistic demo data).
+
 The settings editor is **deliberately narrow** — it cannot touch `pm_adapter`, `repos`, paths, secrets, or anything else that could break the bot or escalate access. For deeper changes, edit `config.yaml` directly.
 
 ---
