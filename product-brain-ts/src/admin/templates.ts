@@ -38,7 +38,7 @@ export function html(strings: TemplateStringsArray, ...values: unknown[]): Raw {
 
 export interface LayoutOpts {
   title: string;
-  active: "dashboard" | "audit" | "repos" | "queue" | "settings";
+  active: "dashboard" | "audit" | "repos" | "queue" | "settings" | "about";
   body: Raw;
 }
 
@@ -48,6 +48,7 @@ const NAV_ITEMS: Array<{ slug: LayoutOpts["active"]; label: string; href: string
   { slug: "repos", label: "Repos", href: "/admin/repos" },
   { slug: "queue", label: "Queue", href: "/admin/queue" },
   { slug: "settings", label: "Settings", href: "/admin/settings" },
+  { slug: "about", label: "About", href: "/admin/about" },
 ];
 
 export function layout(opts: LayoutOpts): string {

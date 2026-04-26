@@ -1,6 +1,6 @@
 // Port target: ../product-brain/src/product_brain/init_brain.py
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const GITIGNORE = `__pycache__/
@@ -80,12 +80,7 @@ export function initBrainRepo(brainPath: string, force = false): InitResult {
     throw new Error(`${configPath} already exists; pass --force to overwrite`);
   }
 
-  const templatePath = path.resolve(import.meta.dirname, "..", "..", "..", "product-brain", "config.example.yaml");
-  if (existsSync(templatePath)) {
-    copyFileSync(templatePath, configPath);
-  } else {
-    writeFileSync(configPath, MIN_CONFIG);
-  }
+  writeFileSync(configPath, MIN_CONFIG);
 
   mkdirSync(path.join(resolved, "repos"), { recursive: true });
 

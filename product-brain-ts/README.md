@@ -113,9 +113,19 @@ npm install
 npm run typecheck       # tsc --noEmit
 npm run lint            # eslint
 npm run test            # vitest
-npm run dev -- --help   # tsx src/cli.ts --help (currently stubs)
-npm run build           # tsc → dist/
+npm run dev -- --help   # tsx src/cli.ts --help
+npm run build           # tsc → dist/ (typecheck output)
+npm run build:bundle    # esbuild → dist/product-brain.cjs (single-file dist)
+npm run release         # build:bundle + tar → product-brain-X.Y.Z.tgz
 ```
+
+---
+
+## Distribution
+
+`npm run release` produces a single `.tgz` (~340 KB) containing one bundled `.cjs` file plus a minimal `package.json`. Customers extract, run `./install.sh`, and execute `node product-brain.cjs`. Source (`src/**/*.ts`), tests, dev configs, and dev deps are NOT in the bundle.
+
+See [docs/distribution.md](docs/distribution.md) for the full delivery + update flow.
 
 ---
 

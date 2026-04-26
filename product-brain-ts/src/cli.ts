@@ -16,12 +16,13 @@ import { initBrainRepo } from "./init-brain.js";
 import { migrateSource } from "./migrate.js";
 import { runCommand } from "./planner.js";
 import { repairRepo } from "./repair.js";
+import { BUILD_ID, BUILD_TIME, VERSION } from "./version.js";
 
 const program = new Command();
 program
   .name("product-brain")
   .description("Cross-repo memory + planning over a ticket-keyed code index.")
-  .version("0.1.0-ts.0")
+  .version(`${VERSION} (${BUILD_ID} ${BUILD_TIME})`)
   .option("--config <path>", "path to config.yaml");
 
 program

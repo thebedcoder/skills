@@ -11,6 +11,7 @@ import {
   configExists,
   readConfigYaml,
 } from "./settings.js";
+import { BUILD_ID, BUILD_TIME, VERSION } from "../version.js";
 import { badge, card, html, layout, raw, statTile, table, type Raw } from "./templates.js";
 
 const DAY_MS = 86_400_000;
@@ -368,6 +369,53 @@ export function buildAdminApp(config: Config): FastifyInstance {
       return reply.type("text/html").send(layout({ title: "Settings — error", active: "settings", body }));
     }
     return reply.redirect("/admin/settings?saved=1");
+  });
+
+  app.get("/admin/about", (_req, reply) => {
+    const grid = (entries: Array<[string, string | Raw]>): Raw =>
+      html`<dl class="grid grid-cols-[180px_1fr] gap-2 text-sm">
+        ${entries.map(([k, v]) => html`<dt class="text-slate-500">${k}</dt><dd class="font-mono">${v}</dd>`)}
+      </dl>`;
+
+    const body = html`<div class="space-y-6">
+      <h1 class="text-xl font-semibold">About</h1>
+      ${card(
+        "Build",
+        grid([
+          ["Version", VERSION],
+          ["Build", BUILD_ID],
+          ["Built at", BUILD_TIME],
+          ["Node", process.version],
+        ]),
+      )}
+      ${card(
+        "License",
+        html`<div class="text-sm space-y-2">
+          <div><strong>Proprietary — All Rights Reserved.</strong></div>
+          <div class="text-slate-600">
+            This software is licensed under a separate commercial agreement.
+            Production use, redistribution, or modification without prior
+            written permission is prohibited. For licensing inquiries, contact
+            the owner.
+          </div>
+        </div>`,
+      )}
+      ${card(
+        "Updates",
+        html`<div class="text-sm space-y-2">
+          <div>To update to a new version:</div>
+          <ol class="list-disc ml-5 text-slate-700 space-y-1">
+            <li>Download the new tarball provided with your license.</li>
+            <li>Extract over the existing install directory.</li>
+            <li>Run <code>npm install --production</code>.</li>
+            <li>Restart the bot worker (and the webhook server, if separate).</li>
+          </ol>
+          <div class="text-slate-500">Schema migrations apply automatically on startup. No manual data migration is needed.</div>
+        </div>`,
+      )}
+    </div>`;
+
+    return reply.type("text/html").send(layout({ title: "About", active: "about", body }));
   });
 
   return app;
