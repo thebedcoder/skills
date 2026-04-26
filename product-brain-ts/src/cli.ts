@@ -5,6 +5,7 @@ import { Command } from "commander";
 import { addToConfig, bindRepo } from "./bind.js";
 import { backfillRepo } from "./backfill/run.js";
 import { llmCallFactory } from "./backfill/summarize.js";
+import { buildAdminApp } from "./admin/server.js";
 import { AuditLog } from "./bot/audit.js";
 import { Queue } from "./bot/queue.js";
 import { buildApp } from "./bot/webhook.js";
@@ -202,6 +203,18 @@ bot
     const config = load(program.opts<{ config?: string }>().config);
     const q = new Queue(config.queue.path);
     process.stdout.write(`${JSON.stringify(q.depth(), null, 2)}\n`);
+  });
+bot
+  .command("admin")
+  .description("run the admin web UI (read+limited-write)")
+  .option("--host <host>", "bind host; defaults to 127.0.0.1 (localhost-only)", "127.0.0.1")
+  .option("--port <port>", "bind port", "8089")
+  .action(async (opts: { host: string; port: string }) => {
+    const config = load(program.opts<{ config?: string }>().config);
+    const app = buildAdminApp(config);
+    await app.listen({ host: opts.host, port: Number(opts.port) });
+    process.stdout.write(`admin listening on http://${opts.host}:${opts.port}/admin/\n`);
+    process.stdout.write(`  basic auth: ADMIN_USER (default 'admin') / ADMIN_PASSWORD\n`);
   });
 bot
   .command("tail-audit")

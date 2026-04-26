@@ -2,7 +2,29 @@
 
 TypeScript port of the Python implementation in [`../product-brain/`](../product-brain/). Same design, same commands, same brain-repo layout — just a different runtime so the team can own it in their primary stack.
 
-**Status: feature-parity port complete + tested.** All 36 modules ported. `tsc --noEmit` clean, `npm audit --omit=dev` clean, `vitest` **125/125 passing** across 17 test files. CLI builds and runs.
+**Status: feature-parity port complete + admin panel + tests.** All 36 ported modules plus a 5-page admin web UI. `tsc --noEmit` clean, `npm audit --omit=dev` clean, `vitest` **176/176 passing** across 22 test files. CLI builds and runs.
+
+## Admin panel
+
+Read-only dashboard + restricted-write settings editor. Same Node runtime, separate `/admin/*` routes; bound to `127.0.0.1` by default so it's not exposed to the public webhook port.
+
+```bash
+export ADMIN_PASSWORD='choose-something-strong'
+product-brain bot admin                # localhost:8089/admin/
+product-brain bot admin --host 0.0.0.0 --port 9000   # bind elsewhere
+```
+
+Auth is HTTP Basic; user defaults to `admin`, override via `ADMIN_USER`.
+
+| Page | Path | What it shows |
+|---|---|---|
+| Dashboard | `/admin/` | Last-30d totals (runs, cost, distinct tickets/users, errors), queue depth, top commands and requesters, daily breakdown |
+| Audit log | `/admin/audit` | Filterable list (ticket, command, requester, status, days). Click into any run for full output summary, model, cost, error |
+| Repos | `/admin/repos` | Each bound repo: source path, indexed HEAD, ticket-record count, last-sync recency, status badge |
+| Queue | `/admin/queue` | Live counts per state, pending+claimed jobs, recent failures with error excerpt |
+| Settings | `/admin/settings` | Whitelisted, zod-validated edit form for `bot.*`, `estimate.*`, `llm.model_*`. Writes to `config.yaml`; restart bot to pick up |
+
+The settings editor is **deliberately narrow** — it cannot touch `pm_adapter`, `repos`, paths, secrets, or anything else that could break the bot or escalate access. For deeper changes, edit `config.yaml` directly.
 
 ---
 
@@ -41,7 +63,7 @@ All versions are the latest as of the scaffold date.
 ```
 npm audit --omit=dev:  0 vulnerabilities  (runtime deps are clean)
 tsc --noEmit:          0 errors  (strict mode + verbatimModuleSyntax + isolatedModules)
-vitest:                125/125 passing across 17 test files
+vitest:                176/176 passing across 22 test files
 ```
 
 Re-run anytime via `npm run audit`, `npm run typecheck`, `npm test`. Coverage report via `npm run test:coverage`.
@@ -69,6 +91,11 @@ Re-run anytime via `npm run audit`, `npm run typecheck`, `npm test`. Coverage re
 | `bind` | 11 | 79% (language/entry-point detection on real git fixtures) |
 | `migrate` | 5 | 100% (legacy → brain copy with --remove-from-source) |
 | `planner` | 3 | 75% (groom/estimate/related with mocked adapter + seeded records) |
+| `admin/auth` | 8 | 100% (basic-auth, env loading, timing-safe compare) |
+| `admin/templates` | 11 | 100% (HTML escape, layout, table/card/badge) |
+| `admin/db` | 11 | 100% (dashboard aggregates, audit filter, queue counts) |
+| `admin/settings` | 10 | 100% (zod whitelist, ignores out-of-list keys, preserves untouched fields) |
+| `admin/server` | 10 | 90% (each route smoke-tested via Fastify inject; auth, render, settings POST round-trip) |
 
 **Not yet covered:** `cli.ts`, `config.ts`, `incremental.ts`, `repair.ts`, `backfill/*` (heavy git+LLM+GitHub I/O), `bot/webhook.ts` + `worker.ts` (Fastify + adapter integration), `llm/*` (SDK wrappers). Listed for future expansion if/when behavior changes warrant deeper integration tests.
 
@@ -130,6 +157,16 @@ Every TS file has a `// Port target:` comment pointing at the Python source. Rec
 | 34 | `src/product_brain/bot/webhook.py` | `src/bot/webhook.ts` | Fastify |
 | 35 | `src/product_brain/bot/worker.py` | `src/bot/worker.ts` | uses planner + adapters |
 | 36 | `src/product_brain/cli.py` | `src/cli.ts` | commander |
+
+### TS-only additions (no Python equivalent)
+
+| File | Purpose |
+|---|---|
+| `src/admin/auth.ts` | HTTP Basic auth hook for the admin panel |
+| `src/admin/templates.ts` | tagged-template HTML renderer with auto-escape, layout, components |
+| `src/admin/db.ts` | read-only SQL queries against `audit.sqlite` and `queue.sqlite` |
+| `src/admin/settings.ts` | whitelisted, zod-validated config editor |
+| `src/admin/server.ts` | Fastify app: dashboard, audit, repos, queue, settings pages |
 
 After the port: keep slash-command markdown, JSON schemas, templates, docs, demo kit **as-is**. They're agent-readable / human-readable and language-agnostic.
 
