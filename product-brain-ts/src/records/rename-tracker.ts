@@ -1,0 +1,30 @@
+// Port target: ../product-brain/src/product_brain/index/rename_tracker.py
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { simpleGit } from "simple-git";
+
+export async function canonicalPaths(repo: string, paths: string[]): Promise<Record<string, string>> {
+  const git = simpleGit(repo);
+  const out: Record<string, string> = {};
+  for (const p of paths) {
+    if (existsSync(path.join(repo, p))) {
+      out[p] = p;
+      continue;
+    }
+    try {
+      const res = await git.raw(["log", "--follow", "--name-status", "--pretty=", "-1", "--", p]);
+      let newPath = p;
+      for (const line of res.split("\n")) {
+        const parts = line.split("\t");
+        if (parts.length >= 3 && parts[0]?.startsWith("R")) {
+          newPath = parts[2] ?? p;
+          break;
+        }
+      }
+      out[p] = newPath;
+    } catch {
+      out[p] = p;
+    }
+  }
+  return out;
+}
