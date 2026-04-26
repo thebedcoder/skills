@@ -287,4 +287,4 @@ This is v1. See [docs/build-order.md](docs/build-order.md) for what was built fi
 
 ## License
 
-MIT.
+MIT — see [LICENSE](LICENSE).
