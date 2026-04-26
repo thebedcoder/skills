@@ -1,0 +1,36 @@
+# Drop into <source-repo>/.github/workflows/product-brain.yml
+# Notifies brain bot on every push to main.
+#
+# Required secrets in the source repo:
+#   PRODUCT_BRAIN_WEBHOOK              full URL to bot's /webhook/source-merge
+#   PRODUCT_BRAIN_SOURCE_MERGE_SECRET  HMAC-SHA256 secret (optional but recommended)
+
+name: product-brain sync
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify brain bot
+        env:
+          WEBHOOK: ${{ secrets.PRODUCT_BRAIN_WEBHOOK }}
+          SECRET:  ${{ secrets.PRODUCT_BRAIN_SOURCE_MERGE_SECRET }}
+          REPO:    ${{ github.event.repository.name }}
+          HEAD:    ${{ github.sha }}
+          BEFORE:  ${{ github.event.before }}
+        run: |
+          PAYLOAD=$(printf '{"repo":"%s","head_sha":"%s","since_sha":"%s"}' "$REPO" "$HEAD" "$BEFORE")
+          if [ -n "$SECRET" ]; then
+            SIG=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$SECRET" -hex | awk '{print $2}')
+            curl -fsS -m 10 -X POST "$WEBHOOK" \
+              -H "Content-Type: application/json" \
+              -H "X-PB-Signature: $SIG" \
+              -d "$PAYLOAD"
+          else
+            curl -fsS -m 10 -X POST "$WEBHOOK" \
+              -H "Content-Type: application/json" \
+              -d "$PAYLOAD"
+          fi

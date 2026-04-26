@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "ProductBrainManifest",
+  "description": "Front-matter schema for .product-brain/manifest.md, one per indexed repo.",
+  "type": "object",
+  "required": ["repo", "ticket_regex", "workflow"],
+  "additionalProperties": false,
+  "properties": {
+    "repo": {
+      "type": "string",
+      "description": "Short name for this repo. Must match the `name` field in the orchestrator's config.yaml."
+    },
+    "ticket_regex": {
+      "type": "string",
+      "description": "Regex matched against commit subjects/bodies and PR titles to extract ticket IDs.",
+      "examples": ["AHA-\\d+", "(AHA|JIRA)-\\d+"]
+    },
+    "workflow": {
+      "type": "string",
+      "enum": ["squash", "merge", "rebase"],
+      "description": "How PRs land on main. Determines whether merge commits or branch commits are the source of truth for diffs."
+    },
+    "languages": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Languages used in this repo. Hints for symbol extraction."
+    },
+    "entry_points": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Files the planning agent should consider as the repo's surface (e.g. main.py, index.tsx). Used for tentative-scope prediction in /pb-plan."
+    },
+    "owners_file": {
+      "type": "string",
+      "description": "Path to a CODEOWNERS-style file. Used to suggest reviewers."
+    },
+    "ignore_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Path prefixes to exclude from file-list aggregation (vendor/, generated/, etc)."
+    },
+    "mega_file_threshold": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Percentile cutoff for excluding 'mega-files' from clusters. 0.95 = exclude top 5% by churn."
+    },
+    "last_indexed_sha": {
+      "type": "string",
+      "description": "Last git SHA processed by backfill/incremental. Set by the tool, do not edit by hand."
+    },
+    "index_cutoff_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date before which the 'every commit has a ticket ID' rule was not enforced. Records before this date are sparse."
+    }
+  }
+}
