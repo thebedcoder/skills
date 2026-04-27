@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/bot/commands.py
 
 const BRAIN_RE = /(?:^|\n)\s*\/brain(?:\s+(\S+))?(?:\s+([^\n]*))?/;
 

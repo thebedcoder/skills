@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/bot/audit.py
 import Database from "better-sqlite3";
 
 export interface AuditEntry {

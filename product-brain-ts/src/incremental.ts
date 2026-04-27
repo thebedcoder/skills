@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/incremental.py
 import { execFileSync } from "node:child_process";
 import { backfillRepo } from "./backfill/run.js";
 import { load } from "./config.js";

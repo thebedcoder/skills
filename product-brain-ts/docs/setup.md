@@ -13,14 +13,14 @@ End-to-end setup, click-by-click. Time: ~30 min if you have credentials ready.
 
 ```bash
 git clone <this-repo> ~/tools/product-brain
-cd ~/tools/product-brain
+cd ~/tools/product-brain/product-brain-ts
 ./install.sh
 ```
 
 The installer:
 - copies the skill to `~/.claude/skills/product-brain/`
 - copies slash command stubs to `~/.claude/commands/`
-- runs `pip install -e .[all]` (installs both anthropic and openai SDKs)
+- runs `npm install` and `npm run build:bundle` (single-file CLI in `dist/product-brain.cjs`)
 
 Skill + slash commands are Claude-Code-specific bonuses. The CLI works for any AI tool — see [integrations.md](integrations.md) for Copilot Chat, Codex, Cursor, and other patterns.
 

@@ -31,7 +31,7 @@ llm:
   model_synthesize: claude-sonnet-4-6
 ```
 
-Install: `pip install 'product-brain[anthropic]'`.
+SDK: `@anthropic-ai/sdk` (already in `package.json`).
 
 ### OpenAI direct
 
@@ -44,7 +44,7 @@ llm:
   model_synthesize: gpt-4o
 ```
 
-Install: `pip install 'product-brain[openai]'`.
+SDK: `openai` (already in `package.json`).
 
 ### Azure OpenAI
 
@@ -63,7 +63,7 @@ llm:
 
 Note: `model_*` are your **deployment names**, not OpenAI model names. Configure them in Azure portal first.
 
-Install: `pip install 'product-brain[openai]'` (Azure uses the `openai` SDK).
+SDK: `openai` (Azure shares the OpenAI SDK; same package).
 
 ### Local / self-hosted via Ollama
 
@@ -79,7 +79,7 @@ llm:
 
 Same pattern works for **LM Studio** (`http://localhost:1234/v1`), **vLLM**, **llama.cpp server**, **text-generation-inference**.
 
-Install: `pip install 'product-brain[openai]'`.
+SDK: `openai` (already in `package.json`).
 
 ### Hosted OpenAI-compatible aggregators
 

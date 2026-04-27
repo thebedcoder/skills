@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/backfill/git_log.py
 import { execFileSync } from "node:child_process";
 import type { Commit, FileChange } from "../models.js";
 

@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/index/rename_tracker.py
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";

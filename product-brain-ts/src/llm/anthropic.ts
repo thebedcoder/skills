@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/llm/anthropic_provider.py
 import Anthropic from "@anthropic-ai/sdk";
 import type { LLMProvider } from "./base.js";
 

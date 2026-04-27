@@ -21,35 +21,36 @@ Code mining captures what dev wrote tests for. PR review captures what reviewers
 
 ## Interface
 
-`src/product_brain/adapters/test_base.py`:
+`src/adapters/test-base.ts`:
 
-```python
-class TestAdapter(ABC):
-    def fetch_case(self, case_id: str) -> Optional[TestCase]: ...
-    def fetch_cases_for_ticket(self, ticket_id: str) -> list[TestCase]: ...
-    def fetch_cases_for_files(self, paths: list[str]) -> list[TestCase]: ...
-    def fetch_run_history(self, case_id: str, since=None) -> list[RunResult]: ...
-    def search_cases(self, keywords: str, limit: int = 50) -> list[TestCase]: ...
+```typescript
+export interface TestAdapter {
+  fetchCase(caseId: string): Promise<TestCase | null>;
+  fetchCasesForTicket(ticketId: string): Promise<TestCase[]>;
+  fetchCasesForFiles(paths: string[]): Promise<TestCase[]>;
+  fetchRunHistory(caseId: string, since?: Date): Promise<RunResult[]>;
+  searchCases(keywords: string, limit?: number): Promise<TestCase[]>;
+}
 ```
 
 `TestCase`:
 
-```python
-@dataclass
-class TestCase:
-    id: str                      # adapter-prefixed: "TR-C-4521"
-    title: str
-    preconditions: str
-    steps: list[str]
-    expected: str
-    automation: str              # manual | automated | semi | unknown
-    type: str                    # functional | security | performance | accessibility
-    suite: str
-    linked_tickets: list[str]    # tickets this case is linked to
-    last_status: str             # passed | failed | blocked | retest | untested
-    last_run: datetime
-    recent_failures: int         # within run-history window
-    url: str
+```typescript
+export interface TestCase {
+  id: string;                  // adapter-prefixed: "TR-C-4521"
+  title: string;
+  preconditions: string;
+  steps: string[];
+  expected: string;
+  automation: "manual" | "automated" | "semi" | "unknown";
+  type: string;                // functional | security | performance | accessibility
+  suite: string;
+  linkedTickets: string[];     // tickets this case is linked to
+  lastStatus?: "passed" | "failed" | "blocked" | "retest" | "untested" | "unknown";
+  lastRun?: Date;
+  recentFailures: number;      // within run-history window
+  url: string;
+}
 ```
 
 ## TestRail implementation
@@ -165,7 +166,7 @@ Fully heuristic mode (no LLM) is available — produces more false positives but
 
 ## Adding a new test adapter (Zephyr, Xray, qTest)
 
-1. Create `src/product_brain/adapters/zephyr.py`.
+1. Create `src/adapters/zephyr.ts`.
 2. Subclass `TestAdapter`, implement all abstract methods.
 3. Register in `adapters/__init__.py`:
    ```python

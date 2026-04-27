@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/models.py
 
 export interface FileChange {
   path: string;

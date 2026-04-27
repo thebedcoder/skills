@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/migrate.py
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 

@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/index/write.py
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import yaml from "js-yaml";

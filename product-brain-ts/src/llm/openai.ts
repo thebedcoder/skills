@@ -1,5 +1,3 @@
-// Port target: ../product-brain/src/product_brain/llm/openai_provider.py
-//
 // Covers OpenAI direct, Azure OpenAI, and any OpenAI-compatible endpoint
 // (Ollama, LM Studio, vLLM, llama.cpp, OpenRouter, Groq, Together, ...).
 import OpenAI, { AzureOpenAI } from "openai";

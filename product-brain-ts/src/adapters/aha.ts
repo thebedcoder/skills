@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/adapters/aha.py
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Config } from "../config.js";
 import type { Comment, Ticket, TicketDraft, WebhookEvent } from "../models.js";

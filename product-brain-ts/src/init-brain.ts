@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/init_brain.py
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";

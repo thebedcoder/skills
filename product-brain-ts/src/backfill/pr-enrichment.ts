@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/backfill/pr_enrichment.py
 import { execFileSync } from "node:child_process";
 import type { Commit, PRComment, PullRequest } from "../models.js";
 

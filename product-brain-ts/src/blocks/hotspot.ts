@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/blocks/hotspot.py
 import type { TicketRecord } from "../models.js";
 
 export interface Cluster {

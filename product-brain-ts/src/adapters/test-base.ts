@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/adapters/test_base.py
 import type { RunResult, TestCase } from "../models.js";
 
 export interface TestAdapter {

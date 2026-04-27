@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// Port target: ../product-brain/src/product_brain/cli.py
 import "dotenv/config";
 import { Command } from "commander";
 import { addToConfig, bindRepo } from "./bind.js";

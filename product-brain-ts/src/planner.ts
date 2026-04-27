@@ -1,5 +1,3 @@
-// Port target: ../product-brain/src/product_brain/planner.py
-//
 // Composes building blocks for a single command. Used by both bot worker
 // and CLI. Slash commands inside Claude Code read the markdown command
 // bodies and may compose differently.

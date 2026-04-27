@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/bot/comment.py
 import { createHash } from "node:crypto";
 import type { Comment } from "../models.js";
 

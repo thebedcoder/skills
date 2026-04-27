@@ -80,7 +80,7 @@ Front-matter and prose live together but are produced separately. Front-matter i
 
 ### Layer 3: Query
 
-Building blocks (see `src/product_brain/blocks/`):
+Building blocks (see `src/blocks/`):
 
 | Block | Determinism | LLM calls |
 |---|---|---|

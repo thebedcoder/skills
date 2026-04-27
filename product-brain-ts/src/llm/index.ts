@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/llm/__init__.py
 import type { Config } from "../config.js";
 import { AnthropicProvider } from "./anthropic.js";
 import type { LLMProvider } from "./base.js";

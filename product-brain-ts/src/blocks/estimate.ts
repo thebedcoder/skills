@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/blocks/estimate.py
 import type { EstimateConfig } from "../config.js";
 import type { Ticket, TicketRecord } from "../models.js";
 

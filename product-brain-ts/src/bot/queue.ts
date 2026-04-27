@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/bot/queue.py
 import Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 

@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/blocks/render.py
 import type { Estimate } from "./estimate.js";
 
 export interface ScopeMap {

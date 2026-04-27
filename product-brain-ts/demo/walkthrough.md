@@ -148,7 +148,7 @@ Point at the `bullets_dropped` column.
 
 - Don't try to render the Aha bot's HMAC-signed webhook flow live; brittle and uninteresting.
 - Don't show LLM cost calculations unless asked. Use the slide.
-- Don't open `src/product_brain/` Python modules unless an engineer asks. The pitch is "what it does," not "how it's coded."
+- Don't open `src/` modules unless an engineer asks. The pitch is "what it does," not "how it's coded."
 
 ## Timing buffer
 

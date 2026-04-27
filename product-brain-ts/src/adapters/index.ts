@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/adapters/__init__.py
 import type { Config } from "../config.js";
 import { AhaAdapter } from "./aha.js";
 import type { PMAdapter } from "./base.js";

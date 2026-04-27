@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/repair.py
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { getTestAdapter } from "./adapters/index.js";

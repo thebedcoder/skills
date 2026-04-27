@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/bot/worker.py
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { setTimeout as sleep } from "node:timers/promises";

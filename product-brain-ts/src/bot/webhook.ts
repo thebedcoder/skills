@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/bot/webhook.py
 import { createHmac, timingSafeEqual } from "node:crypto";
 import Fastify, { type FastifyInstance } from "fastify";
 import { getPmAdapter } from "../adapters/index.js";

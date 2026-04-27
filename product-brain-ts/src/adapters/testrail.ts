@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/adapters/testrail.py
 import type { Config } from "../config.js";
 import type { RunResult, TestCase } from "../models.js";
 import type { TestAdapter } from "./test-base.js";

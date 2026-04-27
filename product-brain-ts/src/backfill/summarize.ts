@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/backfill/summarize.py
 import type { Config } from "../config.js";
 import { getProvider } from "../llm/index.js";
 

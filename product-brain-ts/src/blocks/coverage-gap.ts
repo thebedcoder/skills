@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/blocks/coverage_gap.py
 import type { CoverageGap, EdgeCaseBullet, TestCase } from "../models.js";
 import type { LLMCall } from "./edge-mine.js";
 

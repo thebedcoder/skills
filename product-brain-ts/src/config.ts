@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/config.py
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";

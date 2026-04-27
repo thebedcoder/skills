@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/blocks/edge_mine.py
 import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";

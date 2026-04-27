@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/bot/cooldown.py
 
 export function withinCooldown(lastRunTs: number, now: Date, cooldownHours: number): boolean {
   if (lastRunTs <= 0) return false;

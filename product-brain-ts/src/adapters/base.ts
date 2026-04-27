@@ -1,4 +1,3 @@
-// Port target: ../product-brain/src/product_brain/adapters/base.py
 import type { Comment, Ticket, TicketDraft, WebhookEvent } from "../models.js";
 
 export interface PMAdapter {
