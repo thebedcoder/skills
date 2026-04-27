@@ -167,11 +167,11 @@ Fully heuristic mode (no LLM) is available — produces more false positives but
 ## Adding a new test adapter (Zephyr, Xray, qTest)
 
 1. Create `src/adapters/zephyr.ts`.
-2. Subclass `TestAdapter`, implement all abstract methods.
-3. Register in `adapters/__init__.py`:
-   ```python
-   from .zephyr import ZephyrAdapter
-   TEST_ADAPTERS["zephyr"] = ZephyrAdapter
+2. Implement the `TestAdapter` interface.
+3. Register in `src/adapters/index.ts`:
+   ```typescript
+   import { ZephyrAdapter } from "./zephyr.js";
+   TEST_ADAPTERS["zephyr"] = ZephyrAdapter;
    ```
 4. Set `test_adapter: zephyr` in `config.yaml` and add a `zephyr:` config block.
 

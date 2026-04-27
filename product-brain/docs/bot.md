@@ -14,7 +14,7 @@ Same skill logic as the interactive slash commands, run by a service that listen
 
 ```
 +---------------+     POST /webhook
-|     Aha       | ─────────────────────► Webhook server (FastAPI)
+|     Aha       | ─────────────────────► Webhook server (Fastify)
 +---------------+                              │ verify signature, parse,
                                                 │ decide enqueue or ignore
                                                 ▼

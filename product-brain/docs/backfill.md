@@ -63,25 +63,26 @@ Stored as `symbols: [list]`. Skipped if not configured. Symbol-level data is ici
 
 Pure function `(commits, prs) → front_matter`:
 
-```python
-front_matter = {
-    "ticket":  ticket_id,
-    "title":   pm_adapter.fetch_ticket(ticket_id).title,
-    "type":    pm_adapter.fetch_ticket(ticket_id).type,
-    "status":  infer_status(commits, prs),
-    "first_commit": min(c.date for c in commits),
-    "last_commit":  max(c.date for c in commits),
-    "shas":    [c.sha for c in commits],
-    "prs":     [pr.number for pr in prs],
-    "authors": sorted({c.author for c in commits}),
-    "files":   normalize_paths(aggregate_files(commits)),
-    "symbols": extract_symbols(commits) if cfg.symbol_extraction else [],
-    "loc_added":   sum(f.loc_added   for f in files),
-    "loc_removed": sum(f.loc_removed for f in files),
-    "duration_days": (last_commit - first_commit).total_seconds() / 86400,
-    "pr_open_to_merge_days": median(pr.open_to_merge for pr in prs) if prs else None,
-}
-related_tickets = compute_related(front_matter, all_records)
+```typescript
+const ticketMeta = await pmAdapter.fetchTicket(ticketId);
+const frontMatter = {
+  ticket: ticketId,
+  title:  ticketMeta.title,
+  type:   ticketMeta.type,
+  status: inferStatus(commits, prs),
+  firstCommit: minDate(commits.map(c => c.date)),
+  lastCommit:  maxDate(commits.map(c => c.date)),
+  shas:    commits.map(c => c.sha),
+  prs:     prs.map(p => p.number),
+  authors: [...new Set(commits.map(c => c.author))].sort(),
+  files:   normalizePaths(aggregateFiles(commits)),
+  symbols: cfg.symbolExtraction ? extractSymbols(commits) : [],
+  locAdded:   files.reduce((a, f) => a + (f.loc_added ?? 0), 0),
+  locRemoved: files.reduce((a, f) => a + (f.loc_removed ?? 0), 0),
+  durationDays: (lastCommit.getTime() - firstCommit.getTime()) / 86_400_000,
+  prOpenToMergeDays: prs.length ? median(prs.map(p => p.openToMerge)) : null,
+};
+const relatedTickets = computeRelated(frontMatter, allRecords);
 ```
 
 ### Phase 6 — Prose (one LLM call per ticket)

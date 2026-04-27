@@ -60,7 +60,7 @@ Pre-ticket planning and draft sub-ticket creation.
 
 ## Month 3 — Repair job, status auto-triggers
 
-- Nightly `repair.py` validates citations, reconciles renames, updates `linked_bugs`.
+- Nightly `product-brain repair` validates citations, reconciles renames, updates `linked_bugs`.
 - Bot opt-in to status-change auto-triggers behind label.
 
 **Why later**: maintenance work pays off only after you have a corpus large enough to drift.
