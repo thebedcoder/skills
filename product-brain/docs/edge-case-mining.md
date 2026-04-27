@@ -25,15 +25,15 @@ If a test adapter is configured (see [test-adapter.md](test-adapter.md)), record
 
 Gather raw signals into a structured bundle:
 
-```python
-signals = {
-    "pr_review_comments": [{"author", "body", "file", "line", "sha"}],
-    "added_test_names":   [{"name", "file", "sha"}],
-    "commit_verb_lines":  [{"line", "sha"}],
-    "added_code_comments":[{"text", "file", "line", "sha"}],
-    "pm_description":     str,
-    "linked_bug_tickets": [ticket_id],
-}
+```typescript
+const signals = {
+  prReviewComments:  [{ author, body, file, line, sha }, ...],
+  addedTestNames:    [{ name, file, sha }, ...],
+  commitVerbLines:   [{ line, sha }, ...],
+  addedCodeComments: [{ text, file, line, sha }, ...],
+  pmDescription:     "...",
+  linkedBugTickets:  [ticketId, ...],
+};
 ```
 
 Then one LLM call per ticket with this prompt skeleton:
