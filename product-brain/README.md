@@ -287,4 +287,4 @@ This is v1. See [docs/build-order.md](docs/build-order.md) for what was built fi
 
 ## License
 
-MIT.
+**Proprietary — All Rights Reserved.** See [LICENSE](LICENSE). No use, copying, or distribution is permitted without prior written permission. Commercial licensing inquiries: contact the owner directly.

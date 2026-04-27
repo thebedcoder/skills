@@ -263,3 +263,9 @@ The Python codebase doesn't ship a comprehensive test suite, so we have an oppor
 - For shelling out to git, prefer `simple-git`'s typed API over raw `child_process` for readability.
 
 Happy porting.
+
+---
+
+## License
+
+**Proprietary — All Rights Reserved.** See [LICENSE](LICENSE). No use, copying, or distribution is permitted without prior written permission. Commercial licensing inquiries: contact the owner directly.

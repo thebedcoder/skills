@@ -8,8 +8,9 @@ version = "0.1.0"
 description = "Cross-repo memory and planning layer over a ticket-keyed code index."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
-authors = [{ name = "product-brain authors" }]
+license = { text = "Proprietary - All Rights Reserved" }
+authors = [{ name = "Artem Hetman" }]
+classifiers = ["License :: Other/Proprietary License", "Private :: Do Not Upload"]
 dependencies = [
     "fastapi>=0.110",
     "httpx>=0.27",
