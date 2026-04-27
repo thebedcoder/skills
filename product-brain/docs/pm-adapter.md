@@ -4,90 +4,66 @@ Product Brain treats the project-management tool as pluggable. The orchestrator 
 
 ## Interface
 
-`src/product_brain/adapters/base.py`:
+`src/adapters/base.ts`:
 
-```python
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Optional
+```typescript
+export interface Ticket {
+  id: string;                  // e.g. "AHA-1234"
+  title: string;
+  description: string;
+  type: "feature" | "bug" | "chore" | "spike" | "epic" | "unknown";
+  status: string;              // tool-native status string
+  labels: string[];
+  parentId?: string;
+  childrenIds: string[];
+  url: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  raw: Record<string, unknown>; // tool-specific payload, opaque to the planner
+}
 
-@dataclass
-class Ticket:
-    id: str                          # e.g. "AHA-1234"
-    title: str
-    description: str
-    type: str                        # feature | bug | chore | spike | epic | unknown
-    status: str                      # tool-native status string
-    labels: list[str] = field(default_factory=list)
-    parent_id: Optional[str] = None
-    children_ids: list[str] = field(default_factory=list)
-    url: str = ""
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    raw: dict = field(default_factory=dict)   # tool-specific payload, opaque to the planner
+export interface TicketDraft {
+  title: string;
+  description: string;
+  type?: string;               // default "feature"
+  parentId?: string;
+  labels?: string[];
+  status?: string;             // adapter may override with config.bot.draft_status
+}
 
-@dataclass
-class TicketDraft:
-    title: str
-    description: str
-    type: str = "feature"
-    parent_id: Optional[str] = None
-    labels: list[str] = field(default_factory=list)
-    status: Optional[str] = None     # adapter may override with config.bot.draft_status
+export interface Comment {
+  id: string;
+  ticketId: string;
+  author: string;              // email or handle the adapter normalizes to
+  body: string;
+  createdAt: Date;
+}
 
-@dataclass
-class Comment:
-    id: str
-    ticket_id: str
-    author: str                      # email or handle the adapter normalizes to
-    body: str
-    created_at: datetime
-
-class PMAdapter(ABC):
-    @abstractmethod
-    def fetch_ticket(self, ticket_id: str) -> Ticket: ...
-
-    @abstractmethod
-    def search_tickets(
-        self,
-        keywords: Optional[str] = None,
-        labels: Optional[list[str]] = None,
-        parent_id: Optional[str] = None,
-        type: Optional[str] = None,
-        limit: int = 30,
-    ) -> list[Ticket]: ...
-
-    @abstractmethod
-    def list_siblings(self, ticket_id: str, limit: int = 30) -> list[Ticket]: ...
-
-    @abstractmethod
-    def create_ticket(self, draft: TicketDraft) -> Ticket: ...
-
-    @abstractmethod
-    def link_tickets(self, parent_id: str, child_ids: list[str]) -> None: ...
-
-    @abstractmethod
-    def post_comment(self, ticket_id: str, body: str) -> Comment: ...
-
-    @abstractmethod
-    def edit_comment(self, ticket_id: str, comment_id: str, body: str) -> Comment: ...
-
-    @abstractmethod
-    def list_comments(self, ticket_id: str) -> list[Comment]: ...
-
-    @abstractmethod
-    def verify_webhook(self, headers: dict, body: bytes) -> bool: ...
-
-    @abstractmethod
-    def parse_webhook(self, body: bytes) -> "WebhookEvent": ...
+export interface PMAdapter {
+  fetchTicket(ticketId: string): Promise<Ticket>;
+  searchTickets(opts: {
+    keywords?: string;
+    labels?: string[];
+    parentId?: string;
+    type?: string;
+    limit?: number;            // default 30
+  }): Promise<Ticket[]>;
+  listSiblings(ticketId: string, limit?: number): Promise<Ticket[]>;
+  createTicket(draft: TicketDraft): Promise<Ticket>;
+  linkTickets(parentId: string, childIds: string[]): Promise<void>;
+  postComment(ticketId: string, body: string): Promise<Comment>;
+  editComment(ticketId: string, commentId: string, body: string): Promise<Comment>;
+  listComments(ticketId: string): Promise<Comment[]>;
+  verifyWebhook(headers: Record<string, string>, body: Buffer): boolean;
+  parseWebhook(body: Buffer): WebhookEvent;
+}
 ```
 
-`WebhookEvent` is a simple struct: `{kind, ticket_id, comment, prev_status, new_status}`.
+`WebhookEvent` is a simple struct: `{ kind, ticketId, comment, prevStatus, newStatus }`.
 
 ## Aha implementation
 
-`src/product_brain/adapters/aha.py` ships out of the box. Notes:
+`src/adapters/aha.ts` ships out of the box. Notes:
 
 - **Endpoint**: `https://<subdomain>.aha.io/api/v1/`
 - **Auth**: bearer token (`Authorization: Bearer $AHA_API_KEY`)
@@ -102,12 +78,12 @@ class PMAdapter(ABC):
 
 ## Adding a new adapter (e.g. Linear)
 
-1. Create `src/product_brain/adapters/linear.py`.
-2. Subclass `PMAdapter`, implement all abstract methods.
-3. Register in `adapters/__init__.py`:
-   ```python
-   from .linear import LinearAdapter
-   ADAPTERS["linear"] = LinearAdapter
+1. Create `src/adapters/linear.ts`.
+2. Implement `PMAdapter`.
+3. Register in `src/adapters/index.ts`:
+   ```typescript
+   import { LinearAdapter } from "./linear.js";
+   PM_ADAPTERS["linear"] = LinearAdapter;
    ```
 4. Set `pm_adapter: linear` in `config.yaml` and add a `linear:` config block.
 

@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-# Run webhook + worker together (single-process) for development.
-# Production: run "product-brain bot serve" and "product-brain bot worker" separately.
-set -e
-product-brain bot worker &
-WORKER=$!
-trap "kill $WORKER 2>/dev/null || true" EXIT INT TERM
-exec product-brain bot serve
