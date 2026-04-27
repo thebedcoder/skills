@@ -61,7 +61,7 @@ See [docs/architecture.md](docs/architecture.md) for detail.
 |---|---|---|
 | Runtime | Node | ≥20.18 (LTS); CI on 22 |
 | Compiler | TypeScript | 6.0.3 |
-| Tests | Vitest | 2.1.9 |
+| Tests | Vitest | 4.1.5 |
 | Bot HTTP | Fastify | 5.8.5 |
 | Queue / audit | better-sqlite3 | 12.9.0 |
 | Anthropic SDK | @anthropic-ai/sdk | 0.91.1 |
@@ -85,7 +85,7 @@ What follows is the condensed overview.
 
 ```bash
 git clone <this-repo>
-cd product-brain-ts
+cd product-brain
 ./install.sh
 ```
 
@@ -100,10 +100,10 @@ In a sibling directory to your source repos:
 
 ```bash
 mkdir company-product-brain && cd company-product-brain
-npx tsx /path/to/product-brain-ts/src/cli.ts init
+npx tsx /path/to/product-brain/src/cli.ts init
 ```
 
-(Or `node /path/to/product-brain-ts/dist/product-brain.cjs init` after the bundle build.)
+(Or `node /path/to/product-brain/dist/product-brain.cjs init` after the bundle build.)
 
 This creates `config.yaml`, `repos/`, `.gitignore`, `README.md`, and `git init`s the directory. Edit `config.yaml` to fill in your Aha (or other PM tool) credentials.
 
@@ -148,7 +148,7 @@ Two ways to keep the brain current after merges:
 
 ```bash
 cd ../backend
-/path/to/product-brain-ts/scripts/install-post-merge-hook.sh \
+/path/to/product-brain/scripts/install-post-merge-hook.sh \
   backend https://brain-bot.example.com/webhook/source-merge
 ```
 
@@ -230,7 +230,7 @@ For a complete walkthrough with sample data, slide deck, and one-pager, see the 
 ## Project layout
 
 ```
-product-brain-ts/
+product-brain/
 ├── README.md                       (this file)
 ├── install.sh                      installs skill + builds CLI bundle
 ├── config.example.yaml             orchestrator config template
@@ -300,7 +300,7 @@ Use Haiku for backfill and incremental (mechanical summarization). Sonnet for in
 ## Development
 
 ```bash
-cd product-brain-ts
+cd product-brain
 npm install
 npm run typecheck       # tsc --noEmit
 npm run lint            # eslint
@@ -310,13 +310,13 @@ npm run dev -- --help   # tsx src/cli.ts --help
 npm run build:bundle    # esbuild → dist/product-brain.cjs (single-file)
 npm run release         # build:bundle + tar → product-brain-X.Y.Z.tgz
 npm run screenshots     # re-render admin UI screenshots
-npm run audit           # npm audit --omit=dev
+npm run audit           # npm audit (runtime + dev deps; vitest 4.x cleared the transitive advisories)
 ```
 
 ### Status
 
 ```
-npm audit --omit=dev:  0 vulnerabilities  (runtime deps clean)
+npm audit:             0 vulnerabilities  (runtime + dev deps clean)
 tsc --noEmit:          0 errors  (strict mode + verbatimModuleSyntax + isolatedModules)
 vitest:                176/176 passing across 22 test files
 ```

@@ -13,7 +13,7 @@ End-to-end setup, click-by-click. Time: ~30 min if you have credentials ready.
 
 ```bash
 git clone <this-repo> ~/tools/product-brain
-cd ~/tools/product-brain/product-brain-ts
+cd ~/tools/product-brain
 ./install.sh
 ```
 
