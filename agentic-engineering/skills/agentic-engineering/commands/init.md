@@ -1,4 +1,4 @@
-## `/ae-init` — Project Initialization
+## `/init` — Project Initialization
 
 **Agents:** ARCH, PROD
 
@@ -72,7 +72,7 @@ description: Product updates and changes — what you can now do in the app
 ```markdown
 # Backlog
 <!-- Agents: prepend new NOTE-XXX items at top, newest first -->
-<!-- Run /ae-ship to pick up and implement a backlog item -->
+<!-- Run /ship to pick up and implement a backlog item -->
 ```
 
 **PROD** generates `./docs/CONSTITUTION.md` by asking: non-negotiable tech standards, architectural principles, security/compliance, forbidden patterns.
@@ -93,7 +93,7 @@ Constitution format:
 ## Governance
 - Constitution supersedes all guidelines
 - Violations documented and justified — never silently ignored
-- REQ checks every story against constitution during /ae-review
+- REQ checks every story against constitution during /review
 ```
 
 ⚠️ **Human checkpoint:** Show CLAUDE.md + CONSTITUTION.md drafts together. Ask for edits before saving. *"The constitution must be specific and verifiable — vague principles like 'write high quality code' give agents nothing to check against."*
@@ -179,6 +179,6 @@ User confirms/adds/removes. Reply 'none' to skip. Per selected rule, copy from `
 chore: initialise project structure, CLAUDE.md, CONSTITUTION.md, and project rules
 ```
 
-8. **PROD** summarizes created + prompts: *"Run `/ae-feature [name]` to start your first feature."*
+8. **PROD** summarizes created + prompts: *"Run `/feature [name]` to start your first feature."*
 
 ---

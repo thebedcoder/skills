@@ -1,9 +1,9 @@
-## `/ae-frontend` — Frontend Implementation
+## `/frontend` — Frontend Implementation
 
 **Agents:** ARCH (structure), UX (fidelity), PROD (UX validation)
 
 Read `./CLAUDE.md`, target story, `./docs/specs/[feature-name]-design.md`.
-No `/ae-design` yet → prompt user to run it first or confirm proceeding without designs.
+No `/design` yet → prompt user to run it first or confirm proceeding without designs.
 
 ### Steps
 

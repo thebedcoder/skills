@@ -1,5 +1,5 @@
 ---
-description: UX fidelity reviewer for agentic engineering. Checks frontend implementation against design handoff. Runs after frontend implementation as part of /ae-ship. Loads references based on what the story contains.
+description: UX fidelity reviewer for agentic engineering. Checks frontend implementation against design handoff. Runs after frontend implementation as part of /ship. Loads references based on what the story contains.
 model: claude-haiku-4-5
 tools: Read, Glob, Grep
 color: purple

@@ -1,5 +1,5 @@
 ---
-description: Test coverage reviewer for agentic engineering reviews. Evaluates test quality and identifies missing coverage. Runs as parallel subagent during /ae-review. Reports gaps that would allow real regressions to go undetected.
+description: Test coverage reviewer for agentic engineering reviews. Evaluates test quality and identifies missing coverage. Runs as parallel subagent during /review. Reports gaps that would allow real regressions to go undetected.
 model: claude-haiku-4-5
 tools: Read, Glob, Grep
 color: yellow

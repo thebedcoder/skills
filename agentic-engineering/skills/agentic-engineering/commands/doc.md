@@ -1,4 +1,4 @@
-## `/ae-doc [feature]` — Interactive Feature Documentation
+## `/doc [feature]` — Interactive Feature Documentation
 
 **Agents:** SCRIBE (lead), ARCH (analysis), RED (improvement spotter)
 

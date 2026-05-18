@@ -1,6 +1,6 @@
-## `/ae-ship-all` — Ship All Unchecked Stories
+## `/ship-all` — Ship All Unchecked Stories
 
-Loops `/ae-ship` across every unchecked story in all active features.
+Loops `/ship` across every unchecked story in all active features.
 
 Read `./docs/INDEX.md`, `./docs/CONSTITUTION.md`, then scan feature `STORIES.md` files.
 
@@ -37,7 +37,7 @@ Reply 'go' to start, or 'stop' at any plan prompt to end the session.
 
 **Step 1 — Plan** *(always pauses)*
 
-ARCH + PROD generate plan as in `/ae-ship`.
+ARCH + PROD generate plan as in `/ship`.
 
 ```
 ━━━ STORY-XXX ([X] of [Y]) ━━━
@@ -53,9 +53,9 @@ Reply 'go' to ship · 'skip' to skip this story · 'stop' to end session
 
 **Step 2 — Ship chain** *(automatic on 'go')*
 
-Full `/ae-ship` chain: implement → review → frontend → review → docs → git commits.
+Full `/ship` chain: implement → review → frontend → review → docs → git commits.
 
-Pauses only on review blockers, same as `/ae-ship`.
+Pauses only on review blockers, same as `/ship`.
 
 **Step 3 — Story complete + compact**
 
@@ -105,9 +105,9 @@ PR desc: ✅ updated to cover all shipped stories
 
 - **Never skip plan approval.** 'go' prompt non-negotiable between stories.
 - **Compact between every story.** Mandatory — context must clear before next story.
-- **Blocker pauses propagate.** Review finds blockers → pause exactly as in `/ae-ship`. After fix, resumes.
+- **Blocker pauses propagate.** Review finds blockers → pause exactly as in `/ship`. After fix, resumes.
 - **'stop' always available** at any plan prompt — ends session cleanly.
-- **Skipped stories stay unchecked** in `STORIES.md` so `/ae-status` reflects reality.
+- **Skipped stories stay unchecked** in `STORIES.md` so `/status` reflects reality.
 
 ### Gotchas
 

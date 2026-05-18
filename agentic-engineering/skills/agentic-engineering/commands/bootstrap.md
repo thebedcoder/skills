@@ -1,11 +1,11 @@
-## `/ae-bootstrap` — New Project Setup
+## `/bootstrap` — New Project Setup
 
 **Agents:** ARCH (lead), PROD (feature planning)
 
-Use on blank or near-blank repo. Runs before `/ae-init`.
+Use on blank or near-blank repo. Runs before `/init`.
 Sets up project — package structure, base deps, tooling, config — then plans core features to build first.
 
-After bootstrap, run `/ae-init` for docs scaffold, then `/ae-feature` to start building.
+After bootstrap, run `/init` for docs scaffold, then `/feature` to start building.
 
 ---
 

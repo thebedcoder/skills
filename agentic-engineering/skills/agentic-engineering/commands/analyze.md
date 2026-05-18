@@ -1,4 +1,4 @@
-## `/ae-analyze` — Project Intelligence
+## `/analyze` — Project Intelligence
 
 **Agents:** ARCH (lead), PROD (product lens)
 

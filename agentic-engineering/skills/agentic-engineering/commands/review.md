@@ -1,4 +1,4 @@
-## `/ae-review` — Multi-Agent Code Review
+## `/review` — Multi-Agent Code Review
 
 **Goal:** Consolidated fix list for current story. Five specialist reviewers run parallel on changed code.
 

@@ -1,6 +1,6 @@
 # Rules Library
 
-Path-scoped rules that auto-load when Claude Code works with matching files in a project. During `/ae-init`, you can select which rules to include for your project. Selected rules are copied to `./.claude/rules/` in the target project.
+Path-scoped rules that auto-load when Claude Code works with matching files in a project. During `/init`, you can select which rules to include for your project. Selected rules are copied to `./.claude/rules/` in the target project.
 
 ## Stack / framework rules
 

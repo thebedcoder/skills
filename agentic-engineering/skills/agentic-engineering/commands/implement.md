@@ -1,4 +1,4 @@
-## `/ae-implement` — Implement Next Story
+## `/implement` — Implement Next Story
 
 **Goal:** Ship one story end-to-end — plan approved, code + tests written, acceptance criteria verified, progress recorded.
 
@@ -66,7 +66,7 @@ PROD — Acceptance Check:
 - Notes: [anything notable]
 ```
 
-Prompt: *"Story complete. Run `/ae-review` before next story."*
+Prompt: *"Story complete. Run `/review` before next story."*
 
 ### Gotchas
 

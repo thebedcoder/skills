@@ -1,4 +1,4 @@
-## `/ae-design` — UI/UX Design
+## `/design` — UI/UX Design
 
 **Agents:** UX (lead), PROD (flow validator)
 
@@ -138,6 +138,6 @@ PROD — Handoff Review:
 Any acceptance criterion design doesn't address?]
 ```
 
-After approval: *"Design complete. Run `/ae-ship` to start building."*
+After approval: *"Design complete. Run `/ship` to start building."*
 
 ---
