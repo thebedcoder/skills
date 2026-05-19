@@ -46,43 +46,43 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 
 ```
 ┌──────────────┐
-│ /ae-bootstrap│  New project — pick stack, scaffold, install deps,
+│  /bootstrap  │  New project — pick stack, scaffold, install deps,
 │              │  create base structure, plan core epics.
 └──────┬───────┘
        │
        ▼
 ┌──────────────┐
-│  /ae-init    │  Create docs scaffold + CLAUDE.md + CONSTITUTION.md
+│   /init      │  Create docs scaffold + CLAUDE.md + CONSTITUTION.md
 └──────┬───────┘
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                         FEATURE LOOP                                 │
 │                                                                      │
-│  /ae-feature [name]                                                  │
+│  /feature [name]                                                     │
 │    1. ARCH proposes 3 approach options                               │
 │    2. PROD generates PRD with [NEEDS CLARIFICATION] markers          │
 │    3. Clarification pass — batch resolve all ambiguous items         │
 │    4. REQ constitution check — violations block story breakdown      │
-│    5. ARCH generates data-model.md (if DB changes)                  │
+│    5. ARCH generates data-model.md (if DB changes)                   │
 │    6. PROD writes stories tagged [P] where parallelisable            │
 │                                                                      │
-│  /ae-design  (if UI)                                                 │
+│  /design  (if UI)                                                    │
 │    Mobile-first → desktop → handoff spec in ./docs/specs/            │
 │                                                                      │
-│  /ae-ship  (per story)                                               │
+│  /ship  (per story)                                                  │
 │    ┌─────────────┐                                                   │
 │    │ implement   │  ARCH plans → PROD validates → code + tests       │
 │    └──────┬──────┘                                                   │
 │           │                                                          │
-│    ┌──────▼──────────────────────────────────────────────────┐      │
-│    │              5 PARALLEL REVIEW AGENTS                   │      │
-│    │  🔴 RED    bug hunt (null/async/logic/resources)         │      │
-│    │  ✅ REQ    requirements + constitution audit             │      │
-│    │  🧪 TEST   coverage quality + framework patterns        │      │
-│    │  📖 DOC    convention alignment                         │      │
-│    │  🔐 SEC    security vulnerabilities                     │      │
-│    └──────┬──────────────────────────────────────────────────┘      │
+│    ┌──────▼──────────────────────────────────────────────────┐       │
+│    │              5 PARALLEL REVIEW AGENTS                   │       │
+│    │  🔴 RED    bug hunt (null/async/logic/resources)        │       │
+│    │  ✅ REQ    requirements + constitution audit            │       │
+│    │  🧪 TEST   coverage quality + framework patterns        │       │
+│    │  📖 DOC    convention alignment                         │       │
+│    │  🔐 SEC    security vulnerabilities                     │       │
+│    └──────┬──────────────────────────────────────────────────┘       │
 │           │  consolidated: blockers / should-fix / clean             │
 │           │                                                          │
 │    ┌──────▼──────┐                                                   │
@@ -91,17 +91,17 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │    └──────┬──────┘                                                   │
 │           │                                                          │
 │    ✍️ SCRIBE  updates end-user app-docs + both changelogs            │
-│              (final step before commit — keeps product docs in sync)  │
+│              (final step before commit — keeps product docs in sync) │
 │    🔀 GIT    commits with conventional message + PR description      │
 │                                                                      │
-│  /ae-ship-all — chains /ae-ship across all stories                   │
+│  /ship-all — chains /ship across all stories                         │
 │    Shows [P] parallel groups upfront                                 │
 │    Mandatory /compact between stories                                │
 └──────────────────────────────────────────────────────────────────────┘
        │
        ▼
 ┌──────────────┐
-│   /ae-fix    │  Bug reported → FIXER diagnoses → fix → review → docs
+│    /fix      │  Bug reported → FIXER diagnoses → fix → review → docs
 └──────────────┘
 ```
 
@@ -111,25 +111,25 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 
 | Command | What it does |
 |---|---|
-| `/ae-bootstrap` | Scaffold a new project — stack, deps, structure, epic roadmap |
-| `/ae-init` | Create docs scaffold, CLAUDE.md, and CONSTITUTION.md |
-| `/ae-feature [name]` | Research → PRD → clarifications → constitution check → stories |
-| `/ae-design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown |
-| `/ae-ship` | Full story: implement → 5-agent review → frontend → UX check → docs → git |
-| `/ae-ship-all` | Loop `/ae-ship` across all unchecked stories |
-| `/ae-plan-all` | Plan all unplanned epics from INDEX.md |
-| `/ae-fix [desc]` | Diagnose bug → fix → review → docs |
-| `/ae-note [desc]` | Capture bug/idea/improvement to BACKLOG.md |
-| `/ae-doc [feature]` | Document a feature interactively with Q&A |
-| `/ae-doc-all [--full]` | Document multiple features (`--full` adds guides + index) |
-| `/ae-status` | Progress overview across all features + backlog (runs in forked context) |
-| `/ae-analyze [question]` | Answer any question — searches docs and codebase (runs in forked context) |
+| `/bootstrap` | Scaffold a new project — stack, deps, structure, epic roadmap |
+| `/init` | Create docs scaffold, CLAUDE.md, and CONSTITUTION.md |
+| `/feature [name]` | Research → PRD → clarifications → constitution check → stories |
+| `/design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown |
+| `/ship` | Full story: implement → 5-agent review → frontend → UX check → docs → git |
+| `/ship-all` | Loop `/ship` across all unchecked stories |
+| `/plan-all` | Plan all unplanned epics from INDEX.md |
+| `/fix [desc]` | Diagnose bug → fix → review → docs |
+| `/note [desc]` | Capture bug/idea/improvement to BACKLOG.md |
+| `/doc [feature]` | Document a feature interactively with Q&A |
+| `/doc-all [--full]` | Document multiple features (`--full` adds guides + index) |
+| `/status` | Progress overview across all features + backlog (runs in forked context) |
+| `/analyze [question]` | Answer any question — searches docs and codebase (runs in forked context) |
 
 ---
 
 ## Docs structure
 
-Created automatically by `/ae-init` and maintained by agents throughout development.
+Created automatically by `/init` and maintained by agents throughout development.
 
 ```
 your-project/
@@ -156,7 +156,7 @@ your-project/
     └── guides/                 ← user guides (getting-started, shortcuts, troubleshooting)
 ```
 
-> `./docs/` is for people who **build** the app. `./app-docs/` is for people who **use** the app. They never overlap — no file paths or code in app-docs, no user tutorials in docs. SCRIBE updates app-docs as the final step of every `/ae-ship` and `/ae-fix` so the published docs always match what the app can actually do.
+> `./docs/` is for people who **build** the app. `./app-docs/` is for people who **use** the app. They never overlap — no file paths or code in app-docs, no user tutorials in docs. SCRIBE updates app-docs as the final step of every `/ship` and `/fix` so the published docs always match what the app can actually do.
 
 ---
 
@@ -164,7 +164,7 @@ your-project/
 
 ### Constitution
 
-Every project gets a `CONSTITUTION.md` — non-negotiable principles created at `/ae-init`, checked by REQ at every review. Principles must be specific and verifiable:
+Every project gets a `CONSTITUTION.md` — non-negotiable principles created at `/init`, checked by REQ at every review. Principles must be specific and verifiable:
 
 ```markdown
 # Project Constitution
@@ -192,7 +192,7 @@ The workflow never auto-proceeds past:
 
 ### Parallel stories `[P]`
 
-Stories tagged `[P]` have no dependencies on other stories. `/ae-ship-all` surfaces these upfront — you can run them in separate Claude Code sessions simultaneously.
+Stories tagged `[P]` have no dependencies on other stories. `/ship-all` surfaces these upfront — you can run them in separate Claude Code sessions simultaneously.
 
 ### Two changelogs
 
@@ -210,9 +210,9 @@ Long sessions stay lean through three mechanisms:
 
 ### Context forking
 
-`/ae-status` and `/ae-analyze` use `context: fork` — they run in an isolated subagent context. The main conversation only sees the final result, not the intermediate tool calls and file reads. This keeps the main context lean on long sessions where you might check status or run analysis queries repeatedly.
+`/status` and `/analyze` use `context: fork` — they run in an isolated subagent context. The main conversation only sees the final result, not the intermediate tool calls and file reads. This keeps the main context lean on long sessions where you might check status or run analysis queries repeatedly.
 
-Other commands (`/ae-ship`, `/ae-feature`, `/ae-design`) stay in the main context because they have human checkpoints that require conversation continuity.
+Other commands (`/ship`, `/feature`, `/design`) stay in the main context because they have human checkpoints that require conversation continuity.
 
 ### Built-in gotchas
 
@@ -224,7 +224,7 @@ Command files are also framed as goals and constraints rather than rigid step-by
 
 ## Rules library
 
-Every project gets path-scoped rules in `./.claude/rules/` that auto-load when Claude Code works with matching files. During `/ae-init`, ARCH shows a curated library of starter rules — pick the ones that match your stack and drop them in.
+Every project gets path-scoped rules in `./.claude/rules/` that auto-load when Claude Code works with matching files. During `/init`, ARCH shows a curated library of starter rules — pick the ones that match your stack and drop them in.
 
 **Stack rules** — activate on file pattern:
 
@@ -326,7 +326,7 @@ references/
 
 ## Design tool support
 
-Configured once during `/ae-init`, used by `/ae-design`:
+Configured once during `/init`, used by `/design`:
 
 | Tool | Notes |
 |---|---|
@@ -338,70 +338,115 @@ Configured once during `/ae-init`, used by `/ae-design`:
 
 ## Installation
 
-### Option A — Claude Code CLI
+### Option A — Claude Code plugin (recommended)
+
+```
+/plugin marketplace add thebedcoder/skills
+/plugin install agentic-engineering@thebedcoder
+```
+
+Restart Claude Code — commands appear in the `/` palette as `/bootstrap`, `/init`, `/ship`, etc. (or fully namespaced as `/agentic-engineering:ship`).
+
+**Updates:** `/plugin update agentic-engineering` — Claude Code pulls latest from the marketplace.
+
+**Uninstall:** `/plugin uninstall agentic-engineering`.
+
+### Option B — Shell installer (fallback, pre-plugin Claude Code)
 
 ```bash
-unzip ae-skill.zip
-cd ae-skill
+curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh | bash
+```
+
+Clones the repo into `~/.local/share/bedcode-skills` and copies skill files into `~/.claude/`. Re-run the same command to update.
+
+Override the cache location with `BEDCODE_SKILLS_DIR=~/dev/bedcode-skills`.
+
+### Option C — Local clone
+
+```bash
+git clone https://github.com/thebedcoder/skills.git
+cd skills
 ./install.sh
 ```
 
-Restart Claude Code. Commands appear in the `/` palette immediately.
+Re-run `./install.sh` after `git pull` to update.
 
-**What gets installed:**
+### Option D — Other coding agents (portable workflow)
+
+The full workflow (slash commands + specialist agents) is Claude Code-native and doesn't port directly. The **portable workflow rules** do — they're plain markdown that any agent can follow. Run the installer with `--tool=<name>` from your project root and it writes the right file in the right place:
+
+```bash
+# From inside your project:
+curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh | bash -s -- --tool=<tool>
+```
+
+| `--tool=` | What gets written | How the tool picks it up |
+|---|---|---|
+| `cursor` | `AGENTS.md` + `.cursor/rules/*.mdc` | Auto-loaded; rules scoped by glob |
+| `codex` | `AGENTS.md` | Codex CLI reads it from project root |
+| `copilot` | `.github/copilot-instructions.md` | GitHub Copilot in VS Code / JetBrains reads automatically |
+| `cline` | `.clinerules` | Cline VS Code extension reads on activation |
+| `windsurf` | `.windsurfrules` | Windsurf / Codeium reads from project root |
+| `aider` | `CONVENTIONS.md` | Pass via `/add` or `.aider.conf.yml` |
+| `gemini` | `GEMINI.md` | Gemini CLI reads from project root |
+| `zed` | `AGENTS.md` | Zed assistant reads from project root |
+| `openhands` | `AGENTS.md` | OpenHands reads from project root |
+| `agents-md` | `AGENTS.md` | Generic — any AGENTS.md-aware tool |
+| `copilot-cli` | (instructions only) | Copilot CLI uses its own marketplace |
+| `auto` | Detects installed tools and runs each | — |
+
+**Re-running is safe.** The script wraps content between `<!-- agentic-engineering:start -->` and `<!-- agentic-engineering:end -->` markers — repeat runs replace the block in place, leaving any other content in the file untouched.
+
+**Global scope.** Some tools support user-global config — pass `--scope=user` for `cursor`, `codex`, `gemini` to write to `~/.cursor/`, `~/.codex/`, `~/.gemini/` respectively.
+
+**Override paths.** Use environment variables like `CURSOR_RULES_DIR`, `CLINERULES`, `WINDSURFRULES`, `AIDER_CONVENTIONS`, `GEMINI_MD` if you want a non-default location.
+
+### Option E — Claude.ai
+
+Upload `agentic-engineering.skill` via **Settings → Customize → Skills → Upload**.
+
+**What's inside the plugin:**
 
 ```
-~/.claude/
+agentic-engineering/
+├── .claude-plugin/plugin.json    ← plugin metadata
 ├── skills/
 │   └── agentic-engineering/
-│       ├── SKILL.md              ← 95-line router
-│       ├── commands/             ← 16 command files, loaded on demand
-│       └── rules-library/        ← 16 rule templates for /ae-init to offer
+│       ├── SKILL.md              ← skill router
+│       └── commands/             ← 16 command implementation files, loaded on demand
 ├── agents/
 │   ├── ae-red/                   ← bug hunter
 │   │   ├── AGENT.md
 │   │   ├── references/           ← 7 bug category references
 │   │   └── languages/            ← 7 language guides
 │   ├── ae-req.md                 ← requirements + constitution
-│   ├── ae-test/                  ← test quality reviewer
-│   │   ├── AGENT.md
-│   │   ├── references/           ← 4 testing concept references
-│   │   └── languages/            ← 7 framework guides
+│   ├── ae-test/                  ← test quality reviewer (AGENT.md + references + languages)
 │   ├── ae-doc.md                 ← convention checker
 │   ├── ae-scribe.md              ← MDX documentation writer
-│   ├── ae-sec/                   ← security reviewer
-│   │   ├── AGENT.md
-│   │   ├── references/           ← 16 vulnerability references
-│   │   └── languages/            ← 8 language guides
-│   └── ae-ux/                    ← UX fidelity reviewer
-│       ├── AGENT.md
-│       └── references/           ← 6 UX review checklists
-└── commands/
-    └── ae-*.md                   ← 13 user-facing command wrappers
+│   ├── ae-sec/                   ← security reviewer (AGENT.md + references + languages)
+│   └── ae-ux/                    ← UX fidelity reviewer (AGENT.md + references)
+├── commands/                     ← 16 user-facing slash-command wrappers
+└── rules-library/                ← 16 rule templates for /init to offer
 ```
-
-### Option B — Claude.ai
-
-Upload `agentic-engineering.skill` via **Settings → Customize → Skills → Upload**.
 
 ---
 
 ## Starting a new project
 
 ```bash
-/ae-bootstrap      # scaffold project
-/ae-init           # docs structure + CLAUDE.md + CONSTITUTION.md
-/ae-feature auth   # plan first feature
-/ae-design         # design UI (if applicable)
-/ae-ship           # implement story by story
+/bootstrap      # scaffold project
+/init           # docs structure + CLAUDE.md + CONSTITUTION.md
+/feature auth   # plan first feature
+/design         # design UI (if applicable)
+/ship           # implement story by story
 ```
 
 ## Adding to an existing project
 
 ```bash
-/ae-init               # create docs structure
-/ae-doc-all --full     # generate docs from existing codebase
-/ae-feature [name]     # start planning new features normally
+/init               # create docs structure
+/doc-all --full     # generate docs from existing codebase
+/feature [name]     # start planning new features normally
 ```
 
 ---
@@ -409,10 +454,10 @@ Upload `agentic-engineering.skill` via **Settings → Customize → Skills → U
 ## Example session
 
 ```
-You:    /ae-status
+You:    /status
 PROD:   2 features in progress. 5 stories remaining. 1 backlog item.
 
-You:    /ae-feature payments
+You:    /feature payments
 ARCH:   Option A: Stripe direct. Option B: payment abstraction layer. Option C: ...
 You:    Option A
 
@@ -432,7 +477,7 @@ PROD:   8 stories written. 3 tagged [P] (can run in parallel):
         [P] STORY-003: Webhook handler setup
         Sequential: STORY-004 through STORY-008
 
-You:    /ae-ship
+You:    /ship
 ARCH:   Plan for STORY-001: [implementation plan]
 You:    go
 
@@ -443,7 +488,7 @@ You:    go
         → SCRIBE updates changelogs
         → GIT: feat(payments): add Stripe customer creation
 
-ARCH:   STORY-001 done. Run /ae-ship for next story.
+ARCH:   STORY-001 done. Run /ship for next story.
 ```
 
 ---

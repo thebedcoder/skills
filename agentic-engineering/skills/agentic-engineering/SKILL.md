@@ -4,10 +4,10 @@ description: >
   Full SDLC agentic engineering workflow for Claude Code using named specialist agents.
   Use this skill whenever the user wants to start a new project, initialize a feature,
   research a feature, implement a feature, run a code review, or follow a structured
-  agentic development workflow. Triggers on: "ae:init", "ae:feature", "ae:implement",
-  "ae:review", "ae:status", "ae:design", "ae:frontend", "ae:ship", "ae:fix",
-  "ae:bootstrap", "ae:plan-all", "ae:doc", "init project", "new feature", "implement
-  feature", "ship feature", "code review", "fix bug", "document feature", "plan all",
+  agentic development workflow. Triggers on: "/init", "/feature", "/implement",
+  "/review", "/status", "/design", "/frontend", "/ship", "/fix", "/bootstrap",
+  "/plan-all", "/doc", "init project", "new feature", "implement feature",
+  "ship feature", "code review", "fix bug", "document feature", "plan all",
   or any request to follow a structured step-by-step development process.
   Always use this skill when the user is beginning or continuing structured development
   work — even if they just say "let's start coding" or "what's next".
@@ -25,22 +25,22 @@ Command invoked → read matching file from `commands/` first. File holds full i
 
 | Command | File | Does |
 |---|---|---|
-| `/ae-bootstrap` | `commands/bootstrap.md` | Scaffold project — stack, deps, structure |
-| `/ae-init` | `commands/init.md` | Docs scaffold + CLAUDE.md |
-| `/ae-feature [name]` | `commands/feature.md` | Research + PRD + stories |
-| `/ae-design` | `commands/design.md` | Mockups via Figma/Pencil/Markdown |
-| `/ae-implement` | `commands/implement.md` | Next unchecked story + tests |
-| `/ae-review` | `commands/review.md` | 5-agent parallel review |
-| `/ae-ship` | `commands/ship.md` | Full chain: implement→review→frontend→review→docs |
-| `/ae-ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories |
-| `/ae-fix [description]` | `commands/fix.md` | Diagnose → fix → review |
-| `/ae-plan-all` | `commands/plan-all.md` | Plan all unplanned epics from INDEX.md |
-| `/ae-doc [feature]` | `commands/doc.md` | Document one feature with Q&A |
-| `/ae-doc-all` | `commands/doc-all.md` | Document many features. `--full` = new project (+ guides + index) |
-| `/ae-status` | `commands/status.md` | Progress overview |
-| `/ae-note [description]` | `commands/note.md` | Capture bug/idea/improvement |
-| `/ae-analyze` | `commands/analyze.md` | Answer project question — searches docs + code |
-| `/ae-frontend` | `commands/frontend.md` | Frontend from design handoff |
+| `/bootstrap` | `commands/bootstrap.md` | Scaffold project — stack, deps, structure |
+| `/init` | `commands/init.md` | Docs scaffold + CLAUDE.md |
+| `/feature [name]` | `commands/feature.md` | Research + PRD + stories |
+| `/design` | `commands/design.md` | Mockups via Figma/Pencil/Markdown |
+| `/implement` | `commands/implement.md` | Next unchecked story + tests |
+| `/review` | `commands/review.md` | 5-agent parallel review |
+| `/ship` | `commands/ship.md` | Full chain: implement→review→frontend→review→docs |
+| `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories |
+| `/fix [description]` | `commands/fix.md` | Diagnose → fix → review |
+| `/plan-all` | `commands/plan-all.md` | Plan all unplanned epics from INDEX.md |
+| `/doc [feature]` | `commands/doc.md` | Document one feature with Q&A |
+| `/doc-all` | `commands/doc-all.md` | Document many features. `--full` = new project (+ guides + index) |
+| `/status` | `commands/status.md` | Progress overview |
+| `/note [description]` | `commands/note.md` | Capture bug/idea/improvement |
+| `/analyze` | `commands/analyze.md` | Answer project question — searches docs + code |
+| `/frontend` | `commands/frontend.md` | Frontend from design handoff |
 
 ## Agent Roster
 

@@ -1,8 +1,8 @@
-## `/ae-ship` — Full Story Chain
+## `/ship` — Full Story Chain
 
 **Chain:** implement → review → frontend → review → docs
 
-Use after `/ae-design` approved. Ships story end-to-end without manual triggers.
+Use after `/design` approved. Ships story end-to-end without manual triggers.
 
 ### Finding what to ship
 
@@ -40,7 +40,7 @@ Mark promoted in `BACKLOG.md`:
 
 ### Flow
 
-**Phase 1 — Backend** (`/ae-implement` flow)
+**Phase 1 — Backend** (`/implement` flow)
 - ARCH generates plan
 - PROD validates vs acceptance criteria
 - ⚠️ **Single human checkpoint:** Show both plans. Ask: *"Reply 'go' to start the full ship chain."*
@@ -52,7 +52,7 @@ test([feature-name]): STORY-XXX — add tests
 ```
 
 **Phase 2 — Backend Review** *(automatic)*
-Run full `/ae-review` flow immediately.
+Run full `/review` flow immediately.
 - RED, REQ, TEST, DOC, SEC run parallel
 - Consolidated fix list
 
@@ -70,7 +70,7 @@ fix([feature-name]): STORY-XXX — address review blockers
 ```
 No blockers → continue.
 
-**Phase 3 — Frontend** *(automatic after clean review or 'fixed')* (`/ae-frontend` flow)
+**Phase 3 — Frontend** *(automatic after clean review or 'fixed')* (`/frontend` flow)
 - UX reads design handoff spec
 - ARCH plans components
 - PROD validates flow
@@ -80,7 +80,7 @@ No blockers → continue.
 feat([feature-name]): STORY-XXX — frontend implementation
 ```
 
-**Phase 4 — Frontend Review** *(automatic)* (`/ae-review` + ae-ux fidelity)
+**Phase 4 — Frontend Review** *(automatic)* (`/review` + ae-ux fidelity)
 - 5-agent parallel pass
 - ae-ux checks fidelity vs design handoff
 - Blockers → pause + surface, same pattern as Phase 2
@@ -137,7 +137,7 @@ PR desc:  ✅ ready to copy
 Stories:  [x] marked complete
 Progress: updated
 
-Next: run `/ae-ship` again for STORY-XXX+1, or `/ae-status` to review the board.
+Next: run `/ship` again for STORY-XXX+1, or `/status` to review the board.
 ```
 
 ### Documentation rules (SCRIBE)

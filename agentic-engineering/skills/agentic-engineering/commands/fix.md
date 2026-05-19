@@ -1,4 +1,4 @@
-## `/ae-fix [description]` — Bug Fix Chain
+## `/fix [description]` — Bug Fix Chain
 
 **Chain:** diagnose → fix → review
 **Agents:** FIXER (lead), RED (reviewer)
@@ -132,6 +132,6 @@ Git:        ✅ committed on [branch name]
 - **Fix root cause, not symptom.** Wrong total from upstream calc → fix calc, not display. Root cause in different module → still fix there.
 - **Regression test must fail before fix.** Test → watch fail → fix → watch pass. After-the-fact proves nothing.
 - **Reproduce before confirming.** Can't reproduce → ask user, don't invent hypothesis.
-- **No `/ae-fix` on `main`.** Override GIT check → no PR, no review, no trail.
+- **No `/fix` on `main`.** Override GIT check → no PR, no review, no trail.
 
 ---

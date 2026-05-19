@@ -1,0 +1,111 @@
+<!-- agentic-engineering:start v1 -->
+# Agentic Engineering — Workflow
+
+This project follows the **Agentic Engineering** workflow. When working on this codebase, follow the rules below regardless of which AI assistant you are.
+
+Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
+
+---
+
+## Core principles
+
+- **Test-driven development.** Write a failing test before any implementation code. No exceptions, even for "quick" changes.
+- **Constitution.** `./docs/CONSTITUTION.md` lists non-negotiable project principles. Constitution violations are blockers — fix them before continuing, don't paper over them.
+- **Two changelogs, two audiences.**
+  - `./docs/CHANGELOG.md` — engineering log, terse, one line per change, newest first. Every ship/fix appends here.
+  - `./app-docs/CHANGELOG.mdx` — product release notes written for **end users**. Only changes a user can see go here. Pure refactors stay out.
+- **Docs structure.**
+  - `./docs/` — for people who **build** the app (PRDs, stories, reviews, architecture).
+  - `./app-docs/` — for people who **use** the app (overviews, how-tos, FAQs in MDX).
+  - They never overlap. No file paths or code blocks in `app-docs/`.
+
+---
+
+## Conventions
+
+- **Conventional commits**: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`, `style:`, `perf:`.
+- **Stories tagged `[P]`** can be implemented in parallel (no shared state). Other stories are sequential.
+- **Path-scoped rules** in `./.claude/rules/` (or `.cursor/rules/` depending on tool) auto-apply by file glob. Respect them when editing matching files.
+
+---
+
+## When the user asks you to research or plan a feature
+
+1. **Propose 3 approach options first.** Don't pick one. Show trade-offs (debt, complexity, time). Wait for the user's choice.
+2. **Generate a PRD** with `[NEEDS CLARIFICATION: <question>]` markers for anything ambiguous.
+3. **Batch-resolve clarifications** in one pass before story breakdown.
+4. **Constitution check.** If the proposed feature would violate the constitution, surface it and stop. Don't work around it silently.
+5. **Generate data-model.md** if the feature touches the database.
+6. **Break into stories.** Tag `[P]` where parallelisable. Each story should have clear acceptance criteria.
+
+---
+
+## When the user asks you to implement / ship a story
+
+Do these phases in order. Do not skip the review pass.
+
+1. **Plan.** Write the implementation plan. Show it. Wait for approval.
+2. **Failing tests first.** Write tests that capture the acceptance criteria. Run them — they should fail. Show the failure.
+3. **Implement.** Minimum code to make the tests pass. No drive-by refactors.
+4. **Review across 5 areas.** Do each as a focused pass:
+   - **Bug hunt** — null safety, async/concurrency, logic errors, resource leaks, error handling
+   - **Requirements + constitution** — does the code meet the acceptance criteria and the constitution?
+   - **Test quality** — meaningful assertions, no useless mocks, no flaky patterns
+   - **Conventions** — does the code match the surrounding codebase style?
+   - **Security** — injection, auth, XSS, SSRF, secrets, data exposure — only HIGH confidence findings, no noise
+5. **If UI:** also check fidelity — loading/empty/error states, form validation, accessibility (keyboard, contrast, focus), responsive behavior.
+6. **Update both changelogs** — engineering log always, product release notes only if user-visible.
+7. **Conventional commit** with a descriptive subject and a body explaining the why.
+
+---
+
+## When the user asks you to fix a bug
+
+1. **Diagnose root cause.** Don't patch the symptom. Trace it back to where the contract was broken.
+2. **Write a failing test** that reproduces the bug. Run it — confirm it fails.
+3. **Surgical fix.** One bug, one fix. No tangential cleanup in the same change.
+4. **Run the focused review** (bugs / tests / conventions). Skip requirements + constitution unless the bug is a contract violation.
+5. **Append to engineering changelog.** Append to product changelog only if users would have seen the bug.
+
+---
+
+## Test execution rules
+
+Never use watch mode. Always run tests to completion in a single shot.
+
+- **Vitest:** `vitest run` or `npx vitest run` — never bare `vitest`
+- **Jest:** `jest` (default is non-watch) — never `--watch` / `--watchAll`
+- **Pytest:** `pytest` — never `pytest-watch` / `ptw`
+- **Go:** `go test ./...`
+- **Other:** pass the explicit one-shot / non-watch flag
+
+This applies to every test invocation, including "quick checks."
+
+---
+
+## Human checkpoints — never auto-proceed
+
+Stop and wait for the user before continuing past any of these points:
+
+- Approach selection (after presenting 3 options)
+- PRD approval (after resolving all `[NEEDS CLARIFICATION]` items)
+- Constitution violations (must be resolved or explicitly waived)
+- Implementation plan (before writing any code)
+- Design approval (mobile-first, then desktop, separately)
+
+---
+
+## What "done" means for a story
+
+All of the following must be true before marking a story complete:
+
+- All acceptance criteria met (binary check)
+- Tests pass in non-watch mode
+- No constitution violations
+- Review across 5 areas produced no blockers
+- Both changelogs updated
+- Conventional commit pushed
+- (If UI) fidelity check passes
+
+If any of these fail, the story is not done.
+<!-- agentic-engineering:end v1 -->

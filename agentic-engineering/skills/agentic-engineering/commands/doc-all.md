@@ -1,10 +1,10 @@
-## `/ae-doc-all` — Document All Features
+## `/doc-all` — Document All Features
 
 Output → `./app-docs/` = **end-user product documentation**. Not internal reference.
 
 Modes:
 - **Default** — select from existing features to document/update
-- **`--full`** — no app-docs yet. Reconnaissance, builds landing + user guides, documents all user-facing features. Replaces `/ae-init-docs`.
+- **`--full`** — no app-docs yet. Reconnaissance, builds landing + user guides, documents all user-facing features. Replaces `/init-docs`.
 
 Detect:
 - `./app-docs/` missing or empty → suggest `--full`
@@ -48,7 +48,7 @@ Which features do you want to document?
 
 ### Phase 3 — Doc Loop
 
-Per selected feature, run full `/ae-doc` flow:
+Per selected feature, run full `/doc` flow:
 - ARCH reads code
 - SCRIBE asks Q&A, waits
 - Write MDX to `./app-docs/features/[name].mdx`
@@ -152,7 +152,7 @@ last_updated: [date]
 
 ### Phase 3 — Document All User-Facing Features
 
-Per PROD's user-facing list (internal-only skipped), run `/ae-doc` flow — ARCH reads code, SCRIBE Q&A, writes MDX.
+Per PROD's user-facing list (internal-only skipped), run `/doc` flow — ARCH reads code, SCRIBE Q&A, writes MDX.
 
 ### Phase 4 — PROD Review
 
@@ -180,5 +180,5 @@ Features documented: X
 Internal-only areas skipped: Y
 
 ⚠️ Review ./app-docs/ as if you were a first-time user of the product.
-SCRIBE will keep docs updated after every /ae-ship and /ae-fix.
+SCRIBE will keep docs updated after every /ship and /fix.
 ```

@@ -1,0 +1,17 @@
+{
+  "name": "thebedcoder",
+  "owner": {
+    "name": "thebedcoder",
+    "url": "https://github.com/thebedcoder"
+  },
+  "metadata": {
+    "description": "Plugins by thebedcoder — structured SDLC workflows for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "agentic-engineering",
+      "source": "./agentic-engineering",
+      "description": "Full SDLC agentic engineering workflow with named specialist agents — research, PRD, stories, implementation, 5-agent parallel review, end-user docs"
+    }
+  ]
+}

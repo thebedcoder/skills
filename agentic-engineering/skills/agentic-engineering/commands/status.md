@@ -1,4 +1,4 @@
-## `/ae-status` — Progress Overview
+## `/status` — Progress Overview
 
 **Agent:** PROD
 
@@ -19,12 +19,12 @@ Features: X total
   All X stories shipped
 
 [Feature Name] — planning 📋
-  Stories not yet created — run /ae-feature [name] to start
+  Stories not yet created — run /feature [name] to start
 
 BACKLOG 📋 — X items
   NOTE-001: [title] — bug / S / high
   NOTE-002: [title] — idea / M / medium
-  (run /ae-ship to pick one up and implement it)
+  (run /ship to pick one up and implement it)
 
 ARCH NOTE: [any cross-feature technical concerns?]
 ```

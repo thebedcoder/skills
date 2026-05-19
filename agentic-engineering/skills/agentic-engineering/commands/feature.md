@@ -1,4 +1,4 @@
-## `/ae-feature [name]` — Feature Research & Planning
+## `/feature [name]` — Feature Research & Planning
 
 **Agents:** PROD (lead), ARCH (validator), REQ (constitution check)
 
@@ -155,9 +155,9 @@ Stories must be: independent where possible, small (≤2hrs), testable.
 
 **PROD** outputs final summary: story count, parallel opportunities, recommended next step.
 
-Feature has UI screens → end: *"Run `/ae-design` to prepare mockups before building."*
-Purely backend/API/CLI, no UI → end: *"Run `/ae-ship` to start implementing."*
-Never suggest `/ae-implement` — internal command.
+Feature has UI screens → end: *"Run `/design` to prepare mockups before building."*
+Purely backend/API/CLI, no UI → end: *"Run `/ship` to start implementing."*
+Never suggest `/implement` — internal command.
 
 **ARCH** updates `./docs/INDEX.md`:
 ```markdown

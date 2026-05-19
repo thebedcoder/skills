@@ -1,10 +1,10 @@
-## `/ae-plan-all` — Plan All Epics
+## `/plan-all` — Plan All Epics
 
 **Agents:** PROD (lead), ARCH (validator)
 
-Use after `/ae-bootstrap` or when epics exist in `./docs/INDEX.md` but no stories yet.
-Runs `/ae-feature` for each unplanned epic in sequence, pausing at PRD step for approval.
-After completion, run `/ae-ship-all` to implement.
+Use after `/bootstrap` or when epics exist in `./docs/INDEX.md` but no stories yet.
+Runs `/feature` for each unplanned epic in sequence, pausing at PRD step for approval.
+After completion, run `/ship-all` to implement.
 
 ---
 
@@ -31,7 +31,7 @@ Total to plan: X epics
 
 ### Phase 2 — Planning Loop
 
-Per selected epic, run full `/ae-feature` flow:
+Per selected epic, run full `/feature` flow:
 
 **Between epics — compact:**
 ```

@@ -1,5 +1,5 @@
 ---
-description: Security vulnerability reviewer for agentic engineering. Runs as 5th parallel subagent during /ae-review. Identifies HIGH CONFIDENCE exploitable vulnerabilities only — not theoretical issues, not best-practice gaps. Activate when /ae-review needs a security pass.
+description: Security vulnerability reviewer for agentic engineering. Runs as 5th parallel subagent during /review. Identifies HIGH CONFIDENCE exploitable vulnerabilities only — not theoretical issues, not best-practice gaps. Activate when /review needs a security pass.
 model: claude-sonnet-4-5
 tools: Read, Glob, Grep, Bash(git diff:*)
 color: orange

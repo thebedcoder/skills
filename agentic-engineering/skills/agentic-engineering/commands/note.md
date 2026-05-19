@@ -1,4 +1,4 @@
-## `/ae-note` — Capture Backlog Item
+## `/note` — Capture Backlog Item
 
 **Agents:** FIXER (bugs), PROD (ideas/improvements)
 
@@ -98,5 +98,5 @@ Priority:   low/medium/high
 
 Saved to: ./docs/BACKLOG.md
 
-When ready to implement: run /ae-ship — it will pick this up and promote it automatically.
+When ready to implement: run /ship — it will pick this up and promote it automatically.
 ```
