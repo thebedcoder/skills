@@ -46,7 +46,39 @@ while [[ $# -gt 0 ]]; do
     --scope=*)  SCOPE="${1#*=}"; shift ;;
     --scope)    SCOPE="${2:?--scope requires a value}"; shift 2 ;;
     -h|--help)
-      sed -n '2,/^set -e/p' "${BASH_SOURCE[0]:-$0}" | sed -n '/^#/p' | sed 's|^# \?||'
+      cat <<'EOF'
+bedcode-skills installer — agentic-engineering for any coding agent
+
+Usage:
+  curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh | bash -s -- --tool=cursor
+  bash install.sh [--tool=<tool>] [--branch=main] [--scope=project|user]
+
+Supported tools:
+  claude-code     Full plugin install (slash commands + specialist agents)
+  cursor          .cursor/rules/*.mdc + AGENTS.md
+  codex           AGENTS.md (Codex CLI reads this from project root)
+  copilot         .github/copilot-instructions.md (GitHub Copilot in IDE)
+  copilot-cli     Print plugin install instructions (Copilot CLI has its own marketplace)
+  cline           .clinerules (Cline VS Code extension)
+  windsurf        .windsurfrules (Windsurf / Codeium)
+  aider           CONVENTIONS.md (Aider)
+  gemini          GEMINI.md (Gemini CLI)
+  zed             AGENTS.md (Zed assistant)
+  openhands       AGENTS.md (OpenHands / OpenDevin)
+  agents-md       AGENTS.md only — generic, read by any AGENTS.md-aware tool
+  auto            Detect installed tools and install for each
+
+Scope:
+  project (default for most tools) — writes to current directory
+  user                              — writes to user's global config (where supported)
+
+Environment overrides:
+  BEDCODE_SKILLS_REPO   Git URL for the source repo
+  BEDCODE_SKILLS_DIR    Cache location (default: ~/.local/share/bedcode-skills)
+  CURSOR_RULES_DIR, CURSOR_AGENTS_MD, CLINERULES, WINDSURFRULES,
+  AIDER_CONVENTIONS, GEMINI_MD, COPILOT_INSTRUCTIONS, CODEX_AGENTS_MD, AGENTS_MD
+EOF
       exit 0 ;;
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
@@ -175,19 +207,28 @@ PY
 }
 
 # Copy rules-library into a Cursor-friendly .cursor/rules dir.
-# Renames frontmatter `pattern:` → `globs:` so Cursor's MDC format applies them.
+# Renames frontmatter `paths:` (rules-library convention) to `globs:` so
+# Cursor's MDC format honors the path scoping. Skips README.md, which is
+# documentation, not a rule.
 copy_rules_to_cursor() {
   local dest="$1"
   [[ -d "$SKILL_DIR/rules-library" ]] || { echo "  (no rules-library — skipping)"; return; }
   mkdir -p "$dest"
+  local count=0
   for src in "$SKILL_DIR/rules-library"/*.md; do
     [[ -f "$src" ]] || continue
-    local name
-    name="$(basename "$src" .md).mdc"
-    # Translate pattern: → globs: in frontmatter so Cursor honors path scoping.
-    sed 's|^pattern:|globs:|' "$src" > "$dest/$name"
+    local base
+    base="$(basename "$src")"
+    [[ "$base" == "README.md" ]] && continue
+    local name="${base%.md}.mdc"
+    # Accept both `paths:` (current rules-library convention) and `pattern:`
+    # (older convention) — map either to Cursor's `globs:`. YAML list format
+    # below the key is preserved verbatim; Cursor accepts list-of-strings.
+    # Use `#` as sed delimiter to avoid collision with `|` in the alternation.
+    sed -E 's#^(paths|pattern):#globs:#' "$src" > "$dest/$name"
+    count=$((count + 1))
   done
-  echo "  → Copied $(ls "$dest"/*.mdc 2>/dev/null | wc -l | tr -d ' ') rules to $dest"
+  echo "  → Copied $count rules to $dest"
 }
 
 install_agents_md_style() {
