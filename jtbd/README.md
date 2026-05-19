@@ -158,11 +158,32 @@ references/
 
 ## Installation
 
-### Option A — Claude Code CLI
+### Option A — Claude Code plugin (recommended)
+
+```text
+/plugin marketplace add thebedcoder/skills
+/plugin install jtbd@thebedcoder
+```
+
+Once installed, `/jtbd` is available immediately — no restart needed.
+
+### Option B — Other agentic tools (Cursor, Codex, Copilot, Gemini, Cline, Windsurf, Aider, Zed, OpenHands)
+
+From the repo root:
 
 ```bash
-unzip jtbd-megaskill.zip
-cd jtbd-megaskill
+bash install.sh --skill=jtbd --tool=<tool>
+# or auto-detect what's installed:
+bash install.sh --skill=jtbd --tool=auto
+```
+
+This writes a JTBD workflow block into the tool's AGENTS.md (or equivalent), making the modes, four-forces framework, and references invocable from that tool. Note: parallel subagent dispatch is Claude-Code-specific; other tools run modes sequentially with the same prompts and references.
+
+### Option C — Claude Code CLI (manual install)
+
+```bash
+git clone https://github.com/thebedcoder/skills.git
+cd skills/jtbd
 ./install.sh
 ```
 
@@ -193,7 +214,7 @@ Restart Claude Code. The skill is available immediately.
         └── references/           ← 6 platform + creative guides
 ```
 
-### Option B — Claude.ai
+### Option D — Claude.ai
 
 Upload `jtbd.skill` via **Settings → Customize → Skills → Upload**.
 

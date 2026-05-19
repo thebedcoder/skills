@@ -1,0 +1,187 @@
+<!-- jtbd:start v1 -->
+# JTBD — Jobs to Be Done Megaskill
+
+When the user asks for any of the following — even informally — run the JTBD workflow described below instead of improvising:
+
+- Customer research, personas, positioning, ICP, market validation
+- Why customers churn / convert / switch
+- Landing page copy, hero, value props, FAQ, social proof, final CTA
+- Ad scripts for TikTok, Instagram Reels, YouTube Shorts, Threads
+- Competitor analysis, alternatives map, differentiation
+- "Validate this product idea", "what problem does this solve", "how do I describe this"
+
+Source: https://github.com/thebedcoder/skills/tree/main/jtbd
+
+---
+
+## Mental model
+
+Customers don't buy products. They **hire** them to make progress in a specific circumstance. Every real job has three layers:
+
+- **Functional** — the practical task
+- **Emotional** — how they want to feel (or stop feeling)
+- **Social** — how they want to be perceived
+
+### The Four Forces of Progress
+
+- **Push** — frustrations driving them away from the current solution
+- **Pull** — excitement pulling them toward the desired outcome
+- **Habit** — inertia, sunk cost, "good enough"
+- **Anxiety** — fear of switching cost, learning curve, risk
+
+**Progress happens only when `Push + Pull > Habit + Anxiety`.** Map every customer signal to one of these four forces. If you can't, the signal is noise.
+
+---
+
+## Mode router
+
+```
+WHAT THE USER HAS                            → RUN
+────────────────────────────────────────────────────────────────
+Only a product idea / one-line brief         → MODE 0  Synthetic Research
+Real interviews / reviews / tickets          → MODE 1  Discovery & Analysis
+JTBD research output (from MODE 0 or 1)      → MODE 2  Persona Definition
+Focus job + primary persona                  → MODE 2B Competitor Analysis
+Focus job + persona + positioning            → MODE 3  Landing Page Copy
+Focus job + persona + outcome to lead with   → MODE 4  Ad Scripts
+```
+
+**Default chain (no real research):** MODE 0 → MODE 2 → MODE 2B → MODE 3 → MODE 4
+**Chain with real data:** MODE 1 → MODE 2 → MODE 2B → MODE 3 → MODE 4
+
+**Checkpoint after every mode.** Never auto-chain. Show what's done and ask before continuing.
+
+---
+
+## MODE 0 — Synthetic JTBD Research
+
+**Goal:** Produce a research report that would take 3+ hours of manual work — job performers, four forces, opportunity-scored outcomes, validation interview guide — grounded in real market data where available.
+
+**Constraint:** Label outputs as **hypotheses**. Don't claim certainty you don't have.
+
+1. If product brief is incomplete, ask for: product name, what it does, who it's for, what problem it solves. One question at a time. Stop when you have enough.
+2. Search the web (or use your search tool) for: competitor landscape, customer voice (App Store / Reddit / forum quotes), category pain points, pricing signals. Only use quotes that reveal frustration or desired outcomes — discard marketing copy.
+3. Synthesize: job performers, four forces breakdown, outcome statements with opportunity scores, validation interview guide (5–7 questions).
+4. Output as `jtbd-<product-slug>-mode0-<YYYY-MM-DD>.md` with confidence rating (High/Medium/Low) per section.
+
+**Gotchas:** vague job statements (push for specific struggling moment, not category); force scores cluster 12–14 (outliers >15 = useful); emotional job ≠ desired outcome ("feel less anxious" = emotional; "reduce forgetting likelihood" = outcome).
+
+---
+
+## MODE 1 — Discovery & Analysis
+
+**Input:** Real qualitative data — interview transcripts, App Store reviews, support tickets, Reddit threads, survey open-ends.
+
+For each source, extract:
+
+- **Struggling moments** with timeline markers (when did the problem appear?)
+- **Four forces** quotes (push / pull / habit / anxiety) — verbatim where possible
+- **Desired outcomes** as outcome statements ("minimize the time to X")
+- **Voice samples** with evidence strength (direct quote / paraphrase / inference)
+- **Job map** steps the customer follows today
+
+If multiple sources, weight signals by cross-source frequency. Don't conflate one loud voice with consensus.
+
+**Source-specific notes:**
+- Interviews → look for timeline ("when I…", "the moment I…"), causality language
+- Reviews → 1★/2★ for push, 5★ for pull; star density ≠ signal density
+- Tickets → cancellation tickets are gold; "how do I…" reveals job map gaps
+
+---
+
+## MODE 2 — Persona Definition
+
+Build **2–3 personas based on situation, not demographics.** "30-year-old marketing manager" is not a persona. "Just got promoted, inherited a broken pipeline, needs to prove value in 90 days" is.
+
+For each persona, produce:
+
+- Situation (the trigger that makes the job urgent)
+- Four forces breakdown
+- Voice sample (one quote, verbatim or close)
+- Functional / emotional / social job statements
+- Commercial value rank (1 = highest spend × reachability × urgency)
+- Messaging implications (what to say, what to avoid)
+
+End with a **primary persona recommendation** and one-sentence rationale.
+
+---
+
+## MODE 2B — Competitor Analysis
+
+Map alternatives across **four tiers**. For each tier, find 3–5 named alternatives:
+
+- **Direct** — same category, same job (e.g., Notion vs. Coda)
+- **Adjacent** — different category, hired for the same job (e.g., Apple Notes for project planning)
+- **Workarounds** — DIY, spreadsheets, manual processes
+- **Do-nothing** — accepting the pain; rationalizations users give themselves
+
+For each alternative, record: what job it does best, what gap it leaves, what users complain about. Build a **differentiation matrix** showing where the user's product wins, ties, and loses. End with a **one-sentence positioning statement**: *For [persona] who [situation], [product] is the [category] that [unique benefit], unlike [primary alternative] which [gap].*
+
+---
+
+## MODE 3 — Landing Page Copy
+
+Write the page in seven sections. **Each section has rules** — don't merge or skip them.
+
+1. **Hero** — outcome-led headline (not feature), sub-headline naming the persona's situation, single primary CTA. Anti-pattern: clever wordplay without clarity.
+2. **Problem** — the struggling moment in the customer's voice. Empathy, not blame. Avoid "Are you tired of…" openers.
+3. **Value prop** — 3 outcome cards. Outcome, not feature. "Never forget a birthday" not "AI-powered reminder engine."
+4. **Social proof** — testimonials that map to the four forces (one per force ideal). If none yet, use placeholders labeled `[testimonial needed]`.
+5. **How it works** — describe the **customer's job steps**, not your product's feature steps. Three steps max.
+6. **FAQ** — every Q maps to an anxiety. Answers de-risk (free trial, no credit card, cancel anytime, money-back).
+7. **Final CTA** — echo the hero outcome, amplify with a risk-reversal line, single CTA.
+
+After drafting all seven, run a **consistency check**: same persona voice throughout, hero outcome echoed in final CTA, no feature-speak smuggled into outcome sections.
+
+---
+
+## MODE 4 — Ad Scripts
+
+For each platform requested (TikTok / Instagram Reel / YouTube Shorts / Threads), write **three angle variations**:
+
+- **Pain angle** — open on push (frustration). Hook in platform's hook window (2s TikTok, 3s Reel, 3–5s Shorts).
+- **Outcome angle** — open on pull (desired future state).
+- **Proof angle** — open on social proof or before/after.
+
+Platform constraints:
+- **TikTok** — 2s hook, sound-off design (text overlay carries meaning), native casual tone
+- **Instagram Reel** — 3s hook, sound-off-first, lifestyle aesthetic
+- **YouTube Shorts** — 3–5s hook, searchability matters (front-load keywords), demo-friendly
+- **Threads** — 500-char limit, person-not-brand voice, white space, no link bait
+
+End with an **A/B test recommendation**: which angle to lead with, what to test next, what kill metric to watch.
+
+---
+
+## Output protocol
+
+Every mode produces a markdown file: `jtbd-<product-slug>-mode<N>-<YYYY-MM-DD>.md` in the working dir. First line: `# JTBD [Mode Name] — [Product Name]`. Include: date, confidence rating, inputs used, full output, `Generated by JTBD megaskill` footer.
+
+Before starting any mode, check the working dir for prior `jtbd-*.md` files and ask the user whether to load them as inputs.
+
+---
+
+## Reference library
+
+Each mode has detailed references in the source repo — load on demand if your tool supports it:
+
+```
+jtbd/agents/jtbd-researcher/references/    competitor-research, customer-voice, pain-points, pricing-signals
+jtbd/agents/jtbd-analyst/references/       interview-analysis, review-analysis, support-analysis
+jtbd/agents/jtbd-scout/references/         direct, adjacent, workarounds, do-nothing
+jtbd/agents/jtbd-copywriter/references/    hero, problem, value-prop, social-proof, how-it-works, faq, final-cta
+jtbd/agents/jtbd-scriptwriter/references/  hooks, angles, tiktok, instagram-reel, youtube-shorts, threads
+```
+
+---
+
+## Parallelization note
+
+The Claude Code version of this skill dispatches specialist subagents in parallel — one ANALYST per source, one SCOUT per competitor tier, one COPYWRITER per page section, one SCRIPTWRITER per platform. If your tool can't dispatch subagents, run the work **sequentially with the same prompts**. The structure, references, and frameworks are identical; only the wall-clock time changes.
+
+---
+
+## Credits
+
+Informed by Clayton Christensen (*Competing Against Luck*), Bob Moesta & Chris Spiek (*Demand-Side Sales 101*), Tony Ulwick (*Jobs to Be Done: Theory to Practice*), Joanna Wiebe (Copyhackers), and April Dunford (*Obviously Awesome*).
+<!-- jtbd:end v1 -->

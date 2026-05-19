@@ -12,6 +12,11 @@
       "name": "agentic-engineering",
       "source": "./agentic-engineering",
       "description": "Full SDLC agentic engineering workflow with named specialist agents — research, PRD, stories, implementation, 5-agent parallel review, end-user docs"
+    },
+    {
+      "name": "jtbd",
+      "source": "./jtbd",
+      "description": "Jobs to Be Done megaskill — product brief to research, personas, competitor analysis, landing page copy, and platform-native ad scripts, powered by 5 parallel specialist agents"
     }
   ]
 }

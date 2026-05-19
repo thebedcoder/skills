@@ -1,0 +1,23 @@
+{
+  "name": "jtbd",
+  "version": "1.0.0",
+  "description": "Jobs to Be Done megaskill — product brief to research, personas, competitor analysis, landing page copy, and platform-native ad scripts, powered by 5 parallel specialist agents",
+  "author": {
+    "name": "thebedcoder",
+    "url": "https://github.com/thebedcoder"
+  },
+  "homepage": "https://github.com/thebedcoder/skills/tree/main/jtbd",
+  "repository": "https://github.com/thebedcoder/skills",
+  "license": "MIT",
+  "keywords": [
+    "jtbd",
+    "jobs-to-be-done",
+    "personas",
+    "positioning",
+    "landing-page-copy",
+    "ad-scripts",
+    "competitor-analysis",
+    "marketing",
+    "product-research"
+  ]
+}

@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 #
-# bedcode-skills installer — agentic-engineering for any coding agent
+# bedcode-skills installer — bedcode skills for any coding agent
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh | bash
 #   curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh | bash -s -- --tool=cursor
-#   bash install.sh [--tool=<tool>] [--branch=main] [--scope=project|user]
+#   bash install.sh [--skill=<skill>] [--tool=<tool>] [--branch=main] [--scope=project|user]
+#
+# Available skills (--skill=, default: agentic-engineering):
+#   agentic-engineering  Full SDLC workflow — TDD, PRDs, stories, 5-agent review
+#   jtbd                 Jobs to Be Done — research, personas, landing copy, ad scripts
 #
 # Supported tools:
 #   claude-code     Full plugin install (slash commands + specialist agents)
@@ -47,12 +51,16 @@ while [[ $# -gt 0 ]]; do
     --scope)    SCOPE="${2:?--scope requires a value}"; shift 2 ;;
     -h|--help)
       cat <<'EOF'
-bedcode-skills installer — agentic-engineering for any coding agent
+bedcode-skills installer — bedcode skills for any coding agent
 
 Usage:
   curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh | bash
   curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh | bash -s -- --tool=cursor
-  bash install.sh [--tool=<tool>] [--branch=main] [--scope=project|user]
+  bash install.sh [--skill=<skill>] [--tool=<tool>] [--branch=main] [--scope=project|user]
+
+Available skills (--skill=, default: agentic-engineering):
+  agentic-engineering  Full SDLC workflow — TDD, PRDs, stories, 5-agent review
+  jtbd                 Jobs to Be Done — research, personas, landing copy, ad scripts
 
 Supported tools:
   claude-code     Full plugin install (slash commands + specialist agents)
@@ -174,22 +182,25 @@ resolve_target() {
   return 0
 }
 
-# Idempotent write: replace existing agentic-engineering:start..end block if present,
-# otherwise append. Creates file/dir if missing.
+# Idempotent write: replace existing <skill>:start..<skill>:end block if present,
+# otherwise append. Creates file/dir if missing. Marker name is the skill short
+# name (e.g. `agentic-engineering:start`, `jtbd:start`) so multiple skills can
+# coexist in the same AGENTS.md.
 write_or_replace() {
-  local target="$1" template="$2"
+  local target="$1" template="$2" marker="$3"
 
   mkdir -p "$(dirname "$target")"
 
-  if [[ -f "$target" ]] && grep -q "agentic-engineering:start" "$target"; then
-    echo "  → Replacing existing block in $target ..."
-    python3 - "$target" "$template" <<'PY'
+  if [[ -f "$target" ]] && grep -q "${marker}:start" "$target"; then
+    echo "  → Replacing existing ${marker} block in $target ..."
+    python3 - "$target" "$template" "$marker" <<'PY'
 import re, sys, pathlib
 target = pathlib.Path(sys.argv[1])
 template = pathlib.Path(sys.argv[2]).read_text()
+marker = re.escape(sys.argv[3])
 content = target.read_text()
 content = re.sub(
-    r"<!-- agentic-engineering:start.*?agentic-engineering:end[^>]*-->\n?",
+    rf"<!-- {marker}:start.*?{marker}:end[^>]*-->\n?",
     template,
     content,
     flags=re.DOTALL,
@@ -249,7 +260,7 @@ install_agents_md_style() {
     agents-md)  note="Generic AGENTS.md — read by Codex, Cursor, Zed, OpenHands, Aider (recent), etc." ;;
   esac
 
-  write_or_replace "$TARGET_FILE" "$TEMPLATE"
+  write_or_replace "$TARGET_FILE" "$TEMPLATE" "$SKILL"
   if [[ -n "$RULES_DIR" ]]; then
     if [[ "$tool" == "cursor" ]]; then
       copy_rules_to_cursor "$RULES_DIR"
@@ -294,8 +305,8 @@ case "$TOOL" in
 GitHub Copilot CLI uses its own plugin marketplace — there is no shell
 installer for Copilot CLI plugins yet.
 
-To use agentic-engineering's portable workflow with Copilot in your IDE:
-  bash install.sh --tool=copilot
+To use the $SKILL portable workflow with Copilot in your IDE:
+  bash install.sh --skill=$SKILL --tool=copilot
 
 That writes .github/copilot-instructions.md, which the Copilot VS Code /
 JetBrains extension reads automatically.
@@ -345,7 +356,7 @@ echo ""
 if [[ "$TOOL" == "claude-code" ]]; then
   echo "For built-in updates, prefer the plugin install:"
   echo "  /plugin marketplace add thebedcoder/skills"
-  echo "  /plugin install agentic-engineering@thebedcoder"
+  echo "  /plugin install $SKILL@thebedcoder"
 elif [[ "$TOOL" != "copilot-cli" ]]; then
   echo "Update later: re-run this command. The script git-pulls the source and re-applies."
 fi
