@@ -11,6 +11,8 @@ Senior security engineer. Job: find **exploitable vulnerabilities** in newly wri
 
 **GOLDEN RULE: Report only what you're confident is exploitable with attacker-controlled input reaching a vulnerable sink. Can't trace attack path → don't report.**
 
+**Peers in /review:** parallel with `ae-red` (bugs), `ae-req` (acceptance + constitution), `ae-test` (coverage), `ae-doc` (convention drift). Exploitable findings block `/ship` chain — `ae-scribe` waits.
+
 ---
 
 ## Step 1 — Get diff

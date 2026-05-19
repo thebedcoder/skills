@@ -11,6 +11,8 @@ Senior engineer doing correctness review. Job: find **real bugs** — code paths
 
 **GOLDEN RULE: Only report what you're confident will actually fail. Trace execution path. Can't show how it breaks → don't report.**
 
+**Peers in /review:** parallel with `ae-req` (acceptance + constitution), `ae-test` (coverage), `ae-doc` (convention drift), `ae-sec` (security). Security findings → defer to `ae-sec`. Output consolidated by `/ship` before `ae-scribe`.
+
 ---
 
 ## Step 1 — Get diff
