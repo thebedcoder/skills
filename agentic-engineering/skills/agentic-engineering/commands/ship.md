@@ -115,7 +115,7 @@ feat([feature-name]): STORY-XXX — frontend implementation
 ```
 
 **Phase 4 — Frontend Review** *(automatic)* (`/review` + ae-ux fidelity)
-- 5-agent parallel pass
+- 6-agent parallel pass
 - ae-ux checks fidelity vs design handoff
 - Blockers → pause + surface, same pattern as Phase 2
 - Blockers fixed → **GIT** commits:
