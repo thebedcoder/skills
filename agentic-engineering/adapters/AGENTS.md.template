@@ -123,4 +123,18 @@ If any of these fail, the story is not done.
 Long-running commands (`/feature`, `/implement`, `/ship`, `/fix`, `/design`, `/review`, `/doc`, `/frontend`) auto-write CURRENT at their start using a story-id-match heuristic that prevents flicker when one command is nested in another (e.g. `/ship` calls `/implement` and `/review` inline; the inner phases only update `note:`). `/implement` and `/ship` also call `/focus done` on success (suppressed mid-chain inside `/ship-all`).
 
 Claude Code statusline integration is set up automatically by `/init` and `/bootstrap` via `./.claude/settings.local.json` (per-developer, untracked). Other tools can render the focus title themselves by reading `.agentic/focus.md`.
+
+---
+
+## Auto Mode (`--auto`)
+
+Long-running commands accept a `--auto` flag: `/feature`, `/fix`, `/ship`, `/ship-all`, `/implement`, `/design`. Under `--auto`, the agent skips ceremonial checkpoints and applies defaults from `./docs/CONSTITUTION.md` (especially a `## Default Decisions` section, if present). Every auto-decision is announced inline (`DECISION: <choice> — reason: <why> [auto]`) and appended to `.agentic/auto-log.md` (gitignored, alongside `.agentic/focus.md`).
+
+The agent always pauses regardless of `--auto` for:
+- Review blockers (high-severity bugs, requirements miss, constitution violation)
+- Destructive operations (CI configs, secrets, force-push, DB migrations, mass deletes)
+- Constitution conflicts
+- Missing required project state (no test framework, no design tool, no feature directory)
+
+End of command prints a one-line summary referring to the log file: `🤖 Auto mode: N decisions, M hard-pauses. See .agentic/auto-log.md`.
 <!-- agentic-engineering:end v1 -->
