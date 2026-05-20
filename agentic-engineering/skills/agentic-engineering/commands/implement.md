@@ -96,11 +96,11 @@ PROD — Acceptance Check:
 ## STORY-XXX: [Title] — [date]
 
 ### AC Coverage
-| AC | Description | Tests |
-|----|-------------|-------|
-| AC-1 | [from STORIES.md] | [file:test_name<br>file:test_name] |
-| AC-2 | [from STORIES.md] | [file:test_name] |
-| AC-N | [from STORIES.md] | [file:test_name] |
+| AC | Description | Tests | Level |
+|----|-------------|-------|-------|
+| AC-1 | [from STORIES.md] | [file:test_name<br>file:test_name] | [unit|integration|e2e] |
+| AC-2 | [from STORIES.md] | [file:test_name] | [unit|integration|e2e] |
+| AC-N | [from STORIES.md] | [file:test_name] | [unit|integration|e2e] |
 
 ### Edge probes (from ae-edge)
 | Category | Test |
@@ -120,6 +120,15 @@ PROD — Acceptance Check:
 - Wrote test that doesn't map to specific AC (helper, smoke, framework boilerplate)? Don't include it. Orphans surface as `ae-test` informational findings, not blockers.
 - `### Edge probes` section starts EMPTY. Populated during Phase 2 blocker-fix when `ae-edge` raises findings. Omit section entirely if `ae-edge` returned no findings for this story.
 - Existing `Files changed` + `Notes` unchanged from prior format.
+
+**Level column:** Each matrix row declares one Level: `unit`, `integration`, or `e2e`.
+- `unit` — single function/class, no I/O, no network, no DB, no FS, no real time. Mocks for collaborators OK.
+- `integration` — multiple components in-process, mocked or local-only external boundaries.
+- `e2e` — full system, real network/DB/UI driver, end-to-end user flow.
+
+If row's tests span multiple levels → split into multiple matrix rows (same AC, same Description, different Tests + Level cells). Multiple rows per AC is allowed — AC contract is "≥ 1 row per AC."
+
+Projects that need other levels (`contract`, `smoke`, `perf`) can use them — `ae-test` accepts value but excludes row from pyramid math.
 
 Prompt: *"Story complete. Run `/review` before next story."*
 
