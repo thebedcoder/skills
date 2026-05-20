@@ -131,3 +131,49 @@ A story's `STORIES.md` AC list and its `PROGRESS.md` AC Coverage matrix should a
 - flutter test: `test/auth_test.dart::test_login_redirects`
 
 Use the format the project's test runner emits when reporting a failure — it's the most useful for someone copying the reference into their terminal to re-run.
+
+---
+
+## Pyramid health
+
+The verification pyramid (unit → integration → e2e) is a heuristic for healthy test mix. The matrix's `Level` column makes the mix visible per story.
+
+**Three canonical levels:**
+
+- **unit** — Single function or class, no I/O. Mocks for collaborators OK. Fast (milliseconds), isolated, easy to debug. Example:
+
+  ```python
+  def test_validate_email_rejects_no_at_sign():
+      assert validate_email("foo") is False
+  ```
+
+- **integration** — Multiple components in-process, mocked or local boundaries (in-mem DB, fake HTTP). Slower (10s–100s of ms) but exercises real wiring. Example:
+
+  ```python
+  def test_signup_creates_user_and_session():
+      db = InMemoryDB()
+      session = SignupService(db).signup("a@b", "pw")
+      assert db.get_user("a@b").email == "a@b"
+      assert session.user_id == db.get_user("a@b").id
+  ```
+
+- **e2e** — Full system, real network/DB/UI. Slowest (seconds). Proves the system shipped. Example:
+
+  ```typescript
+  test('user signs up via UI', async ({ page }) => {
+    await page.goto('/signup')
+    await page.fill('#email', 'a@b')
+    await page.fill('#password', 'pw')
+    await page.click('button[type=submit]')
+    await expect(page).toHaveURL('/dashboard')
+  })
+  ```
+
+**Soft warning rules (informational, not blockers):**
+
+- `e2e_count / total > 50%` → inverted pyramid; favor extracting unit-level coverage
+- `unit_count == 0` (with total > 1) → missing unit-level coverage; extract logic out of integration/e2e
+
+**Why these warnings are soft:** Pyramid shape is project-specific. A flow-validation story can legitimately be e2e-heavy. The warning surfaces the shape; the operator decides.
+
+**Custom levels accepted:** Projects using `contract`, `smoke`, `perf`, or other taxonomy can put those values in the Level cell. `ae-test` doesn't block, but excludes those rows from canonical pyramid math.
