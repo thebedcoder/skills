@@ -165,17 +165,21 @@ Tag each story `[P]` if runnable parallel (no dependencies):
 - [ ] STORY-XXX: [Title] [P]
   **As a** [user], **I want** [action] **so that** [benefit]
   **Acceptance Criteria:**
-  - [ ] [criterion]
+  - [ ] AC-1: [criterion]
+  - [ ] AC-2: [criterion]
   **Notes:** [technical context from ARCH]
   **Parallel:** yes — no dependency on other stories
 
 - [ ] STORY-XXX: [Title]
   **As a** [user], **I want** [action] **so that** [benefit]
   **Acceptance Criteria:**
-  - [ ] [criterion]
+  - [ ] AC-1: [criterion]
+  - [ ] AC-2: [criterion]
   **Notes:** depends on STORY-XXX
   **Parallel:** no — requires STORY-XXX first
 ```
+
+**AC labeling:** Number AC explicitly `AC-1:`, `AC-2:`, ... per story. 1-based. Sequential per-story (not per-feature, not global). Stories with 1 AC still use `AC-1:`. Updating existing STORIES.md? Don't retro-label old AC — new stories get labels, old stories stay as-is for backward compat.
 
 **ARCH** validates story independence + parallel markers:
 ```
