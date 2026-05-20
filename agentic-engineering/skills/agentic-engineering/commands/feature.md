@@ -4,6 +4,20 @@
 
 Read `./CLAUDE.md`, `./docs/INDEX.md`, `./docs/CONSTITUTION.md` before starting.
 
+### Step 0a — Parse `--auto` flag
+
+Detect whether `$ARGUMENTS` contains the `--auto` token (not a substring inside a name).
+
+- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
+- Set internal flag `AUTO=true` for this run.
+- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
+- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
+  ```markdown
+  ## [now YYYY-MM-DD HH:MM] — /feature <name> --auto
+  ```
+
+See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+
 ### Step 0 — Auto-write focus
 
 Before doing anything else, update `.agentic/focus.md`:
@@ -73,7 +87,7 @@ Any implementation shortcut that would hurt UX?
 Any option simpler but creates user confusion?]
 ```
 
-⚠️ **Human checkpoint:** Ask user to pick approach before continuing.
+⚠️ **Human checkpoint** `[AUTO: always-ask]`: Ask user to pick approach before continuing. (Architectural choice — never skipped under `--auto`.)
 
 ---
 
@@ -109,7 +123,7 @@ Answer any you know. Skip any that aren't important — SCRIBE will note gaps in
 
 Wait for answers. PROD updates PRD, replaces `[NEEDS CLARIFICATION]` markers with real content or "gap: not yet determined".
 
-⚠️ **Human checkpoint:** *"PRD updated with clarifications. Please review PRD.md. Reply 'approved' when ready."*
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]`: *"PRD updated with clarifications. Please review PRD.md. Reply 'approved' when ready."* Under `--auto`: SKIP if PRD has no open `[NEEDS CLARIFICATION]` markers and no constitution conflicts; otherwise ASK.
 
 ---
 
@@ -189,6 +203,23 @@ Never suggest `/implement` — internal command.
 ```
 chore([feature-name]): add PRD, epics and stories
 ```
+
+### Step N — Auto-mode summary
+
+If `AUTO=true`:
+
+1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
+2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
+
+If `AUTO=false`: skip.
+
+### Checkpoint tag reference (this file)
+
+| Line | Checkpoint | Tag |
+|---|---|---|
+| Approach pick | Choose A/B/C architectural option | `[AUTO: always-ask]` |
+| PRD review | Approve PRD draft | `[AUTO: ask-if-ambiguous]` — skip if no open clarification markers + no constitution conflict |
+| Story breakdown | (implicit — generated from PRD) | `[AUTO: skip]` — proceed silently when PRD is approved |
 
 ### Gotchas
 
