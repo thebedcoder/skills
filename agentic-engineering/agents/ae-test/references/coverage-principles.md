@@ -100,3 +100,34 @@ Good test names make failures self-explaining:
 - `test_login_fails_with_wrong_password` — clear
 - `test_login` — useless when it fails
 - `test_1` — useless
+
+---
+
+## AC Traceability
+
+A story's `STORIES.md` AC list and its `PROGRESS.md` AC Coverage matrix should align 1:1.
+
+**Contract:**
+- Every `AC-N` in STORIES.md → at least one row in the matrix
+- Every test in the matrix → exists in the repo (grep the `file:test_name` reference)
+- Tests not in any matrix → informational, not a blocker (helpers, smoke, boilerplate, cross-cutting tests)
+- Stories without `### AC Coverage` heading in PROGRESS.md → pre-convention story; skip the matrix check
+
+**What this catches:**
+- Implementer forgot to write a test for AC-3
+- Test was renamed but matrix wasn't updated → stale reference
+- Implementer claims `test_login_redirects` covers AC-2 but the function doesn't exist
+
+**What this does NOT catch (covered by existing Step 3 scenario coverage):**
+- Test exists and is mapped to AC, but it's a trivial assertion that doesn't actually exercise the behavior
+- Edge cases the AC implies but the test doesn't cover (e.g., AC says "redirects on success" — test only checks happy path, doesn't check redirect URL or session cookie)
+
+**Test-identifier format per framework:**
+- pytest: `tests/auth_test.py::test_login_redirects`
+- jest/vitest: `tests/auth.test.ts > login > redirects on success` or `tests/auth.test.ts::test_login_redirects` (project-specific — match what the runner outputs)
+- go test: `auth/auth_test.go::TestLoginRedirects`
+- xctest: `AuthTests/testLoginRedirects`
+- junit: `AuthTest#testLoginRedirects`
+- flutter test: `test/auth_test.dart::test_login_redirects`
+
+Use the format the project's test runner emits when reporting a failure — it's the most useful for someone copying the reference into their terminal to re-run.
