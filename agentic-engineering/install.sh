@@ -40,11 +40,12 @@ echo "  → Copying subagents..."
 cp "$SCRIPT_DIR/agents/ae-req.md" ~/.claude/agents/
 cp "$SCRIPT_DIR/agents/ae-doc.md" ~/.claude/agents/
 cp "$SCRIPT_DIR/agents/ae-scribe.md" ~/.claude/agents/
-# ae-red, ae-test, ae-sec, ae-ux are full directories (references + languages)
+# ae-red, ae-test, ae-sec, ae-ux, ae-edge are full directories (references + languages)
 cp -r "$SCRIPT_DIR/agents/ae-red" ~/.claude/agents/
 cp -r "$SCRIPT_DIR/agents/ae-test" ~/.claude/agents/
 cp -r "$SCRIPT_DIR/agents/ae-sec" ~/.claude/agents/
 cp -r "$SCRIPT_DIR/agents/ae-ux" ~/.claude/agents/
+cp -r "$SCRIPT_DIR/agents/ae-edge" ~/.claude/agents/
 
 # Install user-facing command wrappers only
 # (implement, review, frontend are internal — used by ship, not invoked directly)
