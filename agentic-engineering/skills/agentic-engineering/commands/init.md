@@ -75,6 +75,36 @@ description: Product updates and changes — what you can now do in the app
 <!-- Run /ship to pick up and implement a backlog item -->
 ```
 
+**ARCH** also writes per-developer ephemera (worktree-local, gitignored):
+
+1. Ensure `.gitignore` exists and contains `.agentic/`:
+```bash
+if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
+grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
+```
+
+2. Enable the focus statusline by writing `./.claude/settings.local.json` (the `.local.json` variant is per-developer and untracked by default):
+
+```bash
+mkdir -p .claude
+```
+
+If `.claude/settings.local.json` does not exist → create it with:
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/agentic-statusline.sh"
+  }
+}
+```
+
+If it exists but lacks a `statusLine` key → merge the `statusLine` block into existing JSON, preserve other keys.
+
+If it already has a `statusLine` → leave alone (user's choice).
+
+3. Note in `./docs/INDEX.md` navigation section: `.agentic/focus.md` is per-worktree current-task pointer managed by `/focus` and `/next`.
+
 **PROD** generates `./docs/CONSTITUTION.md` by asking: non-negotiable tech standards, architectural principles, security/compliance, forbidden patterns.
 
 Constitution format:
