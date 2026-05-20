@@ -5,6 +5,20 @@
 
 Read `./CLAUDE.md` + relevant feature docs in `./app-docs/features/` before starting.
 
+### Step 0a — Parse `--auto` flag
+
+Detect whether `$ARGUMENTS` contains the `--auto` token (not a substring inside a name).
+
+- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
+- Set internal flag `AUTO=true` for this run.
+- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
+- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
+  ```markdown
+  ## [now YYYY-MM-DD HH:MM] — /fix <bug summary> --auto
+  ```
+
+See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+
 ### Step 0 — Auto-write focus
 
 Before diagnosing, update `.agentic/focus.md`:
@@ -60,7 +74,7 @@ Risk:
   [Could fix break anything else?]
 ```
 
-⚠️ **Human checkpoint:** Show diagnosis. Ask: *"Does this match what you're seeing? Reply 'go' to fix."*
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]`: Show diagnosis. Ask: *"Does this match what you're seeing? Reply 'go' to fix."* Under `--auto`: SKIP if FIXER identifies exactly one plausible root cause with high confidence (single file/line, no alternative hypotheses); otherwise ASK.
 
 **Phase 2 — Fix** *(automatic after 'go')*
 
@@ -146,6 +160,23 @@ Docs:       ✅ updated / not needed
 Changelog:  ✅ both updated
 Git:        ✅ committed on [branch name]
 ```
+
+### Step N — Auto-mode summary
+
+If `AUTO=true`:
+
+1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
+2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
+
+If `AUTO=false`: skip.
+
+### Checkpoint tag reference (this file)
+
+| Checkpoint | Tag |
+|---|---|
+| Branch warning when on `main` | `[AUTO: always-ask]` — never proceed silently on `main` |
+| Show diagnosis, ask 'go' | `[AUTO: ask-if-ambiguous]` — skip when single high-confidence root cause |
+| Review post-fix `FIX PAUSED — RED has concerns` | `[AUTO: always-ask]` (also hard-override #1) |
 
 ### Gotchas
 

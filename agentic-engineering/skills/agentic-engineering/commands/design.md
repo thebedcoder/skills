@@ -4,6 +4,20 @@
 
 Read `./CLAUDE.md` + `./docs/features/[feature-name]/PRD.md` before starting. PRD must be approved before running.
 
+### Step 0a — Parse `--auto` flag
+
+Detect whether `$ARGUMENTS` contains the `--auto` token.
+
+- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
+- Set internal flag `AUTO=true` for this run.
+- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
+- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
+  ```markdown
+  ## [now YYYY-MM-DD HH:MM] — /design <feature> --auto
+  ```
+
+See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+
 ### Step 0 — Auto-write focus
 
 Before designing, update `.agentic/focus.md`:
@@ -61,7 +75,7 @@ Any transition or modal needing own frame?
 Any state painful to implement without design?]
 ```
 
-⚠️ **Human checkpoint:** Confirm screen list before any design work.
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]`: Confirm screen list before any design work. Under `--auto`: SKIP if screen list is fully derivable from the PRD with no gaps; otherwise ASK.
 
 ---
 
@@ -103,7 +117,7 @@ States:
   - Error: [description]
 ```
 
-⚠️ **Human checkpoint:** *"Mobile designs are ready. Please review in [Figma / Pencil / the specs above]. Edit anything that needs changing. Reply 'mobile approved' when ready."*
+⚠️ **Human checkpoint** `[AUTO: always-ask]`: *"Mobile designs are ready. Please review in [Figma / Pencil / the specs above]. Edit anything that needs changing. Reply 'mobile approved' when ready."* (Visual review can't be auto-judged — never skipped.)
 
 ---
 
@@ -118,7 +132,7 @@ Any layout needing fundamentally different treatment at wider widths?
 Any mobile pattern breaking on desktop?]
 ```
 
-⚠️ **Human checkpoint:** *"Desktop designs are ready. Reply 'approved' when ready to proceed."*
+⚠️ **Human checkpoint** `[AUTO: always-ask]`: *"Desktop designs are ready. Reply 'approved' when ready to proceed."* (Visual review can't be auto-judged — never skipped.)
 
 ---
 
@@ -160,5 +174,23 @@ Any acceptance criterion design doesn't address?]
 ```
 
 After approval: *"Design complete. Run `/ship` to start building."*
+
+### Step N — Auto-mode summary
+
+If `AUTO=true`:
+
+1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
+2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
+
+If `AUTO=false`: skip.
+
+### Checkpoint tag reference (this file)
+
+| Checkpoint | Tag |
+|---|---|
+| Confirm screen list | `[AUTO: ask-if-ambiguous]` — skip when screen list fully derivable from PRD |
+| Mobile designs review | `[AUTO: always-ask]` — visual review is human-only |
+| Desktop designs review | `[AUTO: always-ask]` — visual review is human-only |
+| Design tool selection (from CLAUDE.md) | `[AUTO: ask-if-ambiguous]` — defer to project's existing setting |
 
 ---
