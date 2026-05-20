@@ -36,7 +36,7 @@ Commands are handled by a cast of named specialist agents. Each has a distinct r
 └───────────┴────────────────────────────────┴────────────────────────┘
 ```
 
-Five review agents (RED, REQ, TEST, DOC, SEC) run as **parallel Haiku subagents** after every story — results back simultaneously, main context stays clean.
+Six review agents (RED, REQ, TEST, DOC, SEC, EDGE) run as **parallel Haiku subagents** after every story — results back simultaneously, main context stays clean. Now includes `ae-edge`, which adversarially probes backend code for missing edge cases (boundary, null, race, malformed, resource, error-path) and emits failing test code + suggested fixes into the consolidated blocker list.
 
 One UX subagent (ae-ux) runs after the frontend pass with a structured checklist across 6 dimensions.
 
@@ -76,12 +76,13 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │    └──────┬──────┘                                                   │
 │           │                                                          │
 │    ┌──────▼──────────────────────────────────────────────────┐       │
-│    │              5 PARALLEL REVIEW AGENTS                   │       │
+│    │              6 PARALLEL REVIEW AGENTS                   │       │
 │    │  🔴 RED    bug hunt (null/async/logic/resources)        │       │
 │    │  ✅ REQ    requirements + constitution audit            │       │
 │    │  🧪 TEST   coverage quality + framework patterns        │       │
 │    │  📖 DOC    convention alignment                         │       │
 │    │  🔐 SEC    security vulnerabilities                     │       │
+│    │  🔀 EDGE   edge case hunting (boundary/race/malformed)  │       │
 │    └──────┬──────────────────────────────────────────────────┘       │
 │           │  consolidated: blockers / should-fix / clean             │
 │           │                                                          │
@@ -115,7 +116,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/init` | Create docs scaffold, CLAUDE.md, and CONSTITUTION.md |
 | `/feature [name]` | Research → PRD → clarifications → constitution check → stories |
 | `/design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown |
-| `/ship` | Full story: implement → 5-agent review → frontend → UX check → docs → git |
+| `/ship` | Full story: implement → 6-agent review → frontend → UX check → docs → git |
 | `/ship-all` | Loop `/ship` across all unchecked stories |
 | `/plan-all` | Plan all unplanned epics from INDEX.md |
 | `/fix [desc]` | Diagnose bug → fix → review → docs |
@@ -482,7 +483,7 @@ ARCH:   Plan for STORY-001: [implementation plan]
 You:    go
 
         → implement + tests
-        → 5 parallel reviews return simultaneously
+        → 6 parallel reviews return simultaneously
         → 1 blocker: hardcoded Stripe key in config (SEC)
         → fix blocker
         → SCRIBE updates changelogs
