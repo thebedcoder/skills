@@ -108,4 +108,19 @@ All of the following must be true before marking a story complete:
 - (If UI) fidelity check passes
 
 If any of these fail, the story is not done.
+
+---
+
+## Focus pointer (`.agentic/focus.md`)
+
+`.agentic/focus.md` is a per-worktree pointer to the current task. Section `# CURRENT` holds the active task (`title:`, `feature:`, `since:`, `set_by:`, `note:`). Section `# NEXT` is an ordered list of queued items. The file lives in `.agentic/` which is gitignored — each worktree has its own state, no cross-worktree stomping.
+
+- `/focus <task>` overwrites CURRENT manually.
+- `/focus done` clears CURRENT and (if NEXT non-empty) prompts to promote item #1 to CURRENT (`y`), clear only (`n`), or move to BACKLOG (`b`).
+- `/focus clear` wipes both sections.
+- `/next <task>` appends to NEXT. `/next drop <N>` removes item N.
+
+Long-running commands (`/feature`, `/implement`, `/ship`, `/fix`, `/design`, `/review`, `/doc`, `/frontend`) auto-write CURRENT at their start using a story-id-match heuristic that prevents flicker when one command is nested in another (e.g. `/ship` calls `/implement` and `/review` inline; the inner phases only update `note:`). `/implement` and `/ship` also call `/focus done` on success (suppressed mid-chain inside `/ship-all`).
+
+Claude Code statusline integration is set up automatically by `/init` and `/bootstrap` via `./.claude/settings.local.json` (per-developer, untracked). Other tools can render the focus title themselves by reading `.agentic/focus.md`.
 <!-- agentic-engineering:end v1 -->
