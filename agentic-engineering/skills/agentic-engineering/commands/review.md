@@ -1,6 +1,6 @@
 ## `/review` — Multi-Agent Code Review
 
-**Goal:** Consolidated fix list for current story. Five specialist reviewers run parallel on changed code.
+**Goal:** Consolidated fix list for current story. Six specialist reviewers run parallel on changed code.
 
 **Inputs (read first):**
 - `./CLAUDE.md`, `./docs/INDEX.md`, `./docs/CONSTITUTION.md` — orient on current feature
@@ -27,11 +27,11 @@ Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by
 3. Continue with review below.
 
 **Constraints:**
-- All five subagents dispatched **in single tool-call batch** — not sequentially
+- All six subagents dispatched **in single tool-call batch** — not sequentially
 - Each subagent gets only files it needs — pass paths, not full content
 - Consolidate into one fix list before reporting
 
-### The five reviewers
+### The six reviewers
 
 | Agent | Receives | Looks for |
 |---|---|---|
@@ -40,6 +40,7 @@ Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by
 | **ae-test** | changed files + test files | coverage gaps, tests that wouldn't catch regressions |
 | **ae-doc** | CLAUDE.md + changed files + related app-docs | convention drift, docs needing update |
 | **ae-sec** | changed impl files + git diff | high-confidence exploitable vulnerabilities |
+| **ae-edge** | changed impl files + tests + AC + CONSTITUTION | adversarial backend edge cases the diff doesn't handle (boundary, null, race, malformed, resource, error-path) |
 
 Each reviewer loads own reference files on demand. Don't instruct how to review — they know.
 
@@ -63,6 +64,7 @@ Clean areas:
 - TEST: [verdict]
 - DOC: [aligned / drifts noted]
 - SEC: [Clean / X findings — Critical: N, High: N, Medium: N]
+- EDGE: [Clean / X cases — Blockers: N, Should-cover: M, Won't-cover: K]
 ```
 
 Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`.
@@ -70,8 +72,10 @@ Ask: *"Should I fix the blockers now, or do you want to review them first?"*
 
 ### Gotchas
 
-- **Sequential dispatch = failure.** Five subagents in one batched tool call. Never spawn-wait-spawn. 5 separate calls → re-batch.
+- **Sequential dispatch = failure.** Six subagents in one batched tool call. Never spawn-wait-spawn. 6 separate calls → re-batch.
 - **No story summary before dispatch.** Reviewers read files themselves. Paraphrase → token waste + meaning drift.
 - **Don't merge findings early.** ae-red + ae-sec flag same line → keep both voices. Reasoning differs, context varies.
 - **No 6th reviewer ad-hoc.** New dimension missing → skill change, not improvisation. Flag it.
 - **Constitution violations = always blockers.** Never downgrade to "should-fix." Fix cost irrelevant.
+- **ae-edge is read-only.** Despite emitting failing test code, ae-edge does NOT write files. Test code lives in the report as inert text; blocker-fix flow downstream copies it into project test files. If ae-edge writes a file, that's a bug.
+- **ae-edge defers frontend.** If diff is frontend-only, ae-edge emits "out of scope" and exits. Don't expect findings on `.tsx`/`.vue`/`.swiftui` changes — that's `ae-ux`'s beat.
