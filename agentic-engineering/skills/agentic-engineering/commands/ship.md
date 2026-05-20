@@ -4,6 +4,25 @@
 
 Use after `/design` approved. Ships story end-to-end without manual triggers.
 
+### Step 0 — Auto-write focus
+
+Before picking a story, update `.agentic/focus.md`:
+
+1. Ensure `.agentic/` exists + gitignored (idempotent):
+```bash
+mkdir -p .agentic
+if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
+grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
+```
+
+2. Once PROD has picked the next story (see "Finding what to ship" below), set CURRENT (story-id-match heuristic):
+   - Existing CURRENT.title already references this STORY-ID (e.g. set by parent `/ship-all`) → update `note:` to `phase: ship chain` and `set_by:` to `/ship`. Leave `title:` + `since:` alone.
+   - Otherwise → overwrite CURRENT: `title: <STORY-ID> — <story title>`, `feature: <feature-name>`, `since: [now]`, `set_by: /ship`, `note: ship chain`.
+
+Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value, and propagate `--auto` to internal `/implement`, `/review`, `/frontend` phases.
+
+3. Continue with finding-what-to-ship below.
+
 ### Finding what to ship
 
 Read `./docs/INDEX.md` + feature `STORIES.md` + `./docs/BACKLOG.md`.
@@ -139,6 +158,15 @@ Progress: updated
 
 Next: run `/ship` again for STORY-XXX+1, or `/status` to review the board.
 ```
+
+### Step N — Release focus
+
+If this `/ship` is **not** nested under `/ship-all` (detect by `set_by:` on CURRENT — if it contains `/ship-all`, the chain owns release):
+
+- If invoked with `--auto` → run `/focus done auto` (auto-promotes NEXT silently per `commands/focus.md` Phase 3).
+- Else → run `/focus done` (interactive prompt y/n/b).
+
+If nested under `/ship-all` → skip; the chain releases focus only at the end of the final story.
 
 ### Documentation rules (SCRIBE)
 

@@ -6,6 +6,23 @@ Read `./docs/INDEX.md`, `./docs/CONSTITUTION.md`, then scan feature `STORIES.md`
 
 Use to ship all remaining stories without manual trigger. User stays in loop — every story pauses for plan approval before code. Only mechanical chaining is automatic.
 
+### Step 0 — Auto-write focus
+
+At the start of the chain, update `.agentic/focus.md`:
+
+1. Ensure `.agentic/` exists + gitignored (idempotent):
+```bash
+mkdir -p .agentic
+if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
+grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
+```
+
+2. Overwrite CURRENT to represent the whole chain: `title: ship-all: <feature> (N stories)`, `since: [now]`, `set_by: /ship-all`, `note: starting`.
+
+Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value. Propagate `--auto` to every internal `/ship` invocation in the chain.
+
+Between stories: update `note:` to `phase: shipping STORY-X (k of N)`. Do **not** overwrite `title:` per story — it represents the whole chain.
+
 ---
 
 ### On start
@@ -98,6 +115,15 @@ PR desc: ✅ updated to cover all shipped stories
 ```
 
 **GIT** generates single PR desc covering all shipped stories — not one per story.
+
+### Step N — Release focus
+
+After the final story completes successfully (chain end):
+
+- If invoked with `--auto` → run `/focus done auto` (auto-promotes NEXT silently per `commands/focus.md` Phase 3).
+- Else → run `/focus done` (interactive prompt y/n/b).
+
+Mid-chain story completions do NOT call `/focus done` — only the final story triggers release.
 
 ---
 
