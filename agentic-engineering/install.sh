@@ -25,10 +25,13 @@ SKILL_FILE="$HOME/.claude/skills/agentic-engineering/SKILL.md"
 if ! grep -q "user-invocable" "$SKILL_FILE"; then
   # Use Python for cross-platform compatibility (macOS sed differs from GNU sed)
   python3 -c "
-import re, sys
+import re
 with open('$SKILL_FILE', 'r') as f:
     content = f.read()
-content = content.replace('---\n# Agentic Engineering', 'user-invocable: false\n---\n# Agentic Engineering', 1)
+# Insert 'user-invocable: false' on the line before the closing --- of the YAML frontmatter.
+# Targets the closing --- (the one followed by the H1 heading), not the opening ---.
+# Tolerates blank lines / comments between --- and the heading.
+content = re.sub(r'^---\n(?=\s*#)', 'user-invocable: false\n---\n', content, count=1, flags=re.MULTILINE)
 with open('$SKILL_FILE', 'w') as f:
     f.write(content)
 "
