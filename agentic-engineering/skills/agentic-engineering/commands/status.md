@@ -29,6 +29,7 @@ Features: X total
 [Feature Name] — in-progress
   Completed: X / Y stories
   Tests: M/N AC mapped across K shipped stories (P% · G gaps)
+  Pyramid: unit U · integration I · e2e E (balanced) [⚠️ if inverted at feature scope]
   DONE ✅   STORY-001: [title]
   UP NEXT 🔜 STORY-002: [title] ← recommended next
   BLOCKED ⚠️ STORY-003: [reason]
@@ -53,5 +54,6 @@ Rendering rules:
 - Stale → append `⚠️ stale (Nd old) — still working on this?`
 - CURRENT.`set_by` may contain ` (auto)` or ` (auto-promoted)` suffix from auto mode — render as-is
 - **Tests rollup:** Iterate each feature's shipped stories. For each story with `### AC Coverage` in PROGRESS.md, parse the table. M = count of rows where the Tests cell is non-empty. N = count of AC rows. K = count of stories with a matrix. P = `M / N * 100` rounded to integer. G = count of AC rows with empty Tests cell. Pre-matrix stories (no `### AC Coverage` heading) are excluded from M, N, K, G. Omit the entire "Tests:" line if no shipped story has a matrix yet (avoids `0/0`).
+- **Pyramid rollup:** Aggregate `unit_count`, `integration_count`, `e2e_count` across all shipped stories with a 4-column `### AC Coverage` matrix. Skip pre-pyramid (3-column) stories and non-canonical-level rows. Compute `total = unit + integration + e2e`. If `total == 0` (no 4-column stories yet, or all rows non-canonical) → omit the entire `Pyramid:` line. Otherwise render `Pyramid: unit U · integration I · e2e E (balanced)`. If `e2e_count / total > 0.5` OR `unit_count == 0` → append `(inverted — X% e2e, consider extracting unit tests) ⚠️` instead of `(balanced)`.
 
 ---
