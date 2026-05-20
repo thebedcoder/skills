@@ -58,6 +58,8 @@ Do these phases in order. Do not skip the review pass.
 6. **Update both changelogs** — engineering log always, product release notes only if user-visible.
 7. **Conventional commit** with a descriptive subject and a body explaining the why.
 
+**AC Coverage matrix.** Every shipped story records an AC Coverage matrix in `./docs/features/<name>/PROGRESS.md`. The matrix is a markdown table listing every Acceptance Criterion (AC-1, AC-2, ...) from `STORIES.md` and the specific tests that prove it, formatted `file:test_name`. When `ae-edge` probes find edge-case blockers, the implementer also appends an `Edge probes` table. During `/review`, the test-coverage reviewer (`ae-test`) validates that every AC has at least one test entry and every claimed test exists — missing AC or stale entries become review blockers. Matrix is read-only at review time; only `/implement` and Phase 2 blocker-fix mutate it.
+
 ---
 
 ## When the user asks you to fix a bug
