@@ -39,6 +39,8 @@ Command invoked → read matching file from `commands/` first. File holds full i
 | `/doc-all` | `commands/doc-all.md` | Document many features. `--full` = new project (+ guides + index) |
 | `/status` | `commands/status.md` | Progress overview |
 | `/note [description]` | `commands/note.md` | Capture bug/idea/improvement |
+| `/focus [task\|done\|clear]` | `commands/focus.md` | Set, clear, or advance current task pointer for this worktree |
+| `/next [task\|drop N]` | `commands/next.md` | Queue a task to be picked up after current finishes |
 | `/analyze` | `commands/analyze.md` | Answer project question — searches docs + code |
 | `/frontend` | `commands/frontend.md` | Frontend from design handoff |
 
