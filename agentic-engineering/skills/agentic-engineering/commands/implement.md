@@ -15,6 +15,20 @@
 - No files outside ARCH's explicit plan — scope creep forbidden
 - Story marked complete only when all acceptance criteria verified
 
+### Step 0a — Parse `--auto` flag
+
+Detect whether `$ARGUMENTS` contains the `--auto` token.
+
+- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
+- Set internal flag `AUTO=true` for this run.
+- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
+- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
+  ```markdown
+  ## [now YYYY-MM-DD HH:MM] — /implement <STORY-ID> --auto
+  ```
+
+See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+
 ### Step 0 — Auto-write focus
 
 Before planning, update `.agentic/focus.md`:
@@ -62,7 +76,7 @@ Any criterion ARCH's plan doesn't address?
 Any scope in plan not in story?]
 ```
 
-⚠️ **Human checkpoint:** Show both. Ask: *"Reply 'go' to start implementation."*
+⚠️ **Human checkpoint** `[AUTO: skip]`: Show both. Ask: *"Reply 'go' to start implementation."* Under `--auto`: SKIP — emit `SKIPPED: plan approval (clear story, no ambiguous decisions in plan) [auto]` and proceed. Exception per hard-override #4: if plan introduces a new dependency or alters a public interface, treat as `[AUTO: always-ask]` instead.
 
 **Implement.** Per plan. Write each test before code it covers — watch fail with meaningful error, then pass.
 
@@ -95,6 +109,23 @@ If this `/implement` is **not** nested under `/ship` or `/ship-all` (detect by i
 - Else → run `/focus done` (interactive prompt y/n/b).
 
 If nested under `/ship` / `/ship-all` → skip; the parent handles release.
+
+### Step N — Auto-mode summary
+
+If `AUTO=true`:
+
+1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
+2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
+
+If `AUTO=false`: skip.
+
+### Checkpoint tag reference (this file)
+
+| Checkpoint | Tag |
+|---|---|
+| Plan-approval ('go' to start) | `[AUTO: skip]` — proceed silently when plan has no new deps / interface changes |
+| Plan introduces new library or alters public API | `[AUTO: always-ask]` — escalates from skip to ask |
+| Tests passing → commit | `[AUTO: skip]` — tests verify correctness; no user judgment needed |
 
 ### Gotchas
 

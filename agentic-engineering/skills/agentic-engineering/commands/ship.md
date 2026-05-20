@@ -4,6 +4,21 @@
 
 Use after `/design` approved. Ships story end-to-end without manual triggers.
 
+### Step 0a — Parse `--auto` flag
+
+Detect whether `$ARGUMENTS` contains the `--auto` token.
+
+- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
+- Set internal flag `AUTO=true` for this run.
+- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
+- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
+  ```markdown
+  ## [now YYYY-MM-DD HH:MM] — /ship <STORY-ID> --auto
+  ```
+- **Propagate `AUTO=true` to internal phases** — every nested `/implement`, `/review`, `/frontend` step inside this `/ship` run respects the same auto mode.
+
+See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+
 ### Step 0 — Auto-write focus
 
 Before picking a story, update `.agentic/focus.md`:
@@ -55,14 +70,14 @@ Mark promoted in `BACKLOG.md`:
 **Status:** ~~backlog~~ → promoted to STORY-XXX in [feature-name]
 ```
 
-⚠️ **Human checkpoint:** Show promoted story. Ask: *"Does this look right? Reply 'go' to ship."*
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]`: Show promoted story. Ask: *"Does this look right? Reply 'go' to ship."* Under `--auto`: SKIP if the BACKLOG item already has clear acceptance criteria and PROD's shaping is mechanical; otherwise ASK.
 
 ### Flow
 
 **Phase 1 — Backend** (`/implement` flow)
 - ARCH generates plan
 - PROD validates vs acceptance criteria
-- ⚠️ **Single human checkpoint:** Show both plans. Ask: *"Reply 'go' to start the full ship chain."*
+- ⚠️ **Single human checkpoint** `[AUTO: skip]`: Show both plans. Ask: *"Reply 'go' to start the full ship chain."* Under `--auto`: SKIP — emit `SKIPPED: ship-chain approval [auto]` and proceed. Hard-override #4 still applies (missing test framework, missing design tool → HARD-PAUSE).
 - On 'go': implement + tests. Update PROGRESS.md + STORIES.md
 - **GIT** commits:
 ```
@@ -75,7 +90,7 @@ Run full `/review` flow immediately.
 - RED, REQ, TEST, DOC, SEC run parallel
 - Consolidated fix list
 
-**Blockers** → pause + surface:
+**Blockers** → pause + surface (`[AUTO: always-ask]` — also hard-override #1):
 ```
 ⚠️ SHIP PAUSED — blockers found by [agent]
 
@@ -167,6 +182,27 @@ If this `/ship` is **not** nested under `/ship-all` (detect by `set_by:` on CURR
 - Else → run `/focus done` (interactive prompt y/n/b).
 
 If nested under `/ship-all` → skip; the chain releases focus only at the end of the final story.
+
+### Step N+1 — Auto-mode summary
+
+If `AUTO=true`:
+
+1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
+2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
+
+If `AUTO=false`: skip.
+
+### Checkpoint tag reference (this file)
+
+| Checkpoint | Tag |
+|---|---|
+| Promoted backlog item review | `[AUTO: ask-if-ambiguous]` — skip when AC clear and shaping mechanical |
+| Single ship-chain approval ('go' to start) | `[AUTO: skip]` — proceed silently |
+| SHIP PAUSED — review blockers (Phase 2) | `[AUTO: always-ask]` (hard-override #1) |
+| SHIP PAUSED — frontend review blockers (Phase 4) | `[AUTO: always-ask]` (hard-override #1) |
+| Internal `/implement` plan-approval | inherited tag from implement.md (`[AUTO: skip]`) |
+| Internal `/review` blocker surface | inherited tag from review.md / hard-override #1 |
+
 
 ### Documentation rules (SCRIBE)
 

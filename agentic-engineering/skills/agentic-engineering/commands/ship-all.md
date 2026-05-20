@@ -6,6 +6,21 @@ Read `./docs/INDEX.md`, `./docs/CONSTITUTION.md`, then scan feature `STORIES.md`
 
 Use to ship all remaining stories without manual trigger. User stays in loop — every story pauses for plan approval before code. Only mechanical chaining is automatic.
 
+### Step 0a — Parse `--auto` flag
+
+Detect whether `$ARGUMENTS` contains the `--auto` token.
+
+- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
+- Set internal flag `AUTO=true` for this run.
+- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
+- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
+  ```markdown
+  ## [now YYYY-MM-DD HH:MM] — /ship-all --auto
+  ```
+- **Propagate `AUTO=true` to every story's `/ship` invocation in the chain.** Each story's nested `/implement` and `/review` phases also inherit auto.
+
+See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+
 ### Step 0 — Auto-write focus
 
 At the start of the chain, update `.agentic/focus.md`:
@@ -48,6 +63,8 @@ You'll approve each implementation plan before it runs.
 Reply 'go' to start, or 'stop' at any plan prompt to end the session.
 ```
 
+`[AUTO: skip]` — under `--auto`: SKIP the start-of-chain "go" prompt and proceed.
+
 ---
 
 ### Per story
@@ -67,6 +84,8 @@ PROD — Plan Review:
 
 Reply 'go' to ship · 'skip' to skip this story · 'stop' to end session
 ```
+
+`[AUTO: skip]` — under `--auto`: SKIP the per-story "go" prompt and proceed to the ship chain. (Each story's internal `/ship --auto` still respects hard-overrides.)
 
 **Step 2 — Ship chain** *(automatic on 'go')*
 
@@ -127,9 +146,27 @@ Mid-chain story completions do NOT call `/focus done` — only the final story t
 
 ---
 
+### Step N — Auto-mode summary
+
+If `AUTO=true`:
+
+1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` across all stories in this chain.
+2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses across <Y> stories. See .agentic/auto-log.md`
+
+If `AUTO=false`: skip.
+
+### Checkpoint tag reference (this file)
+
+| Checkpoint | Tag |
+|---|---|
+| Chain start ('go' to begin session) | `[AUTO: skip]` |
+| Per-story 'go' prompt | `[AUTO: skip]` |
+| Constitution conflict surfaced by a story | `[AUTO: always-ask]` (hard-override #3) |
+| Recurring blocker class across multiple stories | `[AUTO: always-ask]` — stop + ask whether to update constitution |
+
 ### Guardrails
 
-- **Never skip plan approval.** 'go' prompt non-negotiable between stories.
+- **Never skip plan approval.** 'go' prompt non-negotiable between stories. *(Exception: `--auto` mode skips per-story 'go' prompts but still pauses on hard-overrides.)*
 - **Compact between every story.** Mandatory — context must clear before next story.
 - **Blocker pauses propagate.** Review finds blockers → pause exactly as in `/ship`. After fix, resumes.
 - **'stop' always available** at any plan prompt — ends session cleanly.
