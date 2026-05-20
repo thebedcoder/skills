@@ -4,6 +4,27 @@
 
 Read `./CLAUDE.md`, `./docs/INDEX.md`, `./docs/CONSTITUTION.md` before starting.
 
+### Step 0 — Auto-write focus
+
+Before doing anything else, update `.agentic/focus.md`:
+
+1. Ensure `.agentic/` exists + gitignored (idempotent):
+```bash
+mkdir -p .agentic
+if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
+grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
+```
+
+2. Read existing CURRENT. Apply story-id-match heuristic:
+   - Existing CURRENT.title already references the same feature name → update `note:` to `phase: researching feature <name>` and `set_by:` to `/feature`. Leave `title:` + `since:` alone.
+   - Otherwise → overwrite CURRENT: `title: researching feature: <name>`, `feature: <name>`, `since: [now]`, `set_by: /feature`.
+
+Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
+
+3. Continue with the command's real work below.
+
+---
+
 **GIT** creates feature branch before any work:
 ```
 git checkout -b feat/[feature-name]

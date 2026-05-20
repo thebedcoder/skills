@@ -7,6 +7,25 @@
 - `./docs/features/[feature-name]/PROGRESS.md` — files changed in last story
 - `./docs/features/[feature-name]/STORIES.md` — story's acceptance criteria
 
+### Step 0 — Auto-write focus
+
+Before reviewing, update `.agentic/focus.md`:
+
+1. Ensure `.agentic/` exists + gitignored (idempotent):
+```bash
+mkdir -p .agentic
+if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
+grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
+```
+
+2. Read existing CURRENT. Apply story-id-match heuristic:
+   - Existing CURRENT.title already references the same STORY-ID / branch → update `note:` to `phase: reviewing` and `set_by:` to `/review`. Leave `title:` + `since:` alone. **Common case when `/review` is invoked inside `/ship`.**
+   - Otherwise → overwrite CURRENT: `title: reviewing <STORY-ID or branch>`, `since: [now]`, `set_by: /review`.
+
+Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
+
+3. Continue with review below.
+
 **Constraints:**
 - All five subagents dispatched **in single tool-call batch** — not sequentially
 - Each subagent gets only files it needs — pass paths, not full content

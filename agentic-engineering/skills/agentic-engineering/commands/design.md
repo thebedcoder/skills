@@ -4,6 +4,27 @@
 
 Read `./CLAUDE.md` + `./docs/features/[feature-name]/PRD.md` before starting. PRD must be approved before running.
 
+### Step 0 — Auto-write focus
+
+Before designing, update `.agentic/focus.md`:
+
+1. Ensure `.agentic/` exists + gitignored (idempotent):
+```bash
+mkdir -p .agentic
+if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
+grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
+```
+
+2. Read existing CURRENT. Apply story-id-match heuristic:
+   - Existing CURRENT references the same feature → update `note:` to `phase: designing UI` and `set_by:` to `/design`. Leave `title:` + `since:` alone.
+   - Otherwise → overwrite CURRENT: `title: designing UI for <feature>`, `feature: <feature>`, `since: [now]`, `set_by: /design`.
+
+Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
+
+3. Continue with the command's real work below.
+
+---
+
 **UX** reads `Design Tool` from `./CLAUDE.md` + confirms:
 ```
 UX — Design Tool: [figma | pencil | none]

@@ -5,6 +5,27 @@
 
 Read `./CLAUDE.md` + relevant feature docs in `./app-docs/features/` before starting.
 
+### Step 0 — Auto-write focus
+
+Before diagnosing, update `.agentic/focus.md`:
+
+1. Ensure `.agentic/` exists + gitignored (idempotent):
+```bash
+mkdir -p .agentic
+if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
+grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
+```
+
+2. Read existing CURRENT. Apply story-id-match heuristic:
+   - Existing CURRENT.title already references the same bug summary → update `note:` to `phase: fixing` and `set_by:` to `/fix`. Leave `title:` + `since:` alone.
+   - Otherwise → overwrite CURRENT: `title: fixing: <bug summary>`, `since: [now]`, `set_by: /fix`.
+
+Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
+
+3. Continue with the command's real work below.
+
+---
+
 **GIT** confirms current branch. On `main`/`master`, warn:
 ```
 ⚠️ GIT: You're on main. /ae:fix expects to run on a feature branch.

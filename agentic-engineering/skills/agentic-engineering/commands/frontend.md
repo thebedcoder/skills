@@ -5,6 +5,25 @@
 Read `./CLAUDE.md`, target story, `./docs/specs/[feature-name]-design.md`.
 No `/design` yet → prompt user to run it first or confirm proceeding without designs.
 
+### Step 0 — Auto-write focus
+
+`/frontend` is almost always nested inside `/ship`. Update `.agentic/focus.md` accordingly:
+
+1. Ensure `.agentic/` exists + gitignored (idempotent):
+```bash
+mkdir -p .agentic
+if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
+grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
+```
+
+2. Read existing CURRENT. Apply story-id-match heuristic:
+   - Existing CURRENT.title already references this STORY-ID (set by parent `/ship`) → only update `note:` to `phase: frontend pass` and `set_by:` to `/frontend`. Leave `title:` + `since:` alone. **Expected path when nested.**
+   - Otherwise (rare — `/frontend` invoked standalone) → overwrite CURRENT: `title: frontend for <STORY-ID>`, `since: [now]`, `set_by: /frontend`.
+
+Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
+
+3. Continue with the command's real work below.
+
 ### Steps
 
 1. **UX** reads design handoff spec + summarises:

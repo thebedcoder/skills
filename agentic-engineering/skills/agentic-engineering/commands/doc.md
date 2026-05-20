@@ -8,6 +8,25 @@ Use to document existing feature with Q&A for what code alone can't infer. ARCH 
 
 `[feature]` missing → SCRIBE lists undocumented/stale features + asks which one.
 
+### Step 0 — Auto-write focus
+
+Before documenting, update `.agentic/focus.md`:
+
+1. Ensure `.agentic/` exists + gitignored (idempotent):
+```bash
+mkdir -p .agentic
+if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
+grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
+```
+
+2. Read existing CURRENT. Apply story-id-match heuristic:
+   - Existing CURRENT references the same feature → update `note:` to `phase: documenting` and `set_by:` to `/doc`. Leave `title:` + `since:` alone.
+   - Otherwise → overwrite CURRENT: `title: documenting <feature>`, `feature: <feature>`, `since: [now]`, `set_by: /doc`.
+
+Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
+
+3. Continue with the command's real work below.
+
 ---
 
 ### Phase 1 — Code Read → user-reachable capabilities
