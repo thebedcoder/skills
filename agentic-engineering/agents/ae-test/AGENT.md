@@ -86,6 +86,7 @@ Test quality issues:
 
 Matrix:
   [✅ M/N AC mapped / ⚠️ orphans / blocker list]
+  [Pyramid: unit U · integration I · e2e E (balanced | inverted | pre-pyramid skip)]
 
 Verdict: [would this suite catch real regressions? yes / partial / no]
 ```
@@ -107,11 +108,33 @@ For each story in scope:
    - **Orphan check:** grep the test files in the diff for test functions; tests not referenced by ANY matrix row in this feature → `should-cover` (informational, not a blocker)
 5. Skip orphan detection for tests whose names contain `_helper`, `_smoke`, `conftest`, `fixtures`, `setup_`, `teardown_` — these are framework boilerplate.
 
+6. **Detect matrix shape:** count columns in the AC Coverage table's header row.
+   - 3 columns (`AC | Description | Tests`) → **pre-pyramid story**. Skip Level validation (substep 7). Skip pyramid math (substep 8). Report `Pyramid: (3-column matrix — pre-pyramid story; skip)`.
+   - 4 columns (`AC | Description | Tests | Level`) → run substeps 7 + 8 below.
+   - Match header column names case-insensitively. Extra columns beyond the 4 canonical ones are tolerated and ignored. Unknown column names are ignored. The shape is determined by whether a `Level` column (case-insensitive) is present.
+
+7. **Level-field validation** (4-column matrix only):
+   - Every matrix row must have a non-empty Level cell → empty Level = **blocker** (same severity as missing-AC). Tag with the AC number.
+   - Recognized values: `unit`, `integration`, `e2e`. Match case-insensitively.
+   - Other values (e.g., `contract`, `smoke`, `perf`) accepted without blocker, but excluded from pyramid math in substep 8.
+
+8. **Pyramid math + soft inversion warnings** (4-column matrix only):
+   - Compute per-story counts: `unit_count`, `integration_count`, `e2e_count` (canonical levels only; non-canonical rows excluded).
+   - `total = unit_count + integration_count + e2e_count`
+   - If `total == 0` (all rows non-canonical) → report `Pyramid: (all rows non-canonical levels — pyramid math skipped)`. No warnings.
+   - If `total == 1` → report `Pyramid: unit U · integration I · e2e E (single-test story — pyramid not evaluated)`. No warnings.
+   - If `total > 1`:
+     - If `e2e_count / total > 0.5` → emit `should-fix` (informational, NOT blocker): `Inverted pyramid — over half the story's tests are e2e. Slow + brittle. Consider extracting unit-level coverage.`
+     - If `unit_count == 0` → emit `should-fix`: `No unit-level tests. Consider whether any of these could be extracted as unit tests for speed + isolation.`
+     - Both warnings can fire on the same story (emit both).
+   - Report shape: `Pyramid: unit U · integration I · e2e E (balanced)` when no warnings fire. With warnings: `Pyramid: unit U · integration I · e2e E (inverted — X% e2e, consider extracting unit tests)` where X = `round(e2e_count / total * 100)`.
+
 Report under the `Matrix:` sub-heading inside the existing Step 5 report:
 
 ```
 Matrix:
   ✅ M/N AC mapped to tests (STORY-XXX)
+  Pyramid: unit U · integration I · e2e E (balanced | inverted — X% e2e, [...]) [⚠️ if warnings]
   ⚠️ Orphan: tests/auth_test.py::test_helper_setup — not referenced by any matrix
 ```
 
