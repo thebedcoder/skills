@@ -82,7 +82,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │    │  🧪 TEST   coverage quality + framework patterns        │       │
 │    │  📖 DOC    convention alignment                         │       │
 │    │  🔐 SEC    security vulnerabilities                     │       │
-│    │  🔀 EDGE   edge case hunting (boundary/race/malformed)  │       │
+│    │  🔍 EDGE   edge case hunting (boundary/race/malformed)  │       │
 │    └──────┬──────────────────────────────────────────────────┘       │
 │           │  consolidated: blockers / should-fix / clean             │
 │           │                                                          │
