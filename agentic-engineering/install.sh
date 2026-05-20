@@ -59,11 +59,18 @@ USER_COMMANDS=(
   plan-all
   fix
   note
+  focus
+  next
   doc
   doc-all
   status
   analyze
 )
+
+# Install statusline script (shared utility; per-project trigger is written by /init or /bootstrap).
+echo "  → Copying statusline script..."
+cp "$SCRIPT_DIR/agentic-statusline.sh" ~/.claude/agentic-statusline.sh
+chmod +x ~/.claude/agentic-statusline.sh
 
 for cmd in "${USER_COMMANDS[@]}"; do
   cp "$SCRIPT_DIR/commands/${cmd}.md" ~/.claude/commands/
@@ -82,6 +89,8 @@ echo "  /ship-all     ship all unchecked stories"
 echo "  /plan-all     plan all unplanned epics"
 echo "  /fix          diagnose + fix + review"
 echo "  /note         capture a bug, idea, or improvement for later"
+echo "  /focus        set current task (or /focus done|clear)"
+echo "  /next         queue a task for after current is done"
 echo "  /doc          document a feature interactively"
 echo "  /doc-all      document multiple features (use --full for new projects)"
 echo "  /status       progress overview"
