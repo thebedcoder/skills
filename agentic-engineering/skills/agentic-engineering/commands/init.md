@@ -120,11 +120,25 @@ Constitution format:
 
 (add articles as needed)
 
+## Default Decisions
+
+<!--
+Auto mode (`--auto` flag on /feature, /fix, /ship, /ship-all, /implement, /design) reads this section as the authoritative source for default choices. Add one-line defaults below. Auto mode cites the matching line in its DECISION reasoning. Section is optional — auto mode falls back to general best-practice judgment when absent.
+
+Example entries (replace with your project's real defaults):
+- DB: Postgres unless feature explicitly requires SQLite
+- HTTP client: built-in fetch, no axios
+- Tests: pytest, non-watch only
+- Frontend: Tailwind for layout, no CSS-in-JS
+-->
+
 ## Governance
 - Constitution supersedes all guidelines
 - Violations documented and justified — never silently ignored
 - REQ checks every story against constitution during /review
 ```
+
+**Idempotency for re-init / update:** If `CONSTITUTION.md` already exists and already contains a `## Default Decisions` header → leave that section alone (do not overwrite user content). If it exists without that section → append the `## Default Decisions` block (commented examples only) at the bottom, above `## Governance` if present.
 
 ⚠️ **Human checkpoint:** Show CLAUDE.md + CONSTITUTION.md drafts together. Ask for edits before saving. *"The constitution must be specific and verifiable — vague principles like 'write high quality code' give agents nothing to check against."*
 
