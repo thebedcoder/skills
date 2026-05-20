@@ -1,7 +1,9 @@
 # Value Proposition Section Guide
 
 ## JTBD Mapping
-Pull forces → outcome cards
+Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
+`Pull force` → outcome cards
 Desired outcomes (high opportunity score) → card headlines
 
 ## Rules

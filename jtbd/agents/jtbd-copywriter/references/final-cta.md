@@ -1,8 +1,10 @@
 # Final CTA Section Guide
 
 ## JTBD Mapping
-Headline → the outcome they came to the page for (Pull)
-Subhead → remove last remaining friction (Anxiety)
+Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
+Headline → outcome they came for (`Pull force`)
+Subhead → remove last friction (`Anxiety force`)
 CTA button → action framed as their goal
 Trust line → risk reversal
 

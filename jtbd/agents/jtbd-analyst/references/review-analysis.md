@@ -2,21 +2,23 @@
 
 ## Signal Density by Star Rating
 
+Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
 | Rating | Strongest signal |
 |--------|-----------------|
-| 1–2 ⭐ | Push forces (what drove them to write a negative review = peak frustration) |
-| 3 ⭐ | Habit + Anxiety (ambivalent — stayed but unhappy) |
-| 4–5 ⭐ | Pull forces (what outcome they achieved, social job) |
+| 1–2 ⭐ | `Push force` (negative review = peak frustration) |
+| 3 ⭐ | `Habit force` + `Anxiety force` (ambivalent — stayed but unhappy) |
+| 4–5 ⭐ | `Pull force` (outcome achieved, social job satisfied) |
 
 ## Review Language Patterns
 
-### Push (frustrations — mined from 1–2 star reviews)
+### `Push force` (frustrations — mined from 1–2 star reviews)
 Look for: "stopped working", "can't believe", "wasted", "keeps crashing", "support never"
 
-### Pull (outcomes — mined from 4–5 star reviews)
+### `Pull force` (outcomes — mined from 4–5 star reviews)
 Look for: "finally", "game changer", "saves me", "I used to", "now I can"
 
-### Anxiety (hesitation — often in 3 star or before/after language)
+### `Anxiety force` (hesitation — often in 3 star or before/after language)
 Look for: "took a while to", "learning curve", "wasn't sure at first", "almost gave up"
 
 ## Volume Heuristics

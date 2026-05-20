@@ -1,12 +1,14 @@
 # Social Proof Section Guide
 
 ## JTBD Mapping
-Testimonial A → validates Push (confirms pain was real)
-Testimonial B → confirms Pull (achieved the desired outcome)
-Testimonial C → defuses Anxiety (was hesitant, switched successfully)
+Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
+Testimonial A → validates `Push force` (pain was real)
+Testimonial B → confirms `Pull force` (achieved desired outcome)
+Testimonial C → defuses `Anxiety force` (hesitated, switched successfully)
 
 ## Rules
-- Each testimonial must map to a specific Force — not generic praise
+- Each testimonial must map to a specific force — not generic praise
 - Quote should be specific, past-tense, outcome-focused
 - Attribution: name + role/situation (not just a name)
 - Stat line: one number that signals scale or result

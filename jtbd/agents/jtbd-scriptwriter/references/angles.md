@@ -2,14 +2,16 @@
 
 Every platform gets 3 angle variations. Each serves a different funnel stage and persona awareness level.
 
-## ANGLE 1 — PAIN (Push-first)
+Forces referenced below defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
+## ANGLE 1 — PAIN (`Push force`-first)
 **Lead with:** The frustration. Problem-forward.
 **Goal:** Make them feel seen before showing the solution.
 **Best for:** Cold traffic — doesn't know the product exists.
 **Structure:** Hook with pain → expand the problem → introduce solution → proof → CTA
 **Tone:** Empathetic, specific, mirror their internal monologue
 
-## ANGLE 2 — OUTCOME (Pull-first)
+## ANGLE 2 — OUTCOME (`Pull force`-first)
 **Lead with:** The desired after-state. Aspiration-forward.
 **Goal:** Show the life they want. Make them picture themselves in it.
 **Best for:** Warm traffic — knows the category, evaluating options.

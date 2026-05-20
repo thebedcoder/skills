@@ -2,14 +2,16 @@
 
 ## What Support Data Reveals
 
-Support tickets are pure Push signal — people only contact support when something is failing their job.
+Support tickets are pure `Push force` signal — people only contact support when something is failing their job.
+
+Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
 
 ## Ticket Categories → JTBD Mapping
 
 | Ticket type | JTBD signal |
 |-------------|------------|
 | "How do I..." questions | Job Map friction — Execute or Prepare step |
-| "It's not working" | Push force — specific functional failure |
+| "It's not working" | `Push force` — specific functional failure |
 | "Why can't I..." | Desired outcome blocked — high opportunity score candidate |
 | "I want to cancel" | Firing trigger — peak frustration + switching moment |
 | "Can you add..." | Desired outcome stated directly |
@@ -25,4 +27,4 @@ Support tickets are pure Push signal — people only contact support when someth
 
 - The moment a customer says "I give up" or "forget it" → Job Map failure point
 - Questions asked repeatedly in same session → Prepare step friction
-- Long silences / short replies → Anxiety or Habit signal
+- Long silences / short replies → `Anxiety force` or `Habit force` signal

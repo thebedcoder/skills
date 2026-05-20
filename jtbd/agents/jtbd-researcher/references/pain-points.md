@@ -12,20 +12,21 @@
 
 ## Extraction Rules
 
-Map every pain found to one of the Four Forces:
-- **Push**: Active frustration driving people away from current solution
-- **Habit**: Inertia keeping people stuck ("good enough")
-- **Anxiety**: Fear stopping people from switching to something new
+Map every pain found to one of the Four Forces. Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
+- `Push force` → active frustration
+- `Habit force` → inertia
+- `Anxiety force` → switching fear
 
 ## Output Format
 
 ```
 1. [Pain description]
-   Force: Push / Habit / Anxiety
+   Force: `Push force` / `Habit force` / `Anxiety force`
    Frequency: High / Medium / Low (based on how often mentioned)
    Source: [where found]
 ```
 
 ## Minimum Target
 
-5 recurring pain points, at least 2 mapped to Push force
+5 recurring pain points, at least 2 mapped to `Push force`.

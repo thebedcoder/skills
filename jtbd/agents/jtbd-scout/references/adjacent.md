@@ -2,6 +2,8 @@
 
 Adjacent tools: different product category, but hired for the same underlying job.
 
+Forces referenced below defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
 ## Search Patterns
 ```
 "how do people [accomplish the job] without [product category]"

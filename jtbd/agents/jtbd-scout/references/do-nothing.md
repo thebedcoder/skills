@@ -1,6 +1,8 @@
 # Do-Nothing Analysis Guide
 
-Do-nothing: the customer accepts the current state and doesn't act. This is your most underrated competitor.
+Do-nothing: customer accepts current state, doesn't act. Most underrated competitor.
+
+Maps to `Habit force` (status quo holds) + `Anxiety force` (switching feels riskier than staying). Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
 
 ## No Search Required
 

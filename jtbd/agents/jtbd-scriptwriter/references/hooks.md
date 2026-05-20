@@ -1,10 +1,12 @@
 # Hook Formulas Reference
 
-The hook is the most important 2–3 seconds. If it doesn't stop the scroll, nothing else matters.
+Hook is most important 2–3 seconds. Doesn't stop scroll → nothing else matters.
+
+Forces referenced below defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
 
 ## Hook Types
 
-### PAIN (Push-first)
+### PAIN (`Push force`-first)
 Best for cold traffic. Makes them feel seen before showing the solution.
 ```
 "If you've ever [frustrating experience], this is for you."
@@ -13,7 +15,7 @@ Best for cold traffic. Makes them feel seen before showing the solution.
 "Nobody talks about [uncomfortable truth in your category]."
 ```
 
-### OUTCOME (Pull-first)
+### OUTCOME (`Pull force`-first)
 Best for warm traffic who knows the category.
 ```
 "I went from [before state] to [after state] in [timeframe]."

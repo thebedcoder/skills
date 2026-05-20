@@ -1,12 +1,14 @@
 # Problem Section Guide
 
 ## JTBD Mapping
-Push forces → pain points
-Habit force → "you're not the problem" reframe
+Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
+`Push force` → pain points
+`Habit force` → "you're not the problem" reframe
 
 ## Rules
 - Open by validating frustration in their exact language (use voice samples from research)
-- 3–4 specific pain points — each maps to a Push force finding
+- 3–4 specific pain points — each maps to a `Push force` finding
 - End with empathy, not a pitch: "You're not the problem. Your tools are."
 - Never name the product in this section
 

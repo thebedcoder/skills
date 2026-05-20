@@ -2,6 +2,8 @@
 
 Workarounds: no dedicated software, pure DIY — spreadsheets, manual processes, pen and paper, asking a colleague.
 
+Forces referenced below defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
 ## Search Patterns
 ```
 "[job outcome] without software"
@@ -13,7 +15,7 @@ Workarounds: no dedicated software, pure DIY — spreadsheets, manual processes,
 
 ## Why Workarounds Matter
 
-Workarounds reveal the **Habit force** at its strongest. People who use them:
+Workarounds reveal `Habit force` at its strongest. People who use them:
 - Have already decided dedicated software isn't worth the cost/effort
 - Have a known, predictable process (even if painful)
 - Will only switch when the cost of the workaround becomes intolerable

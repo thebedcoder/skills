@@ -10,12 +10,14 @@ These phrases signal the exact moment that triggered the hire.
 
 ### Four Forces in Interview Language
 
+Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
 | Force | Language patterns |
 |-------|------------------|
-| Push | "I was tired of...", "It kept failing...", "Every time I..." |
-| Pull | "I imagined...", "I wanted to feel...", "I pictured..." |
-| Habit | "I almost didn't...", "I'd been doing it this way for...", "It was familiar..." |
-| Anxiety | "I was worried that...", "I wasn't sure if...", "What if..." |
+| `Push force` | "I was tired of...", "It kept failing...", "Every time I..." |
+| `Pull force` | "I imagined...", "I wanted to feel...", "I pictured..." |
+| `Habit force` | "I almost didn't...", "I'd been doing it this way for...", "It was familiar..." |
+| `Anxiety force` | "I was worried that...", "I wasn't sure if...", "What if..." |
 
 ### Job Map Steps to Flag
 - **Define**: Did they struggle to articulate what they needed?

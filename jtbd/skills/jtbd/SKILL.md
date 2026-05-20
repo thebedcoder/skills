@@ -93,10 +93,51 @@ Always confirm before proceeding.
 
 ---
 
-## The Four Forces (reference for all modes)
+## The Four Forces of Progress
 
-**Push** (frustration with current) · **Pull** (excitement toward outcome) · **Habit** (inertia) · **Anxiety** (switching fear)
+> Canonical reference. Every mode, agent, and reference file cites the names below verbatim. Don't rename, expand, or redefine elsewhere.
 
-Progress = Push + Pull > Habit + Anxiety
+### Forces
 
-Job types: **Functional** (the task) · **Emotional** (how to feel) · **Social** (how to be seen)
+| Force | Definition | Direction |
+|-------|------------|-----------|
+| **Push force** | Frustration with current situation. Drives user from status quo. | toward change |
+| **Pull force** | Attraction to specific better outcome. Draws user toward new solution. | toward change |
+| **Habit force** | Inertia, sunk cost, "good enough". User's routine resisting disruption. | toward status quo |
+| **Anxiety force** | Fear of switching cost, learning curve, social risk, wrong choice. | toward status quo |
+
+### Progress equation
+
+```
+Push force + Pull force  >  Habit force + Anxiety force   ⇒  switch happens
+```
+
+Progress only when change-forces outweigh status-quo-forces. Map every customer signal to a force. Signal that can't map = noise.
+
+### Three job layers
+
+Every real job has all three. Never just one.
+
+- **Functional** — practical task ("send thoughtful birthday message")
+- **Emotional** — feeling to gain or escape ("stop feeling like bad friend")
+- **Social** — perception to project ("be seen as someone who remembers")
+
+### Anchor IDs (cite from reference files)
+
+Reference files map work to a force → link to anchor below. Don't paraphrase definitions locally.
+
+| Anchor | Use in |
+|--------|--------|
+| [`#forces`](../SKILL.md#forces) → Push force | Problem section · Pain hook · Pain angle · Tier 3/4 SCOUT findings |
+| [`#forces`](../SKILL.md#forces) → Pull force | Value Prop section · Outcome hook · Outcome angle · opportunity scoring |
+| [`#forces`](../SKILL.md#forces) → Habit force | How-It-Works section · Workarounds SCOUT · Do-Nothing SCOUT |
+| [`#forces`](../SKILL.md#forces) → Anxiety force | FAQ section · Social Proof testimonial C · switching-cost ANALYST signals |
+| [`#progress-equation`](../SKILL.md#progress-equation) | Final CTA · Hero CTA framing · every persona card |
+| [`#three-job-layers`](../SKILL.md#three-job-layers) | Persona definition · ad angle selection · hook formula choice |
+
+### Vocabulary rules (prevent drift)
+
+- Always **`Push force`** — not `Push`, `Push Force`, `push`. Same for Pull / Habit / Anxiety.
+- Equation always written **`Push force + Pull force > Habit force + Anxiety force`**. Never abbreviated `P+P > H+A`.
+- Three layers always **`Functional / Emotional / Social`** in that order.
+- Reference files map section → force in format **`<Force name> → <section element>`** (e.g., `Push force → pain points`).

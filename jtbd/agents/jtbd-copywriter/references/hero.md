@@ -1,6 +1,8 @@
 # Hero Section Guide
 
 ## JTBD Mapping
+Forces and job layers defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces) and [#three-job-layers](../../../skills/jtbd/SKILL.md#three-job-layers). Cite — don't redefine.
+
 Struggling moment → Headline
 Functional job → Subhead
 Desired outcome → CTA framing

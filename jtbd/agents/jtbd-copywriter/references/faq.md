@@ -1,7 +1,9 @@
 # FAQ Section Guide
 
 ## JTBD Mapping
-Each Q&A → one Anxiety from persona's four forces
+Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
+Each Q&A → one `Anxiety force` finding from persona's four forces
 
 ## Rules
 - One entry per anxiety identified in research
@@ -23,7 +25,7 @@ Q: [Anxiety phrased as a genuine question]
 A: [Direct answer]. [De-risking mechanism].
 ```
 
-## Question Types by Anxiety
+## Question Types by `Anxiety force`
 - Switching cost: "How long does it take to get started?"
 - Learning curve: "Do I need to know [X] to use this?"
 - Commitment: "Can I cancel anytime?" / "Is there a free trial?"

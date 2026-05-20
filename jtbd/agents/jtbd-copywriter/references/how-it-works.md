@@ -1,8 +1,10 @@
 # How It Works Section Guide
 
 ## JTBD Mapping
-Steps follow the customer's job — not the product's feature flow
-Each step = one outcome unlocked (reduces Habit + Anxiety)
+Forces defined in [SKILL.md → #forces](../../../skills/jtbd/SKILL.md#forces). Cite — don't redefine.
+
+Steps follow customer's job — not product's feature flow.
+Each step = one outcome unlocked. Reduces `Habit force` + `Anxiety force`.
 
 ## Rules
 - 3–5 steps maximum
@@ -23,4 +25,4 @@ If it sounds like a demo → rewrite from the customer's perspective.
 ## Anti-patterns
 - ❌ "Sign up and create an account" (assumed, not a step)
 - ❌ Steps that describe UI ("Navigate to the dashboard")
-- ❌ More than 5 steps (Anxiety increases with complexity)
+- ❌ More than 5 steps (`Anxiety force` rises with complexity)
