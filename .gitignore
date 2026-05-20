@@ -1,2 +1,13 @@
 .DS_Store
 node_modules/
+
+# graphify — keep reports, ignore cache + local-path bookkeeping
+*/graphify-out/manifest.json
+*/graphify-out/cost.json
+*/graphify-out/cache/
+*/graphify-out/.graphify_python
+*/graphify-out/.graphify_root
+
+# Claude Code — per-user, never committed
+.claude/settings.local.json
+**/.claude/settings.local.json
