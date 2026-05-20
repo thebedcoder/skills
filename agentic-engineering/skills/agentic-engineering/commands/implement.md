@@ -94,10 +94,32 @@ PROD — Acceptance Check:
 
 ```markdown
 ## STORY-XXX: [Title] — [date]
-- Files changed: [list]
-- Tests added: [what's covered]
-- Notes: [anything notable]
+
+### AC Coverage
+| AC | Description | Tests |
+|----|-------------|-------|
+| AC-1 | [from STORIES.md] | [file:test_name<br>file:test_name] |
+| AC-2 | [from STORIES.md] | [file:test_name] |
+| AC-N | [from STORIES.md] | [file:test_name] |
+
+### Edge probes (from ae-edge)
+| Category | Test |
+|----------|------|
+| [category] | [file:test_name] |
+
+### Files changed
+- [list]
+
+### Notes
+[anything notable — narrative continues here]
 ```
+
+**Filling the matrix:**
+- One row per AC in `STORIES.md`. Match AC text exactly.
+- Tests column lists tests that prove this AC, formatted as `file:test_name` — format test runner emits (`tests/foo.py::test_bar` for pytest, similar for jest/go-test/etc.). Multiple tests per AC → join with `<br>`.
+- Wrote test that doesn't map to specific AC (helper, smoke, framework boilerplate)? Don't include it. Orphans surface as `ae-test` informational findings, not blockers.
+- `### Edge probes` section starts EMPTY. Populated during Phase 2 blocker-fix when `ae-edge` raises findings. Omit section entirely if `ae-edge` returned no findings for this story.
+- Existing `Files changed` + `Notes` unchanged from prior format.
 
 Prompt: *"Story complete. Run `/review` before next story."*
 
