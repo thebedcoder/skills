@@ -116,7 +116,27 @@ On 'go', ARCH executes:
 3. **Installs dependencies** — runs appropriate package manager command
 4. **Writes base boilerplate** — entry points, root layout, base router, health check endpoint, etc. Minimal but runnable — `npm run dev` (or equivalent) should work after this
 5. **Sets up testing** — test config, one passing smoke test
-6. **Initialises git** — no `.git` yet:
+6. **Writes per-developer ephemera** (worktree-local, gitignored):
+   - Ensure `.gitignore` contains `.agentic/`:
+     ```bash
+     if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
+     grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
+     ```
+   - Enable focus statusline by writing `./.claude/settings.local.json` (`.local.json` is per-developer, untracked by default):
+     ```bash
+     mkdir -p .claude
+     ```
+     If `.claude/settings.local.json` does not exist → create with:
+     ```json
+     {
+       "statusLine": {
+         "type": "command",
+         "command": "bash ~/.claude/agentic-statusline.sh"
+       }
+     }
+     ```
+     If exists but lacks `statusLine` → merge in. If already has `statusLine` → leave alone.
+7. **Initialises git** — no `.git` yet:
 ```
 git init
 git add .
