@@ -166,6 +166,16 @@ None blocking. Resolved during brainstorming:
 - Statusline: project-local via `.claude/settings.local.json`, written by `/init`.
 - `/ship-all`: only final story triggers `/focus done`.
 
+## Composition with Auto Mode (addendum)
+
+See `2026-05-20-auto-mode-design.md` for the full auto-mode spec. Three small interaction points apply to this design:
+
+1. **`set_by:` suffix.** When CURRENT is written by a command running under `--auto`, `set_by:` gets an `(auto)` suffix — e.g. `set_by: /ship (auto)`. `/status` renders the suffix as-is.
+2. **Silent NEXT promotion.** Under `--auto`, `/focus done` auto-promotes NEXT item #1 with no y/n/b prompt. The promoted CURRENT's `set_by:` becomes `/focus done (auto-promoted)`. The skipped prompt is logged in `.agentic/auto-log.md`.
+3. **`.agentic/auto-log.md`** lives in the same `.agentic/` directory and is already covered by the single `.agentic/` `.gitignore` entry written by `/init` / `/bootstrap` / `/focus`. No additional gitignore work.
+
+The `/ship-all` chain rule is preserved: mid-chain story completion does not fire `/focus done` even under `--auto`. Only the final story's release triggers NEXT promotion (then auto-promoted under auto, prompted under interactive).
+
 ## Out of Scope (Future)
 
 - Focus history / audit log.
