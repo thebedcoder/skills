@@ -47,12 +47,13 @@ Do these phases in order. Do not skip the review pass.
 1. **Plan.** Write the implementation plan. Show it. Wait for approval.
 2. **Failing tests first.** Write tests that capture the acceptance criteria. Run them — they should fail. Show the failure.
 3. **Implement.** Minimum code to make the tests pass. No drive-by refactors.
-4. **Review across 5 areas.** Do each as a focused pass:
+4. **Review across 6 areas.** Do each as a focused pass:
    - **Bug hunt** — null safety, async/concurrency, logic errors, resource leaks, error handling
    - **Requirements + constitution** — does the code meet the acceptance criteria and the constitution?
    - **Test quality** — meaningful assertions, no useless mocks, no flaky patterns
    - **Conventions** — does the code match the surrounding codebase style?
    - **Security** — injection, auth, XSS, SSRF, secrets, data exposure — only HIGH confidence findings, no noise
+   - **Edge-case probe** — adversarially probe the backend diff for missing edge cases (boundary values, null/empty inputs, race/concurrency, malformed input, resource limits, error paths). Emit failing test code + suggested fixes as part of the consolidated blocker list. Read-only — the downstream blocker-fix flow implements the changes. Frontend states (loading / empty / error UI, responsive, accessibility) stay with the fidelity check in step 5, not this probe. If the diff is frontend-only, the probe self-skips.
 5. **If UI:** also check fidelity — loading/empty/error states, form validation, accessibility (keyboard, contrast, focus), responsive behavior.
 6. **Update both changelogs** — engineering log always, product release notes only if user-visible.
 7. **Conventional commit** with a descriptive subject and a body explaining the why.
@@ -102,7 +103,7 @@ All of the following must be true before marking a story complete:
 - All acceptance criteria met (binary check)
 - Tests pass in non-watch mode
 - No constitution violations
-- Review across 5 areas produced no blockers
+- Review across 6 areas produced no blockers
 - Both changelogs updated
 - Conventional commit pushed
 - (If UI) fidelity check passes
