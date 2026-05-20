@@ -286,7 +286,14 @@ NEXT queue empty.
 ```
 Exit.
 
-**NEXT non-empty:** Read item #1 of NEXT. Ask user:
+**Auto-mode short-circuit (NEXT non-empty + caller is auto):** If `$ARGUMENTS` contains the token `auto` (parent command running under `--auto` passes this), skip the y/n/b prompt entirely. Promote NEXT item #1 to CURRENT with `set_by: /focus done (auto-promoted)`. Renumber NEXT. Append a DECISION line to `.agentic/auto-log.md` (created if missing) describing the promotion. Print:
+```
+━━━ FOCUS DONE (auto-promoted) ━━━
+🎯 [promoted item]
+```
+Exit.
+
+**NEXT non-empty (interactive):** Read item #1 of NEXT. Ask user:
 
 ```
 ━━━ FOCUS DONE ━━━
@@ -793,7 +800,9 @@ At the end of `implement.md` (after the GIT commit step, after the "story comple
 ```markdown
 ### Step N — Release focus
 
-If this `/implement` run is **not** part of a parent `/ship` or `/ship-all` chain (detect by inspecting CURRENT.set_by — if it equals `/ship`, the parent owns the release), then run the `/focus done` workflow (see `commands/focus.md` Phase 3). This will offer to promote the top NEXT item.
+If this `/implement` run is **not** part of a parent `/ship` or `/ship-all` chain (detect by inspecting CURRENT.set_by — if it equals `/ship` or `/ship-all` or has the suffix variants `(auto)`, the parent owns the release), then run the `/focus done` workflow (see `commands/focus.md` Phase 3). This will offer to promote the top NEXT item.
+
+If this `/implement` was invoked with `--auto`, call `/focus done auto` so the promote prompt is auto-answered.
 
 If invoked from `/ship` → skip; the parent ship.md handles release.
 ```
@@ -805,7 +814,9 @@ At the end of `ship.md` (after all phases complete, after the final commit), add
 ```markdown
 ### Step N — Release focus
 
-If this `/ship` run is **not** part of `/ship-all` (detect via CURRENT.set_by — if it equals `/ship-all`, the chain owns release), run the `/focus done` workflow (see `commands/focus.md` Phase 3) to offer NEXT promotion.
+If this `/ship` run is **not** part of `/ship-all` (detect via CURRENT.set_by — if it contains `/ship-all`, the chain owns release), run the `/focus done` workflow (see `commands/focus.md` Phase 3) to offer NEXT promotion.
+
+If this `/ship` was invoked with `--auto`, call `/focus done auto` so the promote prompt is auto-answered.
 
 If invoked from `/ship-all` → skip; the chain releases focus only at the end of the final story.
 ```
