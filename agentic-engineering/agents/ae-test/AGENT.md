@@ -84,10 +84,45 @@ Missing coverage:
 Test quality issues:
 - [test name]: [what it claims vs. what it actually proves]
 
+Matrix:
+  [✅ M/N AC mapped / ⚠️ orphans / blocker list]
+
 Verdict: [would this suite catch real regressions? yes / partial / no]
 ```
 
 Nothing missing + quality good → say so explicitly. Meaningful signal.
+
+---
+
+## Step 6 — Matrix-vs-reality check
+
+For each story in scope:
+
+1. Read `./docs/features/[feature-name]/STORIES.md` → extract AC list for this story. Use explicit `AC-N:` labels if present, otherwise infer 1-based numbering by position.
+2. Read `./docs/features/[feature-name]/PROGRESS.md` → find this story's entry; locate `### AC Coverage` table.
+3. If the story's PROGRESS entry has NO `### AC Coverage` heading → story is pre-matrix. Skip this step. Existing scenario-coverage checks (Step 3) still apply.
+4. If `### AC Coverage` is present:
+   - **Missing-AC check:** every `AC-N` from STORIES.md must appear as a row → missing rows = **blocker**
+   - **Stale-test check:** every test referenced in the matrix must exist. Parse each Tests cell, split on `<br>`, grep each `file:test_name` reference. Function not found → **blocker**. File not found → **blocker**.
+   - **Orphan check:** grep the test files in the diff for test functions; tests not referenced by ANY matrix row in this feature → `should-cover` (informational, not a blocker)
+5. Skip orphan detection for tests whose names contain `_helper`, `_smoke`, `conftest`, `fixtures`, `setup_`, `teardown_` — these are framework boilerplate.
+
+Report under the `Matrix:` sub-heading inside the existing Step 5 report:
+
+```
+Matrix:
+  ✅ M/N AC mapped to tests (STORY-XXX)
+  ⚠️ Orphan: tests/auth_test.py::test_helper_setup — not referenced by any matrix
+```
+
+Missing-AC and stale-test findings go into the existing `Missing coverage:` section of the report, tagged with the AC number or test path. Treat them as blockers (same severity as scenario-coverage blockers).
+
+Pre-matrix stories report:
+
+```
+Matrix:
+  (pre-convention story — no AC Coverage table; matrix check skipped)
+```
 
 ---
 
