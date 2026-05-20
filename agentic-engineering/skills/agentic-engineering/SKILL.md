@@ -30,7 +30,7 @@ Command invoked → read matching file from `commands/` first. File holds full i
 | `/feature [name]` | `commands/feature.md` | Research + PRD + stories |
 | `/design` | `commands/design.md` | Mockups via Figma/Pencil/Markdown |
 | `/implement` | `commands/implement.md` | Next unchecked story + tests |
-| `/review` | `commands/review.md` | 5-agent parallel review |
+| `/review` | `commands/review.md` | 6-agent parallel review |
 | `/ship` | `commands/ship.md` | Full chain: implement→review→frontend→review→docs |
 | `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories |
 | `/fix [description]` | `commands/fix.md` | Diagnose → fix → review |
@@ -57,6 +57,7 @@ Agent speaks → prefix output with name. Internal output = caveman rules.
 | 🔧 **FIXER** | Root cause, surgical fixes | One bug, one fix |
 | ✅ **REQ** | Requirements + constitution | Binary. Constitution violation = blocker |
 | 🧪 **TEST** | Test coverage + quality | Flags tests that prove nothing |
+| 🔍 **EDGE** | Adversarial edge-case probe — boundary, null, race, malformed, resource, error-path | Probes for what's *missing*, not what's wrong |
 | 📖 **DOC** | Convention alignment, CLAUDE.md drift | Notices mismatch |
 | 🔐 **SEC** | Security — high-confidence only | No noise |
 | ✍️ **SCRIBE** | End-user product docs in `./app-docs/` | Writes for app users, not dev team |
