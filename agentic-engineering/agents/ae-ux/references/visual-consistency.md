@@ -130,3 +130,29 @@ When `.claude/visual-capture.md` is present (Phase 2 selected a catalog entry), 
 - **`external-link`** — No automation. Operator records via Loom / Notion / YouTube, pastes URL into the File cell. `ae-ux` skips URL validation.
 
 The selected mechanism doesn't change `ae-ux`'s validation logic — file paths are checked for existence + non-zero size; URLs are skipped; missing tables on UI stories emit `should-fix`.
+
+### Constitution-based enforcement
+
+Phase 1 + Phase 2 keep all Visual Artifacts findings informational (`should-fix`). Projects that want to enforce visual capture on UI stories opt in via `./docs/CONSTITUTION.md`:
+
+```markdown
+## Article N: Visual artifacts
+
+All UI-touching stories must capture visual artifacts (screenshots or screen recordings) and reference them in `PROGRESS.md`'s Visual Artifacts table. Stories that touch frontend files (`.tsx`/`.jsx`/`.vue`/`.svelte`/`.swiftui`/Compose `.kt`/etc.) without captured artifacts are not shipped.
+```
+
+Detection regex used by `ae-ux`: `^##\s+Article\s+\S+:\s+Visual artifacts` (case-insensitive). Article number (`I`, `1`, `7`, ...) is flexible.
+
+When the article is present + any Visual Artifacts finding exists, `ae-ux` escalates the severity:
+
+| Finding | Without article (default) | With article (enforced) |
+|---|---|---|
+| No table on UI story | should-fix | blocker |
+| Stale file reference | should-fix | blocker |
+| Empty (0-byte) file | should-fix | blocker |
+| URL references | (skipped — always valid) | (skipped — always valid) |
+| Non-UI story | (skipped — no Visual Artifacts checks) | (skipped — no Visual Artifacts checks) |
+
+Backend-only stories never produce Visual Artifacts findings regardless of the article; the constitution mandate only fires on UI-touching stories.
+
+Operators add the article by uncommenting the scaffold template `/init` generates inside `CONSTITUTION.md`, or by writing the article body directly.
