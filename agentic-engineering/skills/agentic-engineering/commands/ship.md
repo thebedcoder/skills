@@ -113,6 +113,7 @@ No blockers → continue.
 ```
 feat([feature-name]): STORY-XXX — frontend implementation
 ```
+- **Reminder before review** *(prose only — not a checkpoint)*: capture screenshots or recordings of each UI AC and drop them into `docs/features/<feature-name>/artifacts/STORY-XXX/`. Reference them in PROGRESS.md's Visual Artifacts table. `ae-ux` validates the references during Phase 4 — missing or stale refs become should-fix warnings (informational, not blockers).
 
 **Phase 4 — Frontend Review** *(automatic)* (`/review` + ae-ux fidelity)
 - 6-agent parallel pass
