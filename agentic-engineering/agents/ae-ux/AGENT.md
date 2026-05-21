@@ -100,6 +100,8 @@ Parse the table. For each row's `File` cell:
 
 All findings are `should-fix` (informational, never blockers in Phase 1). Tag each finding with the AC number from the row when emitting.
 
+**`(auto)` markers:** Rows with `Notes` starting `(auto, ...)` are auto-populated by `/ship` Phase 4's capture dispatch. Validate them like any other row (URL skip, file existence, non-zero size). Don't emit warnings about the `(auto)` marker itself — that's a human-facing TODO for the operator to backfill the scenario. If the marker is still present after a story ships, the file reference is still validated; the marker is informational only.
+
 ### Report
 
 Append to the existing `ae-ux` report a `Visual Artifacts:` block (placed near the report's summary lines):
