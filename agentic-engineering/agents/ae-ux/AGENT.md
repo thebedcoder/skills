@@ -64,6 +64,68 @@ Pixel 2px off = not blocker. Missing error state = blocker.
 
 ---
 
+## Step 5 — Visual Artifacts validation
+
+Validate captured visual artifacts after the per-area UX review.
+
+### Substep 1: Detect UI changes
+
+Scan the diff (`git diff main...HEAD`). UI is touched if any changed file has an extension or path matching:
+
+- `.tsx`, `.jsx`, `.vue`, `.svelte` (web frontend)
+- `.swiftui` files OR `.swift` in `Views/` directories (iOS SwiftUI)
+- `.kt` files containing `@Composable` annotations (Android Jetpack Compose)
+- `.dart` files in `lib/widgets/` or files containing `extends StatelessWidget` / `extends StatefulWidget` (Flutter UI)
+- `.html`, `.css`, `.scss` (web markup/style)
+
+If NONE match → story is non-UI → skip Substep 2 + 3. Report `Visual Artifacts: (non-UI story — skipped)`.
+
+### Substep 2: Locate Visual Artifacts table
+
+Read `./docs/features/<feature-name>/PROGRESS.md`, find the current story's entry, scan for `### Visual Artifacts` heading.
+
+- **If heading is absent AND story has UI changes** → emit `should-fix`: *"No visual artifacts captured. Consider adding screenshots or screen recordings to `docs/features/<name>/artifacts/STORY-XXX/` so reviewers can verify the UI without running the app."*
+- **If heading is absent AND story is non-UI** → skip silently (already handled in Substep 1).
+- **If heading is present** → continue to Substep 3.
+
+### Substep 3: Validate each row of the Visual Artifacts table
+
+Parse the table. For each row's `File` cell:
+
+1. If the cell value starts with `http://` or `https://` → URL reference (Loom, Notion, YouTube). Skip validation. Continue.
+2. Otherwise treat as a relative path from repo root. Check:
+   - File exists → continue (no warning)
+   - File doesn't exist → emit `should-fix`: *"Stale reference: `<path>` not found in repo."*
+   - File exists but is 0 bytes → emit `should-fix`: *"Empty file at `<path>` — capture may have failed."*
+
+All findings are `should-fix` (informational, never blockers in Phase 1). Tag each finding with the AC number from the row when emitting.
+
+### Report
+
+Append to the existing `ae-ux` report a `Visual Artifacts:` block (placed near the report's summary lines):
+
+```
+Visual Artifacts:
+  ✅ M/N references valid (STORY-XXX)
+  ⚠️ Stale: artifacts/STORY-XXX/ac-2-error.mp4 not found
+```
+
+For non-UI stories:
+
+```
+Visual Artifacts:
+  (non-UI story — skipped)
+```
+
+For UI stories with no table:
+
+```
+Visual Artifacts:
+  ⚠️ No visual artifacts captured — consider adding screenshots/recordings
+```
+
+---
+
 ## Reference files
 
 - `references/interaction-states.md` — loading, empty, error, disabled states
