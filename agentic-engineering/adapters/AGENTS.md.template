@@ -60,6 +60,8 @@ Do these phases in order. Do not skip the review pass.
 
 **AC Coverage matrix.** Every shipped story records an AC Coverage matrix in `./docs/features/<name>/PROGRESS.md`. The matrix is a markdown table listing every Acceptance Criterion (AC-1, AC-2, ...) from `STORIES.md` and the specific tests that prove it, formatted `file:test_name`. When `ae-edge` probes find edge-case blockers, the implementer also appends an `Edge probes` table. During `/review`, the test-coverage reviewer (`ae-test`) validates that every AC has at least one test entry and every claimed test exists — missing AC or stale entries become review blockers. Matrix is read-only at review time; only `/implement` and Phase 2 blocker-fix mutate it. The matrix's `Level` column declares one of `unit`, `integration`, or `e2e` per row; `ae-test` computes a pyramid ratio per story and surfaces a soft "inverted pyramid" warning when over half the tests are e2e or zero unit tests exist (informational, never blockers).
 
+**Visual Artifacts table.** UI-touching stories additionally record a `### Visual Artifacts` table in `PROGRESS.md` — one row per captured screenshot or screen recording, mapped to the AC it proves. Files live in `docs/features/<name>/artifacts/STORY-XXX/`. The `File` cell accepts either a relative path or a URL (Loom, Notion, YouTube). `ae-ux` validates references during `/review` — missing or stale refs emit `should-fix` warnings (informational, never blockers in Phase 1). The section is omitted entirely for backend-only or CLI-only stories.
+
 ---
 
 ## When the user asks you to fix a bug
