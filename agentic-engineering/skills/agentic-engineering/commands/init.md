@@ -130,6 +130,16 @@ Example entries (replace with your project's real defaults):
 - HTTP client: built-in fetch, no axios
 - Tests: pytest, non-watch only
 - Frontend: Tailwind for layout, no CSS-in-JS
+- Visual artifacts mandatory for UI stories: uncomment the "## Article N: Visual artifacts" article below to enforce. ae-ux escalates missing-artifact warnings to blockers.
+-->
+
+<!--
+Uncomment to enforce visual-artifact capture on UI stories.
+Renumber the Article number to match your constitution's existing articles.
+
+## Article N: Visual artifacts
+
+All UI-touching stories must capture visual artifacts (screenshots or screen recordings) and reference them in `PROGRESS.md`'s Visual Artifacts table. Stories that touch frontend files (`.tsx`/`.jsx`/`.vue`/`.svelte`/`.swiftui`/Compose `.kt`/etc.) without captured artifacts are not shipped.
 -->
 
 ## Governance
