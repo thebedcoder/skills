@@ -218,11 +218,45 @@ User confirms/adds/removes. Reply 'none' to skip. Per selected rule, copy from `
 
 **ARCH** confirms installed + notes: *"Edit any to match your project. Delete any that don't fit."*
 
-7. **GIT** stages + commits scaffold:
+7. **ARCH** reads `~/.claude/skills/agentic-engineering/capture-tools/README.md` + each catalog entry's frontmatter.
+
+Filter catalog by detected stack:
+- Read CLAUDE.md (just generated above) + scan repo for files matching each entry's `detection:` rules
+- Match by `platforms:` (web / mobile / ios / android / rn / flutter / desktop / terminal / any)
+- Always include `manual` and `loom-link` as fallback candidates
+
+Present matching tools to operator:
+
+```
+ARCH — Visual capture tool selection:
+
+Detected stack: <stack summary>
+
+Matching capture tools:
+  1. <tool-name>       — <one-line description>
+  2. <tool-name>       — <one-line description>
+  3. manual            — capture by hand, no automation
+  4. loom-link         — paste hosted recording URLs
+
+Pick one (1-N) or 'none' to skip visual capture setup.
+```
+
+⚠️ **Human checkpoint:** wait for operator's selection.
+
+On selection:
+1. Copy `~/.claude/skills/agentic-engineering/capture-tools/<name>.md` → `./.claude/visual-capture.md`
+2. ARCH announces: *"Capture tool configured at `.claude/visual-capture.md`. Edit to tune project-specific values (command, output dir, etc.). Committed to git so team uses same tool."*
+
+On 'none':
+3. ARCH announces: *"Skipping visual capture setup. UI stories will receive informational reminders during `/ship` Phase 4. Visual Artifacts table in PROGRESS.md can be filled manually."*
+
+(No `.claude/visual-capture.md` written when 'none' selected — Phase 1's manual flow applies by default.)
+
+8. **GIT** stages + commits scaffold:
 ```
 chore: initialise project structure, CLAUDE.md, CONSTITUTION.md, and project rules
 ```
 
-8. **PROD** summarizes created + prompts: *"Run `/feature [name]` to start your first feature."*
+9. **PROD** summarizes created + prompts: *"Run `/feature [name]` to start your first feature."*
 
 ---
