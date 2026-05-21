@@ -118,3 +118,15 @@ artifacts/STORY-005/
 ```
 
 But `screenshot-2026-05-21-3pm.png` is equally valid if it's referenced correctly in the table.
+
+### Capture mechanisms
+
+When `.claude/visual-capture.md` is present (Phase 2 selected a catalog entry), one of five mechanisms drives `/ship` Phase 4:
+
+- **`test-runner`** — Project's existing test framework captures as a side effect. `/ship` runs the test command, scans declared output dir, matches captures to AC by test name.
+- **`mcp`** — Implementer agent uses an MCP server (e.g., Playwright MCP) to walk each AC flow and capture per-AC. No test code required.
+- **`script`** — Project provides a bespoke capture command. `/ship` runs it, scans the declared output dir, treats results like `test-runner`.
+- **`manual`** — No automation. Operator captures by hand. `/ship` emits a reminder only.
+- **`external-link`** — No automation. Operator records via Loom / Notion / YouTube, pastes URL into the File cell. `ae-ux` skips URL validation.
+
+The selected mechanism doesn't change `ae-ux`'s validation logic — file paths are checked for existence + non-zero size; URLs are skipped; missing tables on UI stories emit `should-fix`.
