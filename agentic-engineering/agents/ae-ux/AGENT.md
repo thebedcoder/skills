@@ -102,6 +102,33 @@ All findings are `should-fix` (informational, never blockers in Phase 1). Tag ea
 
 **`(auto)` markers:** Rows with `Notes` starting `(auto, ...)` are auto-populated by `/ship` Phase 4's capture dispatch. Validate them like any other row (URL skip, file existence, non-zero size). Don't emit warnings about the `(auto)` marker itself — that's a human-facing TODO for the operator to backfill the scenario. If the marker is still present after a story ships, the file reference is still validated; the marker is informational only.
 
+### Substep 4: Constitution-based severity escalation
+
+After collecting all should-fix findings from Substeps 2 + 3, check whether project enforces visual artifacts via CONSTITUTION.md:
+
+1. Read `./docs/CONSTITUTION.md`. If file doesn't exist → skip; finalize findings at `should-fix` severity (default informational behavior).
+2. Scan file for section heading matching pattern: `^##\s+Article\s+\S+:\s+Visual artifacts` (case-insensitive). `\S+` allows any article number/identifier (`I`, `1`, `7`, `A`, etc.).
+3. If match found AND any findings exist from Substeps 2 + 3 → **escalate ALL Visual Artifacts findings to blocker severity** for this story.
+4. If no match found → leave findings at `should-fix` (informational).
+
+Escalation is per-story. Project with article applies to every UI story; project without it stays informational-only. Backend-only/non-UI stories produce no Visual Artifacts findings regardless of article (Substep 1 short-circuits earlier).
+
+Report escalation status in existing Visual Artifacts report block:
+
+```
+Visual Artifacts:
+  ❌ Constitution-mandated: 2/3 references valid (STORY-005) — 1 BLOCKER
+  ⚠️ BLOCKER: Stale reference: artifacts/STORY-005/ac-2.mp4 not found
+```
+
+(or when no escalation):
+
+```
+Visual Artifacts:
+  ⚠️ 2/3 references valid (STORY-005) — 1 should-fix
+  ⚠️ Stale: artifacts/STORY-005/ac-2.mp4 not found
+```
+
 ### Report
 
 Append to the existing `ae-ux` report a `Visual Artifacts:` block (placed near the report's summary lines):
