@@ -142,6 +142,13 @@ Projects that need other levels (`contract`, `smoke`, `perf`) can use them — `
 
 Omit entire `### Visual Artifacts` section for backend-only or CLI-only stories. `ae-ux` validates references during `/review` — missing / stale / empty file references emit `should-fix` warnings (informational, never blockers in Phase 1).
 
+**`(auto)` row marker:** When `/ship` Phase 4 dispatches a capture tool (Phase 2 behavior), rows it auto-appends to the Visual Artifacts table use a Notes prefix:
+
+- `(auto, backfill scenario)` — capture matched an AC via test name; operator updates the Notes column with viewport / browser / scenario context
+- `(auto, no test-match, backfill AC)` — capture didn't match any AC matrix Tests cell; operator corrects the AC column AND backfills scenario
+
+Operator removes the `(auto, ...)` prefix from Notes once the row is reviewed and accurate. `ae-ux` doesn't validate Notes content — the marker is human-facing only.
+
 Prompt: *"Story complete. Run `/review` before next story."*
 
 ### Step N — Release focus
