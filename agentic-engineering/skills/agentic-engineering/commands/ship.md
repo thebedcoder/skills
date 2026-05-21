@@ -113,7 +113,21 @@ No blockers → continue.
 ```
 feat([feature-name]): STORY-XXX — frontend implementation
 ```
-- **Reminder before review** *(prose only — not a checkpoint)*: capture screenshots or recordings of each UI AC and drop them into `docs/features/<feature-name>/artifacts/STORY-XXX/`. Reference them in PROGRESS.md's Visual Artifacts table. `ae-ux` validates the references during Phase 4 — missing or stale refs become should-fix warnings (informational, not blockers).
+- **Visual capture dispatch** *(automatic if `.claude/visual-capture.md` exists)*
+
+  1. Read `./.claude/visual-capture.md`. If absent → emit reminder (Phase 1 fallback) and proceed to Phase 4 review.
+  2. Parse `mechanism:` field. Dispatch:
+     - `test-runner` / `script` → run the declared `## Capture command` via Bash, capture exit code
+     - `mcp` → use the declared MCP tools per AC, capture per-AC, write to artifacts dir directly
+     - `manual` → emit reminder, proceed
+     - `external-link` → emit reminder to record + paste URLs, proceed
+  3. On dispatch success (`test-runner` / `script`):
+     - Scan declared `output_dir:` for new files
+     - For each file, match against AC Coverage matrix Tests cells when possible
+     - Move/copy into `docs/features/<feature-name>/artifacts/STORY-XXX/<file>`
+     - Append rows to PROGRESS.md Visual Artifacts table; tag Notes cell with `(auto, backfill scenario)` or `(auto, no test-match, backfill AC)`
+  4. On dispatch failure (non-zero exit, missing files): emit warning, do NOT block ship chain. Operator captures manually for this story.
+  5. Proceed to Phase 4 review (the 6-agent batch).
 
 **Phase 4 — Frontend Review** *(automatic)* (`/review` + ae-ux fidelity)
 - 6-agent parallel pass
