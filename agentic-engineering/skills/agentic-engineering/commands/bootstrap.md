@@ -136,7 +136,43 @@ On 'go', ARCH executes:
      }
      ```
      If exists but lacks `statusLine` → merge in. If already has `statusLine` → leave alone.
-7. **Initialises git** — no `.git` yet:
+7. **Visual capture tool setup**
+
+ARCH reads `~/.claude/skills/agentic-engineering/capture-tools/README.md` + each catalog entry's frontmatter.
+
+Filter catalog by detected stack:
+- Read detected stack from Phase 3 + scan repo for files matching each entry's `detection:` rules
+- Match by `platforms:` (web / mobile / ios / android / rn / flutter / desktop / terminal / any)
+- Always include `manual` and `loom-link` as fallback candidates
+
+Present matching tools to operator:
+
+```
+ARCH — Visual capture tool selection:
+
+Detected stack: <stack summary>
+
+Matching capture tools:
+  1. <tool-name>       — <one-line description>
+  2. <tool-name>       — <one-line description>
+  3. manual            — capture by hand, no automation
+  4. loom-link         — paste hosted recording URLs
+
+Pick one (1-N) or 'none' to skip visual capture setup.
+```
+
+⚠️ **Human checkpoint:** wait for operator's selection.
+
+On selection:
+1. Copy `~/.claude/skills/agentic-engineering/capture-tools/<name>.md` → `./.claude/visual-capture.md`
+2. ARCH announces: *"Capture tool configured at `.claude/visual-capture.md`. Edit to tune project-specific values (command, output dir, etc.). Committed to git so the team uses the same tool."*
+
+On 'none':
+3. ARCH announces: *"Skipping visual capture setup. UI stories will receive informational reminders during `/ship` Phase 4; Visual Artifacts table in PROGRESS.md can be filled manually."*
+
+(No `.claude/visual-capture.md` written when 'none' selected — Phase 1's manual flow applies by default.)
+
+8. **Initialises git** — no `.git` yet:
 ```
 git init
 git add .
@@ -156,6 +192,7 @@ ARCH — Scaffolding:
 ✅ Dependencies installed
 ✅ Base boilerplate written
 ✅ Tests passing
+✅ Visual capture tool configured
 ✅ Git initialised
 ```
 
