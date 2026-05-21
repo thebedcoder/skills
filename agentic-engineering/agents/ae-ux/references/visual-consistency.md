@@ -72,3 +72,49 @@ if they can't articulate why.
 - Font rendering differences between design tool and browser
 - Exact color hex matching between Figma and CSS (slight rendering differences are normal)
 - Subjective aesthetic preferences not reflected in the design spec
+
+---
+
+## Captured artifacts
+
+The `### Visual Artifacts` table in `PROGRESS.md` is the durable visual record of a shipped story's UI behavior. Each row references one capture (file or URL), tagged with the AC it proves and informational notes (viewport, browser, scenario).
+
+### What counts as an artifact
+
+- Static screenshots (`.png`, `.jpg`, `.webp`)
+- Screen recordings (`.mp4`, `.webm`, `.mov`, `.gif`, animated `.webp`)
+- Hosted recordings via URL (Loom, Notion, YouTube — recognized by `http://` / `https://` prefix in the `File` cell)
+
+### Validation rules
+
+| File cell value | Validation |
+|---|---|
+| Starts with `http://` or `https://` | URL — skipped; trust the operator |
+| Relative path; file exists, non-zero size | OK |
+| Relative path; file doesn't exist | `should-fix`: stale reference |
+| Relative path; file exists, 0 bytes | `should-fix`: empty file, capture may have failed |
+| Empty cell | `should-fix`: empty File reference |
+
+All warnings are `should-fix` in Phase 1 (informational, never blockers).
+
+### When the section is omitted
+
+For backend-only / CLI-only stories with no UI changes, the entire `### Visual Artifacts` section is omitted from PROGRESS.md. `ae-ux` detects non-UI stories by scanning the diff for UI file extensions (`.tsx`, `.jsx`, `.vue`, `.svelte`, SwiftUI `.swift`, Compose `.kt`, Flutter widget `.dart`, `.html`, `.css`, `.scss`) — none present → skip the entire validation step.
+
+### Multiple rows per AC
+
+A single AC can have multiple Visual Artifacts rows — desktop + mobile viewports, light + dark theme, happy path + error state. The AC column may repeat across rows; that's allowed and expected.
+
+### Naming convention
+
+Operator's choice. The matrix's `File` column is the source of truth; filenames inside `docs/features/<name>/artifacts/STORY-XXX/` aren't validated against a pattern. A useful convention:
+
+```
+artifacts/STORY-005/
+  ac-1-happy-path-desktop.png
+  ac-1-happy-path-mobile.png
+  ac-2-error-state.mp4
+  ac-3-empty-list.png
+```
+
+But `screenshot-2026-05-21-3pm.png` is equally valid if it's referenced correctly in the table.
