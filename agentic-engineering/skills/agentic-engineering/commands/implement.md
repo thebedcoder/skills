@@ -107,6 +107,14 @@ PROD — Acceptance Check:
 |----------|------|
 | [category] | [file:test_name] |
 
+### Visual Artifacts
+(omit for backend-only / CLI-only stories)
+| AC | Type | File | Notes |
+|----|------|------|-------|
+| AC-1 | screenshot | artifacts/STORY-XXX/ac-1-name.png | [scenario / viewport / browser] |
+| AC-2 | video | artifacts/STORY-XXX/ac-2-name.mp4 | [scenario / viewport / browser] |
+| AC-N | [type] | [path or URL] | [notes] |
+
 ### Files changed
 - [list]
 
@@ -129,6 +137,10 @@ PROD — Acceptance Check:
 If row's tests span multiple levels → split into multiple matrix rows (same AC, same Description, different Tests + Level cells). Multiple rows per AC is allowed — AC contract is "≥ 1 row per AC."
 
 Projects that need other levels (`contract`, `smoke`, `perf`) can use them — `ae-test` accepts value but excludes row from pyramid math.
+
+**Visual Artifacts:** For UI-touching stories, capture screenshots or recordings of each AC's behavior. Drop files in `docs/features/<feature-name>/artifacts/STORY-XXX/`. Reference each capture as row in Visual Artifacts table — multiple rows per AC fine (different viewports, scenarios). `Type` informational (`screenshot` / `video` / `animated-gif` / `loom-link` / `youtube-link`). `File` relative path from repo root OR URL (Loom, Notion, YouTube). `Notes` freeform — viewport, browser, scenario.
+
+Omit entire `### Visual Artifacts` section for backend-only or CLI-only stories. `ae-ux` validates references during `/review` — missing / stale / empty file references emit `should-fix` warnings (informational, never blockers in Phase 1).
 
 Prompt: *"Story complete. Run `/review` before next story."*
 
