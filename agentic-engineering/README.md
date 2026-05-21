@@ -116,7 +116,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/init` | Create docs scaffold, CLAUDE.md, and CONSTITUTION.md |
 | `/feature [name]` | Research → PRD → clarifications → constitution check → stories |
 | `/design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown |
-| `/ship` | Full story: implement → 6-agent review → frontend → UX check → docs → git. Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. |
+| `/ship` | Full story: implement → 6-agent review → frontend → UX check → docs → git. Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates references during `/review` — stale or missing references become should-fix warnings. |
 | `/ship-all` | Loop `/ship` across all unchecked stories |
 | `/plan-all` | Plan all unplanned epics from INDEX.md |
 | `/fix [desc]` | Diagnose bug → fix → review → docs |
