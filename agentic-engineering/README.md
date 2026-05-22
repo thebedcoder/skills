@@ -432,6 +432,57 @@ agentic-engineering/
 
 ---
 
+## Status bar focus hint (optional)
+
+`/focus <task>` writes a current-task pointer to `.agentic/focus.md` (per-worktree, gitignored). Surface it in Claude Code's status bar so it stays visible while you work — title on its own line, optional `note:` dimmed below it.
+
+```
+~/dev/myapp  feat/payments  Sonnet 4.6  ctx:42%
+🎯 STORY-003: Stripe webhook handler
+   Validates signature before parsing body
+```
+
+### Option 1 — ask Claude
+
+Type this prompt:
+
+```
+/statusline extend my status bar with a second line that reads `title:` and `note:` from .agentic/focus.md
+```
+
+Claude Code routes to the `statusline-setup` agent, which reads your current `statusLine` config, extends the existing script in place (so your dir/branch/model/context segments stay), and reloads the bar.
+
+### Option 2 — manual
+
+**If you already have a custom `~/.claude/statusline-command.sh`** (your `statusLine.command` in `settings.json` points to a script), paste this block before the trailing `printf '\n'`:
+
+```sh
+# Focus from .agentic/focus.md — second line, dim note below
+if [ -f "$cwd/.agentic/focus.md" ]; then
+  focus=$(grep -m1 '^title:' "$cwd/.agentic/focus.md" | sed 's/^title:[[:space:]]*//')
+  [ -n "$focus" ] && printf '\n\033[36m🎯 %s\033[0m' "$focus"
+  note=$(grep -m1 '^note:' "$cwd/.agentic/focus.md" | sed 's/^note:[[:space:]]*//')
+  [ -n "$note" ] && printf '\n\033[90m   %s\033[0m' "$note"
+fi
+```
+
+The script reads `$cwd` (the workspace dir Claude Code passes via stdin JSON) so it stays silent in projects without `.agentic/focus.md`.
+
+**If you don't have a custom status line yet**, add this to `~/.claude/settings.json`:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "[ -f .agentic/focus.md ] && awk '/^title:/{sub(/^title:[ ]*/,\"\");print \"🎯 \"$0} /^note:/{sub(/^note:[ ]*/,\"\");print \"   \"$0}' .agentic/focus.md"
+  }
+}
+```
+
+Restart Claude Code to pick up the change. The relative path works because status line commands run in the workspace directory.
+
+---
+
 ## Starting a new project
 
 ```bash
