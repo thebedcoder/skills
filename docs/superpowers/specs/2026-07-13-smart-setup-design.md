@@ -168,8 +168,9 @@ Carve-outs (normal prose): README-type content, end-user docs, anything shown to
 
 1. Read `.claude/setup-manifest.md`.
 2. Re-scan the codebase.
-3. Diff: new deps, changed commands, dead skills, un-covered stacks, tier drift.
-4. Propose amendment manifest → user approves → apply → rewrite `.claude/setup-manifest.md`.
+3. Diff: new deps, changed commands, dead artifacts (skills, rules, agents, `.mcp.json` entries, CLAUDE.md CLI lines), un-covered stacks, tier drift.
+4. Scan non-manifest artifacts (`.claude/skills|agents|rules/`, `.mcp.json`): apparent orphans become suggestion-only rows — never delete rows for artifacts smart-setup did not generate.
+5. Propose amendment manifest → user approves → apply → rewrite `.claude/setup-manifest.md`.
 
 Keeps the setup from rotting; also the natural place to bump tiers as a project grows.
 
