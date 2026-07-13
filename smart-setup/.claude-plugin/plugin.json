@@ -1,0 +1,22 @@
+{
+  "name": "smart-setup",
+  "version": "0.1.0",
+  "description": "Project-tailored Claude Code setup — scans or interviews a project, then generates right-sized Skills, Memory, Agents, Rules, and Tools (SMART)",
+  "author": {
+    "name": "thebedcoder",
+    "url": "https://github.com/thebedcoder"
+  },
+  "homepage": "https://github.com/thebedcoder/skills/tree/main/smart-setup",
+  "repository": "https://github.com/thebedcoder/skills",
+  "license": "MIT",
+  "keywords": [
+    "setup",
+    "scaffolding",
+    "project-config",
+    "skills",
+    "memory",
+    "agents",
+    "rules",
+    "mcp"
+  ]
+}
