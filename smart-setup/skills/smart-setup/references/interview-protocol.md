@@ -30,4 +30,5 @@ Each answer → candidate domain skill or rule. Candidate goes into manifest, us
 ## Preference questions (all tiers > 0)
 
 - Memory: default layers OK? (permanent `CLAUDE.md` / decisions `docs/decisions.md` / disposable `.claude/scratch.md`)
-- Agents: which role handles wanted from palette — QA, SecOps, Lead, Frontend, Backend, Infra, Product, Designer? Only roles with something concrete to verify get generated.
+- Review-after-implement (tier ≥ 1, DEFAULT ON): adversarial reviewer agent — assumes code broken, hunts null/async/logic/edge bugs — dispatched after each non-trivial change, before commit. Ask: keep default? Counts against tier agent cap.
+- Agents: additional role handles from palette — QA, SecOps, Lead, Frontend, Backend, Infra, Product, Designer? Only roles with something concrete to verify get generated.

@@ -1,4 +1,4 @@
-<!-- EXEMPLAR: quality bar for generated CLAUDE.md. Artifact #1 at every tier — section order fixed: Stack, Commands, Required CLIs, Rules, Memory. Tier 0 = Stack + Commands only, ≤ 20 lines. -->
+<!-- EXEMPLAR: quality bar for generated CLAUDE.md. Artifact #1 at every tier — section order fixed: Stack, Commands, Required CLIs, Rules, Workflow, Memory. Tier 0 = Stack + Commands only, ≤ 20 lines. -->
 # CLAUDE.md
 
 ## Stack
@@ -15,6 +15,9 @@
 
 ## Rules
 - Editing `**/*.test.*` → read `.claude/rules/testing-conventions.md`
+
+## Workflow
+- Non-trivial change → dispatch `qa` agent (review-after-implement) before commit. Fix blockers before committing.
 
 ## Memory
 - Decisions log: `docs/decisions.md` — read BEFORE architectural changes or questioning existing patterns. Append ADR-lite entry after any architectural / tooling / scope decision.

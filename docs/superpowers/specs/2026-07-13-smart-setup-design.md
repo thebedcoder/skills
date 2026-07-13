@@ -130,6 +130,8 @@ Hybrid shape: **job-title handles, verification/research-shaped prompts, tier-ga
 - Role palette: QA, SecOps, Lead, Frontend, Backend, Infra, Product, Designer. The generator picks from the palette only when the project gives that role something concrete to verify — a Flutter app with no backend gets no Backend agent.
 - Tier caps: tier 0 → no agents; tier 1 → ≤ 2; tier 2 → as justified by the manifest.
 
+> **Amendment (2026-07-13):** review-after-implement is the DEFAULT agent proposal at tier ≥ 1 (user can decline in interview): one adversarial reviewer — assumes code broken, checks null/async/logic/edge (agentic-engineering's RED pattern) — dispatched after each non-trivial change, before commit. Counts against the tier agent cap; dispatch wiring goes in the generated CLAUDE.md Workflow section, and the verify step treats an agent without wiring as a dead file.
+
 ## 8. R — Rules
 
 Two sources:
