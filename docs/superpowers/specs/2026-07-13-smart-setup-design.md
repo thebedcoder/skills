@@ -91,7 +91,7 @@ Classification: scan signals + one confirming question. User can always override
 5. Present **manifest**: every artifact to be created, plus an explicit **"not generating"** list with reasons — the whole footprint on one screen. User edits/approves. Nothing is written before this gate.
 6. Generate per shapes + exemplars + caveman rules.
 7. Verify: read back every generated file, check frontmatter validity, confirm skills load.
-8. Write `.claude/setup-manifest.md` (tier, date, artifact list) — the anchor for `update` mode.
+8. Write `.claude/setup-manifest.md` (tier, date, artifact list) — the anchor for `update` mode. Written at every tier; as bookkeeping it is exempt from tier output caps.
 
 The manifest gate (step 5) is load-bearing: it is the single defense against the generator recreating agentic-engineering's over-scaffolding.
 
@@ -111,6 +111,8 @@ Every layer defines four things: **location, write-trigger, read-trigger, lifecy
 | **Permanent** | `CLAUDE.md` | setup + "remember this" moments | auto-loaded every session | git, evolves slowly |
 | **Decisions** | `docs/decisions.md` — append-only, newest first; ADR-lite entries: date, decision, why, alternatives rejected | when an architectural/tooling/scope decision is made | instruction in `CLAUDE.md`: "before architectural changes or questioning existing patterns, read `docs/decisions.md`" | git, never rewritten |
 | **Disposable** | `.claude/scratch.md` (gitignored) | task state, next steps, working notes | instruction in `CLAUDE.md`: read at session start | pruned freely, deletable anytime |
+
+Generation includes the matching `.gitignore` entry for `.claude/scratch.md`.
 
 Deliberately does **not** compete with Claude Code's harness-level auto-memory (`~/.claude/projects/.../memory/`) — that is personal-per-machine; these layers are project-shared via git (except disposable).
 
