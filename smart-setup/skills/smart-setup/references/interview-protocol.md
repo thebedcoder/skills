@@ -32,3 +32,4 @@ Each answer → candidate domain skill or rule. Candidate goes into manifest, us
 - Memory: default layers OK? (permanent `CLAUDE.md` / decisions `docs/decisions.md` / disposable `.claude/scratch.md`)
 - Review-after-implement (tier ≥ 1, DEFAULT ON): adversarial reviewer agent — assumes code broken, hunts null/async/logic/edge bugs — dispatched after each non-trivial change, before commit. Ask: keep default? Counts against tier agent cap.
 - Agents: additional role handles from palette — QA, SecOps, Lead, Frontend, Backend, Infra, Product, Designer? Only roles with something concrete to verify get generated.
+- Guardrails (tier ≥ 1, DEFAULT ON): `.claude/settings.json` deny-read rules for sensitive files (`.env*`, keys, certs, secrets dirs). Ask: keep default?

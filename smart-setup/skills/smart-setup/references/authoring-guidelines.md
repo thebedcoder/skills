@@ -30,11 +30,32 @@ Trigger conditions in description mandatory. Skill without trigger = never fires
 
 ### Agent — `.claude/agents/<name>.md`
 
-Frontmatter: `name` + `description` (one line, project-specific). Body must contain three sections:
+Frontmatter: `name` + `description` (one line, project-specific) + `model` by purpose — checklist/mechanical verify → `haiku`; judgment review, research → `sonnet`; architecture/design → `opus`; unsure → omit key (inherits session model). Body must contain three sections:
 
 - **Dispatch trigger** — when main conversation calls this agent
 - **Checks** — concrete list, project-specific, verifiable
 - **Report format** — caveman, severity-ordered
+
+### Settings — `.claude/settings.json`
+
+Sensitive-file guardrails, DEFAULT ON at tier ≥ 1 (user can decline in interview). Merge into existing file — never rewrite. Default deny block:
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./secrets/**)",
+      "Read(./**/credentials*)"
+    ]
+  }
+}
+```
+
+Trim to files project could actually contain. Hooks: propose only on concrete detected trigger (formatter config → PostToolUse format hook). Never speculative hooks.
 
 ### Rule — `.claude/rules/<topic>.md`
 

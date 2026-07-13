@@ -2,6 +2,7 @@
 ---
 name: qa
 description: QA agent for this Flutter app — verifies widget states + platform channels after UI changes
+model: haiku
 ---
 
 # QA

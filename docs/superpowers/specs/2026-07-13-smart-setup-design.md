@@ -152,6 +152,8 @@ Detection-based only; no curated catalog. `references/tool-detection.md` maps co
 
 Output: `.mcp.json` entries + a "required CLIs" section in `CLAUDE.md`. Never installs anything; config and documentation only.
 
+> **Amendment (2026-07-13):** two additions. (1) Generated agents carry a `model` frontmatter key chosen by purpose — haiku for mechanical/checklist verification, sonnet for judgment review/research, opus for architecture; omitted when unsure (inherits session model). (2) Guardrails artifact, default ON at tier ≥ 1: `.claude/settings.json` with `permissions.deny` read rules for sensitive files (`.env*`, keys, certs, secrets dirs), trimmed to what the project could contain, merged never clobbered. Hooks are proposed only on a concrete detected trigger (e.g. formatter config → PostToolUse format hook) — never speculatively.
+
 ## 10. Docs/specs rules
 
 The lightweight replacement for agentic-engineering's PRD/EPICS/STORIES ceremony. Principle: **a doc exists only if it changes future work; every doc type has a read-trigger.**

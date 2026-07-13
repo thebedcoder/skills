@@ -14,6 +14,7 @@ Tier: **1 — solo product** (tests exist, one contributor, no CI)
 | 4 | Memory scaffold | `docs/decisions.md`, `.claude/scratch.md`, CLAUDE.md section | per memory-spec |
 | 5 | Agent: qa | `.claude/agents/qa.md` | widget states + platform channels need adversarial check |
 | 6 | MCP: playwright | `.mcp.json` | playwright.config.ts detected |
+| 7 | Guardrails | `.claude/settings.json` | deny-read `.env*`, keys, certs — default on |
 
 ## NOT generating
 
