@@ -40,4 +40,4 @@ Tier caps output — structural limit, not suggestion. Most projects need almost
 
 ## Exemplars
 
-`exemplars/` — exactly one per artifact type: `procedure-skill.md`, `domain-skill.md`, `agent.md`, `memory-scaffold.md`, `manifest.md`. Read matching exemplar before generating first artifact of that type. Exemplar = quality bar, not padding template.
+`exemplars/` — exactly one per artifact type: `claude-md.md`, `procedure-skill.md`, `domain-skill.md`, `agent.md`, `memory-scaffold.md`, `manifest.md`. Read matching exemplar before generating first artifact of that type. Exemplar = quality bar, not padding template.

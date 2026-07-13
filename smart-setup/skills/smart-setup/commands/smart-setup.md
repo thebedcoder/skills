@@ -40,6 +40,7 @@ Read `exemplars/manifest.md`. Build manifest:
 - Every artifact: type + path + one-line why
 - **NOT generating** table mandatory — near-miss artifacts + reason each. Empty NOT-generating table = manifest rejected, rebuild it.
 - Tier 2 + project needs phase-gated SDLC → row recommending agentic-engineering install. Do not reimplement its workflow.
+- Manifest footer notes: `.claude/setup-manifest.md` written after approval as bookkeeping (exempt from tier caps).
 
 Present manifest. User approves / edits rows / overrides tier.
 
@@ -51,11 +52,11 @@ Read `references/authoring-guidelines.md` first. Before generating first artifac
 
 Order:
 
-1. `CLAUDE.md` — create, or append clearly-marked sections. Never rewrite existing user content.
+1. `CLAUDE.md` — create per `exemplars/claude-md.md`, or append sections wrapped in `<!-- smart-setup:start -->` / `<!-- smart-setup:end -->` markers. Never rewrite existing user content.
 2. Memory scaffold per `references/memory-spec.md` + `exemplars/memory-scaffold.md` — includes `.gitignore` entry for `.claude/scratch.md`
 3. Procedure skills → `.claude/skills/<name>/SKILL.md`
 4. Domain skills → `.claude/skills/<name>/SKILL.md`
-5. Rules — rules-library templates (installed at `~/.claude/skills/smart-setup/rules-library/`) trimmed to project, + observed-convention rules → `.claude/rules/<topic>.md` + pointer line per rule in `CLAUDE.md`. Rules-library dir missing → skip stack templates, observed-convention rules only.
+5. Rules — rules-library templates (installed at `~/.claude/skills/smart-setup/rules-library/`) trimmed to project, + observed-convention rules → `.claude/rules/<topic>.md` + pointer line per rule in `CLAUDE.md`. Rules-library dir missing → skip stack templates, observed-convention rules only. No template fits actual stack → NOT-generating row with evidence, never force-fit.
 6. Agents → `.claude/agents/<name>.md` — role handle from palette (QA, SecOps, Lead, Frontend, Backend, Infra, Product, Designer), verification-shaped, three mandatory sections: Dispatch trigger / Checks / Report format
 7. Tools — `.mcp.json` (merge, never clobber existing keys) + `CLAUDE.md` "Required CLIs" section
 8. Docs conventions per `references/docs-spec-rules.md` (tier-gated)
@@ -90,7 +91,7 @@ Write `.claude/setup-manifest.md`:
 | ... | ... | ... |
 ```
 
-Exempt from tier caps — written at every tier. Then tell user: restart Claude Code session to load generated skills.
+Exempt from tier caps — written at every tier. Skills generated → tell user: restart Claude Code session to load them. No skills generated → no restart needed.
 
 ## Update mode
 
