@@ -100,10 +100,11 @@ Exempt from tier caps — written at every tier. Skills generated → tell user:
 3. Diff current codebase vs manifest:
    - **New:** deps, deploy targets, stacks, CI appearing since setup
    - **Changed:** commands that moved (test script renamed, build tool swapped)
-   - **Dead:** generated skills/rules referencing removed code or procedures
+   - **Dead:** generated skills / rules / agents / `.mcp.json` entries / CLAUDE.md CLI lines referencing removed code, configs, or procedures
    - **Tier drift:** signals now point to different tier
-4. Build amendment manifest: add / update / delete per artifact + why. Same mandatory NOT-generating discipline. Same HARD GATE.
-5. User approves → apply → rewrite `.claude/setup-manifest.md` with new date + artifact list.
+4. Scan non-manifest artifacts — `.claude/skills/`, `.claude/agents/`, `.claude/rules/`, `.mcp.json` entries absent from manifest. Apparent orphan (references removed code/config) → suggestion row `[suggestion — not managed by smart-setup]` in amendment manifest. Never delete rows for artifacts smart-setup did not generate — user removes those by hand.
+5. Build amendment manifest: add / update / delete per artifact + why. Same mandatory NOT-generating discipline. Same HARD GATE.
+6. User approves → apply → rewrite `.claude/setup-manifest.md` with new date + artifact list.
 
 ## Hard rules
 
