@@ -16,11 +16,20 @@ Full SDLC workflows are overkill for most projects. smart-setup sizes first: a t
 
 ## Install
 
+Via the plugin marketplace (recommended):
+
+```
+/plugin marketplace add thebedcoder/skills
+/plugin install smart-setup@thebedcoder
+```
+
+Or from a repo checkout:
+
 ```bash
 bash smart-setup/install.sh
 ```
 
-Restart Claude Code afterwards.
+Restart Claude Code afterwards. Note: the marketplace install ships the plugin as-is; the bash installer additionally copies `rules-library/` from the sibling `agentic-engineering/` plugin. Without it, smart-setup falls back to the agentic-engineering plugin's copy (if installed) or generates rules from observed conventions only.
 
 ## Usage
 

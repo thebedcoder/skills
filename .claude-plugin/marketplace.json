@@ -17,6 +17,11 @@
       "name": "jtbd",
       "source": "./jtbd",
       "description": "Jobs to Be Done megaskill — product brief to research, personas, competitor analysis, landing page copy, and platform-native ad scripts, powered by 5 parallel specialist agents"
+    },
+    {
+      "name": "smart-setup",
+      "source": "./smart-setup",
+      "description": "Project-tailored Claude Code setup — scans or interviews a project, sizes it into a tier, then generates right-sized Skills, Memory, Agents, Rules, and Tools behind a manifest approval gate"
     }
   ]
 }

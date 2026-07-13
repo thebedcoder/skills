@@ -35,6 +35,8 @@ One user-facing command, two modes:
 
 Not listed in `.claude-plugin/marketplace.json` initially (same status as `premortem-skill`). Promoting later is a one-line change.
 
+> **Amendment (2026-07-13):** promoted to the marketplace at user request. Marketplace installs skip `install.sh`, so the command body resolves `rules-library/` location-agnostically: alongside the skill (bash install) → agentic-engineering plugin's copy → observed-convention-only fallback.
+
 ## 2. Plugin layout
 
 Follows the monorepo per-plugin shape exactly (wrapper/real-command split, per-plugin installer):

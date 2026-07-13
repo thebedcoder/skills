@@ -13,7 +13,7 @@ Four plugins live here:
 | `agentic-engineering/` | Full SDLC workflow — named specialist agents, 5-agent parallel review, end-user docs | listed in `.claude-plugin/marketplace.json` |
 | `jtbd/` | Jobs-to-Be-Done megaskill (MODE 0–4) — research → personas → competitors → landing copy → ad scripts | listed in `.claude-plugin/marketplace.json` |
 | `premortem-skill/` | `/premortem` command + investigator agent | **not yet** in the marketplace |
-| `smart-setup/` | `/smart-setup` — scans/interviews a project, sizes it into a tier, generates right-sized project-local config (Skills, Memory, Agents, Rules, Tools); sizing/dispatch layer in front of agentic-engineering | **not yet** in the marketplace; Claude-Code-only (no `adapters/`); its installer copies `rules-library/` from the agentic-engineering sibling |
+| `smart-setup/` | `/smart-setup` — scans/interviews a project, sizes it into a tier, generates right-sized project-local config (Skills, Memory, Agents, Rules, Tools); sizing/dispatch layer in front of agentic-engineering | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); its bash installer copies `rules-library/` from the agentic-engineering sibling (marketplace installs fall back to agentic-engineering's copy or observed-convention rules) |
 
 Distribution targets two universes:
 - **Claude Code** — via the plugin manifest in `.claude-plugin/` (per-plugin `plugin.json` + top-level `marketplace.json`).

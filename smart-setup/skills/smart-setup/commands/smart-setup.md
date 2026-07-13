@@ -56,7 +56,7 @@ Order:
 2. Memory scaffold per `references/memory-spec.md` + `exemplars/memory-scaffold.md` — includes `.gitignore` entry for `.claude/scratch.md`
 3. Procedure skills → `.claude/skills/<name>/SKILL.md`
 4. Domain skills → `.claude/skills/<name>/SKILL.md`
-5. Rules — rules-library templates (installed at `~/.claude/skills/smart-setup/rules-library/`) trimmed to project, + observed-convention rules → `.claude/rules/<topic>.md` + pointer line per rule in `CLAUDE.md`. Rules-library dir missing → skip stack templates, observed-convention rules only. No template fits actual stack → NOT-generating row with evidence, never force-fit.
+5. Rules — rules-library templates trimmed to project (dir: `rules-library/` alongside this skill's `references/` — bash install; not there → installed agentic-engineering plugin's `rules-library/`; first found wins), + observed-convention rules → `.claude/rules/<topic>.md` + pointer line per rule in `CLAUDE.md`. Rules-library not found → skip stack templates, observed-convention rules only. No template fits actual stack → NOT-generating row with evidence, never force-fit.
 6. Agents → `.claude/agents/<name>.md` — role handle from palette (QA, SecOps, Lead, Frontend, Backend, Infra, Product, Designer), verification-shaped, three mandatory sections: Dispatch trigger / Checks / Report format
 7. Tools — `.mcp.json` (merge, never clobber existing keys) + `CLAUDE.md` "Required CLIs" section
 8. Docs conventions per `references/docs-spec-rules.md` (tier-gated)
