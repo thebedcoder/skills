@@ -56,12 +56,15 @@ smart-setup/
       docs-spec-rules.md              ← docs/specs conventions per tier (§10)
       tool-detection.md               ← config-file → MCP/CLI mapping (§9)
     exemplars/
-      procedure-skill.md              ← exactly one excellent example per artifact type
+      claude-md.md                    ← exactly one excellent example per artifact type
+      procedure-skill.md
       domain-skill.md
       agent.md
       memory-scaffold.md
       manifest.md
 ```
+
+> **Amendment (2026-07-13, post smoke-test):** `claude-md.md` exemplar added. Smoke tests showed CLAUDE.md is artifact #1 at every tier but had no exemplar — two fresh sessions could produce differently-shaped files. Still one exemplar per artifact type.
 
 Constraints:
 
