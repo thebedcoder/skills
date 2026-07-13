@@ -55,7 +55,7 @@ Order:
 2. Memory scaffold per `references/memory-spec.md` + `exemplars/memory-scaffold.md` — includes `.gitignore` entry for `.claude/scratch.md`
 3. Procedure skills → `.claude/skills/<name>/SKILL.md`
 4. Domain skills → `.claude/skills/<name>/SKILL.md`
-5. Rules — rules-library templates (installed at `~/.claude/skills/smart-setup/rules-library/`) trimmed to project, + observed-convention rules → `.claude/rules/<topic>.md` + pointer line per rule in `CLAUDE.md`
+5. Rules — rules-library templates (installed at `~/.claude/skills/smart-setup/rules-library/`) trimmed to project, + observed-convention rules → `.claude/rules/<topic>.md` + pointer line per rule in `CLAUDE.md`. Rules-library dir missing → skip stack templates, observed-convention rules only.
 6. Agents → `.claude/agents/<name>.md` — role handle from palette (QA, SecOps, Lead, Frontend, Backend, Infra, Product, Designer), verification-shaped, three mandatory sections: Dispatch trigger / Checks / Report format
 7. Tools — `.mcp.json` (merge, never clobber existing keys) + `CLAUDE.md` "Required CLIs" section
 8. Docs conventions per `references/docs-spec-rules.md` (tier-gated)
@@ -67,6 +67,7 @@ All artifacts caveman-formatted. Tier caps already enforced at manifest — do n
 - Read back every generated file. Frontmatter parses — `name` + `description` present where contract requires.
 - Every skill description contains trigger conditions.
 - Every rule has `CLAUDE.md` pointer line. Every memory layer read-trigger wired in `CLAUDE.md`.
+- Docs artifacts (specs, CHANGELOG) → read-trigger line present in `CLAUDE.md`.
 - `.mcp.json` touched → validate: `python3 -c "import json; json.load(open('.mcp.json'))"`
 - Report to user: files written, one line each.
 

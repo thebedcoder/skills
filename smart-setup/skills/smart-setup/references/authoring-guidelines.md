@@ -43,6 +43,7 @@ Every rule file needs `CLAUDE.md` pointer line: `editing <pattern> → read .cla
 ## Quality bar
 
 - Procedure skill earns existence only if procedure non-obvious (> 1 command, or has gotchas). Single obvious command → `CLAUDE.md` line instead.
+- Rule ≤ ~3 lines → inline `CLAUDE.md` line, no rule file. `.claude/rules/<topic>.md` only for longer rules.
 - Every memory layer states read-trigger. No read-trigger → not generated.
 - Match exemplar density — files in `exemplars/` are the bar. Do not pad past them.
 - Test commands in generated content: non-watch invocations only — `vitest run`, `jest`, `pytest`, `go test ./...`. Never bare `vitest`, never `--watch`.
