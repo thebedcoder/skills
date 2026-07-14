@@ -30,6 +30,7 @@ Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by
 - All six subagents dispatched **in single tool-call batch** — not sequentially
 - Each subagent gets only files it needs — pass paths, not full content
 - Consolidate into one fix list before reporting
+- Before consolidating, read `./docs/improvements.md` (missing → skip). Finding matches prior won't-fix entry → report under Won't-fix as "previously logged [date]", never re-litigate
 
 ### The six reviewers
 
@@ -56,7 +57,7 @@ Should-fix (fix soon):
 1. [issue] — [source agent]
 
 Won't-fix (logged to improvements.md):
-1. [issue] — [reason]
+1. [issue] — [reason / previously logged YYYY-MM-DD]
 
 Clean areas:
 - RED: [scope checked and clear]
