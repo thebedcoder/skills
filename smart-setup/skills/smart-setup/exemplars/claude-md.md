@@ -22,3 +22,4 @@
 ## Memory
 - Decisions log: `docs/decisions.md` — read BEFORE architectural changes or questioning existing patterns. Append ADR-lite entry after any architectural / tooling / scope decision.
 - Scratch: `.claude/scratch.md` — read at session start. Holds current task state + next steps. Prune freely.
+- Subagents: triggers above are main-conversation-only. Dispatched as subagent → skip them; read only files named in your agent file or dispatch prompt. Never write memory files — findings go in report.

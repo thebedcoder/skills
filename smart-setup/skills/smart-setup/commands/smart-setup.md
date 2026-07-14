@@ -57,7 +57,7 @@ Order:
 3. Procedure skills → `.claude/skills/<name>/SKILL.md`
 4. Domain skills → `.claude/skills/<name>/SKILL.md`
 5. Rules — rules-library templates trimmed to project (dir: `rules-library/` alongside this skill's `references/` — bash install; not there → installed agentic-engineering plugin's `rules-library/`; first found wins), + observed-convention rules → `.claude/rules/<topic>.md` + pointer line per rule in `CLAUDE.md`. Rules-library not found → skip stack templates, observed-convention rules only. No template fits actual stack → NOT-generating row with evidence, never force-fit.
-6. Agents → `.claude/agents/<name>.md` — role handle from palette (QA, SecOps, Lead, Frontend, Backend, Infra, Product, Designer), verification-shaped, three mandatory sections: Dispatch trigger / Checks / Report format. `model` frontmatter by purpose (haiku mechanical / sonnet judgment / opus architecture — see authoring-guidelines). Review-after-implement DEFAULT at tier ≥ 1: one adversarial reviewer — assumes code broken, checks null/async/logic/edge — dispatch trigger "after non-trivial change, before commit". Counts against tier agent cap. Wire workflow line in `CLAUDE.md`. User declined in interview → skip + NOT-generating row.
+6. Agents → `.claude/agents/<name>.md` — role handle from palette (QA, SecOps, Lead, Frontend, Backend, Infra, Product, Designer), verification-shaped, four mandatory sections: Dispatch trigger / Context / Checks / Report format. `model` frontmatter by purpose (haiku mechanical / sonnet judgment / opus architecture — see authoring-guidelines). Review-after-implement DEFAULT at tier ≥ 1: one adversarial reviewer — assumes code broken, checks null/async/logic/edge — dispatch trigger "after non-trivial change, before commit". Counts against tier agent cap. Wire workflow line in `CLAUDE.md`. User declined in interview → skip + NOT-generating row.
 7. Tools — `.mcp.json` (merge, never clobber existing keys) + `CLAUDE.md` "Required CLIs" section
 8. Docs conventions per `references/docs-spec-rules.md` (tier-gated)
 9. Guardrails (tier ≥ 1, DEFAULT ON unless declined in interview) → `.claude/settings.json` deny-read rules per authoring-guidelines Settings contract, trimmed to files project could contain. Merge, never clobber. Hooks only on concrete detected trigger — never speculative.
@@ -70,6 +70,7 @@ All artifacts caveman-formatted. Tier caps already enforced at manifest — do n
 - Every skill description contains trigger conditions.
 - Every rule has `CLAUDE.md` pointer line. Every memory layer read-trigger wired in `CLAUDE.md`.
 - Every agent → dispatch wiring present in `CLAUDE.md` Workflow section. Agent without wiring = never dispatched = dead file.
+- Every agent → Context section names its memory reads (`docs/decisions.md` for reviewers) + bans memory writes. Generated `CLAUDE.md` Memory section carries subagent scoping line.
 - Docs artifacts (specs, CHANGELOG) → read-trigger line present in `CLAUDE.md`.
 - `.mcp.json` touched → validate: `python3 -c "import json; json.load(open('.mcp.json'))"`
 - `.claude/settings.json` touched → validate same way. Deny rules present when guardrails accepted.

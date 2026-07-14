@@ -30,9 +30,10 @@ Trigger conditions in description mandatory. Skill without trigger = never fires
 
 ### Agent — `.claude/agents/<name>.md`
 
-Frontmatter: `name` + `description` (one line, project-specific) + `model` by purpose — checklist/mechanical verify → `haiku`; judgment review, research → `sonnet`; architecture/design → `opus`; unsure → omit key (inherits session model). Body must contain three sections:
+Frontmatter: `name` + `description` (one line, project-specific) + `model` by purpose — checklist/mechanical verify → `haiku`; judgment review, research → `sonnet`; architecture/design → `opus`; unsure → omit key (inherits session model). No `memory:` key by default — generated agents stay stateless; project knowledge flows via Context reads. Add `memory: project` only on evidence (agent re-flags settled findings across sessions despite Context reads) — never speculatively. Body must contain four sections:
 
 - **Dispatch trigger** — when main conversation calls this agent
+- **Context** — files agent reads before checks. Reviewer agents: `docs/decisions.md` — deliberate decisions ≠ bugs. Never `.claude/scratch.md` (main-session state). Findings go in report — agent never writes memory files.
 - **Checks** — concrete list, project-specific, verifiable
 - **Report format** — caveman, severity-ordered
 

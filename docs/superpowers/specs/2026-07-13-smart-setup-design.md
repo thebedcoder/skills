@@ -121,6 +121,8 @@ Generation includes the matching `.gitignore` entry for `.claude/scratch.md`.
 
 Deliberately does **not** compete with Claude Code's harness-level auto-memory (`~/.claude/projects/.../memory/`) — that is personal-per-machine; these layers are project-shared via git (except disposable).
 
+> **Amendment (2026-07-14): subagent scoping.** Harness fact (official sub-agents docs): every custom subagent inherits the full `CLAUDE.md` hierarchy — not scopeable per agent. Unscoped triggers therefore leak: a dispatched agent reads the main session's scratch as "session start" or clobbers it on write. The generated Memory section now scopes read/write triggers to the main conversation only; subagents read only files named in their agent file or dispatch prompt, and never write memory files. Harness per-agent memory (`memory:` frontmatter → `.claude/agent-memory/<name>/`, self-curated, 25KB injection cap) was considered and rejected as a default — it duplicates `docs/decisions.md` invisibly and rots uncurated; documented in memory-spec as an evidence-only escalation.
+
 ## 7. A — Agents
 
 Hybrid shape: **job-title handles, verification/research-shaped prompts, tier-gated existence.**
@@ -131,6 +133,8 @@ Hybrid shape: **job-title handles, verification/research-shaped prompts, tier-ga
 - Tier caps: tier 0 → no agents; tier 1 → ≤ 2; tier 2 → as justified by the manifest.
 
 > **Amendment (2026-07-13):** review-after-implement is the DEFAULT agent proposal at tier ≥ 1 (user can decline in interview): one adversarial reviewer — assumes code broken, checks null/async/logic/edge (agentic-engineering's RED pattern) — dispatched after each non-trivial change, before commit. Counts against the tier agent cap; dispatch wiring goes in the generated CLAUDE.md Workflow section, and the verify step treats an agent without wiring as a dead file.
+
+> **Amendment (2026-07-14):** agent body grows a fourth mandatory section, **Context** — the files the agent reads before its checks. Reviewer agents read `docs/decisions.md` so deliberate decisions aren't flagged as bugs; no agent reads `.claude/scratch.md` (main-session state) or writes memory files (findings go in the report; the main session persists decisions). Generated agents carry no `memory:` frontmatter by default — stateless by design; `memory: project` is an evidence-only escalation per memory-spec.
 
 ## 8. R — Rules
 

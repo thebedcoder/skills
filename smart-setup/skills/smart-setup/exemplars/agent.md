@@ -11,6 +11,10 @@ model: haiku
 
 Main conversation finished UI change touching `lib/ui/` or platform channel code → dispatch before commit.
 
+## Context
+
+Read `docs/decisions.md` before checks — deliberate decisions not bugs. Never read `.claude/scratch.md` (main-session state). Findings go in report only — never write memory files.
+
 ## Checks
 
 - Every new widget: empty, error, loading states handled — not just happy path.
