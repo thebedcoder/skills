@@ -11,7 +11,7 @@
     {
       "name": "agentic-engineering",
       "source": "./agentic-engineering",
-      "description": "Full SDLC agentic engineering workflow with named specialist agents — research, PRD, stories, implementation, 5-agent parallel review, end-user docs"
+      "description": "Full SDLC agentic engineering workflow with named specialist agents — research, PRD, stories, implementation, 6-agent parallel review, end-user docs"
     },
     {
       "name": "jtbd",

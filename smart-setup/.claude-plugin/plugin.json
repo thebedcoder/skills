@@ -1,6 +1,6 @@
 {
   "name": "smart-setup",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Project-tailored Claude Code setup — scans or interviews a project, then generates right-sized Skills, Memory, Agents, Rules, and Tools (SMART)",
   "author": {
     "name": "thebedcoder",
