@@ -1,4 +1,4 @@
 ---
-description: Compact a shipped feature's docs into SUMMARY.md — originals deleted, git history preserves them
+description: Compact a shipped feature's docs into SUMMARY.md — originals deleted, git history preserves them. --all archives every eligible feature behind one combined gate
 ---
 Read commands/archive.md from the agentic-engineering skill, then follow those instructions.

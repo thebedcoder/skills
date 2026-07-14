@@ -1,10 +1,10 @@
-## `/archive [feature-name]` — Compact Shipped Feature Docs
+## `/archive [feature-name | --all]` — Compact Shipped Feature Docs
 
 **Agent:** ARCH
 
 **Goal:** Replace shipped feature's working docs with single `SUMMARY.md`. Originals deleted — git history preserves them. Cuts stale-doc scan cost for `/status`, `/ship-all`, `/analyze`.
 
-**Inputs (read first):** `./docs/INDEX.md`. No argument → list features where all stories checked + not yet archived, ask which to archive. One question.
+**Inputs (read first):** `./docs/INDEX.md`. `$ARGUMENTS` contains `--all` → Bulk mode section below. No argument → list features where all stories checked + not yet archived, ask which to archive (feature name or `all`). One question. Answer `all` → Bulk mode.
 
 ### Guards
 
@@ -56,6 +56,13 @@ After approval: delete `PRD.md`, `EPICS.md`, `STORIES.md`, `PROGRESS.md`, `revie
 ```
 chore([feature-name]): archive feature docs to SUMMARY.md
 ```
+
+### Bulk mode (`--all`)
+
+1. Eligible = every feature passing Guards 1–2 (all stories checked, not yet archived). None → report "nothing to archive" + exit.
+2. Build SUMMARY.md content per feature — Step 1 rules.
+3. **ONE combined HARD GATE:** show per feature — deletion list + rendered SUMMARY.md. Single confirmation for whole batch. User names exclusions → drop those, proceed with rest.
+4. Apply per feature in sequence: write SUMMARY.md → delete originals → update INDEX row + CHANGELOG line → commit. **Separate commit per feature** — single revert un-archives single feature. Never one batch commit.
 
 ### Gotchas
 

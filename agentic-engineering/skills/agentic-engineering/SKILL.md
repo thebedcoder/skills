@@ -42,7 +42,7 @@ Command invoked → read matching file from `commands/` first. File holds full i
 | `/focus [task\|done\|clear]` | `commands/focus.md` | Set, clear, or advance current task pointer for this worktree |
 | `/next [task\|drop N]` | `commands/next.md` | Queue a task to be picked up after current finishes |
 | `/analyze` | `commands/analyze.md` | Answer project question — searches docs + code |
-| `/archive [feature]` | `commands/archive.md` | Compact shipped feature docs → SUMMARY.md |
+| `/archive [feature\|--all]` | `commands/archive.md` | Compact shipped feature docs → SUMMARY.md |
 | `/frontend` | `commands/frontend.md` | Frontend from design handoff |
 
 ## Agent Roster
