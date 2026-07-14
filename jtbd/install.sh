@@ -13,19 +13,6 @@ mkdir -p ~/.claude/agents
 echo "  → Copying skill..."
 cp -r "$SCRIPT_DIR/skills/jtbd" ~/.claude/skills/
 
-# Patch SKILL.md for Claude Code CLI — hide from command palette
-# (user-invocable: false is valid in CLI but rejected by claude.ai packager, so added post-install)
-SKILL_FILE="$HOME/.claude/skills/jtbd/SKILL.md"
-if ! grep -q "user-invocable" "$SKILL_FILE"; then
-  python3 -c "
-with open('$SKILL_FILE', 'r') as f:
-    content = f.read()
-content = content.replace('---\n# Jobs to Be Done', 'user-invocable: false\n---\n# Jobs to Be Done', 1)
-with open('$SKILL_FILE', 'w') as f:
-    f.write(content)
-"
-fi
-
 # Install agents (each is a directory with AGENT.md + references/)
 echo "  → Copying agents..."
 cp -r "$SCRIPT_DIR/agents/jtbd-researcher" ~/.claude/agents/

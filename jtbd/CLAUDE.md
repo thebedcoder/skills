@@ -59,7 +59,7 @@ When adding a new variant (e.g. a new landing-page section, a new ad platform, a
 - `allowed-tools` — narrowly scoped (`Bash(date *)`, `Bash(ls jtbd-*.md)`, etc.) for the inline `!` shell expansions at the top of the file. Adding a tool here widens the skill's permissions globally; only add what's used by an inline expansion.
 - `hooks: PostToolUse` — appends usage to `~/.claude/jtbd-usage.log`. Best-effort; failure is swallowed.
 
-The `user-invocable: false` field is **added post-install** by `install.sh` (it's valid in the Claude Code CLI but rejected by the claude.ai packager, so it cannot live in the source). If you ever see `user-invocable:` in `skills/jtbd/SKILL.md` in this repo, it leaked from a manual install — remove it before committing.
+Unlike `agentic-engineering`, `install.sh` does **not** patch in `user-invocable: false` post-install. jtbd's only command (`/jtbd`) shares its exact name with the skill (`name: jtbd`), and Claude Code resolves same-name skill/command collisions in favor of the skill — hiding the skill would shadow the command itself, breaking `/jtbd` entirely. Never add `user-invocable: false` here, in source or post-install.
 
 ## jtbd.skill is a build artifact
 
@@ -88,7 +88,7 @@ cd /tmp/scratch && bash /Users/getman/DevWorkspaces/bedcode/skills/install.sh --
 ```
 
 Then sanity-check that:
-- `~/.claude/skills/jtbd/SKILL.md` has `user-invocable: false` injected.
+- `/jtbd` actually invokes (not blocked with a "can only be invoked by Claude" error).
 - All 5 agent directories landed in `~/.claude/agents/` with their `references/` subtrees intact.
 - The `<!-- jtbd:start v1 -->` … `<!-- jtbd:end -->` markers in any tool's AGENTS.md are exactly one matched pair (idempotency check).
 

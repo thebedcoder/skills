@@ -54,7 +54,7 @@ Every plugin follows the same shape:
 
 **Per-plugin `install.sh`** (Claude-Code-only):
 - Copies `skills/<plugin>/` → `~/.claude/skills/`, named agents (with optional `languages/` + `references/` subdirs) → `~/.claude/agents/`, and the **user-facing subset** of `commands/*.md` → `~/.claude/commands/`. Some commands are internal (e.g. `implement`, `review`, `frontend` are called by `ship`, not exposed) — see the `USER_COMMANDS` array in `agentic-engineering/install.sh`.
-- **Post-copy patch**: rewrites `SKILL.md` frontmatter to add `user-invocable: false`. That field is valid in the CLI but rejected by the claude.ai packager, so it lives only in the installed copy. If you see `user-invocable: false` in a source SKILL.md, it leaked — remove it.
+- **Post-copy patch** (agentic-engineering only): rewrites `SKILL.md` frontmatter to add `user-invocable: false`. That field is valid in the CLI but rejected by the claude.ai packager, so it lives only in the installed copy. If you see `user-invocable: false` in a source SKILL.md, it leaked — remove it. `smart-setup` and `jtbd` deliberately skip this patch: each exposes exactly one command whose name is identical to the skill's own name, and Claude Code resolves same-name skill/command collisions in favor of the skill — patching `user-invocable: false` there shadows the command too, breaking direct invocation (`/smart-setup`, `/jtbd`).
 
 ## When you change something
 
