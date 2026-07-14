@@ -28,6 +28,7 @@ Commands are handled by a cast of named specialist agents. Each has a distinct r
 │ 🔧 FIXER  │ Root cause, surgical fixes     │ One bug, one fix       │
 │ ✅ REQ    │ Requirements + constitution    │ Binary — met or not    │
 │ 🧪 TEST   │ Coverage & test quality        │ Flags useless tests    │
+│ 🔍 EDGE   │ Adversarial edge-case probe    │ Hunts what's missing   │
 │ 📖 DOC    │ Convention alignment           │ Notices code drift     │
 │ ✍️ SCRIBE  │ End-user product docs (MDX)   │ Writes for app users,  │
 │           │                                │ not the dev team       │
@@ -121,6 +122,8 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/plan-all` | Plan all unplanned epics from INDEX.md |
 | `/fix [desc]` | Diagnose bug → fix → review → docs |
 | `/note [desc]` | Capture bug/idea/improvement to BACKLOG.md |
+| `/focus [task\|done\|clear]` | Set, clear, or advance the current-task pointer for this worktree (`.agentic/focus.md` — shown in the status bar, see below) |
+| `/next [task\|drop N]` | Queue a task to be picked up after the current one finishes |
 | `/doc [feature]` | Document a feature interactively with Q&A |
 | `/doc-all [--full]` | Document multiple features (`--full` adds guides + index) |
 | `/status` | Progress overview across all features + backlog (runs in forked context) |
@@ -141,7 +144,7 @@ your-project/
 │   ├── CHANGELOG.md             ← agent changelog, terse, newest first
 │   ├── CONSTITUTION.md          ← non-negotiable project principles
 │   ├── BACKLOG.md               ← captured bugs and ideas
-│   ├── improvements.md          ← ARCH/RED suggestions
+│   ├── improvements.md          ← suggestions + won't-fix log (read at /review consolidation)
 │   ├── specs/                   ← design handoff specs
 │   └── features/
 │       └── [name]/
@@ -150,7 +153,10 @@ your-project/
 │           ├── STORIES.md       ← stories with [P] parallel markers
 │           ├── PROGRESS.md
 │           ├── data-model.md    ← generated when feature touches DB
-│           └── reviews/         ← review output per story
+│           ├── reviews/         ← review output per story
+│           ├── artifacts/       ← captured screenshots/recordings per story
+│           └── SUMMARY.md       ← replaces all of the above after /archive
+│                                  (data-model.md survives)
 └── app-docs/                   ← END-USER product documentation (like a landing-page "Docs" section)
     ├── index.mdx               ← docs landing page the user opens first
     ├── CHANGELOG.mdx           ← product release notes, written to users
@@ -191,6 +197,10 @@ The workflow never auto-proceeds past:
 - Constitution violations (must be resolved before stories are written)
 - Implementation plan (before any code is written)
 - Design approval (mobile and desktop separately)
+
+### Auto mode (`--auto`)
+
+Long-running commands (`/feature`, `/fix`, `/ship`, `/ship-all`, `/implement`, `/design`) accept a per-invocation `--auto` flag. Ceremonial checkpoints are skipped, unambiguous decisions proceed automatically (citing `CONSTITUTION.md` when it settles the choice), and everything that matters still pauses: review blockers, anything touching CI configs / secrets / DB migrations / mass deletions, constitution conflicts, and any architectural or destructive choice. Every auto-decision is announced inline and logged to `.agentic/auto-log.md` (gitignored), and the command ends with a one-line summary of decisions and hard-pauses.
 
 ### Parallel stories `[P]`
 
@@ -415,7 +425,7 @@ agentic-engineering/
 ├── skills/
 │   └── agentic-engineering/
 │       ├── SKILL.md              ← skill router
-│       └── commands/             ← 16 command implementation files, loaded on demand
+│       └── commands/             ← 19 command implementation files, loaded on demand
 ├── agents/
 │   ├── ae-red/                   ← bug hunter
 │   │   ├── AGENT.md
@@ -423,11 +433,12 @@ agentic-engineering/
 │   │   └── languages/            ← 7 language guides
 │   ├── ae-req.md                 ← requirements + constitution
 │   ├── ae-test/                  ← test quality reviewer (AGENT.md + references + languages)
+│   ├── ae-edge/                  ← adversarial edge-case prober (AGENT.md + references)
 │   ├── ae-doc.md                 ← convention checker
 │   ├── ae-scribe.md              ← MDX documentation writer
 │   ├── ae-sec/                   ← security reviewer (AGENT.md + references + languages)
 │   └── ae-ux/                    ← UX fidelity reviewer (AGENT.md + references)
-├── commands/                     ← 16 user-facing slash-command wrappers
+├── commands/                     ← 19 slash-command wrappers (16 user-facing, 3 internal)
 └── rules-library/                ← 16 rule templates for /init to offer
 ```
 
@@ -442,6 +453,8 @@ agentic-engineering/
 🎯 STORY-003: Stripe webhook handler
    Validates signature before parsing body
 ```
+
+**Set up automatically.** The installer ships `~/.claude/agentic-statusline.sh`, and `/init` / `/bootstrap` enable it per project by writing `.claude/settings.local.json` — nothing to do on new projects. If you already have a custom `statusLine`, they leave it untouched; use one of the options below to merge the focus hint into it.
 
 ### Option 1 — ask Claude
 

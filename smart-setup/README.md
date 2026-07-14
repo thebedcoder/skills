@@ -10,6 +10,8 @@ Project-tailored Claude Code setup. Scans your codebase (or interviews you, for 
 | **R** | Rules | Stack rules from the shared rules-library plus conventions observed in your code, in `.claude/rules/` |
 | **T** | Tools | `.mcp.json` entries and required-CLI documentation, detected from config files |
 
+Generated agents are stateless by contract — each carries an explicit Context section naming what it reads before its checks (reviewers read `docs/decisions.md`, so deliberate decisions aren't flagged as bugs) and never writes memory files. Memory triggers in the generated `CLAUDE.md` are scoped to the main conversation, so dispatched subagents don't inherit them.
+
 ## Why
 
 Full SDLC workflows are overkill for most projects. smart-setup sizes first: a throwaway script gets a 20-line `CLAUDE.md` and nothing else; a production system gets domain skills, agents, and doc conventions. Before writing a single file it shows you a manifest — including an explicit list of what it is *not* generating and why — and waits for your approval.
