@@ -42,7 +42,7 @@ Read `exemplars/manifest.md`. Build manifest:
 - Tier 2 + project needs phase-gated SDLC → row recommending agentic-engineering install. Do not reimplement its workflow.
 - Manifest footer notes: `.claude/setup-manifest.md` written after approval as bookkeeping (exempt from tier caps).
 
-Present manifest. User approves / edits rows / overrides tier.
+Present manifest. Tier-default artifact skipped (review agent at tier ≥ 1, stack rules, guardrails) → explicit callout line above tables, one per skip: "No agents — /ae:review covers. Override?" Negative decisions never ride only inside NOT-generating table. User approves / edits rows / overrides tier.
 
 **HARD GATE: nothing written to disk before approval.**
 
@@ -86,16 +86,22 @@ Write `.claude/setup-manifest.md`:
 
 - tier: <N — name>
 - date: <YYYY-MM-DD>
-- smart-setup version: 0.1.0
+- smart-setup version: <x.y.z — read `../../.claude-plugin/plugin.json` relative to skill dir; missing (bash install) → omit line>
 
 ## Artifacts
 
 | Type | Path | Why |
 |---|---|---|
 | ... | ... | ... |
+
+## NOT generated
+
+| Artifact | Why not |
+|---|---|
+| ... | ... |
 ```
 
-Exempt from tier caps — written at every tier. Skills generated → tell user: restart Claude Code session to load them. No skills generated → no restart needed.
+NOT generated table copies rows from approved manifest — table format mandatory, never collapse to prose line. Exempt from tier caps — written at every tier. Skills generated → tell user: restart Claude Code session to load them. No skills generated → no restart needed.
 
 ## Update mode
 
@@ -108,7 +114,7 @@ Exempt from tier caps — written at every tier. Skills generated → tell user:
    - **Tier drift:** signals now point to different tier
 4. Scan non-manifest artifacts — `.claude/skills/`, `.claude/agents/`, `.claude/rules/`, `.mcp.json` entries absent from manifest. Apparent orphan (references removed code/config) → suggestion row `[suggestion — not managed by smart-setup]` in amendment manifest. Never delete rows for artifacts smart-setup did not generate — user removes those by hand.
 5. Build amendment manifest: add / update / delete per artifact + why. Same mandatory NOT-generating discipline. Same HARD GATE.
-6. User approves → apply → rewrite `.claude/setup-manifest.md` with new date + artifact list.
+6. User approves → apply → rewrite `.claude/setup-manifest.md` with new date + artifact list + NOT generated table (Step 7 format).
 
 ## Hard rules
 
