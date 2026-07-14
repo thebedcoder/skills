@@ -8,12 +8,12 @@ The parent `../CLAUDE.md` covers the monorepo (per-plugin layout, the wrapper/re
 
 ## Architecture at a glance
 
-The plugin is the entire `/ship`, `/feature`, `/review`, `/fix` SDLC workflow — a router skill (`skills/agentic-engineering/SKILL.md`) that dispatches into one of 16 command files in `skills/agentic-engineering/commands/`, plus 7 named specialist agents under `agents/` that the commands invoke (often in parallel) as Claude Code subagents. The end-user `README.md` is the workflow-level overview; this file is for authoring inside the plugin.
+The plugin is the entire `/ship`, `/feature`, `/review`, `/fix` SDLC workflow — a router skill (`skills/agentic-engineering/SKILL.md`) that dispatches into one of 19 command files in `skills/agentic-engineering/commands/`, plus 8 named specialist agents under `agents/` that the commands invoke (often in parallel) as Claude Code subagents. The end-user `README.md` is the workflow-level overview; this file is for authoring inside the plugin.
 
 Three pieces of the architecture are non-obvious and load-bearing:
 
 1. **On-demand command loading.** `SKILL.md` is a thin router — it only holds the command → file table, the agent roster, the caveman rules, and the test-watch ban. The actual command body (the long instructions) lives in `skills/agentic-engineering/commands/<name>.md` and is read only when that command fires. This keeps the skill cheap to load. Do not inline command logic into `SKILL.md`.
-2. **5-agent parallel review.** `commands/review.md` dispatches `ae-red`, `ae-req`, `ae-test`, `ae-doc`, `ae-sec` as **simultaneous** Haiku subagents — single message with multiple `Agent` tool calls. Sequential dispatch defeats the design (cost, latency, context). The `ae-ux` agent runs separately after the frontend pass — it is **not** in the parallel batch.
+2. **6-agent parallel review.** `commands/review.md` dispatches `ae-red`, `ae-req`, `ae-test`, `ae-doc`, `ae-sec`, `ae-edge` as **simultaneous** Haiku subagents — single message with multiple `Agent` tool calls. Sequential dispatch defeats the design (cost, latency, context). The `ae-ux` agent runs separately after the frontend pass — it is **not** in the parallel batch.
 3. **Forked vs. main context.** `/status` and `/analyze` run with `context: fork` so their tool calls don't pollute the main conversation. `/ship`, `/feature`, `/design` run in the main context because they have human checkpoints that need conversation continuity. If you add a new command, this choice is deliberate — pick based on whether it needs human handoff.
 
 ## Agent file layout — single file vs. directory
@@ -23,13 +23,13 @@ Two shapes exist. Pick the right one and update `install.sh` to match.
 | Shape | Used by | Why |
 |---|---|---|
 | Single `agents/<name>.md` | `ae-req`, `ae-doc`, `ae-scribe` | Small agents with no per-language or per-topic dispatch |
-| Directory `agents/<name>/AGENT.md` + `references/` + `languages/` | `ae-red`, `ae-test`, `ae-sec`, `ae-ux` (no `languages/`) | Agent loads only the references/language guides relevant to what's in the diff — keeps each review small |
+| Directory `agents/<name>/AGENT.md` + `references/` + `languages/` | `ae-red`, `ae-test`, `ae-sec`; `ae-ux` + `ae-edge` (no `languages/`) | Agent loads only the references/language guides relevant to what's in the diff — keeps each review small |
 
 When adding language/topic depth to an existing single-file agent, **migrate it to a directory** (`agents/ae-foo/AGENT.md`) and update the `cp -r` line in `install.sh`. The single-file `cp` form will fail silently on the new shape.
 
 ## User-facing vs. internal commands
 
-Sixteen commands exist in `commands/`; only thirteen are user-facing. `implement`, `review`, `frontend` are **internal** — invoked by `ship` and `ship-all`, never exposed in the slash palette. The gate is the `USER_COMMANDS` array in `install.sh` — adding a new command file does **not** make it user-visible until you append its name there. The skill's `commands/` table in `SKILL.md` lists all 16 (including internal) because the skill router needs to dispatch them; the installer is where the user-facing filter lives.
+Nineteen commands exist in `commands/`; only sixteen are user-facing. `implement`, `review`, `frontend` are **internal** — invoked by `ship` and `ship-all`, never exposed in the slash palette. The gate is the `USER_COMMANDS` array in `install.sh` — adding a new command file does **not** make it user-visible until you append its name there. The skill's `commands/` table in `SKILL.md` lists all 19 (including internal) because the skill router needs to dispatch them; the installer is where the user-facing filter lives.
 
 ## Post-install SKILL.md patch (do not pre-add)
 
