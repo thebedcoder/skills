@@ -125,6 +125,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/doc-all [--full]` | Document multiple features (`--full` adds guides + index) |
 | `/status` | Progress overview across all features + backlog (runs in forked context) |
 | `/analyze [question]` | Answer any question — searches docs and codebase (runs in forked context) |
+| `/archive [feature]` | Compact a shipped feature's docs (PRD, stories, progress, reviews, artifacts) into a single `SUMMARY.md` with story digests, binding decisions, and a frozen test rollup. Originals are deleted — git history preserves them; `data-model.md` stays. `/status` and `/ship-all` skip archived features, keeping their scans fast as shipped features accumulate. |
 
 ---
 

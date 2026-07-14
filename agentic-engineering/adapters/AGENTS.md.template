@@ -26,6 +26,7 @@ Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
 - **Conventional commits**: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`, `style:`, `perf:`.
 - **Stories tagged `[P]`** can be implemented in parallel (no shared state). Other stories are sequential.
 - **Path-scoped rules** in `./.claude/rules/` (or `.cursor/rules/` depending on tool) auto-apply by file glob. Respect them when editing matching files.
+- **Shipped features get archived**: when every story in `docs/features/<name>/STORIES.md` is checked, compact PRD/EPICS/STORIES/PROGRESS/reviews/artifacts into one `SUMMARY.md` (story digests, binding decisions, frozen test rollup) and delete the originals — git history preserves them; `data-model.md` stays. Skip archived features when scanning for stories or progress.
 
 ---
 

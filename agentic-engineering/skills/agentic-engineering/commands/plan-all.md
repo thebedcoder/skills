@@ -10,7 +10,7 @@ After completion, run `/ship-all` to implement.
 
 ### Phase 1 — Epic Inventory
 
-PROD reads `./docs/INDEX.md` + identifies epics without stories:
+PROD reads `./docs/INDEX.md` + identifies epics without stories. Feature marked `archived` in INDEX (or has `SUMMARY.md`) ≠ unplanned — shipped + compacted, skip it:
 
 ```
 PROD — Epic Inventory:
@@ -21,6 +21,9 @@ Needs planning (no STORIES.md yet):
 
 Already planned (has STORIES.md):
   3. [epic name] — X stories, Y complete ← skip
+
+Archived (SUMMARY.md only):
+  4. [epic name] — shipped + compacted ← skip
 
 Total to plan: X epics
 ```

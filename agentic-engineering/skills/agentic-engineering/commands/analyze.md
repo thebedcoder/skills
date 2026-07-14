@@ -25,7 +25,7 @@ Read in order, stopping when you have enough:
 
 1. `./docs/INDEX.md` — feature list + status
 2. `./app-docs/` — end-user product docs (useful for "what can a user do?" — not architecture)
-3. `./docs/features/*/` — PRDs, stories, progress per feature (engineering source of truth)
+3. `./docs/features/*/` — PRDs, stories, progress per feature (engineering source of truth). Archived features carry `SUMMARY.md` only — read it; originals live in git history
 4. Codebase files — only if docs don't have answer
 
 Note: `./app-docs/` written for users of the app, not dev team — prefer `./docs/` + codebase for architecture, data flow, implementation questions.

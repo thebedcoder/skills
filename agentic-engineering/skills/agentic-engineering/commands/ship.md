@@ -189,6 +189,8 @@ Progress: updated
 Next: run `/ship` again for STORY-XXX+1, or `/status` to review the board.
 ```
 
+This story was the feature's last unchecked one → append: `Feature complete — run /archive [feature-name] to compact its docs into SUMMARY.md.`
+
 ### Step N — Release focus
 
 If this `/ship` is **not** nested under `/ship-all` (detect by `set_by:` on CURRENT — if it contains `/ship-all`, the chain owns release):

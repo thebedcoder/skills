@@ -73,6 +73,7 @@ USER_COMMANDS=(
   doc-all
   status
   analyze
+  archive
 )
 
 # Install statusline script (shared utility; per-project trigger is written by /init or /bootstrap).
