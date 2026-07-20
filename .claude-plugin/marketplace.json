@@ -21,7 +21,7 @@
     {
       "name": "smart-setup",
       "source": "./smart-setup",
-      "description": "Project-tailored Claude Code setup — scans or interviews a project, sizes it into a tier, then generates right-sized Skills, Memory, Agents, Rules, and Tools behind a manifest approval gate"
+      "description": "Project-tailored Claude Code setup — scans or interviews a project, sizes it into a tier, then generates right-sized Skills, Memory, Agents, Rules, Tools, and a workflow phase map behind a manifest approval gate. Ships the standalone update-dependencies skill."
     }
   ]
 }

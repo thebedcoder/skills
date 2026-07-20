@@ -17,7 +17,9 @@
 - Editing `**/*.test.*` → read `.claude/rules/testing-conventions.md`
 
 ## Workflow
+- Read `.claude/workflow.md` before any feature, bugfix, or release. Phase owners there are authoritative.
 - Non-trivial change → dispatch `qa` agent (review-after-implement) before commit. Fix blockers before committing.
+- Dependency updates → use `update-dependencies` skill. Constraints: `.claude/deps-constraints.md`.
 
 ## Memory
 - Decisions log: `docs/decisions.md` — read BEFORE architectural changes or questioning existing patterns. Append ADR-lite entry after any architectural / tooling / scope decision.

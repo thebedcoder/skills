@@ -22,10 +22,14 @@ Ambiguous → propose LOWER tier. User can always bump up. Never silently exceed
 | Tier | Name | Max output |
 |---|---|---|
 | 0 | scratch | `CLAUDE.md` ≤ 20 lines. Nothing else. |
-| 1 | solo product | `CLAUDE.md` + procedure skills + stack rules + memory scaffold + ≤ 2 agents + `.mcp.json` |
-| 2 | production system | Tier 1 + domain skills + agents as justified + docs/specs conventions. May recommend agentic-engineering install for phase-gated SDLC. |
+| 1 | solo product | `CLAUDE.md` + `.claude/workflow.md` (plan / implement / bugfix) + procedure skills + stack rules + memory scaffold + ≤ 2 agents + `.mcp.json` |
+| 2 | production system | Tier 1 + workflow phases audit / release / maintain / docs + domain skills + agents as justified + docs/specs conventions. May recommend agentic-engineering install for phase-gated SDLC. |
 
 `.claude/setup-manifest.md` exempt from caps — bookkeeping, written at every tier.
+
+`.claude/deps-constraints.md` — tier ≥ 1, and only when scan found constraints the `update-dependencies` skill cannot infer. No constraints → no file.
+
+Phase skills promoted out of `.claude/workflow.md` count against the tier's skill budget. Routing a phase to installed tooling costs nothing.
 
 ## Procedure
 

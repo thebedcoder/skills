@@ -15,6 +15,17 @@ Tier: **1 — solo product** (tests exist, one contributor, no CI)
 | 5 | Agent: qa | `.claude/agents/qa.md` | widget states + platform channels need adversarial check |
 | 6 | MCP: playwright | `.mcp.json` | playwright.config.ts detected |
 | 7 | Guardrails | `.claude/settings.json` | deny-read `.env*`, keys, certs — default on |
+| 8 | Workflow doc | `.claude/workflow.md` | phase map — see table below |
+| 9 | Deps constraints | `.claude/deps-constraints.md` | `pod install` needed after any plugin bump; `flutter_secure_storage` pinned |
+
+## Workflow phases
+
+| Phase | Owner | Source |
+|---|---|---|
+| plan | inline | no workflow plugin installed; 3 obvious steps |
+| implement | inline | TDD loop + `flutter test`, no gotchas |
+| bugfix | inline | repro widget test first, then fix |
+| release | `.claude/skills/release/SKILL.md` | promoted — 5 ordered steps, 2 gotchas (row 2) |
 
 ## NOT generating
 
@@ -24,5 +35,7 @@ Tier: **1 — solo product** (tests exist, one contributor, no CI)
 | Backend / Infra / SecOps agents | no backend, no infra in repo |
 | docs/CHANGELOG.md | tier 2 artifact |
 | CI conventions | no CI configured |
+| Workflow phases audit / maintain / docs | tier 2 phases |
+| `plan` / `implement` / `bugfix` skills | phases obvious — inline in workflow.md, not promoted |
 
 Approve, edit rows, or override tier. Nothing written until approved.

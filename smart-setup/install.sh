@@ -9,9 +9,11 @@ echo "🧰 Installing smart-setup..."
 mkdir -p ~/.claude/skills
 mkdir -p ~/.claude/commands
 
-echo "  → Copying skill..."
+echo "  → Copying skills..."
 rm -rf ~/.claude/skills/smart-setup
 cp -r "$SCRIPT_DIR/skills/smart-setup" ~/.claude/skills/
+rm -rf ~/.claude/skills/update-dependencies
+cp -r "$SCRIPT_DIR/skills/update-dependencies" ~/.claude/skills/
 
 # rules-library single source of truth lives in agentic-engineering (sibling plugin)
 RULES_SRC="$SCRIPT_DIR/../agentic-engineering/rules-library"
@@ -31,3 +33,4 @@ echo ""
 echo "Usage:"
 echo "  /smart-setup           scan/interview → tier → manifest → generate"
 echo "  /smart-setup update    re-audit existing setup, propose amendments"
+echo "  \"update dependencies\"  audit + upgrade deps on any stack (update-dependencies skill)"

@@ -37,7 +37,12 @@ Tier caps output — structural limit, not suggestion. Most projects need almost
 | `references/memory-spec.md` | 3-layer memory definition |
 | `references/docs-spec-rules.md` | docs/specs conventions per tier |
 | `references/tool-detection.md` | config file → MCP/CLI map |
+| `references/workflow-spec.md` | phase set per tier + detect installed tooling + route / inline / promote |
 
 ## Exemplars
 
-`exemplars/` — exactly one per artifact type: `claude-md.md`, `procedure-skill.md`, `domain-skill.md`, `agent.md`, `memory-scaffold.md`, `manifest.md`. Read matching exemplar before generating first artifact of that type. Exemplar = quality bar, not padding template.
+`exemplars/` — exactly one per artifact type: `claude-md.md`, `procedure-skill.md`, `domain-skill.md`, `agent.md`, `memory-scaffold.md`, `manifest.md`, `workflow-doc.md`. Read matching exemplar before generating first artifact of that type. Exemplar = quality bar, not padding template.
+
+## Sibling skill
+
+`update-dependencies` ships in this plugin — generic, any stack. smart-setup never generates a dependency-update procedure; it records project constraints in `.claude/deps-constraints.md` and routes the workflow's Maintain phase to that skill.
