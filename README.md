@@ -8,9 +8,10 @@ A marketplace of [Claude Code](https://claude.ai/code) plugins by [thebedcoder](
 
 | Plugin | What it does |
 |---|---|
-| [`agentic-engineering`](./agentic-engineering/) | Full SDLC workflow with named specialist agents — `/bootstrap`, `/init`, `/feature`, `/ship`, `/review`, `/fix`, `/doc`. Five-agent parallel code review (bugs, requirements, tests, conventions, security). End-user product docs kept in sync. |
+| [`agentic-engineering`](./agentic-engineering/) | Full SDLC workflow with named specialist agents — `/bootstrap`, `/init`, `/feature`, `/ship`, `/fix`, `/doc`. Six-agent parallel code review (bugs, requirements, tests, conventions, security, backend edge cases). End-user product docs kept in sync. |
+| [`smart-setup`](./smart-setup/) | `/smart-setup` — scans or interviews a project, sizes it into a tier, then generates right-sized project-local config (Skills, Memory, Agents, Rules, Tools) plus a `.claude/workflow.md` phase map, all behind a manifest approval gate. A sizing/dispatch layer in front of `agentic-engineering`. Also ships the standalone, trigger-invoked `update-dependencies` skill. |
 | [`jtbd`](./jtbd/) | Jobs-to-Be-Done megaskill — product brief to research, personas, competitor analysis, landing page copy, and platform-native ad scripts. Five chainable modes powered by parallel specialist agents. |
-| [`premortem-skill`](./premortem-skill/) | `/premortem <plan>` — assumes the target failed 6 months from now, dispatches one investigator per failure reason in parallel, synthesizes the most likely failure, hidden assumptions, and a revised plan. |
+| [`premortem-skill`](./premortem-skill/) | `/premortem <plan>` — assumes the target failed 6 months from now, dispatches one investigator per failure reason in parallel, synthesizes the most likely failure, hidden assumptions, and a revised plan. Not yet in the marketplace. |
 
 Each plugin has its own README with the full workflow and command reference.
 
@@ -23,6 +24,7 @@ Each plugin has its own README with the full workflow and command reference.
 ```
 /plugin marketplace add thebedcoder/skills
 /plugin install agentic-engineering@thebedcoder
+/plugin install smart-setup@thebedcoder
 /plugin install jtbd@thebedcoder
 ```
 
@@ -59,6 +61,7 @@ Re-running the installer is idempotent — blocks are wrapped in `<!-- <plugin>:
 ├── .claude-plugin/
 │   └── marketplace.json          # Claude Code marketplace manifest
 ├── agentic-engineering/          # plugin
+├── smart-setup/                  # plugin (Claude-Code-only)
 ├── jtbd/                         # plugin
 ├── premortem-skill/              # plugin (not yet in marketplace.json)
 ├── install.sh                    # universal multi-tool installer
