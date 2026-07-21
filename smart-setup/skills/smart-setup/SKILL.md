@@ -45,4 +45,4 @@ Tier caps output — structural limit, not suggestion. Most projects need almost
 
 ## Sibling skill
 
-`update-dependencies` ships in this plugin — generic, any stack. smart-setup never generates a dependency-update procedure; it records project constraints in `.claude/deps-constraints.md` and routes the workflow's Maintain phase to that skill.
+`update-dependencies` ships in this plugin — generic, any stack. Invoke as `/update-dependencies` or by saying "update dependencies". smart-setup never generates a dependency-update procedure; it records project constraints in `.claude/deps-constraints.md` and routes the workflow's Maintain phase to that skill.

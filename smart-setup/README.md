@@ -39,7 +39,7 @@ Restart Claude Code afterwards. Note: the marketplace install ships the plugin a
 
 - `/smart-setup` — scan or interview → tier proposal → manifest → generate
 - `/smart-setup update` — re-audit an existing setup against the current codebase and propose amendments
-- "update dependencies" — invokes the `update-dependencies` skill (see below)
+- `/update-dependencies` — audit and upgrade deps on any stack (also fires on the phrase "update dependencies"); see below
 
 ## The `update-dependencies` skill
 

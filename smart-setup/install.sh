@@ -24,8 +24,9 @@ else
   echo "  ⚠ rules-library not found at $RULES_SRC — stack rule templates unavailable"
 fi
 
-echo "  → Copying command..."
+echo "  → Copying commands..."
 cp "$SCRIPT_DIR/commands/smart-setup.md" ~/.claude/commands/
+cp "$SCRIPT_DIR/commands/update-dependencies.md" ~/.claude/commands/
 
 echo ""
 echo "✅ Done. Restart Claude Code to pick up the changes."
@@ -33,4 +34,4 @@ echo ""
 echo "Usage:"
 echo "  /smart-setup           scan/interview → tier → manifest → generate"
 echo "  /smart-setup update    re-audit existing setup, propose amendments"
-echo "  \"update dependencies\"  audit + upgrade deps on any stack (update-dependencies skill)"
+echo "  /update-dependencies   audit + upgrade deps on any stack (also fires on \"update dependencies\")"
