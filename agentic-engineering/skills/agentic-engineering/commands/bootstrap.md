@@ -102,8 +102,9 @@ Dev dependencies to install:
 Config files to generate:
 [list — tsconfig, .eslintrc, tailwind.config, etc.]
 
-⚠️ Confirm? Reply 'go' to scaffold, or adjust any layer above.
 ```
+
+⚠️ **Human checkpoint** `[ASK: confirm]`: *"Scaffold with this stack?"* → **Scaffold it** · **Adjust the stack**. Second option → follow up `[ASK: prose]` for which layer to change, then re-render the plan above before asking again.
 
 ---
 
@@ -157,11 +158,9 @@ Matching capture tools:
   2. <tool-name>       — <one-line description>
   3. manual            — capture by hand, no automation
   4. loom-link         — paste hosted recording URLs
-
-Pick one (1-N) or 'none' to skip visual capture setup.
 ```
 
-⚠️ **Human checkpoint:** wait for operator's selection.
+⚠️ **Human checkpoint** `[ASK: single]`: *"Which visual-capture tool should this project use?"* — top stack matches first (best match suffixed `(Recommended)`), then `manual`. More than 3 matches → offer the top 3; the built-in "Other" covers the rest of the catalog. Skipping is a valid answer — treat "Other: none" as skip.
 
 On selection:
 1. Copy `~/.claude/skills/agentic-engineering/capture-tools/<name>.md` → `./.claude/visual-capture.md`
@@ -223,7 +222,7 @@ NICE TO HAVE (v2+):
   4. [Epic name] — ...
 ```
 
-⚠️ **Human checkpoint:** *"Does this roadmap capture your vision? Adjust priorities or add missing epics. Reply 'approved' when ready."*
+⚠️ **Human checkpoint** `[ASK: confirm]`: *"Does this roadmap capture your vision?"* → **Approve roadmap** · **Adjust it**. Second option → follow up `[ASK: prose]` for priority changes and missing epics.
 
 On approval, PROD saves roadmap → `./docs/INDEX.md` (appended as initial feature list) + creates placeholder folders under `./docs/features/` per epic.
 
@@ -243,8 +242,8 @@ Stack:    [key choices on one line]
 ✅ Epic roadmap saved to ./docs/INDEX.md + feature folders created
 
 Next steps:
-  1. Run /ae:init to set up the docs scaffold and CLAUDE.md
-  2. Run /ae:feature [epic-1-name] to start your first feature
+  1. Run /init to set up the docs scaffold and CLAUDE.md
+  2. Run /feature [epic-1-name] to start your first feature
 ```
 
 ---

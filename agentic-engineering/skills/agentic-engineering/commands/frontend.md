@@ -5,6 +5,20 @@
 Read `./CLAUDE.md`, target story, `./docs/specs/[feature-name]-design.md`.
 No `/design` yet → prompt user to run it first or confirm proceeding without designs.
 
+### Step 0a — Parse `--auto` flag
+
+Detect whether `$ARGUMENTS` contains the `--auto` token. `/frontend` is normally nested inside `/ship`, which propagates `AUTO=true` down — inherit it when present.
+
+- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
+- Set internal flag `AUTO=true` for this run.
+- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
+- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
+  ```markdown
+  ## [now YYYY-MM-DD HH:MM] — /frontend <STORY-ID> --auto
+  ```
+
+See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+
 ### Step 0 — Auto-write focus
 
 `/frontend` is almost always nested inside `/ship`. Update `.agentic/focus.md` accordingly:
@@ -60,7 +74,7 @@ Any interaction state missing — loading, empty, error?
 Any shortcut diverging from approved design?]
 ```
 
-⚠️ **Human checkpoint:** Show all three. Ask: *"Reply 'go' to implement."*
+⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: Show all three, then ask *"Implement this frontend plan?"* → Go / Stop. Under `--auto`: SKIP — emit `SKIPPED: frontend plan approval [auto]` and proceed. Exception per hard-override #4: no design handoff spec exists → HARD-PAUSE regardless of tag.
 
 4. Implement per ARCH's plan, pixel-faithful to handoff.
 
@@ -90,13 +104,24 @@ PROD — Final Check:
 Anything technically working but wrong to use?]
 ```
 
----
+### Step N — Auto-mode summary
 
-## Core Principles
+If `AUTO=true`:
 
-1. **Never skip human checkpoint.** Every gate exists for reason.
-2. **Agents challenge each other.** PROD vs ARCH. RED assumes failure. Tension is the point.
-3. **One story at a time.** No batching.
-4. **Tests not optional.** Done = implemented + tested.
-5. **Docs stay in sync.** PROGRESS.md, STORIES.md, reviews reflect reality.
-6. **Plan before code.** ARCH plans. PROD validates. Then build.
+1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
+2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
+
+If `AUTO=false`: skip. Nested under `/ship` → parent prints the combined summary; skip here.
+
+### Checkpoint tag reference (this file)
+
+| Checkpoint | Tag |
+|---|---|
+| Frontend plan approval ('go' to implement) | `[AUTO: skip]` — proceed silently when handoff spec exists |
+| No `/design` handoff spec found | `[AUTO: always-ask]` (hard-override #4) — never build UI against no design |
+| ae-ux fidelity BLOCKERS | `[AUTO: always-ask]` (hard-override #1) — surfaced by parent `/ship` Phase 4 |
+
+### Gotchas
+
+- **ae-ux is the last word on fidelity, not PROD.** PROD's spot-check is a sanity read, not a substitute for the structured report.
+- **No design spec → stop, don't improvise.** Building UI against an imagined design is unreviewable.

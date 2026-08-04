@@ -40,12 +40,9 @@ Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by
 
 ---
 
-**GIT** confirms current branch. On `main`/`master`, warn:
-```
-⚠️ GIT: You're on main. /ae:fix expects to run on a feature branch.
-Are you fixing a pre-merge bug? Reply 'yes' to continue on main, or switch to the relevant branch first.
-```
-Otherwise proceeds silently.
+**GIT** confirms current branch. On `main`/`master`, print `⚠️ GIT: You're on main. /fix expects to run on a feature branch.` then gate — ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"Continue on main?"* → **Branch first (Recommended)** · **Continue on main** · **Abort**. Never proceed silently on `main`, even under `--auto`.
+
+Off `main` → proceeds silently, no gate.
 
 ### Steps
 
@@ -74,7 +71,7 @@ Risk:
   [Could fix break anything else?]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]`: Show diagnosis. Ask: *"Does this match what you're seeing? Reply 'go' to fix."* Under `--auto`: SKIP if FIXER identifies exactly one plausible root cause with high confidence (single file/line, no alternative hypotheses); otherwise ASK.
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: single]`: Show diagnosis, then ask *"Does this match what you're seeing?"* → **Yes, fix it (Recommended)** · **Close but not quite** · **Wrong root cause**. Either non-first option → follow up `[ASK: prose]` and re-diagnose; never proceed to Phase 2 on a corrected diagnosis without re-running FIXER. Under `--auto`: SKIP if FIXER identifies exactly one plausible root cause with high confidence (single file/line, no alternative hypotheses); otherwise ASK.
 
 **Phase 2 — Fix** *(automatic after 'go')*
 
@@ -97,12 +94,7 @@ Is test sufficient to prevent regression? [yes/no — detail]
 Blast radius check: [anything adjacent to re-test?]
 ```
 
-RED raises concerns → pause:
-```
-⚠️ FIX PAUSED — RED has concerns
-[RED's findings]
-Proceed anyway? Reply 'override' or 'revise'.
-```
+RED raises concerns → pause. Print `⚠️ FIX PAUSED — RED has concerns` + RED's findings, then ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to proceed?"* → **Revise the fix (Recommended)** · **Ship it anyway** · **Revert the fix**.
 
 Clean → continue.
 

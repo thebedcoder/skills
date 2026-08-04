@@ -4,13 +4,13 @@
 
 **Goal:** Replace shipped feature's working docs with single `SUMMARY.md`. Originals deleted — git history preserves them. Cuts stale-doc scan cost for `/status`, `/ship-all`, `/analyze`.
 
-**Inputs (read first):** `./docs/INDEX.md`. `$ARGUMENTS` contains `--all` → Bulk mode section below. No argument → list features where all stories checked + not yet archived, ask which to archive (feature name or `all`). One question. Answer `all` → Bulk mode.
+**Inputs (read first):** `./docs/INDEX.md`. `$ARGUMENTS` contains `--all` → Bulk mode section below. No argument → list features where all stories checked + not yet archived, then `[ASK: multi]` *"Which features should I archive?"* — one option per eligible feature, none pre-checked, `minSelected: 1`. Selecting every option is equivalent to `--all` (one combined gate). No eligible features → report and exit without a widget.
 
 ### Guards
 
 1. Feature dir exists under `./docs/features/`. `SUMMARY.md` present + `STORIES.md` absent → already archived, report + exit.
 2. Every checkbox in `STORIES.md` checked. Unchecked stories → refuse, list them, exit. Partial archive = lost AC for remaining work.
-3. **HARD GATE:** show file list to delete + rendered `SUMMARY.md` → user confirms. Nothing deleted before approval.
+3. **HARD GATE** `[ASK: confirm]`: print the full list of files to be deleted **and** the rendered `SUMMARY.md` in the message body first, then ask *"Delete these N files and replace with SUMMARY.md?"* → **Archive it** · **Cancel**. Nothing deleted before approval. Per SKILL.md, a destructive gate never shows the widget without the deletion list above it.
 
 ### Step 1 — Build SUMMARY.md
 

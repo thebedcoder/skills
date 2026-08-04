@@ -87,7 +87,9 @@ Any implementation shortcut that would hurt UX?
 Any option simpler but creates user confusion?]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: always-ask]`: Ask user to pick approach before continuing. (Architectural choice — never skipped under `--auto`.)
+⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: Ask user to pick approach before continuing. (Architectural choice — never skipped under `--auto`.)
+
+Options = the three approaches, ARCH's pick first suffixed `(Recommended)`. Each option's description carries the one-line Pros/Complexity digest, not the full block — the full A/B/C analysis is already printed above the widget.
 
 ---
 
@@ -121,9 +123,11 @@ PROD — Clarification Required:
 Answer any you know. Skip any that aren't important — SCRIBE will note gaps in the docs.
 ```
 
+`[ASK: prose]` — clarification answers are freeform by nature. Do **not** widget them.
+
 Wait for answers. PROD updates PRD, replaces `[NEEDS CLARIFICATION]` markers with real content or "gap: not yet determined".
 
-⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]`: *"PRD updated with clarifications. Please review PRD.md. Reply 'approved' when ready."* Under `--auto`: SKIP if PRD has no open `[NEEDS CLARIFICATION]` markers and no constitution conflicts; otherwise ASK.
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: confirm]`: *"PRD updated with clarifications. Review PRD.md."* → Approve / Revise. Under `--auto`: SKIP if PRD has no open `[NEEDS CLARIFICATION]` markers and no constitution conflicts; otherwise ASK.
 
 ---
 

@@ -150,7 +150,7 @@ All UI-touching stories must capture visual artifacts (screenshots or screen rec
 
 **Idempotency for re-init / update:** If `CONSTITUTION.md` already exists and already contains a `## Default Decisions` header → leave that section alone (do not overwrite user content). If it exists without that section → append the `## Default Decisions` block (commented examples only) at the bottom, above `## Governance` if present.
 
-⚠️ **Human checkpoint:** Show CLAUDE.md + CONSTITUTION.md drafts together. Ask for edits before saving. *"The constitution must be specific and verifiable — vague principles like 'write high quality code' give agents nothing to check against."*
+⚠️ **Human checkpoint** `[ASK: confirm]`: Show CLAUDE.md + CONSTITUTION.md drafts together, then ask *"Save these drafts?"* → **Save both** · **Edit first**. Second option → follow up `[ASK: prose]`. Print this warning above the widget: *"The constitution must be specific and verifiable — vague principles like 'write high quality code' give agents nothing to check against."*
 
 **`./docs/INDEX.md`** — single file every agent reads at session start. ARCH generates:
 
@@ -169,7 +169,7 @@ All UI-touching stories must capture visual artifacts (screenshots or screen rec
 
 | Feature | Status | Folder |
 |---------|--------|--------|
-| (none yet — populated by /ae:feature) | | |
+| (none yet — populated by /feature) | | |
 
 ## Design specs
 ./docs/specs/
@@ -216,7 +216,7 @@ All UI-touching stories must capture visual artifacts (screenshots or screen rec
 - Constitution violations must be flagged — never silently ignored
 ```
 
-5. ⚠️ **Human checkpoint:** Show generated CLAUDE.md. Ask for edits before saving.
+5. ⚠️ **Human checkpoint** `[ASK: confirm]`: Show generated CLAUDE.md, then ask *"Save it?"* → **Save** · **Edit first**. Second option → follow up `[ASK: prose]`.
 
 6. **ARCH** reads `~/.claude/skills/agentic-engineering/rules-library/README.md`, presents rules grouped by type, pre-suggests matches from captured stack.
 
@@ -224,7 +224,9 @@ Stack rules: `react-typescript` · `nextjs-app-router` · `react-native` · `pyt
 
 Cross-cutting: `testing-conventions` · `git-conventions` · `api-design` · `secrets-management`
 
-User confirms/adds/removes. Reply 'none' to skip. Per selected rule, copy from `~/.claude/skills/agentic-engineering/rules-library/<name>.md` to `./.claude/rules/` (create dir if needed).
+⚠️ **Human checkpoint** `[ASK: multi]`: *"Which convention rules should this project install?"* — one option per rule above, pre-check the stack matches ARCH detected plus `testing-conventions` and `git-conventions`; leave the rest unchecked. `minSelected: 0` — selecting nothing is a valid "skip rules entirely".
+
+Per selected rule, copy from `~/.claude/skills/agentic-engineering/rules-library/<name>.md` to `./.claude/rules/` (create dir if needed).
 
 **ARCH** confirms installed + notes: *"Edit any to match your project. Delete any that don't fit."*
 
@@ -247,11 +249,9 @@ Matching capture tools:
   2. <tool-name>       — <one-line description>
   3. manual            — capture by hand, no automation
   4. loom-link         — paste hosted recording URLs
-
-Pick one (1-N) or 'none' to skip visual capture setup.
 ```
 
-⚠️ **Human checkpoint:** wait for operator's selection.
+⚠️ **Human checkpoint** `[ASK: single]`: *"Which visual-capture tool should this project use?"* — top stack matches first (best match suffixed `(Recommended)`), then `manual`. More than 3 matches → offer the top 3; the built-in "Other" covers the rest of the catalog. Skipping is a valid answer — treat "Other: none" as skip.
 
 On selection:
 1. Copy `~/.claude/skills/agentic-engineering/capture-tools/<name>.md` → `./.claude/visual-capture.md`

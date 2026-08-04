@@ -19,6 +19,19 @@ Detect whether `$ARGUMENTS` contains the `--auto` token.
 
 See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
 
+### Step 0b — Open the phase task list
+
+Per "Progress Tracking" in SKILL.md, create one task per phase before any work starts:
+
+1. `Implement STORY-XXX backend + tests`
+2. `Backend review — 6-agent batch`
+3. `Frontend from design handoff`
+4. `Frontend review — 6-agent + ae-ux fidelity`
+5. `End-user docs + changelogs`
+6. `PR description from git log`
+
+Mark #1 `in_progress` at Phase 1. Advance one at a time. Backend-only story → complete #3 and #4 with `skipped (no UI)`. Blocker pause → leave the current task `in_progress` until the fix lands and review re-runs clean.
+
 ### Step 0 — Auto-write focus
 
 Before picking a story, update `.agentic/focus.md`:
@@ -70,14 +83,14 @@ Mark promoted in `BACKLOG.md`:
 **Status:** ~~backlog~~ → promoted to STORY-XXX in [feature-name]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]`: Show promoted story. Ask: *"Does this look right? Reply 'go' to ship."* Under `--auto`: SKIP if the BACKLOG item already has clear acceptance criteria and PROD's shaping is mechanical; otherwise ASK.
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: confirm]`: Show promoted story, then ask *"Ship this story?"* → Ship it / Reshape first. Under `--auto`: SKIP if the BACKLOG item already has clear acceptance criteria and PROD's shaping is mechanical; otherwise ASK.
 
 ### Flow
 
 **Phase 1 — Backend** (`/implement` flow)
 - ARCH generates plan
 - PROD validates vs acceptance criteria
-- ⚠️ **Single human checkpoint** `[AUTO: skip]`: Show both plans. Ask: *"Reply 'go' to start the full ship chain."* Under `--auto`: SKIP — emit `SKIPPED: ship-chain approval [auto]` and proceed. Hard-override #4 still applies (missing test framework, missing design tool → HARD-PAUSE).
+- ⚠️ **Single human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: Show both plans, then ask *"Start the full ship chain?"* → Go / Stop. Under `--auto`: SKIP — emit `SKIPPED: ship-chain approval [auto]` and proceed. Hard-override #4 still applies (missing test framework, missing design tool → HARD-PAUSE).
 - On 'go': implement + tests. Update PROGRESS.md + STORIES.md
 - **GIT** commits:
 ```
@@ -87,17 +100,16 @@ test([feature-name]): STORY-XXX — add tests
 
 **Phase 2 — Backend Review** *(automatic)*
 Run full `/review` flow immediately.
-- RED, REQ, TEST, DOC, SEC run parallel
+- RED, REQ, TEST, DOC, SEC, EDGE run parallel — same 6-agent batch as Phase 4
 - Consolidated fix list
 
-**Blockers** → pause + surface (`[AUTO: always-ask]` — also hard-override #1):
+**Blockers** → pause + surface (`[AUTO: always-ask]` `[ASK: single]` — also hard-override #1):
 ```
 ⚠️ SHIP PAUSED — blockers found by [agent]
 
-[consolidated blocker list]
-
-Fix these now? Reply 'fixed' to continue the chain, or 'abort' to stop.
+[consolidated blocker list — top 5, then "+N more"]
 ```
+Then ask *"How do you want to handle these?"* → **Fix now** (agent fixes, chain resumes) · **I'll fix them** (pause for manual fix, then re-review) · **Abort chain**.
 Blockers fixed → **GIT** amends or commits:
 ```
 fix([feature-name]): STORY-XXX — address review blockers
@@ -152,7 +164,7 @@ After SCRIBE returns, prepend to both changelogs (newest first):
 ```markdown
 ## [date]
 - [STORY-XXX] feat([feature]): [what was implemented] — [key files]
-- [STORY-XXX] review: [clean / N blockers fixed] — RED/REQ/TEST/DOC
+- [STORY-XXX] review: [clean / N blockers fixed] — RED/REQ/TEST/DOC/SEC/EDGE
 - [STORY-XXX] docs: [feature].mdx updated
 ```
 
@@ -218,6 +230,7 @@ If `AUTO=false`: skip.
 | SHIP PAUSED — review blockers (Phase 2) | `[AUTO: always-ask]` (hard-override #1) |
 | SHIP PAUSED — frontend review blockers (Phase 4) | `[AUTO: always-ask]` (hard-override #1) |
 | Internal `/implement` plan-approval | inherited tag from implement.md (`[AUTO: skip]`) |
+| Internal `/frontend` plan-approval (Phase 3) | inherited tag from frontend.md (`[AUTO: skip]`) |
 | Internal `/review` blocker surface | inherited tag from review.md / hard-override #1 |
 
 

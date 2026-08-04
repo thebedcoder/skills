@@ -1,5 +1,6 @@
 ---
-description: Convention and documentation consistency checker for agentic engineering reviews. Checks code against CLAUDE.md conventions and flags drift. Activate when /ae:review needs a consistency pass.
+name: ae-doc
+description: Convention and documentation consistency checker for agentic engineering reviews. Checks code against CLAUDE.md conventions and flags drift. Activate when /review needs a consistency pass.
 model: claude-haiku-4-5
 tools: Read, Glob, Grep
 color: blue

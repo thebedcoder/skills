@@ -102,6 +102,36 @@ if [[ "$REL" =~ ^([^/]+)/adapters/AGENTS\.md\.template$ ]]; then
     || fail "$REL is missing its '<!-- ${plugin}:end ... -->' marker — re-installs will append duplicates instead of replacing."
 fi
 
+# --- F. Agent files must declare a name: in frontmatter ---------------------
+# Claude Code drops any agent file lacking 'name:' SILENTLY — no warning, no
+# filename fallback. A review still runs and still emits a report; it is just
+# the main model role-playing the reviewers inline. Nothing else surfaces this.
+# Confirmed 2026-08-04: all 8 agentic-engineering agents were missing it.
+#
+# Only two shapes define an agent: agents/<n>.md and agents/<n>/AGENT.md.
+# references/ and languages/ files sit a level deeper and are excluded by the
+# path depth, so they are never checked.
+agent_slug=""
+if [[ "$REL" =~ ^[^/]+/agents/([^/]+)\.md$ ]]; then
+  agent_slug="${BASH_REMATCH[1]}"
+elif [[ "$REL" =~ ^[^/]+/agents/([^/]+)/AGENT\.md$ ]]; then
+  agent_slug="${BASH_REMATCH[1]}"
+fi
+if [[ -n "$agent_slug" && "$agent_slug" != "README" && -f "$FILE" ]]; then
+  declared="$(awk '
+    NR==1 && $0=="---" { inside=1; next }
+    inside && $0=="---" { exit }
+    inside && /^name:/ {
+      sub(/^name:[[:space:]]*/, ""); gsub(/["\047]/, ""); sub(/[[:space:]]+$/, "")
+      print; exit
+    }' "$FILE" 2>/dev/null)"
+  if [[ -z "$declared" ]]; then
+    fail "$REL has no 'name:' in its frontmatter. Claude Code drops such agents silently — it will never register, and every dispatch to it degrades to inline role-play with no error. Add 'name: $agent_slug'."
+  elif [[ "$declared" != "$agent_slug" ]]; then
+    fail "$REL declares 'name: $declared' but lives at agents/$agent_slug. Dispatch resolves by the declared name, so callers referencing '$agent_slug' (install.sh, commands/review.md) silently get nothing. Make them match."
+  fi
+fi
+
 if ((${#ERRORS[@]})); then
   printf 'Plugin integrity check failed:\n' >&2
   printf '  - %s\n' "${ERRORS[@]}" >&2

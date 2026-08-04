@@ -18,7 +18,7 @@ Three pieces of the architecture are non-obvious and load-bearing:
 
 ## Agent file layout — single file vs. directory
 
-Two shapes exist. Pick the right one and update `install.sh` to match.
+Two shapes exist. Pick the right one and update `install.sh` to match. Either shape **must** declare `name:` in its frontmatter, matching the file stem or directory name — Claude Code drops a nameless agent silently, so `/review` still produces a report, just with the main model role-playing the six reviewers. `.claude/hooks/check-integrity.sh` check F enforces this.
 
 | Shape | Used by | Why |
 |---|---|---|
@@ -29,7 +29,16 @@ When adding language/topic depth to an existing single-file agent, **migrate it 
 
 ## User-facing vs. internal commands
 
-Nineteen commands exist in `commands/`; only sixteen are user-facing. `implement`, `review`, `frontend` are **internal** — invoked by `ship` and `ship-all`, never exposed in the slash palette. The gate is the `USER_COMMANDS` array in `install.sh` — adding a new command file does **not** make it user-visible until you append its name there. The skill's `commands/` table in `SKILL.md` lists all 19 (including internal) because the skill router needs to dispatch them; the installer is where the user-facing filter lives.
+Nineteen commands exist in `commands/`. `implement`, `review`, `frontend` are **internal by intent** — designed to be invoked by `ship` and `ship-all`, not driven by hand. But "internal" is enforced on exactly one of the two install paths, and that asymmetry is load-bearing:
+
+| Install path | What the user sees |
+|---|---|
+| Per-plugin `install.sh` (bash) | 16 commands. The `USER_COMMANDS` array is the gate — a new command file is **not** user-visible until you append its name there. |
+| Marketplace / `/plugin install` | **All 19.** Plugin auto-discovery registers every `.md` in `commands/`, so `/agentic-engineering:implement`, `:review`, and `:frontend` do appear in the palette. `USER_COMMANDS` has no effect here. |
+
+This is deliberate, not a bug to paper over: standalone `/agentic-engineering:review` is genuinely useful (review without shipping), and the three wrappers are kept for it. What you must **not** do is assume the bash-installer filter hides them everywhere — it doesn't. If you ever need a command hidden on both paths, delete its root `commands/<name>.md` wrapper; the skill router still dispatches from `skills/agentic-engineering/commands/<name>.md`.
+
+The skill's `commands/` table in `SKILL.md` lists all 19 because the router needs to dispatch them regardless of palette visibility.
 
 ## Post-install SKILL.md patch (do not pre-add)
 
@@ -76,7 +85,7 @@ The per-plugin `install.sh` is idempotent — re-run after every edit to a skill
 
 ## graphify
 
-This project has a graphify knowledge graph at graphify-out/.
+This project can carry a graphify knowledge graph at `graphify-out/`. It is **build output, gitignored and local-only** — a fresh clone has none. Run `graphify .` to generate it; the rules below apply only when the directory exists.
 
 Rules:
 - Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure

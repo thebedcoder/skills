@@ -1,4 +1,5 @@
 ---
+name: ae-red
 description: Bug hunter for agentic engineering reviews. Finds runtime errors, logic bugs, async issues, null safety violations, and concurrency problems. Runs as parallel subagent during /review. Reports only HIGH CONFIDENCE bugs — clear failure paths, not theoretical risks.
 model: claude-haiku-4-5
 tools: Read, Glob, Grep, Bash(git diff:*)

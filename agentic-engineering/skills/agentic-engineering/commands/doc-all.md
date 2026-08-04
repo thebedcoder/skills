@@ -36,15 +36,7 @@ Total to document: X features
 
 ### Phase 2 — Selection
 
-⚠️ **Human checkpoint:**
-```
-Which features do you want to document?
-
-  'all'    → document everything listed
-  '1,2,4'  → specific numbers
-  'undoc'  → only undocumented
-  'stale'  → only stale
-```
+⚠️ **Human checkpoint** `[ASK: multi]`: *"Which features should I document?"* — one option per feature from the inventory above, each subtitled with its state (`undocumented` / `stale` / `current`). Pre-check undocumented and stale; leave current unchecked. `minSelected: 1`.
 
 ### Phase 3 — Doc Loop
 
@@ -114,7 +106,7 @@ Features spread across files ARCH may have missed:
   - [feature]
 ```
 
-⚠️ **Human checkpoint:** *"Does this capture everything? Reply 'approved' or correct anything."*
+⚠️ **Human checkpoint** `[ASK: confirm]`: *"Does this capture every feature?"* → **Looks complete** · **Something's missing**. Second option → follow up `[ASK: prose]` for what was missed.
 
 ### Phase 2 — Build Docs Landing + User Guides
 

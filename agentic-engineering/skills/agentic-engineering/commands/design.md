@@ -75,7 +75,7 @@ Any transition or modal needing own frame?
 Any state painful to implement without design?]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]`: Confirm screen list before any design work. Under `--auto`: SKIP if screen list is fully derivable from the PRD with no gaps; otherwise ASK.
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: multi]`: *"Which screens should I design?"* — one option per screen from PROD's inventory, all pre-checked, `minSelected: 1`. Unchecking is how the user trims scope before any design work starts. Under `--auto`: SKIP if screen list is fully derivable from the PRD with no gaps; otherwise ASK.
 
 ---
 
@@ -117,7 +117,7 @@ States:
   - Error: [description]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: always-ask]`: *"Mobile designs are ready. Please review in [Figma / Pencil / the specs above]. Edit anything that needs changing. Reply 'mobile approved' when ready."* (Visual review can't be auto-judged — never skipped.)
+⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: confirm]`: Print *"Mobile designs ready — review in [Figma / Pencil / the specs above]."* then ask *"Mobile designs approved?"* → **Approved** · **Needs changes**. Second option → `[ASK: prose]` for what to change, then regenerate. (Visual review can't be auto-judged — never skipped under `--auto`.)
 
 ---
 
@@ -132,7 +132,7 @@ Any layout needing fundamentally different treatment at wider widths?
 Any mobile pattern breaking on desktop?]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: always-ask]`: *"Desktop designs are ready. Reply 'approved' when ready to proceed."* (Visual review can't be auto-judged — never skipped.)
+⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: confirm]`: *"Desktop designs approved?"* → **Approved** · **Needs changes**. Second option → `[ASK: prose]` for what to change, then regenerate. (Visual review can't be auto-judged — never skipped under `--auto`.)
 
 ---
 

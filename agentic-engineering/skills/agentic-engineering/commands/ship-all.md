@@ -21,6 +21,14 @@ Detect whether `$ARGUMENTS` contains the `--auto` token.
 
 See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
 
+### Step 0b — Open the story task list
+
+Per "Progress Tracking" in SKILL.md, create one task per unchecked story before the session starts — subject `STORY-XXX: [title]`, in the recommended order. This is the chain's progress bar; the per-story `/ship` does **not** open a nested list, it advances this one.
+
+- Mark each story `in_progress` at its plan gate, `completed` after its ship chain closes.
+- User picks **Skip this story** → complete the task with `skipped` noted; story stays unchecked in `STORIES.md`.
+- User picks **End session** → leave remaining tasks `pending`; they show as unfinished, which is accurate.
+
 ### Step 0 — Auto-write focus
 
 At the start of the chain, update `.agentic/focus.md`:
@@ -60,10 +68,9 @@ Sequential (depend on others):
 
 Recommended order: [suggested sequence]
 You'll approve each implementation plan before it runs.
-Reply 'go' to start, or 'stop' at any plan prompt to end the session.
 ```
 
-`[AUTO: skip]` — under `--auto`: SKIP the start-of-chain "go" prompt and proceed.
+⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: *"Start the ship-all session?"* → Start / Cancel. Under `--auto`: SKIP and proceed.
 
 ---
 
@@ -81,11 +88,9 @@ ARCH — Implementation Plan:
 
 PROD — Plan Review:
 [validation]
-
-Reply 'go' to ship · 'skip' to skip this story · 'stop' to end session
 ```
 
-`[AUTO: skip]` — under `--auto`: SKIP the per-story "go" prompt and proceed to the ship chain. (Each story's internal `/ship --auto` still respects hard-overrides.)
+⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"STORY-XXX ([X] of [Y]) — proceed?"* → **Ship it (Recommended)** · **Skip this story** · **End session**. Under `--auto`: SKIP and proceed to the ship chain. (Each story's internal `/ship --auto` still respects hard-overrides.)
 
 **Step 2 — Ship chain** *(automatic on 'go')*
 

@@ -16,3 +16,6 @@ node_modules/
 # time with /rebuild-artifacts. Committed copies drift silently: git reports the
 # repo clean while the archive falls months behind source.
 *.skill
+
+# graphify knowledge-graph build output
+graphify-out/

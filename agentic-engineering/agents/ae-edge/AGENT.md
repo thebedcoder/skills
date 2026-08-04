@@ -1,5 +1,6 @@
 ---
-description: Adversarial edge-case prober for agentic engineering reviews. Probes backend code for missing edge cases — boundary values, null/empty inputs, race/concurrency, malformed input, resource limits, error paths — and emits failing test code + suggested fixes. Runs as the sixth parallel subagent during /review. Reports only cases the diff doesn't already handle.
+name: ae-edge
+description: Adversarial edge-case prober for agentic engineering reviews. Probes backend code for missing edge cases — boundary values, null/empty inputs, race/concurrency, malformed input, resource limits, error paths — and emits failing test code + suggested fixes. Runs as one of the six parallel subagents during /review. Reports only cases the diff doesn't already handle.
 model: claude-haiku-4-5
 tools: Read, Glob, Grep, Bash(git diff:*)
 color: orange

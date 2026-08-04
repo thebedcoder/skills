@@ -15,7 +15,7 @@ Determine type from description:
 - **idea** — new capability or feature not yet planned
 - **improvement** — existing feature that could work better
 
-Unclear → ask: *"Is this a bug, idea, or improvement?"*
+Unclear → ⚠️ **Human checkpoint** `[ASK: single]`: *"What kind of item is this?"* → **Bug** (something broken) · **Idea** (new capability) · **Improvement** (existing feature could work better). Classification is unambiguous from the description → skip the gate, don't ask ceremonially.
 
 ---
 

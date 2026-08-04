@@ -69,14 +69,15 @@ Clean areas:
 ```
 
 Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`.
-Ask: *"Should I fix the blockers now, or do you want to review them first?"*
+
+⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to handle the blockers?"* → **Fix now (Recommended)** · **Show me the full report first** · **Log and move on**. No blockers → skip the gate entirely and print the clean summary.
 
 ### Gotchas
 
 - **Sequential dispatch = failure.** Six subagents in one batched tool call. Never spawn-wait-spawn. 6 separate calls → re-batch.
 - **No story summary before dispatch.** Reviewers read files themselves. Paraphrase → token waste + meaning drift.
 - **Don't merge findings early.** ae-red + ae-sec flag same line → keep both voices. Reasoning differs, context varies.
-- **No 6th reviewer ad-hoc.** New dimension missing → skill change, not improvisation. Flag it.
+- **No 7th reviewer ad-hoc.** Roster is exactly the six above. New dimension missing → skill change, not improvisation. Flag it.
 - **Constitution violations = always blockers.** Never downgrade to "should-fix." Fix cost irrelevant.
 - **ae-edge is read-only.** Despite emitting failing test code, ae-edge does NOT write files. Test code lives in the report as inert text; blocker-fix flow downstream copies it into project test files. If ae-edge writes a file, that's a bug.
 - **ae-edge defers frontend.** If diff is frontend-only, ae-edge emits "out of scope" and exits. Don't expect findings on `.tsx`/`.vue`/`.swiftui` changes — that's `ae-ux`'s beat.

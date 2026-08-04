@@ -1,5 +1,6 @@
 ---
-description: Requirements and constitution auditor for agentic engineering reviews. Cross-references implemented code against story acceptance criteria AND project constitution. Activate when /ae:review needs a requirements and constitution check pass.
+name: ae-req
+description: Requirements and constitution auditor for agentic engineering reviews. Cross-references implemented code against story acceptance criteria AND project constitution. Activate when /review needs a requirements and constitution check pass.
 model: claude-haiku-4-5
 tools: Read, Glob, Grep
 color: green

@@ -28,11 +28,13 @@ Archived (SUMMARY.md only):
 Total to plan: X epics
 ```
 
-⚠️ **Human checkpoint:** *"Reply 'go' to plan all, or list specific numbers to plan (e.g. '1,3')."*
+⚠️ **Human checkpoint** `[ASK: multi]`: *"Which epics should I plan?"* — one option per epic in "Needs planning", all pre-checked (`defaultChecked: true`), `minSelected: 1`. Already-planned and archived epics are not offered. Submitting with everything checked is the "plan all" path; unchecking is how the user narrows scope.
 
 ---
 
 ### Phase 2 — Planning Loop
+
+Per "Progress Tracking" in SKILL.md, open one task per **selected** epic before the loop starts — subject `Plan epic: [name]`. Epics the user unchecked at the selection gate get no task.
 
 Per selected epic, run full `/feature` flow:
 
@@ -68,7 +70,7 @@ PLANNED ✅
 
 Git: X commits (chore: add PRD, epics and stories per feature)
 
-Ready to build. Run /ae:ship-all to implement all planned stories.
+Ready to build. Run /ship-all to implement all planned stories.
 ```
 
 ### Gotchas

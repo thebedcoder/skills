@@ -4,11 +4,16 @@ description: >
   Full SDLC agentic engineering workflow for Claude Code using named specialist agents.
   Use this skill whenever the user wants to start a new project, initialize a feature,
   research a feature, implement a feature, run a code review, or follow a structured
-  agentic development workflow. Triggers on: "/init", "/feature", "/implement",
+  agentic development workflow. Triggers on: "/feature", "/implement",
   "/review", "/status", "/design", "/frontend", "/ship", "/fix", "/bootstrap",
-  "/plan-all", "/doc", "init project", "new feature", "implement feature",
+  "/plan-all", "/doc", "new feature", "implement feature",
   "ship feature", "code review", "fix bug", "document feature", "plan all",
   or any request to follow a structured step-by-step development process.
+  Also triggers on "/agentic-engineering:init", "scaffold agentic docs", or
+  "set up docs and constitution" — but NOT on a bare "/init" or "initialize
+  CLAUDE.md", which belong to Claude Code's built-in init command. This skill's
+  init builds the full ./docs scaffold (INDEX, CONSTITUTION, BACKLOG, CHANGELOG),
+  not just a CLAUDE.md.
   Always use this skill when the user is beginning or continuing structured development
   work — even if they just say "let's start coding" or "what's next".
 ---
@@ -64,6 +69,17 @@ Agent speaks → prefix output with name. Internal output = caveman rules.
 | ✍️ **SCRIBE** | End-user product docs in `./app-docs/` | Writes for app users, not dev team |
 | 🔀 **GIT** | Commits, branches, PR desc | Conventional only |
 
+## Core Principles
+
+Apply to every command. Not command-specific.
+
+1. **Never skip human checkpoint.** Every gate exists for reason. `--auto` skips by tag, never by improvisation.
+2. **Agents challenge each other.** PROD vs ARCH. RED assumes failure. Tension is the point.
+3. **One story at a time.** No batching.
+4. **Tests not optional.** Done = implemented + tested.
+5. **Docs stay in sync.** PROGRESS.md, STORIES.md, reviews reflect reality.
+6. **Plan before code.** ARCH plans. PROD validates. Then build.
+
 ## Caveman Communication Rules
 
 Apply to all agent internal output (plans, reports, reviews). NOT to human checkpoints, code, commits, MDX docs.
@@ -73,6 +89,36 @@ Apply to all agent internal output (plans, reports, reviews). NOT to human check
 - **Pattern:** `[thing] [problem/action] [reason]. [next step].`
 - **Fragments OK.** Short synonyms: fix not "implement solution", use not "utilize"
 - During `ship-all` / `plan-all`: **ultra** mode — arrows for causality (X → Y), one word when enough
+
+## Human Checkpoint Interaction (`[ASK: ...]`)
+
+Every `⚠️ Human checkpoint` carries an `[ASK: ...]` tag beside its `[AUTO: ...]` tag. The ASK tag picks the input mechanism; the AUTO tag decides whether the gate fires at all.
+
+| Tag | Mechanism | Use for |
+|---|---|---|
+| `[ASK: confirm]` | `AskUserQuestion`, 2 options | go / approved / proceed-or-stop gates |
+| `[ASK: single]` | `AskUserQuestion`, 2–4 options | pick one from a known set |
+| `[ASK: multi]` | `AskUserQuestion`, `multiSelect: true` | pick any subset |
+| `[ASK: prose]` | plain text, no widget | freeform answers — clarifications, bug repro, design critique |
+
+Rules:
+
+- **Never render a tagged gate as "Reply 'go'" prose.** Widget or nothing. Typed-reply gates drop answers when the user phrases them differently.
+- **`[AUTO: skip]` wins.** Under `--auto` a skipped gate shows no widget at all.
+- Option labels ≤ 5 words. Recommended option first, suffixed `(Recommended)`.
+- >4 options → collapse to the top 3; the built-in "Other" escape hatch covers the rest.
+- Gate needing a choice *and* detail → `[ASK: single]` first, then a `[ASK: prose]` follow-up. Never one widget doing both.
+- **Destructive gates are never `[ASK: confirm]` alone** — show what will be destroyed in the message body first (`/archive` deletes files; `/focus clear` wipes queue).
+
+## Human-Facing Output Rules
+
+Caveman rules above govern **agent-internal** output. These govern what the **human** reads — checkpoint messages, `━━━` summary blocks, consolidated review findings. The two registers never mix.
+
+1. **Restate state.** Every chain turn says where it is: `STORY-003 (2 of 5) · Phase 4 of 6`. The task list does this structurally — don't also narrate the full plan in prose.
+2. **End with one concrete next action.** Every command's last line is a runnable thing: `Next: /ship for STORY-004`. Not "let me know how you'd like to proceed." `/analyze` and `/review` currently under-do this — fix on sight.
+3. **Cap surfaced lists at 5.** Blocker lists, epic inventories, gap reports. Six blockers → show 5 + `+1 more in reviews/STORY-XXX-review.md`. Ranked-and-truncated beats complete-and-unreadable.
+4. **Errors are matter-of-fact.** State cause and fix. `Test fails at auth.spec.ts:42 — expected 200, got 401. Cause: missing auth header.` No "Uh oh", no "There seems to be a problem".
+5. **No caveman shorthand in human-facing text.** No arrows for causality, no dropped articles, no invented abbreviations, no stacked compounds. Ultra mode (below) applies to agent reports during `ship-all` / `plan-all` — it never reaches a checkpoint prompt or a `━━━` block. A user reading only the first and last line of your output should know what happened and what to do next.
 
 ## Auto Mode (`--auto`)
 
@@ -118,6 +164,25 @@ DECISION: <choice>
 ### Composition with /focus
 
 When CURRENT is written by an `--auto` command, `set_by:` gets ` (auto)` suffix. `/focus done` under auto mode auto-promotes NEXT item #1 silently (no y/n/b prompt) — parent passes `auto` as `$ARGUMENTS` to `/focus done`.
+
+## Progress Tracking
+
+Chain commands maintain a **live task list** — the harness task tool, not prose. `/ship`, `/ship-all`, `/plan-all` create one at start. Single-phase commands (`/note`, `/focus`, `/status`, `/analyze`, `/archive`) don't — a list for one step is noise.
+
+| Command | One task per |
+|---|---|
+| `/ship` | phase (implement · review · frontend · review · docs · PR desc) |
+| `/ship-all` | story |
+| `/plan-all` | epic |
+| `/implement`, `/review`, `/frontend` standalone | phase |
+
+Rules:
+
+- **Exactly one task `in_progress`.** Mark it before the phase starts, complete it as the phase closes — never batch completions at the end.
+- **Nested commands don't open their own list.** `/implement` inside `/ship` advances the parent's task; it does not create a second one.
+- **Blocker pause leaves the task `in_progress`.** Completing a phase that ended in a pause reports work that didn't happen.
+- **Skipped phase → complete the task with the skip noted**, don't delete it. Backend-only story still shows "Frontend — skipped (no UI)".
+- **The list replaces mid-chain narration**, not the `━━━` summary blocks. Those still print — they are the deliverable, the list is the progress bar.
 
 ## Context Management
 

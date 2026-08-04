@@ -78,6 +78,8 @@ About intent — who is this for, why use it:
 Answer any you know. Skip any that aren't important. I'll note gaps in the docs.
 ```
 
+`[ASK: prose]` — these are freeform by nature. Do **not** widget them; a fixed option set can't cover "what does the user see when X fails".
+
 Wait for answers.
 
 ---

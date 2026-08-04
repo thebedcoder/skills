@@ -29,6 +29,10 @@ Detect whether `$ARGUMENTS` contains the `--auto` token.
 
 See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
 
+### Step 0b — Task list
+
+Nested under `/ship` or `/ship-all` → **do not open a task list**; advance the parent's. Standalone → open one task per phase (plan · implement + tests · verify AC · record progress). See "Progress Tracking" in SKILL.md.
+
 ### Step 0 — Auto-write focus
 
 Before planning, update `.agentic/focus.md`:
@@ -76,7 +80,7 @@ Any criterion ARCH's plan doesn't address?
 Any scope in plan not in story?]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: skip]`: Show both. Ask: *"Reply 'go' to start implementation."* Under `--auto`: SKIP — emit `SKIPPED: plan approval (clear story, no ambiguous decisions in plan) [auto]` and proceed. Exception per hard-override #4: if plan introduces a new dependency or alters a public interface, treat as `[AUTO: always-ask]` instead.
+⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: Show both, then ask *"Start implementation?"* → Go / Stop. Under `--auto`: SKIP — emit `SKIPPED: plan approval (clear story, no ambiguous decisions in plan) [auto]` and proceed. Exception per hard-override #4: if plan introduces a new dependency or alters a public interface, treat as `[AUTO: always-ask]` instead.
 
 **Implement.** Per plan. Write each test before code it covers — watch fail with meaningful error, then pass.
 

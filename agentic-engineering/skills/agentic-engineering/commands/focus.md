@@ -68,26 +68,22 @@ Exit.
 ```
 Exit.
 
-**NEXT non-empty (interactive):** Read item #1 of NEXT. Ask user:
+**NEXT non-empty (interactive):** Read item #1 of NEXT. Print state, then gate:
 
 ```
 ━━━ FOCUS DONE ━━━
 🎯 (cleared)
 
 Next queued: [item #1 text]
-
-Pick it up?
-  y  → promote to CURRENT, shift NEXT up
-  n  → clear CURRENT only, leave NEXT
-  b  → move that item to BACKLOG (via /note), shift NEXT up
-
-Reply y / n / b:
 ```
 
-Apply choice:
-- `y` → rewrite CURRENT with `title: <item #1 text>`, `since: now`, `set_by: /focus done (promoted)`. Remove item #1 from NEXT; renumber.
-- `n` → clear CURRENT only.
-- `b` → invoke `/note` workflow with the item text. Remove from NEXT; renumber.
+⚠️ **Human checkpoint** `[ASK: single]`: *"Pick up '[item #1 text]' next?"*
+
+| Option | Effect |
+|---|---|
+| **Pick it up (Recommended)** | Rewrite CURRENT with `title: <item #1 text>`, `since: now`, `set_by: /focus done (promoted)`. Remove item #1 from NEXT; renumber. |
+| **Leave it queued** | Clear CURRENT only. NEXT untouched. |
+| **Move to backlog** | Invoke `/note` workflow with the item text. Remove from NEXT; renumber. |
 
 Confirm result.
 

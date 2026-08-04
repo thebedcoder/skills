@@ -79,6 +79,8 @@ Priority recommendation: [if applicable]
 
 **Open-ended** → synthesize from all sources. Be honest about documented vs inferred from code.
 
+**Every format ends with one runnable next action** (SKILL.md "Human-Facing Output Rules" #2) — `Next: /feature auth-refresh to plan the gap` or `Next: /doc payments — it's the only shipped feature with no app-docs entry`. Never end on "let me know if you want more detail". Nothing actionable follows → say so in one line and stop.
+
 ---
 
 ### If answer not findable

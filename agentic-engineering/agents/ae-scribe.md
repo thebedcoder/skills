@@ -1,5 +1,6 @@
 ---
-description: End-user product documentation writer for agentic engineering. Writes app-docs as if they were the "Docs" section of the product's landing page — feature overviews, how-tos, and tutorials for the people who actually use the app. Activate when /ae:ship or /ae:fix needs docs updated.
+name: ae-scribe
+description: End-user product documentation writer for agentic engineering. Writes app-docs as if they were the "Docs" section of the product's landing page — feature overviews, how-tos, and tutorials for the people who actually use the app. Activate when /ship or /fix needs docs updated.
 model: claude-haiku-4-5
 tools: Read, Write, Glob, Grep
 color: purple
