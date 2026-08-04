@@ -13,12 +13,35 @@
    - Code conventions + test framework
    - Design tool: **Figma** (paid MCP) / **Pencil.dev** (free, IDE-native, `.pen` files in repo — pencil.dev) / **None** (Markdown wireframe specs)
 
-3. **ARCH** designs folder structure + creates:
+2b. **ARCH** picks project mode. Mode sizes the docs scaffold + `/feature`'s planning depth. See "Project Mode" in SKILL.md.
+
+ARCH proposes from observable signals — no guessing, cite what it found:
+
+| Signal | Proposes |
+|---|---|
+| No test framework, no CI config, no deploy config | lite |
+| `git shortlog -sn` → one contributor, < ~20 source files | lite |
+| CI pipeline present (`.github/workflows/`, `.gitlab-ci.yml`) | full |
+| Deploy config present (`vercel.json`, `Dockerfile`, `fastlane/`) | full |
+| Multiple contributors, or user says "production" / "real users" | full |
+
+Ambiguous → propose **lite**. User bumps up any time — re-running `/init` updates marker in place.
+
+⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: Print detected signals, then ask *"Which mode fits this project?"* → **Lite (Recommended)** · **Full**. Option descriptions:
+
+- Lite — "Stories, tests, and the 6-agent review. No PRD, no epics, no app-docs until needed."
+- Full — "Everything: research → PRD → epics → stories, plus end-user docs and cross-feature specs."
+
+Swap which one carries `(Recommended)` to match ARCH's proposal. Mode is written to `./docs/INDEX.md` frontmatter in step 3.
+
+3. **ARCH** designs folder structure + creates. **Full mode:**
 
 ```
 ./docs/
   INDEX.md                      ← agent navigation — always read first
   CHANGELOG.md                  ← agent changelog — prepend after every ship/fix, newest first
+  DECISIONS.md                  ← binding decisions — why, not what. Appended by /cleanup
+  MEMORY.md                     ← durable project knowledge — rewritten by /cleanup, hard line cap
   BACKLOG.md                    ← bugs, ideas, improvements to implement later
   CONSTITUTION.md               ← non-negotiable project principles — agents check before every review
   /features/
@@ -32,11 +55,28 @@
   /specs/                       ← cross-feature and design handoff specs
 
 ./app-docs/                     ← END-USER product documentation (like "Docs" section of a landing page)
-  index.mdx                     ← docs landing page the user sees first
-  CHANGELOG.mdx                 ← product release notes, written to end users
-  /features/                    ← one .mdx per user-facing feature — overview + how-to + tutorial + FAQ
+  index.md                      ← docs landing page the user sees first
+  CHANGELOG.md                  ← product release notes, written to end users
+  /features/                    ← one .md per user-facing feature — overview + how-to + tutorial + FAQ
   /guides/                      ← user guides (getting-started, shortcuts, troubleshooting). NOT dev onboarding.
 ```
+
+**Lite mode** — same files minus the ceremony:
+
+```
+./docs/
+  INDEX.md
+  CHANGELOG.md
+  DECISIONS.md
+  MEMORY.md
+  BACKLOG.md
+  CONSTITUTION.md               ← short form: Default Decisions + Governance only
+  /features/                    ← empty. First story lands in features/main/ (see /ship)
+```
+
+Lite does **not** create at init: `PRD.md`, `EPICS.md`, `improvements.md`, `docs/specs/`, `app-docs/`. Each is created on first write — `/doc` builds `app-docs/` when the first user-facing feature ships, `/note`-driven improvements create `improvements.md` on first append. Lite **never** creates `PRD.md` or `EPICS.md`.
+
+Lite keeps `CONSTITUTION.md` deliberately — REQ + EDGE read it during `/review`, and auto-mode hard-override #3 checks it. Short form is ~10 lines, not the full article set.
 
 > **app-docs vs docs:** users vs builders. Strict separation — no paths/code in app-docs, no tutorials in docs.
 
@@ -51,8 +91,8 @@
 - [INIT] project initialised
 ```
 
-`./app-docs/CHANGELOG.mdx` — product release notes, written to end users:
-```mdx
+`./app-docs/CHANGELOG.md` — product release notes, written to end users (**full mode only** — lite creates this when `/doc` first builds `app-docs/`):
+```md
 ---
 title: What's new
 description: Product updates and changes — what you can now do in the app
@@ -74,6 +114,48 @@ description: Product updates and changes — what you can now do in the app
 <!-- Agents: prepend new NOTE-XXX items at top, newest first -->
 <!-- Run /ship to pick up and implement a backlog item -->
 ```
+
+**ARCH** seeds `./docs/DECISIONS.md` (both modes):
+```markdown
+# Decisions
+<!-- Binding decisions only — choices that constrain future work: API contracts, chosen
+     libraries, rejected approaches, data-model shape. Not implementation detail.
+     Appended by /cleanup, newest first. Superseded entries are marked, never deleted. -->
+
+<!-- Entry format:
+
+## DEC-001 — [decision, one line]
+date: YYYY-MM-DD · story: STORY-XXX · status: active
+
+**Chose:** [what]
+**Because:** [why]
+**Rules out:** [what this forecloses]
+
+-->
+```
+
+**ARCH** seeds `./docs/MEMORY.md` (both modes). Line cap differs by mode — 150 full, 50 lite:
+```markdown
+# Project Memory
+<!-- Rewritten by /cleanup — not appended. Durable knowledge only: what an agent must know
+     at session start. Not a log (docs/CHANGELOG.md), not rationale (docs/DECISIONS.md).
+     Nothing derivable from code, git log, or CLAUDE.md belongs here.
+     Hard cap: 150 lines. -->
+
+## What this is
+[one paragraph — populated after first ship]
+
+## How it's built
+[shape of the system an agent can't infer in one read]
+
+## Non-obvious constraints
+[things that will bite someone who doesn't know them]
+
+## Known rough edges
+[what's knowingly unfinished, and why it's acceptable]
+```
+
+Lite mode → write `Hard cap: 50 lines.` in the comment instead.
 
 **ARCH** also writes per-developer ephemera (worktree-local, gitignored):
 
@@ -106,6 +188,8 @@ If it already has a `statusLine` → leave alone (user's choice).
 3. Note in `./docs/INDEX.md` navigation section: `.agentic/focus.md` is per-worktree current-task pointer managed by `/focus` and `/next`.
 
 **PROD** generates `./docs/CONSTITUTION.md` by asking: non-negotiable tech standards, architectural principles, security/compliance, forbidden patterns.
+
+**Lite mode:** skip the article interview. Write the short form — header comment, `## Default Decisions` (uncommented, populated from the stack answers in step 2: test runner, package manager, styling approach), `## Governance`. No `## Article` sections. User adds articles later if the project grows. Everything below through `## Governance` is the full-mode format.
 
 Constitution format:
 ```markdown
@@ -155,25 +239,45 @@ All UI-touching stories must capture visual artifacts (screenshots or screen rec
 **`./docs/INDEX.md`** — single file every agent reads at session start. ARCH generates:
 
 ```markdown
+---
+mode: lite
+---
+
 # Docs Index
 
 ## How to navigate
 - Read this file first to orient yourself
+- Read ./docs/MEMORY.md for durable project knowledge — what you need to know before touching anything
+- Read ./docs/DECISIONS.md for binding decisions — don't re-litigate what's recorded there
 - Read ./docs/CHANGELOG.md to see what's already been done
 - Read ./docs/CONSTITUTION.md for non-negotiable project principles
-- Go to ./docs/features/[name]/ for feature-specific PRD, stories, and progress
+- Go to ./docs/features/[name]/ for feature-specific stories and progress
 - Go to ./app-docs/ for END-USER product documentation (how to use the app — don't write internal notes here)
-- Go to ./docs/improvements.md for ARCH/RED improvement suggestions
+- `.agentic/focus.md` — current task + plan for this worktree, managed by /focus and /next. Gitignored; absent means no active task.
 
 ## Features
 
 | Feature | Status | Folder |
 |---------|--------|--------|
 | (none yet — populated by /feature) | | |
-
-## Design specs
-./docs/specs/
 ```
+
+Frontmatter `mode:` is the marker every mode-aware command reads. Values: `lite` | `full`. Write the mode confirmed in step 2b.
+
+**Full mode additions** to the template above:
+- navigation bullet: `- Go to ./docs/features/[name]/ for feature-specific PRD, stories, and progress` (replaces the lite wording)
+- navigation bullet: `- Go to ./docs/improvements.md for ARCH/RED improvement suggestions`
+- trailing section:
+  ```markdown
+  ## Design specs
+  ./docs/specs/
+  ```
+
+**Re-init on an existing project:** frontmatter present → rewrite only the `mode:` value.
+
+No frontmatter, INDEX.md exists anyway → two cases:
+- Project has shipped work (any `PRD.md`, `EPICS.md`, or checked story) → it predates modes. Prepend `mode: full`, announce it, skip the 2b gate. Silently downgrading to lite would strand its PRD and epics.
+- No shipped work — INDEX.md is a `/bootstrap` roadmap stub → run the 2b gate normally and prepend the chosen mode.
 
 4. **ARCH + PROD** co-generate `./CLAUDE.md`:
 
@@ -199,6 +303,12 @@ All UI-touching stories must capture visual artifacts (screenshots or screen rec
 - pencil: uses Pencil.dev via local MCP server (free, IDE-native, .pen files live in repo)
 - none: SCRIBE produces detailed Markdown wireframe specs instead
 
+## Project Docs
+- `docs/INDEX.md` — read first, navigation + feature table
+- `docs/MEMORY.md` — durable project knowledge, read at session start
+- `docs/DECISIONS.md` — binding decisions, don't re-litigate
+- `.agentic/focus.md` — current task + plan (per-worktree, gitignored; absent = no active task)
+
 ## Docs Structure
 - Index:        ./docs/INDEX.md
 - Constitution: ./docs/CONSTITUTION.md
@@ -214,6 +324,17 @@ All UI-touching stories must capture visual artifacts (screenshots or screen rec
 - Update PROGRESS.md after completing each story
 - Never modify files outside the current story's scope
 - Constitution violations must be flagged — never silently ignored
+```
+
+`## Project Docs` is idempotent on re-init: section exists → replace it; absent → insert it above `## Docs Structure`.
+
+**Lite mode** trims `## Docs Structure` to the files lite actually creates:
+```markdown
+## Docs Structure
+- Index:        ./docs/INDEX.md
+- Constitution: ./docs/CONSTITUTION.md
+- Features:     ./docs/features/[name]/STORIES.md|PROGRESS.md
+- Reviews:      ./docs/features/[name]/reviews/
 ```
 
 5. ⚠️ **Human checkpoint** `[ASK: confirm]`: Show generated CLAUDE.md, then ask *"Save it?"* → **Save** · **Edit first**. Second option → follow up `[ASK: prose]`.

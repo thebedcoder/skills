@@ -86,7 +86,9 @@ Wait for answers.
 
 ### Phase 3 — Write End-User Documentation
 
-SCRIBE writes/updates `./app-docs/features/[feature-name].mdx`. Full template + self-check → `ae-scribe.md`. Structure: frontmatter → intro → **What you can do** → **How to use it** (numbered, real UI labels) → **Tips** → **FAQ** (only if real recurring Qs) → **Related**. No file paths / function names / code blocks.
+`./app-docs/` absent → SCRIBE creates the tree first: `index.md`, `CHANGELOG.md` (seeded per `commands/init.md`), `features/`, `guides/`. Existence check, not a mode check — lite projects skip the tree at init and grow it here, on the first user-facing feature.
+
+SCRIBE writes/updates `./app-docs/features/[feature-name].md`. Full template + self-check → `ae-scribe.md`. Structure: frontmatter → intro → **What you can do** → **How to use it** (numbered, real UI labels) → **Tips** → **FAQ** (only if real recurring Qs) → **Related**. No file paths / function names / code blocks.
 
 ---
 

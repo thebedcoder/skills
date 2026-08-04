@@ -6,7 +6,7 @@ description: >
   research a feature, implement a feature, run a code review, or follow a structured
   agentic development workflow. Triggers on: "/feature", "/implement",
   "/review", "/status", "/design", "/frontend", "/ship", "/fix", "/bootstrap",
-  "/plan-all", "/doc", "new feature", "implement feature",
+  "/plan-all", "/doc", "/cleanup", "new feature", "implement feature",
   "ship feature", "code review", "fix bug", "document feature", "plan all",
   or any request to follow a structured step-by-step development process.
   Also triggers on "/agentic-engineering:init", "scaffold agentic docs", or
@@ -48,6 +48,7 @@ Command invoked → read matching file from `commands/` first. File holds full i
 | `/next [task\|drop N]` | `commands/next.md` | Queue a task to be picked up after current finishes |
 | `/analyze` | `commands/analyze.md` | Answer project question — searches docs + code |
 | `/archive [feature\|--all]` | `commands/archive.md` | Compact shipped feature docs → SUMMARY.md |
+| `/cleanup [story\|feature]` | `commands/cleanup.md` | Record binding decisions + rewrite MEMORY.md after a task |
 | `/frontend` | `commands/frontend.md` | Frontend from design handoff |
 
 ## Agent Roster
@@ -69,6 +70,47 @@ Agent speaks → prefix output with name. Internal output = caveman rules.
 | ✍️ **SCRIBE** | End-user product docs in `./app-docs/` | Writes for app users, not dev team |
 | 🔀 **GIT** | Commits, branches, PR desc | Conventional only |
 
+## Project Mode
+
+Workflow sizes itself to project. Marker lives in `./docs/INDEX.md` frontmatter:
+
+```yaml
+---
+mode: lite   # lite | full
+---
+```
+
+`/init` asks once, proposes from signals (test framework, CI, deploy config, contributor count). Ambiguous → propose lite.
+
+| | lite | full |
+|---|---|---|
+| Planning | stories only | research → PRD → epics → stories |
+| `PRD.md`, `EPICS.md` | never | always |
+| `improvements.md`, `specs/`, `app-docs/` | on first write | at init |
+| `CONSTITUTION.md` | short form (~10 lines) | full articles |
+| `STORIES.md`, `PROGRESS.md`, `reviews/` | same | same |
+| 6-agent review, tests, checkpoints | same | same |
+
+**Only `/init`, `/feature`, `/status`, `/cleanup` read the marker.** `/cleanup` reads it for one thing — `MEMORY.md`'s line cap. Every other command is mode-blind: they consume `STORIES.md` + `PROGRESS.md`, which both modes produce. Adding a mode branch anywhere else is a design break, not a feature.
+
+No `mode:` key (project predates modes) → treat as `full`.
+
+Lite's shipping path is `/note` → `/ship`, not `/feature` → `/ship`. `/ship` promotes a BACKLOG item into `docs/features/main/` when no feature exists.
+
+## Project Memory Docs
+
+Three files, three jobs. Overlap between them is the failure mode.
+
+| File | Answers | Write pattern |
+|---|---|---|
+| `docs/CHANGELOG.md` | what shipped, when | append, newest first, unbounded |
+| `docs/DECISIONS.md` | why it's built this way | append `DEC-NNN`, supersede never delete |
+| `docs/MEMORY.md` | what to know before touching anything | **rewritten** each cleanup, hard line cap (150 full / 50 lite) |
+
+`/cleanup` owns all three after a task. `CONSTITUTION.md` is separate — rules that must not be broken, not choices that were made.
+
+`.agentic/focus.md` holds CURRENT + PLAN + NEXT for this worktree. Gitignored, per-developer, never committed.
+
 ## Core Principles
 
 Apply to every command. Not command-specific.
@@ -82,7 +124,7 @@ Apply to every command. Not command-specific.
 
 ## Caveman Communication Rules
 
-Apply to all agent internal output (plans, reports, reviews). NOT to human checkpoints, code, commits, MDX docs.
+Apply to all agent internal output (plans, reports, reviews). NOT to human checkpoints, code, commits, app-docs pages.
 
 - **Drop:** articles (a/an/the), filler (just/really/basically), pleasantries, hedging
 - **Keep:** technical terms exact, code blocks unchanged, file paths verbatim
@@ -171,7 +213,7 @@ Chain commands maintain a **live task list** — the harness task tool, not pros
 
 | Command | One task per |
 |---|---|
-| `/ship` | phase (implement · review · frontend · review · docs · PR desc) |
+| `/ship` | phase (implement · review · frontend · review · docs · PR desc · cleanup) |
 | `/ship-all` | story |
 | `/plan-all` | epic |
 | `/implement`, `/review`, `/frontend` standalone | phase |
@@ -188,7 +230,7 @@ Rules:
 
 - **Compact between stories** in `ship-all` + `plan-all` — mandatory
 - **Compact instruction:** `/compact Focus on: current feature, last story done, next story, branch, blockers, last changelog entry, constitution key points. Discard: file contents, review reports, diffs.`
-- **Read INDEX.md, CHANGELOG.md, CONSTITUTION.md first** every session — no codebase scan to orient
+- **Read INDEX.md, MEMORY.md, DECISIONS.md, CHANGELOG.md, CONSTITUTION.md first** every session — no codebase scan to orient
 - **Read only files relevant to current story** — not whole project
 - **Never re-read** files already in context
 

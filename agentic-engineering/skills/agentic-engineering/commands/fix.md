@@ -36,7 +36,9 @@ grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
 
 Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
 
-3. Continue with the command's real work below.
+3. Write the chain into the `# PLAN` section of `.agentic/focus.md` (see `commands/focus.md`) — `diagnose`, `fix + regression test`, `RED review`, `docs + changelogs`, `cleanup`. Tick each as its phase closes.
+
+4. Continue with the command's real work below.
 
 ---
 
@@ -103,7 +105,7 @@ Clean → continue.
 `./app-docs/` updated only if user-facing behaviour changed.
 
 Spawn **ae-scribe** subagent:
-- User-noticeable change (UI response, workflow outcome, visible error, API shape they consume)? Yes → update feature MDX. No → returns `no user-facing change, app-docs unchanged`.
+- User-noticeable change (UI response, workflow outcome, visible error, API shape they consume)? Yes → update the feature's `app-docs/features/[name].md`. No → returns `no user-facing change, app-docs unchanged`.
 
 Prepend to both changelogs (newest first):
 
@@ -114,15 +116,15 @@ Prepend to both changelogs (newest first):
 - [FIX] test: regression test added — [test location]
 ```
 
-`./app-docs/CHANGELOG.mdx` (after frontmatter + title, **product release note to end users**):
-```mdx
+`./app-docs/CHANGELOG.md` (after frontmatter + title, **product release note to end users**):
+```md
 ## [Month YYYY]
 
 ### Fixed
 - [Plain-English, user-perspective — what they saw wrong, what they now see. No file paths / stack traces.]
 ```
 
-SCRIBE reported "no user-facing change" → skip `### Fixed` entry entirely. Internal-only fixes stay in `docs/CHANGELOG.md` (engineering log), never surface in `app-docs/CHANGELOG.mdx`.
+SCRIBE reported "no user-facing change" → skip `### Fixed` entry entirely. Internal-only fixes stay in `docs/CHANGELOG.md` (engineering log), never surface in `app-docs/CHANGELOG.md`.
 
 **GIT** commits:
 ```
@@ -141,6 +143,14 @@ docs([scope]): update edge case notes    ← only if docs changed
 **Regression test:** [name/location]
 ```
 
+**Phase 5 — Cleanup** *(automatic — last phase)*
+
+Run the `/cleanup` flow inline for this fix (`commands/cleanup.md`). Phase 4 already wrote the CHANGELOG entry — cleanup skips that step and does the remaining two: binding decisions → `./docs/DECISIONS.md`, rewrite `./docs/MEMORY.md`.
+
+Most fixes yield no binding decision. That's the normal case — record nothing rather than inventing a `DEC-` entry. A fix earns one only when it changes a contract, rules out an approach, or reveals a constraint future work must respect.
+
+Chain ended with RED's concerns unresolved ("Ship it anyway" is resolved; an abandoned fix is not) → skip Phase 5.
+
 **Fix complete:**
 ```
 ━━━ FIX COMPLETE ━━━
@@ -151,6 +161,7 @@ Test:       ✅ added / updated
 Docs:       ✅ updated / not needed
 Changelog:  ✅ both updated
 Git:        ✅ committed on [branch name]
+Cleanup:    ✅ MEMORY.md refreshed · [DEC-XXX recorded | no binding decision]
 ```
 
 ### Step N — Auto-mode summary

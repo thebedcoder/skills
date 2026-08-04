@@ -29,8 +29,11 @@ Per "Progress Tracking" in SKILL.md, create one task per phase before any work s
 4. `Frontend review — 6-agent + ae-ux fidelity`
 5. `End-user docs + changelogs`
 6. `PR description from git log`
+7. `Cleanup — decisions + memory`
 
 Mark #1 `in_progress` at Phase 1. Advance one at a time. Backend-only story → complete #3 and #4 with `skipped (no UI)`. Blocker pause → leave the current task `in_progress` until the fix lands and review re-runs clean.
+
+Mirror the same list into the `# PLAN` section of `.agentic/focus.md` (see `commands/focus.md`) and tick each step there as its task completes. The harness task list dies with the session; PLAN survives it.
 
 ### Step 0 — Auto-write focus
 
@@ -67,6 +70,8 @@ NOTE-XXX: [title]
 
 Shaping into story for feature: [feature name]
 ```
+
+**Target feature dir.** Active feature from `INDEX.md` → use it. No feature exists yet (normal in lite mode, where `/note` → `/ship` is the main path) → default to `./docs/features/main/`, creating `STORIES.md`, `PROGRESS.md`, `reviews/` on first use and adding the `main` row to INDEX.md's feature table. Never fail with "no feature directory".
 
 PROD converts → appends to `./docs/features/[feature-name]/STORIES.md`:
 ```markdown
@@ -165,18 +170,18 @@ After SCRIBE returns, prepend to both changelogs (newest first):
 ## [date]
 - [STORY-XXX] feat([feature]): [what was implemented] — [key files]
 - [STORY-XXX] review: [clean / N blockers fixed] — RED/REQ/TEST/DOC/SEC/EDGE
-- [STORY-XXX] docs: [feature].mdx updated
+- [STORY-XXX] docs: [feature].md updated
 ```
 
-`./app-docs/CHANGELOG.mdx` (after frontmatter + title, **product release note to end users**):
-```mdx
+`./app-docs/CHANGELOG.md` (after frontmatter + title, **product release note to end users**):
+```md
 ## [Month YYYY]
 
 ### Added
 - **[Feature name in user language]** — [plain-English — what users can now do, no internals]
 ```
 
-SCRIBE returned "no user-facing change" → skip `### Added` entry + skip `app-docs/CHANGELOG.mdx` commit. Still prepend terse entry to `docs/CHANGELOG.md`.
+SCRIBE returned "no user-facing change" → skip `### Added` entry + skip `app-docs/CHANGELOG.md` commit. Still prepend terse entry to `docs/CHANGELOG.md`.
 
 - **GIT** commits:
 ```
@@ -186,6 +191,12 @@ docs([feature-name]): STORY-XXX — update app docs and changelogs
 **Phase 6 — PR Description** *(automatic, not pushed)*
 
 **GIT** generates PR desc from `git log` (not plan): story title, What changed (plain English), Why (user story), Changes (`feat:`/`fix:`/`docs:` commits), How to test (from acceptance criteria), Checklist (tests · docs · no blockers).
+
+**Phase 7 — Cleanup** *(automatic — last phase)*
+
+Run the `/cleanup` flow inline for this story (`commands/cleanup.md`). Extracts binding decisions → `./docs/DECISIONS.md`, rewrites `./docs/MEMORY.md`. Step 2 of that flow (CHANGELOG entry) is already done by Phase 5 — cleanup detects the existing entry and skips it rather than writing a second one.
+
+Chain ended in an unresolved blocker pause → **skip Phase 7 entirely**. Unfinished work has nothing durable to record.
 
 **Chain complete:**
 ```
@@ -197,6 +208,7 @@ Git:      ✅ committed (see log above)
 PR desc:  ✅ ready to copy
 Stories:  [x] marked complete
 Progress: updated
+Cleanup:  ✅ DEC-XXX recorded · MEMORY.md refreshed
 
 Next: run `/ship` again for STORY-XXX+1, or `/status` to review the board.
 ```
@@ -241,10 +253,10 @@ If `AUTO=false`: skip.
 After successful ship, SCRIBE:
 
 1. User-reachable change? No → return "no user-facing change" + exit.
-2. Update existing `./app-docs/features/[feature-name].mdx` or create.
-3. MDX: frontmatter → intro → **What you can do** → **How to use it** (numbered, real UI labels) → **Tips** → **FAQ** (only if real recurring) → **Related**.
+2. Update existing `./app-docs/features/[feature-name].md` or create. `app-docs/` absent (lite mode, first user-facing feature) → create the tree first: `index.md`, `CHANGELOG.md`, `features/`, `guides/`.
+3. Structure: frontmatter → intro → **What you can do** → **How to use it** (numbered, real UI labels) → **Tips** → **FAQ** (only if real recurring) → **Related**.
 4. No file paths / function names / code blocks in app-docs.
-5. Update `./app-docs/index.mdx` if new user-facing feature added.
+5. Update `./app-docs/index.md` if new user-facing feature added.
 6. Self-check per `ae-scribe.md`.
 
 ### What still requires your input

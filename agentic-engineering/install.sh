@@ -74,6 +74,7 @@ USER_COMMANDS=(
   status
   analyze
   archive
+  cleanup
 )
 
 # Install statusline script (shared utility; per-project trigger is written by /init or /bootstrap).
@@ -104,3 +105,4 @@ echo "  /doc          document a feature interactively"
 echo "  /doc-all      document multiple features (use --full for new projects)"
 echo "  /status       progress overview"
 echo "  /analyze      answer any question about the project"
+echo "  /cleanup      record decisions + refresh project memory after a task"

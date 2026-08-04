@@ -6,13 +6,35 @@ Set, clear, or advance current task pointer for this worktree. State lives at `.
 
 Input received: $ARGUMENTS
 
+### File shape
+
+Three sections. All optional — absent section means empty.
+
+```markdown
+# CURRENT
+title: [task]
+since: [YYYY-MM-DD HH:MM]
+set_by: [manual | /ship | /fix | ...]
+
+# PLAN
+- [x] [completed step]
+- [ ] [pending step]
+
+# NEXT
+1. [queued task]
+```
+
+`# PLAN` is the on-disk mirror of the harness task list. Chain commands (`/ship`, `/fix`, `/ship-all`) write it at start and tick steps as phases close — the harness list dies with the session, PLAN survives it. A one-step task needs no PLAN; absent is valid.
+
+**Never hand-edit PLAN from `/focus <text>`** — setting a new CURRENT wipes PLAN, because a plan for the previous task is worse than none.
+
 ---
 
 ### Phase 1 — Parse intent
 
 Inspect `$ARGUMENTS`:
 
-- Empty → show current focus + NEXT (read-only). Same render as `/status` FOCUS block. Exit.
+- Empty → show current focus + PLAN + NEXT (read-only). Same render as `/status` FOCUS block. Exit.
 - `done` → Phase 3 (clear CURRENT + promote NEXT).
 - `done auto` → Phase 3, auto-promote branch (no prompt). Parent command running under `--auto` passes this.
 - `clear` → Phase 4 (clear both).
@@ -30,7 +52,7 @@ if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
 grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
 ```
 
-Overwrite CURRENT section of `.agentic/focus.md` (preserve NEXT section if present). Fields:
+Overwrite CURRENT section of `.agentic/focus.md` (preserve NEXT section if present, **drop PLAN** — it belonged to the previous task). Fields:
 
 ```markdown
 # CURRENT
@@ -51,9 +73,11 @@ Exit.
 
 ### Phase 3 — `/focus done` (clear CURRENT, promote NEXT)
 
-Read `.agentic/focus.md`. Three sub-cases:
+Read `.agentic/focus.md`. **PLAN is cleared in every sub-case below** — it describes the task being closed. `/cleanup` reads PLAN, so a chain command that wants its steps recorded must run cleanup *before* calling `/focus done`.
 
-**NEXT empty (or file absent):** Clear CURRENT (delete section or remove file if NEXT also empty). Print:
+Three sub-cases:
+
+**NEXT empty (or file absent):** Clear CURRENT + PLAN (delete sections, or remove file if NEXT also empty). Print:
 ```
 ━━━ FOCUS DONE ━━━
 🎯 (none)
@@ -91,10 +115,10 @@ Confirm result.
 
 ### Phase 4 — `/focus clear`
 
-Wipe both CURRENT and NEXT (delete file or leave headers empty). Print:
+Wipe CURRENT, PLAN, and NEXT (delete file or leave headers empty). Destructive gate per SKILL.md — print what's about to be wiped before the widget. Print after:
 ```
 ━━━ FOCUS CLEARED ━━━
-CURRENT + NEXT wiped.
+CURRENT + PLAN + NEXT wiped.
 ```
 
 ---
@@ -105,8 +129,9 @@ When another command (`/feature`, `/implement`, `/ship`, `/fix`, `/design`, `/re
 
 1. Ensure `.agentic/` exists + gitignored (same idempotent block as Phase 2).
 2. Read existing CURRENT.
-3. **Story-id match heuristic:** if new task references same STORY-ID (or same feature, when no story) as existing CURRENT, **only** update `note:` and `set_by:` — leave `title:` and `since:` alone. Prevents flicker when `/ship` includes `/implement` + `/review` inline.
-4. Otherwise overwrite CURRENT with new title/feature/set_by, fresh `since:`.
+3. **Story-id match heuristic:** if new task references same STORY-ID (or same feature, when no story) as existing CURRENT, **only** update `note:` and `set_by:` — leave `title:`, `since:`, and PLAN alone. Prevents flicker when `/ship` includes `/implement` + `/review` inline.
+4. Otherwise overwrite CURRENT with new title/feature/set_by, fresh `since:`, and clear PLAN.
 5. Under `--auto`: append ` (auto)` suffix to `set_by:` value.
+6. Chain commands (`/ship`, `/fix`, `/ship-all`) then write their phase list into PLAN and tick it as phases close. Single-phase commands write no PLAN.
 
 `/implement` and `/ship` additionally call Phase 3 (`/focus done`) on success — except `/ship` suppresses this when it is mid-chain inside `/ship-all` (chain caller decides when to release focus). Under `--auto`, the caller passes `auto` as the `$ARGUMENTS` to `/focus done` so it auto-promotes silently.

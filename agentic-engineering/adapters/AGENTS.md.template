@@ -13,11 +13,17 @@ Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
 - **Constitution.** `./docs/CONSTITUTION.md` lists non-negotiable project principles. Constitution violations are blockers — fix them before continuing, don't paper over them.
 - **Two changelogs, two audiences.**
   - `./docs/CHANGELOG.md` — engineering log, terse, one line per change, newest first. Every ship/fix appends here.
-  - `./app-docs/CHANGELOG.mdx` — product release notes written for **end users**. Only changes a user can see go here. Pure refactors stay out.
+  - `./app-docs/CHANGELOG.md` — product release notes written for **end users**. Only changes a user can see go here. Pure refactors stay out.
 - **Docs structure.**
   - `./docs/` — for people who **build** the app (PRDs, stories, reviews, architecture).
-  - `./app-docs/` — for people who **use** the app (overviews, how-tos, FAQs in MDX).
+  - `./app-docs/` — for people who **use** the app (overviews, how-tos, FAQs in Markdown).
   - They never overlap. No file paths or code blocks in `app-docs/`.
+- **Project mode.** `./docs/INDEX.md` frontmatter carries `mode: lite` or `mode: full`. In `lite`, this project writes no `PRD.md` and no `EPICS.md` — stories go straight into `docs/features/<name>/STORIES.md`, and `app-docs/`, `docs/specs/`, `docs/improvements.md` are created only when something needs writing to them. Everything else — stories, acceptance criteria, tests, review depth — is identical in both modes. No `mode:` key → treat as `full`.
+- **Three memory documents, three jobs.** Keep them separate; overlap is what makes docs rot.
+  - `./docs/CHANGELOG.md` — what shipped, when. Appended, unbounded.
+  - `./docs/DECISIONS.md` — why it's built this way. Appended as `DEC-NNN` entries with `Chose` / `Because` / `Rules out`. A reversed decision is marked `status: superseded by DEC-NNN`, never deleted.
+  - `./docs/MEMORY.md` — what you must know before touching anything. **Rewritten** after each finished task, never appended, and capped at 150 lines (50 in lite mode). Nothing derivable from code, git log, or this file belongs in it.
+- **Clean up after finishing a task.** Once work is committed: record any binding decision in `DECISIONS.md` (most tasks produce none — that's correct), then rewrite `MEMORY.md`. A decision qualifies only if it constrains code not yet written: a fixed contract, a library chosen over a named alternative, an approach tried and rejected.
 
 ---
 
@@ -26,11 +32,13 @@ Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
 - **Conventional commits**: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`, `style:`, `perf:`.
 - **Stories tagged `[P]`** can be implemented in parallel (no shared state). Other stories are sequential.
 - **Path-scoped rules** in `./.claude/rules/` (or `.cursor/rules/` depending on tool) auto-apply by file glob. Respect them when editing matching files.
-- **Shipped features get archived**: when every story in `docs/features/<name>/STORIES.md` is checked, compact PRD/EPICS/STORIES/PROGRESS/reviews/artifacts into one `SUMMARY.md` (story digests, binding decisions, frozen test rollup) and delete the originals — git history preserves them; `data-model.md` stays. Skip archived features when scanning for stories or progress.
+- **Shipped features get archived**: when every story in `docs/features/<name>/STORIES.md` is checked, compact PRD/EPICS/STORIES/PROGRESS/reviews/artifacts into one `SUMMARY.md` (story digests, links to the feature's `DEC-` ids in `DECISIONS.md`, frozen test rollup) and delete the originals — git history preserves them; `data-model.md` stays. Skip archived features when scanning for stories or progress.
 
 ---
 
 ## When the user asks you to research or plan a feature
+
+**In `full` mode**, all six steps:
 
 1. **Propose 3 approach options first.** Don't pick one. Show trade-offs (debt, complexity, time). Wait for the user's choice.
 2. **Generate a PRD** with `[NEEDS CLARIFICATION: <question>]` markers for anything ambiguous.
@@ -38,6 +46,8 @@ Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
 4. **Constitution check.** If the proposed feature would violate the constitution, surface it and stop. Don't work around it silently.
 5. **Generate data-model.md** if the feature touches the database.
 6. **Break into stories.** Tag `[P]` where parallelisable. Each story should have clear acceptance criteria.
+
+**In `lite` mode**, steps 5 and 6 only. Write stories straight from the user's description plus a read of the codebase. No approach comparison, no PRD, no epics file. The constitution is still enforced — during review, not as a separate planning gate.
 
 ---
 

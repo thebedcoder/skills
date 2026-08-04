@@ -20,7 +20,7 @@ Review for:
 - Any documentation now needing update
 
 Note on app-docs: `./app-docs/` = **end-user product documentation** (how to use the app), not internal reference. When flagging docs needing update:
-- Flag `./app-docs/` MDX only if change altered user-facing behaviour docs describe (UI label, workflow step, error user sees, API response shape they consume). Internal refactors with identical user behaviour → no app-docs update needed.
+- Flag `./app-docs/` pages only if change altered user-facing behaviour docs describe (UI label, workflow step, error user sees, API response shape they consume). Internal refactors with identical user behaviour → no app-docs update needed.
 - Flag `./docs/` or `CLAUDE.md` for convention / architecture / constitution drift. Never push those concerns into app-docs.
 
 Output format (caveman — terse, no filler):

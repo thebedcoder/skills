@@ -24,16 +24,15 @@ X stories shipped.
 ## Stories
 - STORY-001: [title] — [one-line AC digest]
 
-## Binding decisions
-<!-- only decisions constraining future work: API contracts, chosen libraries, rejected approaches -->
-- [decision] — [why]
+## Decisions
+- DEC-004, DEC-007 — see ../../DECISIONS.md
 
 ## Test rollup (frozen at archive)
 Tests: M/N AC mapped across K stories (P%). Pyramid: unit U · integration I · e2e E.
 
 ## Pointers
 - Data model: ./data-model.md
-- End-user docs: ../../../app-docs/features/[feature-name].mdx
+- End-user docs: ../../../app-docs/features/[feature-name].md
 - Full history: `git log --follow -- docs/features/[feature-name]/`
 ```
 
@@ -41,6 +40,9 @@ Rules:
 - Rollup numbers: same parse as `/status` (AC Coverage matrices in `PROGRESS.md`). No matrices → omit section.
 - Pointer lines only for files that exist.
 - Summary ≤ ~40 lines. Narrative history lives in git, not SUMMARY.md.
+- **`## Decisions` links, never restates.** `/cleanup` already wrote each decision to `./docs/DECISIONS.md` with its rationale. Archive lists the `DEC-` ids this feature produced — match by the `story:` field on each entry. Copying the text back creates a second source of truth that drifts.
+- Feature produced no `DEC-` entries → omit the section.
+- Archiving a project that predates `DECISIONS.md` (no such file) → fall back to the old inline form: `## Binding decisions` with `- [decision] — [why]` lines, only for decisions constraining code not yet written.
 
 ### Step 2 — Delete originals
 
@@ -69,4 +71,4 @@ chore([feature-name]): archive feature docs to SUMMARY.md
 - **Won't-fix findings already live in `./docs/improvements.md`.** Never copy review findings into SUMMARY.md — one source of truth.
 - **app-docs untouched.** End-user docs are product surface, not working docs.
 - **Un-archive = git revert**, not regeneration. User wants originals back → `git log --follow` the feature dir.
-- **Binding decisions ≠ story recap.** Decision earns a line only if it constrains code not yet written.
+- **Decisions live in `./docs/DECISIONS.md`, not SUMMARY.md.** Archive links `DEC-` ids. Restating them duplicates a file `/cleanup` owns.

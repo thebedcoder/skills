@@ -21,11 +21,11 @@ ARCH scans codebase + cross-references `./app-docs/features/`:
 ```
 ARCH — Feature Inventory:
 
-Undocumented (no MDX file exists):
+Undocumented (no doc file exists):
   1. [feature] — [files] — complexity: S/M/L
   2. [feature] — [files] — complexity: S/M/L
 
-Stale (MDX exists but code changed significantly):
+Stale (doc exists but code changed significantly):
   3. [feature] — [last updated: date] — [what changed]
 
 Up to date (skip):
@@ -43,7 +43,7 @@ Total to document: X features
 Per selected feature, run full `/doc` flow:
 - ARCH reads code
 - SCRIBE asks Q&A, waits
-- Write MDX to `./app-docs/features/[name].mdx`
+- Write doc to `./app-docs/features/[name].md`
 - Append improvements to `./docs/improvements.md`
 - GIT commit
 
@@ -112,13 +112,13 @@ Features spread across files ARCH may have missed:
 
 SCRIBE creates `./app-docs/guides/` with **end-user guides** (not dev onboarding):
 
-- **`getting-started.mdx`** — user sign-up/install/first-use walkthrough. (Dev setup → `README.md` + `./docs/`.)
-- **Other user guides** — e.g. `account-settings.mdx`, `shortcuts.mdx`, `troubleshooting.mdx`. Only if real user questions. Skip if none.
+- **`getting-started.md`** — user sign-up/install/first-use walkthrough. (Dev setup → `README.md` + `./docs/`.)
+- **Other user guides** — e.g. `account-settings.md`, `shortcuts.md`, `troubleshooting.md`. Only if real user questions. Skip if none.
 
-**Do not** create `architecture.mdx` / `conventions.mdx` — engineering concerns → `./docs/`.
+**Do not** create `architecture.md` / `conventions.md` — engineering concerns → `./docs/`.
 
-Create `./app-docs/index.mdx` — **docs landing page**:
-```mdx
+Create `./app-docs/index.md` — **docs landing page**:
+```md
 ---
 title: [Product name] Docs
 description: [One sentence — what product does, written to the user]
@@ -130,21 +130,21 @@ last_updated: [date]
 [2-3 sentence plain-English welcome. What product is, who it's for, where to start.]
 
 ## Get started
-- [Getting started](./guides/getting-started.mdx) — [one-line hook]
+- [Getting started](./guides/getting-started.md) — [one-line hook]
 
 ## Features
-- [Feature name](./features/[name].mdx) — [one-line user-facing description]
-- [Feature name](./features/[name].mdx) — [one-line user-facing description]
+- [Feature name](./features/[name].md) — [one-line user-facing description]
+- [Feature name](./features/[name].md) — [one-line user-facing description]
 
 ## Guides
-- [Guide title](./guides/[name].mdx) — [one-line hook]
+- [Guide title](./guides/[name].md) — [one-line hook]
 
 (Omit any section with no entries. Don't leave empty headers.)
 ```
 
 ### Phase 3 — Document All User-Facing Features
 
-Per PROD's user-facing list (internal-only skipped), run `/doc` flow — ARCH reads code, SCRIBE Q&A, writes MDX.
+Per PROD's user-facing list (internal-only skipped), run `/doc` flow — ARCH reads code, SCRIBE Q&A, writes the doc.
 
 ### Phase 4 — PROD Review
 
@@ -166,7 +166,7 @@ docs: initialise end-user app-docs from codebase analysis
 ```
 ━━━ DOC-ALL --FULL COMPLETE ━━━
 
-Landing page:        ./app-docs/index.mdx
+Landing page:        ./app-docs/index.md
 User guides created: [list]
 Features documented: X
 Internal-only areas skipped: Y

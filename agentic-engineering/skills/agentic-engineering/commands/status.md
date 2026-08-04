@@ -6,22 +6,27 @@
 
 Read `.agentic/focus.md` if it exists. Parse:
 - CURRENT: `title`, `feature`, `since`, `set_by`, `note`
+- PLAN: checklist, ticked + pending
 - NEXT: ordered numbered list
 
 Stale check: if CURRENT.`since` ≥ 7 days ago, flag with ⚠️.
 
 ### Step 2 — Read project state
 
-Read `./docs/INDEX.md`, `./docs/BACKLOG.md`, then scan all `./docs/features/*/STORIES.md` + `PROGRESS.md`.
+Read `./docs/INDEX.md` (including its `mode:` frontmatter), `./docs/BACKLOG.md`, then scan all `./docs/features/*/STORIES.md` + `PROGRESS.md`.
+
+Mode gates what counts as a gap. In `lite`, absent `PRD.md`, `EPICS.md`, `docs/specs/`, `improvements.md`, and `app-docs/` are **expected** — never report them as missing. In `full` they're reportable gaps. No `mode:` key → treat as `full`. See "Project Mode" in SKILL.md.
 
 Feature marked `archived` in INDEX (or has `SUMMARY.md` + no `STORIES.md`) → read `SUMMARY.md` only. Never scan archived features for stories or progress.
 
 ### Step 3 — Render
 
 ```
-━━━ PROJECT STATUS ━━━
+━━━ PROJECT STATUS ━━━  [lite]
 
 FOCUS 🎯 [CURRENT.title]  ([feature], since [HH:MM], via [set_by])[⚠️ stale (Nd old) if ≥ 7d]
+PLAN   ✅ [completed step]
+       ⬜ [pending step]
 NEXT   1. [item 1]
        2. [item 2]
        ...
@@ -55,7 +60,9 @@ ARCH NOTE: [any cross-feature technical concerns?]
 ```
 
 Rendering rules:
+- Header carries the mode tag: `[lite]` or `[full]`. Marker missing → `[full]`.
 - CURRENT empty (or file absent) → `FOCUS 🎯 (none — run /focus <text> to set)`
+- PLAN empty or absent → omit the entire PLAN block. Cap at 5 lines per SKILL.md — more than 5 steps → show the pending ones plus `+N done`.
 - NEXT empty → omit the entire NEXT block
 - Stale → append `⚠️ stale (Nd old) — still working on this?`
 - CURRENT.`set_by` may contain ` (auto)` or ` (auto-promoted)` suffix from auto mode — render as-is

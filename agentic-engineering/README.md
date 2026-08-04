@@ -30,7 +30,7 @@ Commands are handled by a cast of named specialist agents. Each has a distinct r
 │ 🧪 TEST   │ Coverage & test quality        │ Flags useless tests    │
 │ 🔍 EDGE   │ Adversarial edge-case probe    │ Hunts what's missing   │
 │ 📖 DOC    │ Convention alignment           │ Notices code drift     │
-│ ✍️ SCRIBE  │ End-user product docs (MDX)   │ Writes for app users,  │
+│ ✍️ SCRIBE  │ End-user product docs         │ Writes for app users,  │
 │           │                                │ not the dev team       │
 │ 🔀 GIT    │ Commits, branches, PRs         │ Conventional always    │
 │ 🔐 SEC    │ Security vulnerabilities       │ High-confidence only   │
@@ -53,7 +53,8 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
        │
        ▼
 ┌──────────────┐
-│   /init      │  Create docs scaffold + CLAUDE.md + CONSTITUTION.md
+│   /init      │  Pick project mode (lite or full), then create the
+│              │  docs scaffold + CLAUDE.md + CONSTITUTION.md
 └──────┬───────┘
        │
        ▼
@@ -95,6 +96,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │    ✍️ SCRIBE  updates end-user app-docs + both changelogs            │
 │              (final step before commit — keeps product docs in sync) │
 │    🔀 GIT    commits with conventional message + PR description      │
+│    🧹 CLEAN  records DEC- decisions + refreshes docs/MEMORY.md       │
 │                                                                      │
 │  /ship-all — chains /ship across all stories                         │
 │    Shows [P] parallel groups upfront                                 │
@@ -114,21 +116,22 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | Command | What it does |
 |---|---|
 | `/bootstrap` | Scaffold a new project — stack, deps, structure, epic roadmap |
-| `/init` | Create docs scaffold, CLAUDE.md, and CONSTITUTION.md |
-| `/feature [name]` | Research → PRD → clarifications → constitution check → stories |
+| `/init` | Pick project mode (lite or full), then create the docs scaffold, CLAUDE.md, and CONSTITUTION.md |
+| `/feature [name]` | Research → PRD → clarifications → constitution check → stories. In lite mode: stories only, no PRD or epics |
 | `/design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown |
 | `/ship` | Full story: implement → 6-agent review → frontend → UX check → docs → git. Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates references during `/review` — stale or missing references become should-fix warnings. Projects opt into automated capture during `/init` by picking a tool from the 15-entry catalog (`agentic-engineering/capture-tools/`); `/ship` Phase 4 then dispatches per mechanism and auto-populates the table. To require captures, add a "Visual artifacts" article to CONSTITUTION.md — `ae-ux` then escalates missing-artifact findings to blockers. |
 | `/ship-all` | Loop `/ship` across all unchecked stories |
 | `/plan-all` | Plan all unplanned epics from INDEX.md |
 | `/fix [desc]` | Diagnose bug → fix → review → docs |
 | `/note [desc]` | Capture bug/idea/improvement to BACKLOG.md |
-| `/focus [task\|done\|clear]` | Set, clear, or advance the current-task pointer for this worktree (`.agentic/focus.md` — shown in the status bar, see below) |
+| `/focus [task\|done\|clear]` | Set, clear, or advance the current-task pointer and step plan for this worktree (`.agentic/focus.md` — shown in the status bar, see below) |
 | `/next [task\|drop N]` | Queue a task to be picked up after the current one finishes |
 | `/doc [feature]` | Document a feature interactively with Q&A |
 | `/doc-all [--full]` | Document multiple features (`--full` adds guides + index) |
 | `/status` | Progress overview across all features + backlog (runs in forked context) |
 | `/analyze [question]` | Answer any question — searches docs and codebase (runs in forked context) |
-| `/archive [feature\|--all]` | Compact a shipped feature's docs (PRD, stories, progress, reviews, artifacts) into a single `SUMMARY.md` with story digests, binding decisions, and a frozen test rollup. Originals are deleted — git history preserves them; `data-model.md` stays. `/status` and `/ship-all` skip archived features, keeping their scans fast as shipped features accumulate. `--all` archives every fully-shipped feature behind one combined confirmation, with a separate commit per feature so each can be reverted individually. |
+| `/archive [feature\|--all]` | Compact a shipped feature's docs (PRD, stories, progress, reviews, artifacts) into a single `SUMMARY.md` with story digests, links to the feature's `DEC-` entries, and a frozen test rollup. Originals are deleted — git history preserves them; `data-model.md` stays. `/status` and `/ship-all` skip archived features, keeping their scans fast as shipped features accumulate. `--all` archives every fully-shipped feature behind one combined confirmation, with a separate commit per feature so each can be reverted individually. |
+| `/cleanup [story\|feature]` | Promote finished work into durable docs: binding decisions appended to `docs/DECISIONS.md` as `DEC-NNN` entries, and `docs/MEMORY.md` rewritten within a hard line cap. Runs automatically as the last phase of every `/ship` and `/fix`; use it standalone for work done outside those chains. |
 
 ---
 
@@ -140,7 +143,9 @@ Created automatically by `/init` and maintained by agents throughout development
 your-project/
 ├── CLAUDE.md                    ← project conventions
 ├── docs/
-│   ├── INDEX.md                 ← read first every session
+│   ├── INDEX.md                 ← read first every session (carries the mode: marker)
+│   ├── MEMORY.md                ← durable project knowledge, rewritten and size-capped
+│   ├── DECISIONS.md             ← binding decisions, DEC-NNN, superseded never deleted
 │   ├── CHANGELOG.md             ← agent changelog, terse, newest first
 │   ├── CONSTITUTION.md          ← non-negotiable project principles
 │   ├── BACKLOG.md               ← captured bugs and ideas
@@ -148,8 +153,8 @@ your-project/
 │   ├── specs/                   ← design handoff specs
 │   └── features/
 │       └── [name]/
-│           ├── PRD.md
-│           ├── EPICS.md
+│           ├── PRD.md                        ← full mode only
+│           ├── EPICS.md                      ← full mode only
 │           ├── STORIES.md       ← stories with [P] parallel markers
 │           ├── PROGRESS.md
 │           ├── data-model.md    ← generated when feature touches DB
@@ -158,17 +163,63 @@ your-project/
 │           └── SUMMARY.md       ← replaces all of the above after /archive
 │                                  (data-model.md survives)
 └── app-docs/                   ← END-USER product documentation (like a landing-page "Docs" section)
-    ├── index.mdx               ← docs landing page the user opens first
-    ├── CHANGELOG.mdx           ← product release notes, written to users
-    ├── features/               ← one .mdx per user-facing feature: overview + how-to + tutorial + FAQ
+    ├── index.md                ← docs landing page the user opens first
+    ├── CHANGELOG.md            ← product release notes, written to users
+    ├── features/               ← one .md per user-facing feature: overview + how-to + tutorial + FAQ
     └── guides/                 ← user guides (getting-started, shortcuts, troubleshooting)
 ```
 
 > `./docs/` is for people who **build** the app. `./app-docs/` is for people who **use** the app. They never overlap — no file paths or code in app-docs, no user tutorials in docs. SCRIBE updates app-docs as the final step of every `/ship` and `/fix` so the published docs always match what the app can actually do.
 
+A **lite** project (see below) starts with a much smaller subset of this tree — no `PRD.md`, no `EPICS.md`, no `app-docs/`, no `specs/` — and grows the rest only when something actually needs to be written.
+
 ---
 
 ## Key concepts
+
+### Project mode — lite or full
+
+Not every project is a production system. A landing page does not need a PRD, an epic breakdown, and an end-user documentation site before the first line of CSS. But it still benefits from stories with acceptance criteria, real tests, and a six-agent review.
+
+So `/init` asks once, and records the answer in `docs/INDEX.md` frontmatter:
+
+```yaml
+---
+mode: lite
+---
+```
+
+| | lite | full |
+|---|---|---|
+| Planning | stories straight from your description | research → 3 approaches → PRD → epics → stories |
+| `PRD.md`, `EPICS.md` | never created | always |
+| `improvements.md`, `specs/`, `app-docs/` | created on first write | created at `/init` |
+| `CONSTITUTION.md` | short form, ~10 lines | full articles |
+| Stories, acceptance criteria, `PROGRESS.md` | identical | identical |
+| 6-agent parallel review | identical | identical |
+| Mandatory tests, human checkpoints | identical | identical |
+
+`/init` proposes a mode from what it can observe — test framework, CI config, deploy config, contributor count — and defaults to lite when the signals are ambiguous. You can override at the prompt, and re-running `/init` changes the marker.
+
+In lite mode the shipping path is `/note` → `/ship` rather than `/feature` → `/ship`: capture the thing, then ship it. `/ship` promotes a backlog item into `docs/features/main/` when no feature exists yet. `/feature` still works when you want a group of related stories planned at once — it just skips the research and PRD stages.
+
+Only four commands behave differently between modes (`/init`, `/feature`, `/status`, `/cleanup`). Everything else — `/ship`, `/implement`, `/review`, `/fix`, `/doc` — is identical, because it reads `STORIES.md` and `PROGRESS.md`, which both modes produce.
+
+### Three memory documents
+
+Finished work leaves behind three different kinds of knowledge, and mixing them is how documentation rots. `/cleanup` — the last phase of every `/ship` and `/fix` — keeps them separate:
+
+| File | Answers | How it's written |
+|---|---|---|
+| `docs/CHANGELOG.md` | what shipped, and when | appended, newest first, grows forever |
+| `docs/DECISIONS.md` | why it's built this way | appended as `DEC-NNN`; a reversed decision is marked superseded, never deleted |
+| `docs/MEMORY.md` | what you need to know before touching anything | **rewritten** every cleanup, with a hard cap of 150 lines (50 in lite) |
+
+`MEMORY.md` is the only project document with a size ceiling, and that is the point: it is what an agent reads at session start instead of scanning the codebase, so it has to stay short enough to be worth reading. When a rewrite would blow the cap, cleanup compresses the least valuable section and tells you which one.
+
+Most stories produce no `DEC-` entry at all. That is the expected outcome — a decision earns a line only when it constrains code that hasn't been written yet.
+
+`CONSTITUTION.md` sits apart from all three: it holds rules that must not be broken, not choices that were made.
 
 ### Constitution
 
@@ -211,7 +262,7 @@ Stories tagged `[P]` have no dependencies on other stories. `/ship-all` surfaces
 Both maintained automatically — never skip this step:
 
 - **`./docs/CHANGELOG.md`** — agent-readable engineering log, terse, one line per action. Read at every session start alongside INDEX.md to orient without scanning the codebase. Every ship/fix appends here.
-- **`./app-docs/CHANGELOG.mdx`** — **product release notes, written to end users.** Only gets an entry when a ship or fix actually changed something a user can see. Pure internal refactors do not appear here — they stay in the engineering log.
+- **`./app-docs/CHANGELOG.md`** — **product release notes, written to end users.** Only gets an entry when a ship or fix actually changed something a user can see. Pure internal refactors do not appear here — they stay in the engineering log.
 
 ### Context management
 
@@ -435,7 +486,7 @@ agentic-engineering/
 │   ├── ae-test/                  ← test quality reviewer (AGENT.md + references + languages)
 │   ├── ae-edge/                  ← adversarial edge-case prober (AGENT.md + references)
 │   ├── ae-doc.md                 ← convention checker
-│   ├── ae-scribe.md              ← MDX documentation writer
+│   ├── ae-scribe.md              ← end-user docs writer
 │   ├── ae-sec/                   ← security reviewer (AGENT.md + references + languages)
 │   └── ae-ux/                    ← UX fidelity reviewer (AGENT.md + references)
 ├── commands/                     ← 19 slash-command wrappers (16 user-facing, 3 internal)

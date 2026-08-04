@@ -37,6 +37,20 @@ Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by
 
 3. Continue with the command's real work below.
 
+### Step 0c — Read project mode
+
+Read `mode:` from `./docs/INDEX.md` frontmatter. See "Project Mode" in SKILL.md.
+
+No `./docs/INDEX.md` → print `Run /init first — no docs scaffold in this project.` and exit.
+No `mode:` key → treat as `full`.
+
+| Mode | Stages run |
+|---|---|
+| `full` | 1 → 2 → 2b → 2c → 2d → 3 |
+| `lite` | 2d (only if DB touched) → 3 |
+
+Lite skips research/options (Stage 1), PRD (Stage 2), clarification pass (Stage 2b), and the standalone constitution check (Stage 2c) — REQ still checks every story against CONSTITUTION.md during `/review`. Lite writes no `PRD.md` and no `EPICS.md`, ever.
+
 ---
 
 **GIT** creates feature branch before any work:
@@ -44,7 +58,7 @@ Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by
 git checkout -b feat/[feature-name]
 ```
 
-**ARCH** creates feature folder:
+**ARCH** creates feature folder. **Full:**
 ```
 ./docs/features/[feature-name]/
   PRD.md
@@ -54,9 +68,17 @@ git checkout -b feat/[feature-name]
   /reviews/
 ```
 
+**Lite:**
+```
+./docs/features/[feature-name]/
+  STORIES.md
+  PROGRESS.md
+  /reviews/
+```
+
 ---
 
-### Stage 1: Research & Options
+### Stage 1: Research & Options *(full mode only)*
 
 **ARCH** analyzes codebase + proposes **3 implementation approaches**:
 
@@ -93,7 +115,7 @@ Options = the three approaches, ARCH's pick first suffixed `(Recommended)`. Each
 
 ---
 
-### Stage 2: PRD Generation
+### Stage 2: PRD Generation *(full mode only)*
 
 **PROD** generates PRD → `./docs/features/[feature-name]/PRD.md`.
 
@@ -109,7 +131,7 @@ Any scope harder than it looks?]
 
 ---
 
-### Stage 2b: Clarification Pass
+### Stage 2b: Clarification Pass *(full mode only)*
 
 Any `[NEEDS CLARIFICATION]` items → **PROD** surfaces all at once:
 
@@ -131,7 +153,7 @@ Wait for answers. PROD updates PRD, replaces `[NEEDS CLARIFICATION]` markers wit
 
 ---
 
-### Stage 2c: Constitution Check
+### Stage 2c: Constitution Check *(full mode only)*
 
 **REQ** reads `./docs/CONSTITUTION.md` + checks approved PRD vs every article:
 
@@ -159,7 +181,9 @@ No DB changes → skip silently.
 
 ### Stage 3: Story Breakdown
 
-**PROD** writes epics → `./docs/features/[feature-name]/EPICS.md`, stories → `./docs/features/[feature-name]/STORIES.md`.
+**Full:** PROD writes epics → `./docs/features/[feature-name]/EPICS.md`, stories → `./docs/features/[feature-name]/STORIES.md`.
+
+**Lite:** PROD writes stories only → `./docs/features/[feature-name]/STORIES.md`. Source is the user's `$ARGUMENTS` description plus a codebase read, not a PRD. Ask `[ASK: prose]` once if the description is too thin to derive acceptance criteria from — one round, then write. No epics file.
 
 Tag each story `[P]` if runnable parallel (no dependencies):
 
@@ -212,6 +236,8 @@ Never suggest `/implement` — internal command.
 chore([feature-name]): add PRD, epics and stories
 ```
 
+Lite → `chore([feature-name]): add stories`.
+
 ### Step N — Auto-mode summary
 
 If `AUTO=true`:
@@ -228,6 +254,8 @@ If `AUTO=false`: skip.
 | Approach pick | Choose A/B/C architectural option | `[AUTO: always-ask]` |
 | PRD review | Approve PRD draft | `[AUTO: ask-if-ambiguous]` — skip if no open clarification markers + no constitution conflict |
 | Story breakdown | (implicit — generated from PRD) | `[AUTO: skip]` — proceed silently when PRD is approved |
+
+Lite mode: first two rows never fire — their stages don't run. Only the thin-description `[ASK: prose]` in Stage 3 can pause a lite `/feature`.
 
 ### Gotchas
 
