@@ -11,3 +11,8 @@ node_modules/
 # Claude Code — per-user, never committed
 .claude/settings.local.json
 **/.claude/settings.local.json
+
+# .skill zips are build output for the claude.ai packager — rebuild at release
+# time with /rebuild-artifacts. Committed copies drift silently: git reports the
+# repo clean while the archive falls months behind source.
+*.skill

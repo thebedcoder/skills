@@ -41,7 +41,7 @@ Every plugin follows the same shape:
 
 **The wrapper/real-command split is the most common gotcha.** `commands/<name>.md` at the plugin root is a 4-line shim that says *"Read `commands/<name>.md` from the agentic-engineering skill, then follow those instructions."* The actual command body lives at `skills/<plugin>/commands/<name>.md`. When editing command behavior, edit the real one — the wrapper rarely changes. The split lets the same command be invoked as either a top-level slash command or through the `Skill` tool.
 
-`.skill` files at the root of each plugin (`agentic-engineering.skill`, `jtbd.skill`) are **zip archives** built for the claude.ai skill packager. Treat them as build artifacts, not source — rebuild them from the directory tree if needed; never edit them directly.
+`.skill` files at the root of each plugin (`agentic-engineering.skill`, `jtbd.skill`) are **zip archives** built for the claude.ai skill packager. They are build output, not source: `*.skill` is gitignored and a PreToolUse hook blocks editing them. Rebuild at release time with `/rebuild-artifacts`. The two recipes differ — `jtbd.skill` stages `jtbd/agents/` into the archive, `agentic-engineering.skill` bundles no agents.
 
 ## Two installers — know which one to touch
 
@@ -74,17 +74,18 @@ Conventional Commits with a scope: `feat(agentic-engineering):`, `chore(jtbd):`,
 
 ## Testing changes locally
 
-There is no test suite. Verify changes by running an installer against a temp dir:
+There is no test suite. Run `/verify-install` — it executes all six installers with `HOME` pointed at a throwaway dir and asserts the results.
+
+**Never run an installer directly.** Every installer writes to `~/.claude`; there is no `--prefix` flag, so `bash agentic-engineering/install.sh` clobbers your real config. `HOME` is the only seam:
 
 ```bash
-# Claude Code path
-bash agentic-engineering/install.sh
-
-# Multi-tool path — dry-run-ish: write into a scratch directory
-cd /tmp/scratch && bash /Users/getman/DevWorkspaces/bedcode/skills/install.sh --tool=cursor --skill=agentic-engineering
+SANDBOX=$(mktemp -d)
+HOME="$SANDBOX" bash agentic-engineering/install.sh
 ```
 
-Then inspect `~/.claude/skills/`, `~/.claude/agents/`, `~/.claude/commands/`, or (for non-Claude tools) the written AGENTS.md / `.cursor/rules/` / etc.
+Then inspect `$SANDBOX/.claude/skills/`, `$SANDBOX/.claude/agents/`, `$SANDBOX/.claude/commands/`, or (for non-Claude tools) the written AGENTS.md / `.cursor/rules/` / etc.
+
+`.claude/hooks/check-integrity.sh` runs on every Edit/Write and catches the structural drift this table describes — orphan wrappers, commands missing from `USER_COMMANDS`, `user-invocable` leaking into source, malformed manifests, dropped adapter markers.
 
 ## Agentic-engineering authoring style
 
