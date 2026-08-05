@@ -277,7 +277,7 @@ Container(...))` — also already handled one level up. Only `paywall_content.da
 where `backgroundColor`/`badgeColor` are computed from `isSelected` (flips on
 `PaywallCubit.selectProduct`), with no `AnimatedContainer`/wrapper anywhere — a genuine
 abrupt color-swap-on-selection bug.
-Confirm step (the reading procedure Task 6 should copy verbatim): (1) re-anchor the pattern
+Confirm step: (1) re-anchor the pattern
 to `\bContainer\(` to drop `Animated/LG/Outlined/*Container` false matches; (2) drop hits
 inside `///`/`//` comment lines; (3) for each remaining hit, check whether any of its
 constructor arguments (`color`, `decoration`, `width`, `height`, `padding`, `margin`,
@@ -365,28 +365,53 @@ replaced below):
 Probe: `grep -rEho 'Duration\(milliseconds: *[0-9]+' lib --include='*.dart' | grep -oE '[0-9]+$' | sort -n | uniq -c | sort -rn`
 (this is style-1's own duration-histogram command — style-3 is greppable because it's a
 reclassification of the same literals, not a new search)
-Raw hits: 31 literals fall outside the 100–500ms band, out of 76 non-comment
+
+**Boundary convention (stated explicitly since the band table's edges are ambiguous and this
+text is copied verbatim into Task 6):** the 500ms value itself is treated as owned by the
+**slow** band, not the correct band — i.e. "100–500ms correct" means `100 <= d < 500`, and
+"500–800ms slow" means `500 <= d <= 800`. All figures below follow that convention. If the
+boundary is instead read the other way (500 owned by "correct"), the 500ms bucket (8 sites)
+moves out of the outside-band count entirely and outside-band drops from 31 to 23 — pick
+whichever convention Task 6 wants, but the two are not interchangeable and this document
+uses the first.
+
+Raw hits: 31 literals fall outside the 100–500ms band, out of 75 non-comment
 `Duration(milliseconds:` literals that parsed to a bare integer. Caveat on that denominator:
-of the 92 raw style-1 hits, 14 are inside `///` doc-comment examples (excluded before
-counting — see the `///` sample below), and 2 more didn't parse to a plain integer (a
-variable or expression, not caught by this histogram command) — so 76, not 92, is the real
-base. Band breakdown of the 76: correct (100–500ms) 45, slow (500–800ms) 18, high-severity
-(>800ms) 7, glitch (<100ms) 6 → 45+18+7+6 = 76 ✓. Outside-band count = 18+7+6 = 31.
+of the 92 raw style-1 hits, **15** are inside comment lines (excluded before counting — 14
+are `///` doc-comment examples, plus 1 more that's a `//`-commented-out line,
+`tutorial_finished_dialog.dart:24` — `//     await Future<void>.delayed(const Duration(
+milliseconds: 200));` — found on review; my first pass only excluded `///` and undercounted
+this denominator by 1), and 2 more didn't parse to a plain integer (a variable or arithmetic
+expression, not caught by this histogram command as a clean value — see the noise-class note
+below on why "didn't parse" isn't the only way an expression sneaks in). So 75, not 76, not
+92, is the real base. Band breakdown of the 75: correct (100–500ms) 44, slow (500–800ms) 18,
+high-severity (>800ms) 7, glitch (<100ms) 6 → 44+18+7+6 = 75 ✓. Outside-band count =
+18+7+6 = **31, unchanged** — the corrected denominator only moves the in-band figure (45→44),
+the load-bearing outside-band number reproduces exactly.
 Verdict: needs confirm-step — a large share of the 31 "outside band" literals are not
 motion durations at all, confirmed by reading every site in the glitch band and a sample of
 the slow/high-severity bands:
-- **Glitch band (6, all 3 distinct values hand-checked, not just sampled):** the two 16ms
+- **Glitch band (6, all 3 sites hand-checked — my first pass wrote "the two 50ms sites,"
+  which undercounted; the 50ms bucket has three, not two):** the two 16ms
   sites (`smart_overlay_details.dart:126,132`) are `Future.delayed(const Duration(
   milliseconds: 16), ...)` — a one-frame scheduling wait, not an animation. The 7ms site
-  (`smart_add_input_section.dart:93`) is the same pattern. Of the two 50ms sites, one
-  (`scroll_on_focus.dart:40`) is `Future.delayed` (scheduling); the other
+  (`smart_add_input_section.dart:93`) is the same pattern. Of the three 50ms sites: one
+  (`scroll_on_focus.dart:40`) is `Future.delayed` (scheduling); a second
   (`ai_summary_button.dart:36`) is a `Future.delayed(50ms)` immediately followed by a real
   motion duration two lines later (`Scrollable.ensureVisible(duration: Duration(
   milliseconds: 200), curve: Curves.easeInOut)`) — so this call site has one real
   100–500ms-band motion duration and one unrelated glitch-band scheduling delay that
-  happens to match the same grep pattern. **All 6 glitch-band hits are scheduling
-  delays, zero are actual sub-100ms animations** — none of these are the "glitch" failure
-  mode the band describes (a real transition too fast to perceive); they were never
+  happens to match the same grep pattern; and a third
+  (`smart_overlay_details.dart:360` — `final delay = Duration(milliseconds: 50 +
+  (_repositioningRetryCount * 25)); ... Timer(delay, ...)` at :362) is a **distinct noise
+  class from the "didn't parse to a plain integer" case already noted above**: this literal
+  *does* parse cleanly to the histogram command (the regex greedily grabs the leading digits
+  of `50 + (...)` and reports "50"), but the number reported is not the actual duration used
+  at runtime — the real value is `50 + 25*retryCount`, i.e. 75ms, 100ms, 125ms… on
+  successive retries, truncated by the regex to just its leading literal. It is also a
+  `Timer`, i.e. scheduling, not motion, on top of that. **All 6 glitch-band hits are
+  scheduling delays, zero are actual sub-100ms animations** — none of these are the "glitch"
+  failure mode the band describes (a real transition too fast to perceive); they were never
   animations to begin with.
 - **Slow band (18, sampled):** the 800ms bucket is almost entirely doc-comment noise — 6 of
   its 7 *raw* (pre-comment-filter) occurrences are `///   duration: Duration(milliseconds:
@@ -419,7 +444,14 @@ Confirm step: for every literal outside the 100–500ms band, first check whethe
 enclosing call is `Future.delayed(...)`/`Timer(...)`/a stream operator (`.debounceTime(...)`)
 — if so, it is not a motion duration at all and should be dropped from style-3 entirely (it
 belongs to a scheduling/debounce audit, not a motion one; on this codebase that's true of
-100% of the glitch-band hits and roughly half the 500ms slow-band sample). If it genuinely is
+100% of the glitch-band hits and roughly half the 500ms slow-band sample). Separately, watch
+for a distinct noise class the histogram command can't catch by itself: an arithmetic
+expression inside `Duration(milliseconds: ...)` (e.g. `50 + (retryCount * 25)`) parses
+*successfully* to the histogram — the regex just reports its leading literal — but that
+literal is not the actual duration used at runtime, which varies. A hit whose source line
+has anything other than a single bare integer between `milliseconds:` and the closing `)`
+needs its real value (or range) read from source, not taken from the histogram bucket it
+landed in. If the literal genuinely is
 an animation/transition `duration:` parameter, then classify by band as given, and for the
 high-severity band specifically weigh whether the animation is a one-shot transition on an
 interaction path (worth flagging at "high severity" per the table) or an ambient/looping
@@ -441,9 +473,15 @@ distinct files that match the raw `AnimationController` pattern against their ow
 `void dispose()` body (script: for each file containing the pattern, check whether it also
 contains `void dispose()`) — **all 16 do**, and reading each of those 16 dispose() bodies
 individually confirms each locally-declared `AnimationController` field is disposed by name
-in the same file's `dispose()`. Zero real leaks found. Two things I *did* find that map onto
-the brief's stated concern, both confirmed by reading, both turning out correct rather than
+in the same file's `dispose()`. Zero real leaks found. Three things I *did* find that map onto
+the brief's stated concern, all confirmed by reading, all turning out correct rather than
 buggy:
+- `listening_animation.dart` declares `List<AnimationController>? _rippleControllers;` — a
+  **collection-typed** controller field, disposed by iterating it (`for (final controller in
+  _rippleControllers!) { controller.dispose(); }`) rather than by a direct
+  `_rippleControllers.dispose()` call. A check that only greps for `<fieldName>.dispose()`
+  would never find this and would mechanically conclude "leak" — wrong. See Confirm step
+  clause (5).
 - `smart_overlay_details.dart` declares `final AnimationController? pressFeedbackController;`
   as a **constructor parameter** (`this.pressFeedbackController` in the constructor) — this
   field is correctly *not* disposed in this widget's `dispose()`, because it's caller-owned
@@ -461,7 +499,7 @@ Also found in passing (not a hyg-1 finding, but adjacent): `press_feedback_anima
 `dispose()` doesn't call `super.dispose()` — harmless here because `PressFeedbackAnimationController`
 is a plain class, not a `State`/`ChangeNotifier`, so there's no superclass `dispose()` to
 chain to.
-Confirm step (the reading procedure Task 6 should copy verbatim): (1) don't trust the raw
+Confirm step: (1) don't trust the raw
 grep's file list — for each match, read the actual declared type; discard hits where the
 matched text is a substring of a different class name (e.g. `PressFeedbackAnimationController`)
 rather than the literal `AnimationController`; (2) for each true `AnimationController` field,
@@ -471,7 +509,21 @@ parameter (`this.fieldName` in the constructor, no `= AnimationController(...)` 
 and no assignment in `initState`), it is caller-owned — absence of a local dispose call is
 *correct*, not a leak; (4) if the field's static type is a custom wrapper class rather than
 `AnimationController` itself, follow the wrapper's own `dispose()` to confirm it forwards to
-the real controller before calling it a leak. On this codebase, applying steps 1-4 finds
+the real controller before calling it a leak; (5) **if the field's static type is a
+collection of controllers** (`List<AnimationController>`/`Iterable<AnimationController>`/
+similar — as opposed to a single `AnimationController?`), step 2's literal
+`<fieldName>.dispose()` search will never match, because the correct disposal pattern is a
+loop, not a direct call on the field. Before concluding a leak, check for a `for (... in
+<fieldName>...) { <loopVar>.dispose(); }` (or `.forEach`) construct inside the same
+`dispose()` that iterates the collection and disposes each element. Verified against
+`lib/src/core/presentation/widgets/animations/listening_animation.dart`: `_rippleControllers`
+is declared `List<AnimationController>? _rippleControllers;` (line 70) and disposed at
+`dispose()` lines 183-185 via `for (final controller in _rippleControllers!) {
+controller.dispose(); }` — the string `_rippleControllers.dispose()` never appears anywhere
+in the file, so step 2 alone would mechanically conclude "leak," which is wrong; step 5
+correctly reclassifies it as disposed. This exact file was already cited under hyg-2 ("2
+named controllers plus a controller list") but the collection-field case wasn't folded back
+into hyg-1's own procedure until this correction. On this codebase, applying steps 1-5 finds
 zero real leaks among 50 raw hits / 16 distinct files.
 
 ## hyg-2 — ticker mixin
@@ -533,7 +585,25 @@ this set, unlike state-6/hyg-1/hyg-3).
 Refined probe (per this task's ambiguity-resolution ruling — added, not in the brief):
 for each `AnimatedBuilder\(` hit, check whether `child:` appears within the next 6 lines
 (a plain grep can't express "absence of a token nearby", so this walks each hit's own
-context window with `sed`). Refined raw hits: 13 of 25 have no `child:` within that window.
+context window with `sed`). Exact runnable command (my first pass reported the "13" figure
+without recording this — it reproduces exactly when run):
+
+```bash
+grep -rEn 'AnimatedBuilder\(' lib --include='*.dart' \
+  | while IFS=: read -r file line _; do
+      sed -n "${line},$((line + 6))p" "$file" | grep -q 'child:' \
+        || echo "$file:$line"
+    done | wc -l
+```
+
+Refined raw hits: 13 of 25 have no `child:` within that window (command above, re-run and
+confirmed to reproduce 13 exactly). Full 13-site list: `expandable_section.dart:151`,
+`step_variant.dart:22/92/144`, `smart_overlay_details.dart:451/496/530`,
+`overlay_widget_builder.dart:79`, `vertical_handshake.dart:121`,
+`animated_step_linear_gradient.dart:209`, `listening_animation.dart:215/244/282`. (Note: this
+is the deterministic order the command above produces; the 5 sites I hand-checked below were
+sampled rather than taken as literally "the first 5 in this order," but all 5 are confirmed
+members of this 13-site list.)
 Verdict: real, high precision. Hand-checked all 5 of the refined "missing child:" sample
 sites: `expandable_section.dart:151` (rebuilds a `ClipRRect(... widget.child ...)` subtree
 every animation tick even though `widget.child` doesn't change frame-to-frame);
