@@ -8,7 +8,7 @@ allowed-tools: Bash, Read, Glob, Grep
 # verify-install
 
 This repo has no test suite. The installers *are* the thing under test, and all
-six of them write to `~/.claude`. Running one directly clobbers real config —
+seven of them write to `~/.claude`. Running one directly clobbers real config —
 never do that. This skill redirects `HOME` to a temp dir so the same code paths
 run against a sandbox.
 
@@ -21,7 +21,7 @@ SANDBOX="$(mktemp -d)"
 echo "sandbox: $SANDBOX"
 
 # Every installer resolves paths through ~ , so overriding HOME contains them.
-for p in agentic-engineering jtbd premortem-skill smart-setup squash-merge; do
+for p in agentic-engineering jtbd premortem-skill smart-setup squash-merge update-dependencies; do
   echo "--- $p"
   HOME="$SANDBOX" bash "$REPO/$p/install.sh" >/dev/null || echo "  !! installer FAILED: $p"
 done

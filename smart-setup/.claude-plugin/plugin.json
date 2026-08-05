@@ -1,7 +1,7 @@
 {
   "name": "smart-setup",
   "version": "0.3.0",
-  "description": "Project-tailored Claude Code setup — scans or interviews a project, then generates right-sized Skills, Memory, Agents, Rules, and Tools (SMART) plus a workflow phase map. Ships the standalone update-dependencies skill.",
+  "description": "Project-tailored Claude Code setup — scans or interviews a project, then generates right-sized Skills, Memory, Agents, Rules, and Tools (SMART) plus a workflow phase map.",
   "author": {
     "name": "thebedcoder",
     "url": "https://github.com/thebedcoder"
@@ -18,7 +18,6 @@
     "agents",
     "rules",
     "mcp",
-    "workflow",
-    "dependencies"
+    "workflow"
   ]
 }

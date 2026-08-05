@@ -39,20 +39,6 @@ Restart Claude Code afterwards. Note: the marketplace install ships the plugin a
 
 - `/smart-setup` — scan or interview → tier proposal → manifest → generate
 - `/smart-setup update` — re-audit an existing setup against the current codebase and propose amendments
-- `/update-dependencies` — audit and upgrade deps on any stack (also fires on the phrase "update dependencies"); see below
-
-## The `update-dependencies` skill
-
-The plugin ships a second, standalone skill that works on any stack — npm/pnpm/yarn/bun, pip/poetry/uv, cargo, go, maven/gradle, bundler, composer, pub, SwiftPM, NuGet. It is not generated per project; it is the same skill everywhere, and it reads project-specific constraints from `.claude/deps-constraints.md` when smart-setup found any worth recording (pinned dependencies and why, workspace update order, native rebuild steps, the verify command).
-
-It runs in waves:
-
-1. **Security first.** Ecosystem audit, reported before anything is applied.
-2. **Wave 1 — patch and minor.** Applied as one batch, verified, committed. A failing batch is bisected; the culprit is demoted to wave 2 rather than blocking the rest.
-3. **Wave 2 — majors, one at a time.** For each: changelog and migration guide fetched, breaking changes scoped to *this* repo by grepping for the affected symbols, then it stops and asks. Only after approval does it apply the bump, run the official codemod if one exists, and verify. A failure resets that single dep and moves on.
-4. **Report.** Updated / deferred / blocked / still-vulnerable, each with a reason.
-
-It never applies a major unasked, never runs a codemod without showing the diff, never hand-edits a lockfile, and never forces past a peer-dependency conflict.
 
 ## Tiers
 

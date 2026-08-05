@@ -6,15 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A monorepo of Claude Code plugins published under the **thebedcoder** marketplace. There is no build system, no tests, no lint — the artifacts are markdown (SKILL.md, AGENT.md, command files) and shell (installers). "Shipping" means committing markdown and updating an installer.
 
-Five plugins live here:
+Six plugins live here:
 
 | Plugin | Role | Marketplace |
 |---|---|---|
 | `agentic-engineering/` | Full SDLC workflow — named specialist agents, 6-agent parallel review, end-user docs | listed in `.claude-plugin/marketplace.json` |
 | `jtbd/` | Jobs-to-Be-Done megaskill (MODE 0–4) — research → personas → competitors → landing copy → ad scripts | listed in `.claude-plugin/marketplace.json` |
 | `premortem-skill/` | `/premortem` command + investigator agent | **not yet** in the marketplace |
-| `smart-setup/` | `/smart-setup` — scans/interviews a project, sizes it into a tier, generates right-sized project-local config (Skills, Memory, Agents, Rules, Tools) plus `.claude/workflow.md`; sizing/dispatch layer in front of agentic-engineering. Also ships a second, standalone skill: `skills/update-dependencies/` (generic; exposed as `/update-dependencies` via a same-name command wrapper, also trigger-invoked) | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); its bash installer copies `rules-library/` from the agentic-engineering sibling (marketplace installs fall back to agentic-engineering's copy or observed-convention rules) |
+| `smart-setup/` | `/smart-setup` — scans/interviews a project, sizes it into a tier, generates right-sized project-local config (Skills, Memory, Agents, Rules, Tools) plus `.claude/workflow.md`; sizing/dispatch layer in front of agentic-engineering. Routes the workflow's Maintain phase to `update-dependencies` when that plugin is installed alongside it | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); its bash installer copies `rules-library/` from the agentic-engineering sibling (marketplace installs fall back to agentic-engineering's copy or observed-convention rules) |
 | `squash-merge/` | `/squash-merge [target-branch]` — squash-merges the current branch into a target branch: clean preconditions, a Conventional Commit message synthesized from the squashed commits, then a post-merge push/delete prompt. Single skill, exposed as `/squash-merge` via a same-name command wrapper (also trigger-invoked) | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); simplest per-plugin installer (copies one skill + one command, no `rules-library`) |
+| `update-dependencies/` | `/update-dependencies` — audits and upgrades project dependencies on any stack: security advisories first, then patch/minor in a verified wave, then majors one at a time behind approval. Single skill, exposed as `/update-dependencies` via a same-name command wrapper (also trigger-invoked) | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); simplest per-plugin installer (copies one skill + one command, no `rules-library`) |
 
 Distribution targets two universes:
 - **Claude Code** — via the plugin manifest in `.claude-plugin/` (per-plugin `plugin.json` + top-level `marketplace.json`).

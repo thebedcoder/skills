@@ -21,12 +21,17 @@
     {
       "name": "smart-setup",
       "source": "./smart-setup",
-      "description": "Project-tailored Claude Code setup — scans or interviews a project, sizes it into a tier, then generates right-sized Skills, Memory, Agents, Rules, Tools, and a workflow phase map behind a manifest approval gate. Ships the standalone update-dependencies skill."
+      "description": "Project-tailored Claude Code setup — scans or interviews a project, sizes it into a tier, then generates right-sized Skills, Memory, Agents, Rules, Tools, and a workflow phase map behind a manifest approval gate."
     },
     {
       "name": "squash-merge",
       "source": "./squash-merge",
       "description": "Squash-merge the current branch into a target branch — clean preconditions, a Conventional Commit message synthesized from the squashed commits, and a post-merge push/delete prompt. Nothing pushed or deleted without an explicit choice."
+    },
+    {
+      "name": "update-dependencies",
+      "source": "./update-dependencies",
+      "description": "Audit and upgrade project dependencies on any stack — security advisories first, then patch/minor in a verified wave, then majors one at a time behind approval with changelog and migration steps."
     }
   ]
 }

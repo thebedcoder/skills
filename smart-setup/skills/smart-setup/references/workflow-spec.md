@@ -40,7 +40,7 @@ Known tooling:
 | maintain | — | — |
 | release | — | — |
 
-`maintain` → `update-dependencies` skill when the smart-setup plugin is installed (it ships alongside). Otherwise inline.
+`maintain` → `update-dependencies` skill when the update-dependencies plugin is installed. Otherwise inline.
 
 Unknown tooling found → ask user which phases it owns. Never assume from the name.
 
