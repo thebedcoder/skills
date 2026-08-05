@@ -6,11 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A monorepo of Claude Code plugins published under the **thebedcoder** marketplace. There is no build system, no tests, no lint — the artifacts are markdown (SKILL.md, AGENT.md, command files) and shell (installers). "Shipping" means committing markdown and updating an installer.
 
-Six plugins live here:
+Seven plugins live here:
 
 | Plugin | Role | Marketplace |
 |---|---|---|
 | `agentic-engineering/` | Full SDLC workflow — named specialist agents, 6-agent parallel review, end-user docs | listed in `.claude-plugin/marketplace.json` |
+| `flutter-motion/` | `/flutter-motion` — audits a Flutter project's motion (token consistency, reduce-motion, animation hygiene, missing transitions) and applies fixes in approval-gated waves, each verified against a captured `flutter analyze` + `flutter test` baseline. Single skill, exposed as `/flutter-motion` via a same-name command wrapper | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); simple per-plugin installer (one skill + one command, no `rules-library`) |
 | `jtbd/` | Jobs-to-Be-Done megaskill (MODE 0–4) — research → personas → competitors → landing copy → ad scripts | listed in `.claude-plugin/marketplace.json` |
 | `premortem-skill/` | `/premortem` command + investigator agent | **not yet** in the marketplace |
 | `smart-setup/` | `/smart-setup` — scans/interviews a project, sizes it into a tier, generates right-sized project-local config (Skills, Memory, Agents, Rules, Tools) plus `.claude/workflow.md`; sizing/dispatch layer in front of agentic-engineering. Routes the workflow's Maintain phase to `update-dependencies` when that plugin is installed alongside it | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); its bash installer copies `rules-library/` from the agentic-engineering sibling (marketplace installs fall back to agentic-engineering's copy or observed-convention rules) |

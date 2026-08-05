@@ -14,6 +14,11 @@
       "description": "Full SDLC agentic engineering workflow with named specialist agents — research, PRD, stories, implementation, 6-agent parallel review, end-user docs"
     },
     {
+      "name": "flutter-motion",
+      "source": "./flutter-motion",
+      "description": "Audit and fix a Flutter app's motion — a consistent duration/curve token system, reduce-motion compliance, animation hygiene, and the transitions that actually earn their place. Applied in approval-gated, verified waves."
+    },
+    {
       "name": "jtbd",
       "source": "./jtbd",
       "description": "Jobs to Be Done megaskill — product brief to research, personas, competitor analysis, landing page copy, and platform-native ad scripts, powered by 5 parallel specialist agents"

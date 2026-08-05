@@ -8,7 +8,7 @@ allowed-tools: Bash, Read, Glob, Grep
 # verify-install
 
 This repo has no test suite. The installers *are* the thing under test, and all
-seven of them write to `~/.claude`. Running one directly clobbers real config —
+eight of them write to `~/.claude`. Running one directly clobbers real config —
 never do that. This skill redirects `HOME` to a temp dir so the same code paths
 run against a sandbox.
 
@@ -21,7 +21,7 @@ SANDBOX="$(mktemp -d)"
 echo "sandbox: $SANDBOX"
 
 # Every installer resolves paths through ~ , so overriding HOME contains them.
-for p in agentic-engineering jtbd premortem-skill smart-setup squash-merge update-dependencies; do
+for p in agentic-engineering flutter-motion jtbd premortem-skill smart-setup squash-merge update-dependencies; do
   echo "--- $p"
   HOME="$SANDBOX" bash "$REPO/$p/install.sh" >/dev/null || echo "  !! installer FAILED: $p"
 done
@@ -42,6 +42,7 @@ summarize away a failure.
 | 1 | `$SANDBOX/.claude/skills/agentic-engineering/SKILL.md` contains `user-invocable: false` | installer must patch it post-copy |
 | 2 | `$SANDBOX/.claude/skills/smart-setup/SKILL.md` does **not** contain `user-invocable` | patching it shadows `/smart-setup` — same-name skill/command collision resolves in favor of the skill |
 | 3 | `$SANDBOX/.claude/skills/jtbd/SKILL.md` does **not** contain `user-invocable` | same collision rule for `/jtbd` |
+| 3b | `$SANDBOX/.claude/skills/flutter-motion/SKILL.md` does **not** contain `user-invocable` | same collision rule — patching it shadows `/flutter-motion` |
 | 4 | Repo source `*/skills/*/SKILL.md` still contains no `user-invocable` | the claude.ai packager rejects it; it belongs only in the installed copy |
 | 5 | Every name in `USER_COMMANDS` has a file in `$SANDBOX/.claude/commands/` | user-facing commands actually landed |
 | 6 | `frontend.md`, `implement.md`, `review.md` are **absent** from `$SANDBOX/.claude/commands/` | internal commands stay hidden; they are called by `/ship` |
