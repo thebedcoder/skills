@@ -14,43 +14,87 @@ Sanity anchors from the plan author's 2026-08-05 run, compared against this run:
 | style-1 (`Duration\(milliseconds:`) | ~92 | 92 | exact match |
 | hyg-1 (`AnimationController`) | ~50 | 50 | exact match |
 | hyg-4 (`disableAnimations`) | 0 | 0 | exact match |
-| nav-1 (`MaterialPageRoute\|CupertinoPageRoute`) | 2 | **0** | **-100%, flagged** |
+| nav-1 (`MaterialPageRoute\|CupertinoPageRoute\|PageRouteBuilder`) | 2 | 2 | exact match (after correction — see below) |
 | curve histogram | 11 distinct, easeInOut led at 28, elasticOut×4, easeInBack×2, bounceOut×1 | 11 distinct, easeInOut 28, elasticOut 4, easeInBack 2, bounceOut 1 | exact match |
 
-Everything matches exactly except nav-1, which disagrees by more than the ~10% threshold
-(2 → 0, a 100% relative change). Per the flagging instruction this means the project
-changed, not that the probe is broken. Confirmed by direct reading (not just re-grepping):
-`lib/src/core/navigation/router.dart` builds its entire route table with
-`GoRoute`/`StatefulShellRoute.indexedStack` from `bedcode_navigator`'s re-exported
-`GoRouter`, using `pageBuilder: (context, state) => SomePage()` everywhere — there is no
-`MaterialPageRoute(` or `CupertinoPageRoute(` literal anywhere under `lib/`, confirmed with
-both the shell's `grep` and the real system `grep` binary (`command grep`, bypassing any
-shell wrapper) searching the whole repo, not just `lib/`. Either the anchor was measured
-before a routing migration, or was measured with a different search scope. On today's
-Relaty, nav-1 as written is dead — 0 candidates, and route-level transitions are entirely
-invisible to a `MaterialPageRoute`/`CupertinoPageRoute` grep because go_router's
-`pageBuilder:` returns a bare page widget, never wraps it in a matched literal. See nav-1
-below for the rewrite recommendation.
+**Correction (post-review):** my first pass measured nav-1 with the plan script's literal
+pattern (`MaterialPageRoute|CupertinoPageRoute`, no `PageRouteBuilder`) and got 0, a 100%
+disagreement with the anchor's 2 — I flagged that loudly as instructed. On review it turned
+out the *probe*, not the project, was incomplete: the original anchor measurement included
+`PageRouteBuilder` as a third alternative. Adding it back reproduces the anchor exactly (2
+hits, both in one file — `smart_overlay_menu.dart:360-361`). See the corrected nav-1 section
+below for the pattern, the hand-check, and the honest verdict on that site.
 
 ---
 
 ## nav-1 — default page route
 
-Probe: `grep -rEn 'MaterialPageRoute|CupertinoPageRoute' lib --include='*.dart'`
-Raw hits: 0
-Verdict: false negative (coverage gap, not a false positive). Confirmed by reading
-`lib/src/core/navigation/router.dart` and `lib/main.dart`: every route is a `GoRoute` /
-`StatefulShellRoute.indexedStack` whose `pageBuilder:` returns a bare page widget
-(`const SplashPage()`, `TimelinePage()`, …). go_router wraps that return value in its own
-page/route class internally — the app never spells `MaterialPageRoute(` or
-`CupertinoPageRoute(` anywhere. Disagrees with the anchor (2) by 100% — see Anchor check
-above; re-measured with both the shell grep and the real system grep binary, same result.
-Confirm step: for a go_router codebase, the equivalent rule is not this literal pattern.
-Grep `pageBuilder:\s*\(context, state\)` inside `GoRoute(`/`GoRoute\.` blocks and check
-whether the returned expression is `CustomTransitionPage(` (custom transition — fine) or a
-bare page constructor (default OS transition — the actual thing worth flagging). Task 6
-should treat `nav-1` as go_router-specific and rewrite the probe around `pageBuilder:` /
-`CustomTransitionPage`, not `MaterialPageRoute`.
+Probe: `grep -rEn 'MaterialPageRoute|CupertinoPageRoute|PageRouteBuilder' lib --include='*.dart'`
+Raw hits: 2 (both in one file — `smart_overlay_menu.dart:360` and `:361`). Matches the
+anchor exactly once `PageRouteBuilder` is added as a third alternative — my first pass used
+the plan script's literal two-alternative pattern and got 0, which I flagged loudly as a
+100% anchor disagreement; the probe itself, not the project, was the gap.
+
+**Verified fact for Task 4:** `pubspec.yaml` contains neither `go_router` nor `auto_route` as
+a direct dependency — only `bedcode_navigator` (see lines 41-43). Navigation is entirely
+routed through that in-house package. `lib/src/core/navigation/router.dart` does import a
+class literally named `GoRouter` from `bedcode_navigator`'s own export surface
+(`import 'package:bedcode_navigator/bedcode_navigator.dart' show GoRouter;`), so
+`bedcode_navigator` re-exports or reimplements a `go_router`-shaped API under its own
+package name — but Relaty's own manifest never depends on the `go_router` package directly.
+Every route is a `GoRoute`/`StatefulShellRoute.indexedStack` whose `pageBuilder:` returns a
+bare page widget (`const SplashPage()`, `TimelinePage()`, …), which is *why* this probe
+finds almost nothing on the main route table: that push mechanism never spells
+`MaterialPageRoute(`/`CupertinoPageRoute(`/`PageRouteBuilder(` anywhere. The only 2 hits in
+the whole app are a hand-rolled `PageRouteBuilder` used for a one-off overlay, not for main
+navigation.
+
+Hand-check of `lib/src/core/presentation/widgets/smart_overlay/smart_overlay_menu.dart:360-372`:
+
+```dart
+PageRouteBuilder<void> _createOverlayRoute() {
+  return PageRouteBuilder(
+    transitionDuration: widget.duration ?? SmartOverlayConstants.defaultTransitionDuration, // 200ms
+    pageBuilder: (context, animation, secondaryAnimation) => _buildOverlayPage(animation),
+    fullscreenDialog: SmartOverlayConstants.defaultFullscreenDialog,
+    opaque: SmartOverlayConstants.defaultOpaque, // false
+    barrierDismissible: SmartOverlayConstants.defaultBarrierDismissible,
+    barrierColor: Colors.transparent,
+    maintainState: SmartOverlayConstants.defaultMaintainState,
+  );
+}
+```
+
+Verdict: **real hit, honest verdict is nuanced — not a clean "bug" and not "out of scope".**
+`transitionsBuilder:` is omitted, so Flutter's own default applies
+(`(context, animation, secondaryAnimation, child) => child` — the route itself contributes
+no visual transition). Taken at face value that's exactly the "reached for a custom route
+and didn't give it a real transition" pattern. But reading further shows the `animation`
+object is threaded into `_buildOverlayPage(animation)` → `SmartOverlayDetails(pageAnimation:
+animation, ...)`, and that widget's own `AnimatedBuilder`s (`_buildBlurBackground`,
+`_buildAnimatedChild`, `_buildTopWidget`, `_buildBottomWidget`, all read earlier for
+hyg-5) drive blur/fade/reposition directly off that same clock over the same 200ms — and
+there's a distinct `_isClosing` flag plus separate open/close positioning logic, meaning
+the entrance and exit are deliberately choreographed, symmetrically, by the destination
+widget. So the *user-visible* result is properly animated over a reasonable duration (200ms
+is inside the 100-500ms "correct" band); what's actually missing is only the conventional
+placement of that logic — the route's own `transitionsBuilder` hook is unused, with all
+transition responsibility silently delegated to the pushed widget instead. That's a real,
+worth-a-human's-eyes finding (surprising to a future maintainer expecting
+`PageRouteBuilder.transitionsBuilder` to be where the page's enter/exit lives; fragile if
+someone later reuses `_createOverlayRoute`'s page builder without also carrying over the
+child's internal animation wiring) — but it is not the "static/abrupt, forgot to animate"
+failure mode the rule name suggests, and calling it a plain false positive would ignore
+that it's a real architectural smell.
+Confirm step: for each `PageRouteBuilder` hit, check whether `transitionsBuilder:` is
+present. If present and non-trivial, real good practice, no finding. If absent (as here),
+don't stop at "no transitionsBuilder = bug" — trace whether the `animation` parameter
+passed into `pageBuilder` is consumed downstream by the pushed widget's own
+`AnimatedBuilder`/`Animation`-driven code. If it is, and duration/curve are reasonable, this
+is a "transition exists but lives in the wrong place" finding (architectural, not a missing-
+motion bug) — worth flagging with a different severity than a route with no transition
+signal anywhere. If the `animation` is dropped entirely (never read downstream), that's the
+real "default/abrupt, no transition at all" bug this rule is actually hunting for.
 
 ## nav-2 — tab/nav body swap
 
@@ -305,30 +349,83 @@ curves reflects deliberate design-system diversity (unlikely) or ad-hoc per-site
 (more likely, given `easeInOut`/`linear`/`easeOut` alone cover 44/63 = 70% of usage and the
 remaining 8 curves each appear ≤4 times).
 
-## style-3
+## style-3 — duration outside the correct band
 
-Probe: none — manual (no grep pattern or rule definition was supplied to me anywhere — not
-in the brief's probe script, not in the task's ambiguity-resolution ruling that added hyg-2/
-hyg-5. I derived a working definition from reading style-1/style-2's own histogram data
-rather than inventing one from memory, per this task's stated point, and flagging this
-gap explicitly rather than silently guessing).
-Raw hits: 5 outlier sites found by reading the duration histogram's tail (16ms×2, 7ms×1,
-50ms×2) against its mode (300ms, 27 hits).
-Verdict: needs confirm-step / open question for whoever writes the Task 6 catalog. Working
-definition I used: "a `Duration(milliseconds:` literal that is not actually a motion/
-transition duration at all, because it's the argument to `Future.delayed`/`Timer` (scheduling)
-rather than to an animation-related parameter (`AnimationController(duration:`,
-`AnimatedContainer(duration:`, `.animateToPage(duration:`, etc.), or that is small enough
-(<50ms, based on the two 16ms `Future.delayed` sites in `smart_overlay_details.dart:126,132`
-and the 7ms site in `smart_add_input_section.dart:93`) to read as a frame-wait/microtask hack
-rather than a perceptible eased transition." I could not verify this is what the plan author
-intended for style-3 — it's an inference, not a measurement of a given rule. **Flag for the
-person who wrote task-2-brief.md / the Task 6 catalog: style-3 needs an explicit definition
-before Task 6 copies anything from this section.**
-Confirm step: if this definition is accepted — grep `Duration\(milliseconds:` sites (already
-gathered by style-1) and classify each by its enclosing call (`Future.delayed`/`Timer` vs. an
-animation-parameter position); flag the `Future.delayed`/`Timer` ones as "not a motion
-duration, exclude from style-1's token migration" rather than as a style-3 bug per se.
+Definition (authoritative, from Task 6 of the plan — my first pass had derived a different,
+wrong working definition from the histogram tail alone because this table hadn't reached me;
+replaced below):
+
+| Duration | Reads as |
+|---|---|
+| < 100ms | glitch — the eye doesn't register motion, only a jump |
+| 100–500ms | correct |
+| 500–800ms | slow; acceptable only for a full-screen emphasized transition |
+| > 800ms on a common path | **high severity.** The biggest cheap-app tell there is. A user hitting this ten times a session waits eight seconds on animation. |
+
+Probe: `grep -rEho 'Duration\(milliseconds: *[0-9]+' lib --include='*.dart' | grep -oE '[0-9]+$' | sort -n | uniq -c | sort -rn`
+(this is style-1's own duration-histogram command — style-3 is greppable because it's a
+reclassification of the same literals, not a new search)
+Raw hits: 31 literals fall outside the 100–500ms band, out of 76 non-comment
+`Duration(milliseconds:` literals that parsed to a bare integer. Caveat on that denominator:
+of the 92 raw style-1 hits, 14 are inside `///` doc-comment examples (excluded before
+counting — see the `///` sample below), and 2 more didn't parse to a plain integer (a
+variable or expression, not caught by this histogram command) — so 76, not 92, is the real
+base. Band breakdown of the 76: correct (100–500ms) 45, slow (500–800ms) 18, high-severity
+(>800ms) 7, glitch (<100ms) 6 → 45+18+7+6 = 76 ✓. Outside-band count = 18+7+6 = 31.
+Verdict: needs confirm-step — a large share of the 31 "outside band" literals are not
+motion durations at all, confirmed by reading every site in the glitch band and a sample of
+the slow/high-severity bands:
+- **Glitch band (6, all 3 distinct values hand-checked, not just sampled):** the two 16ms
+  sites (`smart_overlay_details.dart:126,132`) are `Future.delayed(const Duration(
+  milliseconds: 16), ...)` — a one-frame scheduling wait, not an animation. The 7ms site
+  (`smart_add_input_section.dart:93`) is the same pattern. Of the two 50ms sites, one
+  (`scroll_on_focus.dart:40`) is `Future.delayed` (scheduling); the other
+  (`ai_summary_button.dart:36`) is a `Future.delayed(50ms)` immediately followed by a real
+  motion duration two lines later (`Scrollable.ensureVisible(duration: Duration(
+  milliseconds: 200), curve: Curves.easeInOut)`) — so this call site has one real
+  100–500ms-band motion duration and one unrelated glitch-band scheduling delay that
+  happens to match the same grep pattern. **All 6 glitch-band hits are scheduling
+  delays, zero are actual sub-100ms animations** — none of these are the "glitch" failure
+  mode the band describes (a real transition too fast to perceive); they were never
+  animations to begin with.
+- **Slow band (18, sampled):** the 800ms bucket is almost entirely doc-comment noise — 6 of
+  its 7 *raw* (pre-comment-filter) occurrences are `///   duration: Duration(milliseconds:
+  800),` dartdoc examples across `zoom_out_motor.dart`/`fade_in.dart`/`zoom_in.dart`/
+  `zoom_in_motor.dart`/`fade_out.dart`/`zoom_out.dart`; only `listening_animation.dart:28`
+  (`soundWaveDuration = const Duration(milliseconds: 800)`) is real. The 600ms bucket (9,
+  sampled 5) is real in every sample — default `duration:` constructor parameters on the
+  app's own `animated.dart`/`zoom_out_motor.dart`/`fade_in.dart`/`zoom_out.dart`/
+  `zoom_in_motor.dart` animation-widget classes — genuinely in the "slow, acceptable only for
+  emphasized transitions" band, and these widgets do read as emphasized/decorative effects.
+  The 500ms bucket (8, sampled 5) is mixed: 1 real animation-duration default
+  (`tutorial_constants.dart`'s `focusAnimationDuration`), 1 scheduling delay
+  (`notifications_service.dart`'s `.debounceTime(500ms)` — a stream debounce, not a widget
+  transition), 1 more scheduling delay (`tutorial.dart`'s `Future.delayed(500ms)`), and the
+  rest already excluded as doc-comments in the clean histogram.
+- **High-severity band (7, all 4 distinct values checked):** `1500ms`×4 is mixed —
+  `bootstrap_service.dart`'s `splashFloor` (a minimum splash-screen display floor, a business
+  rule about wait time rather than an animated transition, though still user-facing wait
+  time) alongside 3 genuine animation-duration defaults
+  (`animated_step_linear_gradient.dart`, `vertical_handshake.dart`,
+  `smart_add_voice_input.dart`'s `bounceDuration`). `2000ms`×1 and `1000ms`×1
+  (`listening_animation.dart`'s `rippleDuration`/`bounceDuration`) and `3000ms`×1
+  (`pulsing_animation.dart`'s `pulseDuration`) are all real animation defaults for
+  ambient/looping effects (ripple, pulse, bounce), not one-shot page/interaction
+  transitions. This matters for the band table's own qualifier — "> 800ms **on a common
+  path**" — because a decorative loop a user isn't blocked on is a different severity than
+  an 1000ms+ duration gating an interaction a user repeats every session; `splashFloor` is
+  the one site here that plausibly *is* on a common path (every cold start).
+Confirm step: for every literal outside the 100–500ms band, first check whether its
+enclosing call is `Future.delayed(...)`/`Timer(...)`/a stream operator (`.debounceTime(...)`)
+— if so, it is not a motion duration at all and should be dropped from style-3 entirely (it
+belongs to a scheduling/debounce audit, not a motion one; on this codebase that's true of
+100% of the glitch-band hits and roughly half the 500ms slow-band sample). If it genuinely is
+an animation/transition `duration:` parameter, then classify by band as given, and for the
+high-severity band specifically weigh whether the animation is a one-shot transition on an
+interaction path (worth flagging at "high severity" per the table) or an ambient/looping
+decorative effect (pulse/ripple/bounce) that a user is not blocked waiting on — the table's
+"on a common path" qualifier is doing real work here and a flat >800ms grep will over-flag
+ambient animations otherwise.
 
 ## hyg-1 — controllers
 
