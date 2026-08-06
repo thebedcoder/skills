@@ -94,23 +94,18 @@ Verify. Commit alone: `feat(ui): motion token system`.
 
 `hyg-1`…`hyg-5`. These are bugs — a leaked controller burning frames on a dead screen, a ticker mixin mismatch that crashes, reduce-motion never checked. Not taste, so not per-item gated.
 
-Show the full list before applying. One batched commit: `fix(ui):` or `perf(ui):`.
+Show the full list before applying. **Two commits, not one:**
 
-`hyg-4` (reduce-motion) is app-wide, not per-site. Report it once with a count, never once per animation.
+1. `hyg-1`, `hyg-2`, `hyg-3`, `hyg-5` — localized, a handful of sites each. One batch: `fix(ui):` or `perf(ui):`.
+2. `hyg-4` **alone**, its own verify and its own commit: `fix(ui): respect reduce-motion`.
+
+`hyg-4` is one finding with an app-wide fix — every animation site gets its duration wrapped, which on a mature project is dozens of files. It is also where the `const`-site constraint in the hard rules bites hardest. Batching that with four small bug fixes produces an unbisectable commit, and a compile error anywhere in it strands the whole wave. Report the finding once with a count; apply and commit it on its own.
 
 ## Step 6 — Wave 2: high severity, one screen at a time
 
 Gated per screen, not per finding. A screen carrying two high findings is one unit: both diffs shown together, applied together, verified together, one commit. Splitting them means two eyeball checkpoints on the same screen.
 
-For each screen:
-
-1. Show the diff — all high findings on that screen.
-2. Apply.
-3. Verify (below).
-4. **Stop. User looks at it.**
-5. Commit, or revert.
-
-One screen per commit. `feat(ui): <screen> — <what moved>`.
+For each screen: show the diff for all high findings on it, apply them, then run the Verify block below — it owns everything from that point, including the checkpoint and the commit. One screen per commit, `feat(ui): <screen> — <what moved>`.
 
 ## Step 7 — Wave 3: medium and low, as a menu
 
@@ -120,11 +115,15 @@ Anything unpicked is **declined** and gets written to `.claude/motion.md` at Ste
 
 ## Verify — after every wave, no exceptions
 
+This block owns the whole post-apply sequence. A wave's own section says what to change; from "applied" onward, these five steps run and nothing repeats them.
+
 1. `flutter analyze` — no worse than baseline.
 2. `flutter test` — no worse than baseline. Motion breaks widget tests routinely: `pumpAndSettle` times out against an infinite animation; finders that ran mid-frame stop matching. **Fix the tests your motion broke. Never delete one, never add `skip`.**
 3. **Human checkpoint.** State exactly what to open and what to watch. Not "check the animations" — "Open Home, tap the second card, watch whether the card grows into the detail page or the page slides in from the right."
-4. User approves, or the wave reverts: `git reset --hard HEAD`.
-5. Commit. One wave per commit; Wave 2 is one screen per commit.
+4. User approves → step 5. User rejects → `git reset --hard HEAD`, report why, move on.
+5. Commit. **One verify cycle, one commit** — never two commits from one run of this block, never one commit spanning two. Wave 0 is one; Wave 1 is two (small hygiene, then `hyg-4`); Wave 2 is one per screen; Wave 3 is one.
+
+**The commit is always last.** Nothing is committed before the human has looked at it, which is what makes step 4's `git reset --hard HEAD` safe — the wave is still uncommitted at that point. If you have already committed, that command reverts nothing; you are past the gate and the wave stands.
 
 **Jank check.** `flutter run --profile` with a DevTools timeline trace is the only real one, and it is heavy. Required ONLY for findings that touch a scrolling list — the one place added motion actually drops frames. Everywhere else, list it under suggested manual checks.
 
@@ -160,5 +159,5 @@ Empty section keeps its heading and reads `none`. Silent omission reads as "hand
 - Never touch a path under `Do not animate` in `.claude/motion.md`.
 - Never re-propose a finding under `Declined`.
 - Never carry a failed wave forward. Revert it, report why, move on.
-- One wave per verification. No batching because "they're all small".
+- Every commit gets its own verification. No batching because "they're all small".
 - Never delete or skip a test that new motion broke. Fix it.
