@@ -75,7 +75,7 @@ Tokens: absent | <path> | scattered literals (N distinct durations, M distinct c
 (N durations across the app; which files disagree)
 ```
 
-Severity: **the `Severity` column in `references/findings.md`'s rule index governs.** It is per-rule and already decided; do not re-derive it. The definitions there:
+Severity: **the `Severity` column in `references/findings.md`'s rule index governs.** Consult it rather than re-deriving from the definitions below. Two rows are compound — `hyg-2` is "high crashing / low reverse", `style-2` is "medium (high for bounce/elastic/back)" — and there you pick the half the confirmed reading supports. The definitions:
 
 - **high** — a bug, a crash, an accessibility gap, or motion on a hot path that reads as broken. Root transitions, primary list→detail, the main loading state, and any duration over 800ms on a common path are hot-path cases; a missing error branch is the accessibility/bug case.
 - **medium** — real, worth fixing, felt across the app rather than at one site.
@@ -155,7 +155,7 @@ Empty section keeps its heading and reads `none`. Silent omission reads as "hand
 - Never write a bounce, elastic, or back curve. Flag existing ones as findings.
 - Every duration you write comes from the token file. Zero inline literals.
 - Every animation you write respects reduce-motion — **at the site where the duration is consumed, not where it is declared.** A `const` site (default parameter, `static const`, file-level `const`) takes the bare token; `Motion.of(…)` is a function call, not a constant expression, and will not compile there. Wrap at the build site that reads it, and never call `Motion.of` from `initState`. `references/motion-system.md` §1 is authoritative and carries the SDK citation.
-- A duration is not a motion duration just because it is a `Duration`. Retry backoffs, debounces, polling intervals and `Future.delayed` floors are scheduling — they leave this skill's scope entirely rather than getting a token.
+- A duration is not a motion duration just because it is a `Duration`. Retry backoffs, debounces, polling intervals and `Future.delayed` floors are scheduling — they leave this skill's scope entirely rather than getting a token. `references/findings.md` `style-1` clause 1 is authoritative.
 - Never touch a path under `Do not animate` in `.claude/motion.md`.
 - Never re-propose a finding under `Declined`.
 - Never carry a failed wave forward. Revert it, report why, move on.
