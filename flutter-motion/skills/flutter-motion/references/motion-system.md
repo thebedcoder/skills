@@ -70,6 +70,19 @@ Also never call `Motion.of` from `initState` — it reads `MediaQuery`, and
 safe point. `findings.md` `style-1` enumerates the affected positions with
 counts.
 
+**These two prohibitions fail differently, and only one of them is caught for you.**
+Measured on a real project, 2026-08-06:
+
+| Violation | How it fails | Caught by `flutter analyze`? |
+|---|---|---|
+| `Motion.of(…)` at a `const` site | compile error — `const_eval_method_invocation` ("Methods can't be invoked in constant expressions") plus `undefined_identifier` on `context` | **Yes**, immediately |
+| `Motion.of(context, …)` in `initState` | runtime assertion when the widget first builds | **No — analyzes completely clean** |
+
+So a green `flutter analyze` is not evidence the `initState` rule was respected. Only a
+widget test that actually pumps the widget catches it, and a project whose tests do not
+cover that screen catches it never. Grep the changed files for `Motion.of` and check the
+enclosing method by eye.
+
 ## 2. Adopting an existing file
 
 Detect before proposing a new one. Check, in order:

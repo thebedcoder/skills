@@ -16,7 +16,7 @@ Make an app feel expensive by making its motion consistent, not by adding more o
 ## Preconditions — check before anything
 
 1. Flutter project. `pubspec.yaml` exists with `flutter:` under `dependencies`. No → stop.
-2. Working tree clean (`git status --porcelain` empty). Dirty → stop, tell user to commit or stash. Wave revert depends on a clean baseline.
+2. No uncommitted **tracked** changes: `git status --porcelain --untracked-files=no` empty. Dirty → stop, tell user to commit or stash. Untracked files are fine and do not block — `git reset --hard HEAD` never touches them, so they cannot corrupt a wave revert. Checking plain `git status --porcelain` here refuses to run on any project with a stray local file, for no safety gain.
 3. **Capture baseline.** Run `flutter analyze` and `flutter test`, record both results BEFORE touching anything. Pre-existing failures get recorded, not fixed and not blamed on this skill. The gate is **no worse than baseline**, never "clean" — most real projects are not clean.
 
 ## Step 1 — Read the contract
@@ -86,6 +86,8 @@ Severity: **the `Severity` column in `references/findings.md`'s rule index gover
 
 Create or adopt the token file per `references/motion-system.md` §1–2. **No fix wave lands before this one** — every later fix references these names, and a fix that lands first writes a literal.
 
+**Place it alongside the project's existing theme code, and derive the import from `pubspec.yaml`.** §2's globs find an existing token file; they do not tell you where to put a new one. Look at where the project already keeps theme/constants code and match it — a file dropped at `lib/theme/` in a project whose theme lives at `lib/src/core/presentation/theme/` violates its layout on the first commit. The import prefix is the `name:` field in `pubspec.yaml`, **not the directory name** — they differ more often than you'd think (a mid-rebrand project can have directory `relaty` and package `memocue`). Get this wrong and every fix in every later wave fails to resolve.
+
 Values are taste. **ASK, and wait.** Present the proposed durations and curves as numbers the user can argue with. A project with an existing scale adopts that scale (§2), it does not get Material's imposed on it.
 
 Verify. Commit alone: `feat(ui): motion token system`.
@@ -117,7 +119,7 @@ Anything unpicked is **declined** and gets written to `.claude/motion.md` at Ste
 
 This block owns the whole post-apply sequence. A wave's own section says what to change; from "applied" onward, these five steps run and nothing repeats them.
 
-1. `flutter analyze` — no worse than baseline.
+1. `flutter analyze` — no worse than baseline. **It will not catch a `Motion.of` called from `initState`** — that is a runtime assertion, not a static error, and it analyzes clean (measured). Grep for it yourself before trusting a green analyze: `grep -n 'Motion\.of' <changed files>` and confirm every hit is in `build`, `didChangeDependencies`, or a callback — never `initState`.
 2. `flutter test` — no worse than baseline. Motion breaks widget tests routinely: `pumpAndSettle` times out against an infinite animation; finders that ran mid-frame stop matching. **Fix the tests your motion broke. Never delete one, never add `skip`.**
 3. **Human checkpoint.** State exactly what to open and what to watch. Not "check the animations" — "Open Home, tap the second card, watch whether the card grows into the detail page or the page slides in from the right."
 4. User approves → step 5. User rejects → `git reset --hard HEAD`, report why, move on.
