@@ -29,6 +29,13 @@ Mechanics that apply to every probe:
 - Drop comment lines before counting: `| grep -vE ':[[:space:]]*//'`. On Relaty this
   changes the answer, not just the count, for `style-1` (15 of 92), `style-2`,
   `state-2`, and `state-6`.
+- **A site listed in a fix table must still pass its own rule's confirm step first.** A
+  table answering "where does this construct appear" is not answering "is this a
+  finding". Where a rule has both, the confirm step runs first — always. Three separate
+  defects caught in this catalog's own review were this one shape: an enumeration
+  asserting coverage it did not have, then being read as a to-do list. The countermeasures
+  are structural, not numeric — a cross-check whose gap must be accounted for (`nav-1`),
+  an explicit non-completeness disclaimer (`style-1`), and this rule.
 - Three traps have bitten this project four times: **substring** matches
   (`Container(` ⊃ `LGContainer(`, `TickerProviderStateMixin` ⊂
   `SingleTickerProviderStateMixin`), **re-exports** (`bedcode_navigator` →
@@ -704,17 +711,37 @@ Confirm by reading:
    is a defect the skill introduced.
 
 Fix: replace each transition literal with a `Motion` token (`motion-system.md` §1).
+
+**Two different questions. The table below answers only the first.**
+
+| Question | Kind of question | What answers it |
+|---|---|---|
+| Where is `Motion.of(context, …)` unavailable? | **compile constraint** | the rows below — all 30 const sites qualify, scheduling delays included |
+| Does this site get a `Motion` token *at all*? | **motion question** | **clause 1 above, and it runs first** |
+
+A scheduling delay can be a `const` position **and** be out of scope for `style-1`
+entirely. It gets no token — not bare, not wrapped — and never enters the migration.
+Verified on Relaty: `core/utils/retry.dart:11` is consumed at `:26-29` as
+`Future<void>.delayed(retryDelay * pow(2, …))`, exponential backoff whose literal is only
+a *base* (real delays 300/600/1200ms);
+`features/audio_record/…/audio_record_cubit.dart:23` is consumed at `:148` as
+`Timer.periodic(_timerInterval, …)`, a polling interval;
+`core/data/services/bootstrap_service.dart:50` at `:59` as
+`Future<void>.delayed(splashFloor)`; `core/presentation/widgets/debounced_button.dart:27`
+at `:71` as `EasyDebounce.debounce(…)`. **That list is an illustration, not a
+classification of all 30** — classify each site by reading its consumption, exactly as
+clause 1 says.
+
 **Positions where `Motion.of(context, …)` is not usable. Each must be handled or the fix
-will not compile. The three `const` rows below are one rule — reduce-motion is applied
-where a duration is *consumed*, never where it is *declared* (`motion-system.md` §1) —
-and the counts are what Relaty measured, not a claim that no fourth const position
-exists:**
+will not compile. The three `const` rows are one rule — reduce-motion is applied where a
+duration is *consumed*, never where it is *declared* (`motion-system.md` §1) — and the
+counts are what Relaty measured, not a claim that no fourth const position exists:**
 
 | Position | Why `Motion.of` fails | What to write |
 |---|---|---|
-| Default constructor parameter — **18 of the 75** on Relaty (`animations/` — `fade_in.dart:29`, `zoom_in.dart:30`, `zoom_out.dart:30`, `zoom_in_motor.dart:30`, `zoom_out_motor.dart:31`, `fade_out.dart:29`, `listening_animation.dart:26,28,29`, `pulsing_animation.dart:83`, `vertical_handshake.dart:33`, `animated_step_linear_gradient.dart:41`, `animated_two_state_switcher.dart:26`; `core/presentation/widgets/` — `animated.dart:8`, `expanded_page_view.dart:13,38`, `scroll_after_build.dart:7`, `debounced_button.dart:27`) | a default value must be a compile-time constant, and there is no `BuildContext` | the **bare token** — `Motion.standard` is `static const`, so `this.duration = Motion.standard` is legal. Apply `Motion.of` at the consuming build site. |
-| `static const` field — **9 more** (`core/data/services/bootstrap_service.dart:50`, `smart_overlay/constants.dart:15,16`, `smart_overlay/overlay_widget_builders.dart:6,7`, `features/tutorial/presentation/utils/tutorial_constants.dart:4,5,6,7`) | same reason; `static const X = Motion.of(…)` is not a constant expression | same — the bare token |
-| File-level `const` — **3 more** (`core/utils/retry.dart:11`, `core/presentation/widgets/expandable_section.dart:11`, `features/audio_record/presentation/cubit/audio_record_cubit.dart:23`) | same reason; a top-level `const` initializer must be a constant expression | same — the bare token. **30 of the 75 literals sit in one of these three const positions.** Worked precedent already in Relaty: `expandable_section.dart:11` declares `const Duration _kExpandCollapseDuration = Duration(milliseconds: 250)` and `:275` consumes it as `duration: _animateTransitions ? _kExpandCollapseDuration : Duration.zero` — bare const at the declaration, the conditional applied at the build site. Copy the structure, not the literal: that `250` is itself a `style-1` finding and the fix swaps it for `Motion.standard` in place. |
+| Default constructor parameter — **18 of the 75** on Relaty (`animations/` — `fade_in.dart:29`, `zoom_in.dart:30`, `zoom_out.dart:30`, `zoom_in_motor.dart:30`, `zoom_out_motor.dart:31`, `fade_out.dart:29`, `listening_animation.dart:26,28,29`, `pulsing_animation.dart:83`, `vertical_handshake.dart:33`, `animated_step_linear_gradient.dart:41`, `animated_two_state_switcher.dart:26`; `core/presentation/widgets/` — `animated.dart:8`, `expanded_page_view.dart:13,38`, `scroll_after_build.dart:7`, `debounced_button.dart:27` — a debounce, dropped by clause 1) | a default value must be a compile-time constant, and there is no `BuildContext` | **if clause 1 kept the site:** the **bare token** — `Motion.standard` is `static const`, so `this.duration = Motion.standard` is legal. Apply `Motion.of` at the consuming build site. If clause 1 dropped it, write nothing — it is not a `style-1` site. |
+| `static const` field — **9 more** (`core/data/services/bootstrap_service.dart:50` — a `Future.delayed` floor, dropped by clauses 1 and 3; `smart_overlay/constants.dart:15,16`, `smart_overlay/overlay_widget_builders.dart:6,7`, `features/tutorial/presentation/utils/tutorial_constants.dart:4,5`; `:6,7` are `navigationDelay`/`navigationDelayLong`, dropped by clause 1 and referenced nowhere in `lib/` besides) | same reason; `static const X = Motion.of(…)` is not a constant expression | same, and same gate — bare token only for the sites clause 1 kept |
+| File-level `const` — **3 more** (`core/presentation/widgets/expandable_section.dart:11` — the only motion duration of the three; `core/utils/retry.dart:11` and `features/audio_record/presentation/cubit/audio_record_cubit.dart:23` are both dropped by clause 1) | same reason; a top-level `const` initializer must be a constant expression | same, and same gate. **30 of the 75 literals sit in one of these three const positions — that is the compile-constraint count, not a fix count.** Worked precedent already in Relaty: `expandable_section.dart:11` declares `const Duration _kExpandCollapseDuration = Duration(milliseconds: 250)` and `:275` consumes it as `duration: _animateTransitions ? _kExpandCollapseDuration : Duration.zero` — bare const at the declaration, the conditional applied at the build site. Copy the structure, not the literal: that `250` is itself a `style-1` finding and the fix swaps it for `Motion.standard` in place. |
 | `AnimationController(duration: …)` inside `initState` — Relaty builds controllers in `initState` in 14 of its 16 controller files | `Motion.of` reads `MediaQuery`, and `dependOnInheritedWidgetOfExactType` must not be called from `initState` (SDK `flutter/lib/src/widgets/framework.dart:999-1002`; `didChangeDependencies` is the earliest safe point) | construct with the bare token, then assign `controller.duration = Motion.of(context, …)` in `didChangeDependencies`, or read the value in `build` |
 
 Why it matters: 92 literals is 92 independent decisions. One token file turns "the
