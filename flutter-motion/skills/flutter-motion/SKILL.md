@@ -11,9 +11,7 @@ description: >
 
 # flutter-motion
 
-Make an app feel expensive by making its motion consistent, not by adding more of it. Audit first, apply in verified waves, never touch a path the user declined.
-
-The product is restraint. A mature Flutter app is usually over-animated and under-systematised — many durations, many curves, no shared source. Fixing that reads as polish. Adding animation on top of it reads as noise.
+Make an app feel expensive by making its motion consistent, not by adding more of it. Audit first, apply in verified waves, never touch a path the user declined. Restraint is the product — a mature app is usually over-animated and under-systematised, and adding motion on top of that reads as noise.
 
 ## Preconditions — check before anything
 
@@ -51,7 +49,7 @@ Four detections. Each has a reference; none is a single grep.
 | Router | `references/routing.md` §1–5 | **Never conclude from `pubspec.yaml` alone.** A wrapper package can re-export the real router under its own name with no trace in the manifest. Run §5's re-export check before deciding. |
 | State management | `references/state-mgmt.md` §0 | `flutter_bloc` re-exports Provider's `context.watch`/`context.select`, so those greps false-positive Provider on every BLoC app. §0's detection is AND-gated for this reason. |
 | Existing animation deps | `pubspec.yaml` — `animations`, `flutter_animate`, `lottie`, `rive` | Adopt the house style. **Never stack a second animation library** on a project that already has one. |
-| Design system | `references/motion-system.md` §2–3 | M3, Cupertino, or custom. Custom → adopt its existing values at Step 4, do not impose Material's. |
+| Existing motion scale | `references/motion-system.md` §2 | Glob the paths §2 lists before proposing a new token file. A project with its own scale adopts that scale at Step 4 — never get Material's values imposed on it. **Cupertino-specific motion has no coverage in these references; on an all-Cupertino project say so rather than applying Material timings.** |
 
 ## Step 3 — Scan and report, before any edit
 
@@ -77,15 +75,15 @@ Tokens: absent | <path> | scattered literals (N distinct durations, M distinct c
 (N durations across the app; which files disagree)
 ```
 
-Severity:
+Severity: **the `Severity` column in `references/findings.md`'s rule index governs.** It is per-rule and already decided; do not re-derive it. The definitions there:
 
-- **high** — every user, every session. Root transitions, primary list→detail, the main loading state, any duration over 800ms on a common path.
-- **medium** — a real path, not a hot one.
-- **low** — staggered entrance, micro press feedback. Aggregate these; never one line per site.
+- **high** — a bug, a crash, an accessibility gap, or motion on a hot path that reads as broken. Root transitions, primary list→detail, the main loading state, and any duration over 800ms on a common path are hot-path cases; a missing error branch is the accessibility/bug case.
+- **medium** — real, worth fixing, felt across the app rather than at one site.
+- **low** — polish, or a missed optimization. Aggregate these; never one line per site.
 
 ## Step 4 — Wave 0: tokens
 
-Create or adopt the token file per `references/motion-system.md` §1–2. Nothing else in this skill may run first — every later fix references these names, and a fix that lands before them writes a literal.
+Create or adopt the token file per `references/motion-system.md` §1–2. **No fix wave lands before this one** — every later fix references these names, and a fix that lands first writes a literal.
 
 Values are taste. **ASK, and wait.** Present the proposed durations and curves as numbers the user can argue with. A project with an existing scale adopts that scale (§2), it does not get Material's imposed on it.
 
@@ -101,9 +99,11 @@ Show the full list before applying. One batched commit: `fix(ui):` or `perf(ui):
 
 ## Step 6 — Wave 2: high severity, one screen at a time
 
-Gated per item. For each:
+Gated per screen, not per finding. A screen carrying two high findings is one unit: both diffs shown together, applied together, verified together, one commit. Splitting them means two eyeball checkpoints on the same screen.
 
-1. Show the diff.
+For each screen:
+
+1. Show the diff — all high findings on that screen.
 2. Apply.
 3. Verify (below).
 4. **Stop. User looks at it.**
@@ -113,7 +113,9 @@ One screen per commit. `feat(ui): <screen> — <what moved>`.
 
 ## Step 7 — Wave 3: medium and low, as a menu
 
-Present them grouped, let the user pick. Anything unpicked is **declined** and gets written to `.claude/motion.md` at Step 8, so the next run does not re-propose it.
+Present them grouped by rule, let the user pick. Apply the picked set as one batch, verify, commit: `feat(ui): <what moved>`.
+
+Anything unpicked is **declined** and gets written to `.claude/motion.md` at Step 8, so the next run does not re-propose it.
 
 ## Verify — after every wave, no exceptions
 
