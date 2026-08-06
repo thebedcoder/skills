@@ -5,7 +5,7 @@ app has zero hits and a real bug. An in-house router has zero hits and
 could go either way. This file: given a codebase's router identity, where
 its transition hook lives and what the fix looks like there. The Material
 motion patterns themselves (`SharedAxisTransition`, `PageRouteBuilder`,
-`PageTransitionsBuilder`) are covered in `motion-system.md` (§3, §1 lines
+`PageTransitionsBuilder`) are covered in `motion-system.md` (§3/§4 lines
 ~84/185) — not repeated here, only where to put them.
 
 Five identities, checked in this order.
@@ -60,7 +60,10 @@ fix isn't a redundant second `transitionsBuilder` stacked on top.
 
 ## 2. go_router
 
-**Detect:** `go_router` in `pubspec.yaml`.
+**Detect:** `go_router` in `pubspec.yaml` — but a pubspec grep alone is not
+sufficient proof of absence. A wrapper package can depend on go_router and
+re-export it under its own name with no trace in the app's own pubspec; see
+§5's re-export check before concluding "not go_router" from this alone.
 
 **A go_router project has no `MaterialPageRoute` to find — it genuinely
 uses none, this isn't Navigator 1.0 in disguise.** The finding is a
@@ -94,13 +97,17 @@ GoRoute(
 
 **Second finding shape, not hypothetical:** `pageBuilder:` alone isn't
 proof of a custom transition — it only rules out `builder:`. Relaty's own
-router (`lib/src/core/navigation/router.dart:90-232`, all 18 routes) uses
-`pageBuilder:` exclusively, but every route returns a page subclassing
-`MaterialPage` directly (`pageBuilder: (context, state) => const
+router (`lib/src/core/navigation/router.dart:90-232`) has 17 `GoRoute`s, all
+17 using `pageBuilder:` exclusively — but every one returns a page
+subclassing `MaterialPage` directly (`pageBuilder: (context, state) => const
 SplashPage()`, `SplashPage extends MaterialPage<void>`) — still the
 platform default. `pageBuilder:` returning anything but
 `CustomTransitionPage` is the same finding as `builder:`, just harder to
-grep for — check what the returned `Page` subclass extends.
+grep for — check what the returned `Page` subclass extends. The 18th
+construct in that range, `StatefulShellRoute.indexedStack` (`:108-149`),
+uses `builder:` at `:110` — but it returns `ShellNavigation`, a bare shell
+widget wrapping child navigation, not a single page. That's expected usage
+for a shell route, not a finding; don't let a raw `builder:` grep flag it.
 
 ## 3. auto_route
 
