@@ -15,10 +15,10 @@ Also fires on natural phrasing: "make the app feel more polished", "the app feel
 1. **Reads the motion contract** — the project's existing motion conventions (or the absence of one), so the audit has a baseline to check against and update.
 2. **Detects the stack** — routing, state management, and animation libraries in use, so fixes match the project's own patterns instead of a generic template.
 3. **Scans and reports** — inventories every duration, curve, and animated widget, flags inconsistency and reduce-motion gaps, and presents findings before touching anything.
-4. **Wave 0: tokens** — introduces the duration/curve token system and migrates hand-typed values onto it, verified before moving on.
-5. **Wave 1: hygiene** — cleans up animation controllers, disposal, and other low-risk correctness fixes.
-6. **Wave 2: high-severity, gated** — applies higher-impact fixes behind explicit approval, one wave at a time.
-7. **Wave 3: menu** — offers the remaining optional polish (missing transitions, reduce-motion compliance, etc.) as a menu to pick from.
+4. **Wave 0: tokens** — introduces the duration/curve token system. Values are taste, so they are proposed and approved before anything references them. Migrating existing hand-typed values onto the tokens is a later, optional wave.
+5. **Wave 1: hygiene** — bugs, not taste: leaked animation controllers, ticker mixin mismatches, missing repaint boundaries. Two commits — the small localized fixes, then reduce-motion compliance on its own, because that one touches every animation site.
+6. **Wave 2: high-severity, gated** — applies higher-impact fixes one screen at a time, each shown, applied, verified, and eyeballed before it is committed.
+7. **Wave 3: menu** — offers the remaining medium and low findings (missing transitions, curve and duration consistency, polish) as a menu to pick from. Anything unpicked is recorded as declined and never re-proposed.
 8. **Updates the contract and reports** — writes the new conventions back to the motion contract and summarizes what changed.
 
 ## Safety

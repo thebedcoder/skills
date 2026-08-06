@@ -29,13 +29,23 @@ Mechanics that apply to every probe:
   where the prose says `core/navigation/router.dart`. Prepend `lib/src/` to open one. An
   app whose code sits directly under `lib/` needs no prefix — check where the project's
   `features/` and `core/` directories actually live before matching a citation.
-- **Two filters attach to every probe in this catalog. The probe blocks below do not
-  repeat them — you append them.**
+- **Two filters attach to every probe in this catalog.** Some probe blocks below already
+  include one or both inline; where a block does not, append them yourself. Appending twice
+  is harmless — both are idempotent.
 
   ```bash
   | grep -vE '(^|/)(gen)/|\.(g|gr|freezed)\.dart:'   # generated code — not authored, not in scope
-  | grep -vE ':[[:space:]]*//'                        # comment lines — including /// doc examples
+  | grep -vE '^[^:]+:[0-9]+:[[:space:]]*//'           # comment lines — including /// doc examples
   ```
+
+  **The comment filter must stay anchored to the `file:line:` prefix.** The obvious short
+  form `grep -vE ':[[:space:]]*//'` also matches `://` and silently eats every hit line
+  containing a URL — measured, e.g. a `Container` decorated with
+  `Image.network('https://…')` vanishes from `state-6`.
+
+  Neither filter fits the two loop-shaped probes: `nav-1` stage 1 resolves class names
+  rather than emitting `file:line`, and `hyg-5` emits bare `file:line` with no content.
+  Filter their *inputs*, not their output.
 
   Generated trees (`lib/gen/`, `*.g.dart`, `*.gr.dart`, `*.freezed.dart`) are not
   developer-authored. On a `freezed` / `json_serializable` / `auto_route` project they are

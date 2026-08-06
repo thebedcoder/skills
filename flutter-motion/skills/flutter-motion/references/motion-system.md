@@ -199,10 +199,13 @@ no parameter lists. No signature in this section is unverified.
 
 ## 4. Built-in vs package
 
-Relaty has no `package:animations` dependency and none of `go_router` /
-`auto_route` — a real target app may need every fix done with built-in
-`Animated*` widgets and zero new dependencies. Don't reach for the package
-column by default; check whether a built-in widget already covers the case.
+Relaty has no `package:animations` dependency — a real target app may need every
+fix done with built-in `Animated*` widgets and zero new dependencies. Don't reach
+for the package column by default; check whether a built-in widget already covers
+the case.
+
+(It *does* have go_router, via `bedcode_navigator`'s re-export — establish the
+router from `routing.md` §5, never from a `pubspec.yaml` grep.)
 
 | Case | Built-in widget | Covers it alone? |
 |---|---|---|
@@ -216,14 +219,17 @@ column by default; check whether a built-in widget already covers the case.
 | Card/tile morphs into detail screen | none | No — container transform's shape/elevation/color morph has no built-in equivalent; needs `package:animations` (`OpenContainer`) |
 | Spatial step navigation (shared axis) | `SlideTransition` + `FadeTransition` inside a hand-rolled `PageRouteBuilder` | Approximates it, more code, no built-in single widget |
 
-Rule of thumb: the 7 implicit `Animated*` widgets above cover single-property,
+Rule of thumb: the implicit `Animated*` widgets above cover single-property,
 single-widget changes. The moment a fix needs to coordinate two animations
 (outgoing + incoming) with a named Material choreography — container
 transform or shared axis — that's the signal to raise adding
-`package:animations` as an option, not silently hand-roll it. On a stack like
-Relaty's (no package, in-house navigator), hand-rolling shared axis via
-`PageRouteBuilder` is the honest fallback; say so in the proposal instead of
-presenting `package:animations` as the only path.
+`package:animations` as an option, not silently hand-roll it.
+
+Where the hand-rolled fallback goes depends on the router, so settle that from
+`routing.md` first. On a go_router app — which Relaty is — it belongs in
+`CustomTransitionPage`'s `transitionsBuilder`, not a `PageRouteBuilder`, because
+a go_router app never constructs one. Say which fallback you mean in the
+proposal instead of presenting `package:animations` as the only path.
 
 ## 5. The band: 100–500ms
 

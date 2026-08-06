@@ -16,7 +16,9 @@ Make an app feel expensive by making its motion consistent, not by adding more o
 ## Preconditions — check before anything
 
 1. Flutter project. `pubspec.yaml` exists with `flutter:` under `dependencies`. No → stop.
-2. No uncommitted **tracked** changes: `git status --porcelain --untracked-files=no` empty. Dirty → stop, tell user to commit or stash. Untracked files are fine and do not block — `git reset --hard HEAD` never touches them, so they cannot corrupt a wave revert. Checking plain `git status --porcelain` here refuses to run on any project with a stray local file, for no safety gain.
+2. No uncommitted **tracked** changes: `git status --porcelain --untracked-files=no` empty. Dirty → stop, tell user to commit or stash. The user's own pre-existing untracked files do not block — `git reset --hard HEAD` never touches them, so a wave revert cannot destroy them, and blocking on a stray local file refuses to run for no safety gain.
+
+   **This cuts the other way for files the skill itself creates.** `reset --hard` will not remove those either, so a rejected wave leaves them behind. Track every path you add during a run and delete it explicitly on revert — see the Verify block.
 3. **Capture baseline.** Run `flutter analyze` and `flutter test`, record both results BEFORE touching anything. Pre-existing failures get recorded, not fixed and not blamed on this skill. The gate is **no worse than baseline**, never "clean" — most real projects are not clean.
 
 ## Step 1 — Read the contract
@@ -121,9 +123,20 @@ This block owns the whole post-apply sequence. A wave's own section says what to
 
 1. `flutter analyze` — no worse than baseline. **It will not catch a `Motion.of` called from `initState`** — that is a runtime assertion, not a static error, and it analyzes clean (measured). Grep for it yourself before trusting a green analyze: `grep -n 'Motion\.of' <changed files>` and confirm every hit is in `build`, `didChangeDependencies`, or a callback — never `initState`.
 2. `flutter test` — no worse than baseline. Motion breaks widget tests routinely: `pumpAndSettle` times out against an infinite animation; finders that ran mid-frame stop matching. **Fix the tests your motion broke. Never delete one, never add `skip`.**
+
+   **If step 1 or step 2 comes back worse than baseline, you do not proceed to the human.** Fix it, or revert the wave per step 4 and report. An analyze regression is the *expected* failure of the `hyg-4` commit — that is where the `const`-site constraint bites — so treat it as a normal branch, not an emergency. Never show a human a wave that does not build.
 3. **Human checkpoint.** State exactly what to open and what to watch. Not "check the animations" — "Open Home, tap the second card, watch whether the card grows into the detail page or the page slides in from the right."
-4. User approves → step 5. User rejects → `git reset --hard HEAD`, report why, move on.
-5. Commit. **One verify cycle, one commit** — never two commits from one run of this block, never one commit spanning two. Wave 0 is one; Wave 1 is two (small hygiene, then `hyg-4`); Wave 2 is one per screen; Wave 3 is one.
+4. User approves → step 5. User rejects → revert, report why, move on:
+
+   ```bash
+   git reset --hard HEAD                      # tracked edits
+   git clean -fd -- <every path this wave created>   # reset --hard will NOT remove these
+   ```
+
+   **Name the created paths explicitly — never a bare `git clean -fd`,** which would also delete the user's own untracked files. Wave 0's entire output is a new file, so this line is the whole of its revert.
+
+   **If Wave 0 is rejected, stop.** Do not "move on" — every later wave references tokens that no longer exist, and every hard rule below becomes unsatisfiable. Report and exit.
+5. **Stage, then commit.** `git add <paths>` — a wave that only adds files (Wave 0) commits nothing under `git commit -a`. **One verify cycle, one commit** — never two commits from one run of this block, never one commit spanning two. Wave 0 is one; Wave 1 is two (small hygiene, then `hyg-4`); Wave 2 is one per screen; Wave 3 is one.
 
 **The commit is always last.** Nothing is committed before the human has looked at it, which is what makes step 4's `git reset --hard HEAD` safe — the wave is still uncommitted at that point. If you have already committed, that command reverts nothing; you are past the gate and the wave stands.
 
