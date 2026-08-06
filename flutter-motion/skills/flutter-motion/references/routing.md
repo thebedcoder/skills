@@ -135,8 +135,27 @@ CustomRoute(
 
 No `BuildContext` exists at this declaration site, so `Motion.of(context,
 ...)` can't be used for `duration:` — pass the bare `Motion.standard`
-token. For reduce-motion awareness, apply `Motion.of` inside the
-`transitionsBuilder` body instead, where `context` is a parameter.
+token.
+
+Reduce-motion here is **not** a `Motion.of` call. `Motion.of` returns a
+`Duration`, and a `transitionsBuilder` body takes
+`(context, animation, secondaryAnimation, child)` and returns a `Widget` —
+there is no `Duration` slot in it to wrap. Skip the transition instead:
+
+```dart
+transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+    MediaQuery.disableAnimationsOf(context)
+        ? child
+        : FadeTransition(
+            opacity: animation.drive(CurveTween(curve: Motion.enter)),
+            child: child,
+          ),
+```
+
+The route's `duration:` still elapses either way — this returns the final
+frame immediately rather than animating toward it, which is what
+reduce-motion asks for. The same shape applies to go_router's
+`CustomTransitionPage` (§2) and any raw `PageRouteBuilder` (§4).
 
 **Fix shape:** a route entry using plain `AutoRoute(page: ...)` instead of
 `CustomRoute(page: ..., transitionsBuilder: ...)` is the finding — same

@@ -29,10 +29,10 @@ Make an app feel expensive by making its motion consistent, not by adding more o
 # .claude/motion.md
 
 ## Tokens
-Source: lib/theme/motion.dart
+Source: lib/src/core/presentation/theme/motion.dart
 
 ## Declined
-lib/screens/settings.dart:88
+state-1  lib/screens/settings.dart  _ThemeToggle
   no AnimatedSwitcher on theme toggle
   — intentional, instant feedback wanted
 
@@ -41,6 +41,8 @@ lib/widgets/chart/**  — perf-critical
 ```
 
 A finding under `Declined` is never re-proposed. A path under `Do not animate` is never touched. Both are permanent until the user edits the file.
+
+**Key declined entries `<rule-id> <file> <enclosing widget or member>` — never `file:line`.** A line number is invalidated by this run's own commits: every fix shifts the lines below it, so a `path:line` key silently stops matching and the finding is re-proposed next run. Wave 3's unpicked items are exactly what lands here, so a key that decays is the suppression that matters most failing quietly. Match on rule id plus the enclosing declaration, which survives edits above it.
 
 ## Step 2 — Detect the stack
 
@@ -107,13 +109,29 @@ Show the full list before applying. **Two commits, not one:**
 
 ## Step 6 — Wave 2: high severity, one screen at a time
 
-Gated per screen, not per finding. A screen carrying two high findings is one unit: both diffs shown together, applied together, verified together, one commit. Splitting them means two eyeball checkpoints on the same screen.
+Gated per **checkpoint unit**, not per finding — a unit is *one thing the user can open and look at in one pass*. Two findings the user would check on the same screen are one unit; splitting them means two checkpoints on the same screen.
 
-For each screen: show the diff for all high findings on it, apply them, then run the Verify block below — it owns everything from that point, including the checkpoint and the commit. One screen per commit, `feat(ui): <screen> — <what moved>`.
+Deriving the unit from a `file:line` finding list, in order:
+
+1. **The finding is in a screen/page widget** → that screen is the unit. Widget files map to their screen by the project's own convention (`profile_content.dart` → `profile_screen.dart`).
+2. **The finding is in a shared widget** used by several screens (an animation primitive, a card, a button) → the *widget* is the unit, not each of its users. Its checkpoint names two or three real screens to spot-check it on.
+3. **The finding is in a central route table** — all 17 of one project's `nav-1` hits landed in a single `router.dart` — → group by **destination screen**, not by file. Seventeen route entries touching seventeen screens are seventeen units; committing them as one file-sized change defeats the gate, because the user cannot eyeball seventeen transitions in one pass.
+4. **No screen is identifiable** → it is not a Wave 2 finding. Say so and move it to Wave 3, rather than inventing a unit to satisfy the gate.
+
+For each unit: show the diff for all high findings in it, apply them, then run the Verify block below — it owns everything from that point, including the checkpoint and the commit. One unit per commit, `feat(ui): <unit> — <what moved>`.
 
 ## Step 7 — Wave 3: medium and low, as a menu
 
-Present them grouped by rule, let the user pick. Apply the picked set as one batch, verify, commit: `feat(ui): <what moved>`.
+Present them grouped by rule, let the user pick.
+
+**Re-run the confirm step for each picked finding before applying it.** Every confirm step ran once, at Step 3, against a tree that Waves 1 and 2 have since changed — and two disqualifiers in the catalog depend on exactly what those waves add:
+
+- `nav-5` clause 4 discards a Hero when a container transform already covers the same tap. `nav-1` is high, so Wave 2 just committed one.
+- `state-6` clause 3 discards a `Container` whose ancestor already supplies the transition. A `state-1` `AnimatedSwitcher` picked in this very batch becomes that ancestor.
+
+A finding whose confirm step now says "discard" is dropped from the batch and reported as superseded — not applied and not counted as declined.
+
+Then apply the picked set as one batch, verify, commit: `feat(ui): <what moved>`. If two picks conflict (a duration fix and a curve fix at the same call site), apply them together — a call site usually carries both.
 
 Anything unpicked is **declined** and gets written to `.claude/motion.md` at Step 8, so the next run does not re-propose it.
 

@@ -87,7 +87,7 @@ Mechanics that apply to every probe:
 | Rule | What it finds | Severity | Relaty raw → real |
 |---|---|---|---|
 | `nav-1` | default page transition on a container tap | high | 2 → 1 (nuanced) + 17 routes on the platform default |
-| `nav-2` | tab / nav body swap is an instant cut | medium | 0 → **false negative**, custom tab widget |
+| `nav-2` | tab / nav body swap is an instant cut | medium | 0 on the stock probe → **1 real** via the custom-widget probe |
 | `nav-3` | asymmetric motion inside a flow | medium | 2 flows → 0 (the 1 candidate is a multi-step bypass) |
 | `nav-4` | dialog / sheet on the platform default | low | 2 → 2 |
 | `nav-5` | shared-element transition missing (Hero) | low | 0 → 0 (real zero) |
@@ -105,7 +105,7 @@ Mechanics that apply to every probe:
 | `hyg-2` | ticker mixin mismatch | high crashing / low reverse | 15 → 0 bugs, 3 style |
 | `hyg-3` | missing RepaintBoundary | low | 5 → 3 real widgets, 2 generated |
 | `hyg-4` | reduce-motion never checked | high | 0 → **1 app-wide finding** |
-| `hyg-5` | AnimatedBuilder rebuilding a static subtree | low | 25 → 13 |
+| `hyg-5` | AnimatedBuilder rebuilding a static subtree | low | 25 → 13 **candidates** (5 of 13 hand-checked) |
 
 ---
 
@@ -470,10 +470,15 @@ Confirm by reading — clause 1 first, and it is the one that was missing:
    the card comes and goes as a unit. **Discard, and hand it to `state-1` as a question
    about the card.** Relaty:
    `features/timeline/presentation/widgets/contacts_progress.dart:43` is a
-   `LinearProgressIndicator` in a stateless `ContactsProgress` card with no conditional
-   anywhere in that file; the nearest one is `if (showProgress) ContactsProgress(…)` in a
-   different file (`features/timeline/presentation/widgets/timeline_content.dart:209`).
-   Reporting it was this rule's only false positive on Relaty.
+   `LinearProgressIndicator` in a stateless `ContactsProgress` card. **Ask whether a
+   conditional governs *this indicator's presence* — not whether the file contains one.**
+   That file has five `withButton` conditionals (`:29-30`, `:35`, `:40-41`, `:55`, and
+   `if (withButton)` at `:57`), and none of them decides whether the indicator renders;
+   it is unconditional within the card. The conditional that matters is
+   `if (showProgress) ContactsProgress(…)` in a *different* file
+   (`features/timeline/presentation/widgets/timeline_content.dart:209`), which governs
+   the whole card. A file-scoped test reports this — it was this rule's only false
+   positive on Relaty, and "no conditional in the file" is not what discards it.
    **Do not try to discriminate on `value:`.** A determinate `value:` is not evidence
    either way and reading it as "meter, not spinner" drops a real finding: *both* Relaty
    hits are determinate — the false positive is `value: contactsCount / 3` and the real
@@ -588,7 +593,8 @@ Worked example, adversarially checked (`state-mgmt.md` §4):
 `BlocBuilder<ProfileBloc, ProfileState>` with `buildWhen: (previous, current) => current
 is ProfileLoaded` (`:83`); `:85` renders the card, `:95` falls back to
 `_buildProfileCard(context, EmptyUser()).asSkeleton()`. `ProfileError` is declared
-(`profile_state.dart:29`), really emitted (`profile_bloc.dart:71`, `:73`, `:78`), and
+(`profile_state.dart:29`) and really reaches the state — `profile_bloc.dart:78` emits it
+directly, `:71` and `:73` return it from an `onError` transformer — and
 nothing between the provider and the builder renders it — `profile_screen.dart:27-45`
 wraps `ProfileContent` in `BlocProvider`, `LifecycleHooksSubscriber` (`:31`) and
 `AuthStateListener` (`:37`), none of which read bloc state. On a load failure the user
@@ -650,7 +656,8 @@ well-animated codebase — and a rule that reported all 6 of Relaty's hits would
 
 Severity: low.
 Raw hits (Relaty): 57 → 22 anchored → 18 after the comment filter → **2 confirmed**
-among 7 hand-checked. Do not report this rule's raw count to a user; it is meaningless.
+confirmed with all 18 candidates read, not sampled. Do not report this rule's raw count to a
+user; it is meaningless.
 
 Probe — anchored, and the anchor is not optional:
 ```bash
@@ -677,13 +684,24 @@ Confirm by reading:
    just the static end state. `core/presentation/widgets/step_variant.dart:123,124` are
    the two cross-fade children; `core/presentation/widgets/toggle_group.dart:133` sits
    inside `Animated(animate: _animate, child: Container(…))`.
+
+   **The ancestor must interpolate the property that changes.** An animated wrapper that
+   drives something else is not a discard. `features/paywall/presentation/widgets/paywall_content.dart:296-304`
+   wraps the `:239` container in `ZoAnimatedGradientBorder(animationDuration:
+   Duration(seconds: 4), …)` for the annual product — a wrapper by any grep, but it loops
+   a *border gradient* and never touches `backgroundColor`, so the abrupt colour swap it
+   is supposed to excuse is still abrupt. Read what the ancestor animates, not that it
+   animates.
 4. (1) yes and (3) no → finding.
 
 Confirmed real on Relaty: `features/paywall/presentation/widgets/paywall_content.dart:239`
 and `:259` — `Container(decoration: BoxDecoration(color: backgroundColor))` where
 `backgroundColor` / `badgeColor` are computed from `isSelected` (`:211-230`), flipped by
-`PaywallCubit.selectProduct` (`:237`), with no animated wrapper anywhere. A genuine
-abrupt colour swap on selection.
+`PaywallCubit.selectProduct` (`:237`). Nothing interpolates that colour — the annual
+product's `ZoAnimatedGradientBorder` at `:296-304` loops a border and leaves
+`backgroundColor` alone, and the monthly product has no wrapper at all. A genuine abrupt
+colour swap on selection, and it survives clause 3 on that reading, not by the absence of
+a wrapper.
 
 Fix: `Container` → `AnimatedContainer` with
 `duration: Motion.of(context, Motion.standard)` and `curve: Motion.enter`
@@ -1132,8 +1150,22 @@ Confirm:
    on **any** `MediaQuery` change. Flag it as a rebuild-scope smell and move it to the
    aspect accessor (`motion-system.md` §1).
 
-Fix: `Motion.of(context, …)` (`motion-system.md` §1) — one helper, wrapped around every
-duration the skill proposes or touches. Verified API:
+Fix: `Motion.of(context, …)` (`motion-system.md` §1) — one helper, wrapped at every
+**animation site in the app**, not merely at the sites this run happens to edit.
+
+**Scope, explicitly, because it decides how large the commit is:** `hyg-4` is the finding
+"this app never checks reduce-motion". Fixing it means the app checks it — so the unit of
+work is every existing animation whose duration is under the skill's control, which on a
+mature project is dozens of files. Wrapping only the durations touched by other fixes
+leaves the app still non-compliant everywhere else and closes a high-severity
+accessibility finding that is not actually closed.
+
+Two consequences: it gets its own verify and its own commit (`SKILL.md` Wave 1), and it is
+the wave most likely to regress `flutter analyze`, because it is where the `const`-site
+constraint bites hardest. Expect that, and route it through the Verify block's failure
+branch rather than treating it as a surprise.
+
+Verified API:
 `MediaQuery.disableAnimationsOf(context)`, SDK
 `flutter/lib/src/widgets/media_query.dart:1942-1951`, not deprecated. Note the two
 const-position constraints in `style-1`'s table: at a `const` declaration site and

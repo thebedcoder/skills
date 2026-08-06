@@ -245,6 +245,17 @@ copy_rules_to_cursor() {
 install_agents_md_style() {
   local tool="$1"
   local note=""
+
+  # Several plugins are Claude-Code-only and ship no adapters/AGENTS.md.template.
+  # Without this check the `cp` below dies under `set -e` with a bare
+  # "No such file or directory" — and under --tool=auto that happens *after* the
+  # claude-code install already succeeded, so the run half-completes and aborts.
+  if [[ ! -f "$TEMPLATE" ]]; then
+    echo "⚠ Skipping $tool — '$SKILL' is Claude Code only (no adapters/AGENTS.md.template)." >&2
+    SKIPPED_ANY=1
+    return 0
+  fi
+
   resolve_target "$tool" "$SCOPE" || { echo "resolve_target failed for $tool" >&2; return 1; }
 
   case "$tool" in
@@ -351,6 +362,11 @@ EOF
 esac
 
 echo ""
+if [[ "${SKIPPED_ANY:-0}" == "1" && "$TOOL" != "claude-code" && "$TOOL" != "auto" ]]; then
+  echo "⚠ Nothing installed for $TOOL — '$SKILL' is Claude Code only."
+  echo "  Install it with: --tool=claude-code --skill=$SKILL"
+  exit 1
+fi
 echo "✅ Installed $SKILL@$SHA for $TOOL"
 echo ""
 if [[ "$TOOL" == "claude-code" ]]; then

@@ -103,7 +103,8 @@ is what made the following real. **Walked end to end (`profile`):** `profile_con
 is a `BlocBuilder<ProfileBloc, ProfileState>` with `buildWhen: … current is ProfileLoaded`
 (`:83`); `:85` renders the card, `:95` falls back to a skeleton. `ProfileState` is sealed with
 a `ProfileError` subclass (`profile_state.dart:3`, `:29`); `ProfileError` really is emitted
-(`profile_bloc.dart:71`, `:73`, `:78`); and no widget between the provider and the builder
+(`profile_bloc.dart:78` emits directly; `:71`/`:73` return it from an `onError` transformer);
+and no widget between the provider and the builder
 listens to `ProfileBloc` state — `profile_screen.dart:27-45` wraps `ProfileContent` in
 `BlocProvider`, `LifecycleHooksSubscriber` (`:31`) and `AuthStateListener` (`:37`), none
 reading it. Verdict: **`state-4` confirmed** — the user sees a skeleton forever.

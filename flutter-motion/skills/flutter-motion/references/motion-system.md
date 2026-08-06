@@ -103,6 +103,30 @@ existing naming convention — it does not introduce `Motion` alongside it. The
 `Motion` class in Section 1 is what to propose only when detection finds
 nothing.
 
+### Adopting: two things you must do that the fix snippets will not do for you
+
+Every fix snippet in `findings.md`, `routing.md`, and `state-mgmt.md` is written
+against the Section 1 names — `Motion.standard`, `Motion.of(context, …)`, `Motion.enter`.
+**On an adopting project those names are placeholders, not code.** Translate each one to
+the host project's own vocabulary as you apply it (`Motion.standard` → `AppDurations.medium`,
+and so on). Pasting a snippet verbatim onto a project that has its own scale does not
+compile, and there are enough of them across the four reference files that doing this by
+habit rather than by rule will miss some.
+
+**And the adopted class almost certainly has no reduce-motion helper.** `Motion.of` is the
+entire mechanism behind `hyg-4` and behind the hard rule that every animation respects
+reduce-motion; a hand-rolled `AppDurations` will have durations and no `of()`. Adding it is
+part of adopting, not a separate finding:
+
+```dart
+// added to the project's existing token class, matching its naming
+static Duration of(BuildContext context, Duration duration) =>
+    MediaQuery.disableAnimationsOf(context) ? Duration.zero : duration;
+```
+
+Propose it in Wave 0 alongside the missing duration tokens. Skipping it leaves every later
+wave unable to satisfy the reduce-motion rule.
+
 ## 3. The four Material motion patterns
 
 All four ship in `package:animations` (verified against the installed source,
