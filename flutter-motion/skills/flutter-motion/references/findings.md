@@ -29,11 +29,28 @@ Mechanics that apply to every probe:
   where the prose says `core/navigation/router.dart`. Prepend `lib/src/` to open one. An
   app whose code sits directly under `lib/` needs no prefix — check where the project's
   `features/` and `core/` directories actually live before matching a citation.
-- Exclude generated trees everywhere: `lib/gen/`, `*.g.dart`, `*.gr.dart`,
-  `*.freezed.dart`. Generated code is not developer-authored and is not in scope.
-- Drop comment lines before counting: `| grep -vE ':[[:space:]]*//'`. On Relaty this
-  changes the answer, not just the count, for `style-1` (15 of 92), `style-2`,
-  `state-2`, and `state-6`.
+- **Two filters attach to every probe in this catalog. The probe blocks below do not
+  repeat them — you append them.**
+
+  ```bash
+  | grep -vE '(^|/)(gen)/|\.(g|gr|freezed)\.dart:'   # generated code — not authored, not in scope
+  | grep -vE ':[[:space:]]*//'                        # comment lines — including /// doc examples
+  ```
+
+  Generated trees (`lib/gen/`, `*.g.dart`, `*.gr.dart`, `*.freezed.dart`) are not
+  developer-authored. On a `freezed` / `json_serializable` / `auto_route` project they are
+  a large fraction of `lib/`, and skipping this filter floods `state-*` and `style-*` with
+  machine-written code.
+
+  **Relaty is not that project** — it has almost no codegen, so this filter is a measured
+  no-op on every rule here, `hyg-3` included (its two `lib/gen/assets.gen.dart` lines are
+  `addRepaintBoundary`, already excluded by that probe's `\b…\(` anchor; the explicit
+  `grep -v '^lib/gen/'` there is belt-and-suspenders). **Do not read Relaty's numbers as
+  evidence the filter is optional** — they are evidence only that this one project is
+  codegen-light. Every `Raw hits` count in this catalog was measured without it mattering.
+
+  The comment filter changes the answer, not just the count, for `style-1` (15 of 92),
+  `style-2` (2 of 7), `state-2`, and `state-6` (4 of 22).
 - **A site listed in a fix table must still pass its own rule's confirm step first.** A
   table answering "where does this construct appear" is not answering "is this a
   finding". Where a rule has both, the confirm step runs first — always. Three separate
