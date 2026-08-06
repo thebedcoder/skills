@@ -1,0 +1,22 @@
+{
+  "name": "flutter-motion",
+  "version": "0.1.0",
+  "description": "Audit and fix a Flutter app's motion — a consistent duration/curve token system, reduce-motion compliance, animation hygiene, and the transitions that actually earn their place. Applied in approval-gated, verified waves.",
+  "author": {
+    "name": "thebedcoder",
+    "url": "https://github.com/thebedcoder"
+  },
+  "homepage": "https://github.com/thebedcoder/skills/tree/main/flutter-motion",
+  "repository": "https://github.com/thebedcoder/skills",
+  "license": "MIT",
+  "keywords": [
+    "flutter",
+    "dart",
+    "animation",
+    "motion",
+    "transitions",
+    "ui",
+    "ux",
+    "polish"
+  ]
+}

@@ -6,11 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A monorepo of Claude Code plugins published under the **thebedcoder** marketplace. There is no build system, no tests, no lint — the artifacts are markdown (SKILL.md, AGENT.md, command files) and shell (installers). "Shipping" means committing markdown and updating an installer.
 
-Six plugins live here:
+Seven plugins live here:
 
 | Plugin | Role | Marketplace |
 |---|---|---|
 | `agentic-engineering/` | Full SDLC workflow — named specialist agents, 6-agent parallel review, end-user docs | listed in `.claude-plugin/marketplace.json` |
+| `flutter-motion/` | `/flutter-motion` — audits a Flutter project's motion (token consistency, reduce-motion, animation hygiene, missing transitions) and applies fixes in approval-gated waves, each verified against a captured `flutter analyze` + `flutter test` baseline. Single skill, exposed as `/flutter-motion` via a same-name command wrapper | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); simple per-plugin installer (one skill + one command, no `rules-library`) |
 | `jtbd/` | Jobs-to-Be-Done megaskill (MODE 0–4) — research → personas → competitors → landing copy → ad scripts | listed in `.claude-plugin/marketplace.json` |
 | `premortem-skill/` | `/premortem` command + investigator agent | **not yet** in the marketplace |
 | `smart-setup/` | `/smart-setup` — scans/interviews a project, sizes it into a tier, generates right-sized project-local config (Skills, Memory, Agents, Rules, Tools) plus `.claude/workflow.md`; sizing/dispatch layer in front of agentic-engineering. Routes the workflow's Maintain phase to `update-dependencies` when that plugin is installed alongside it | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); its bash installer copies `rules-library/` from the agentic-engineering sibling (marketplace installs fall back to agentic-engineering's copy or observed-convention rules) |
@@ -65,7 +66,7 @@ Every plugin follows the same shape:
 | Command behavior | `skills/<plugin>/commands/<name>.md` (real), not `commands/<name>.md` (wrapper) |
 | Add a new slash command | (1) `commands/<name>.md` wrapper, (2) `skills/<plugin>/commands/<name>.md` body, (3) `USER_COMMANDS` array in per-plugin `install.sh` if user-facing, (4) the skill's `commands/` table in `SKILL.md` |
 | Add a new agent | new dir under `agents/<name>/AGENT.md` with `name: <name>` in its frontmatter (omit it and Claude Code drops the agent silently) + `cp` line in per-plugin `install.sh` |
-| Add a new plugin | (1) `<plugin>/.claude-plugin/plugin.json`, (2) entry in top-level `.claude-plugin/marketplace.json`, (3) per-plugin `install.sh`, (4) `adapters/AGENTS.md.template` with `<plugin>:start v1` / `<plugin>:end` markers, (5) entry in top-level `install.sh` `--skill=` help text |
+| Add a new plugin | **Always:** (1) `<plugin>/.claude-plugin/plugin.json`, (2) entry in top-level `.claude-plugin/marketplace.json`, (3) per-plugin `install.sh`, (4) add to the installer loop in `.claude/skills/verify-install/SKILL.md`. **Only if it ships for non-Claude tools:** (5) `adapters/AGENTS.md.template` with `<plugin>:start v1` / `<plugin>:end` markers, (6) entry in top-level `install.sh` `--skill=` help text. Five of seven plugins are Claude-Code-only and correctly have neither — the top-level installer skips them with a message rather than failing. |
 | Edit portable (non-Claude) behavior | `adapters/AGENTS.md.template` — preserve the marker comments |
 | Add per-language convention rule | `agentic-engineering/rules-library/<stack>.md` with frontmatter `paths:` (becomes `globs:` for Cursor) |
 
