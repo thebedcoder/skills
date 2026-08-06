@@ -65,9 +65,18 @@ fi
 # --- C. 'user-invocable' must never appear in a source SKILL.md --------------
 # The field is valid in the CLI but rejected by the claude.ai skill packager.
 # agentic-engineering's installer patches it in post-copy; source must stay clean.
-if [[ "$REL" =~ ^[^/]+/skills/[^/]+/SKILL\.md$ ]]; then
-  if grep -q 'user-invocable' "$FILE" 2>/dev/null; then
-    fail "$REL contains 'user-invocable' — it leaked into source. The claude.ai packager rejects it; agentic-engineering/install.sh adds it post-copy. Remove it."
+#
+# Two scoping rules, both learned from false positives:
+#   1. First segment must not start with a dot. Plain `[^/]+` also matches
+#      `.claude`, so this fired on the repo's OWN internal skills under
+#      `.claude/skills/` — which are not shipped and never packaged.
+#   2. Only the YAML frontmatter counts. `user-invocable` is a frontmatter key;
+#      a file that merely *documents* it in prose (verify-install/SKILL.md
+#      asserts on it by name) is clean.
+if [[ "$REL" =~ ^[^./][^/]*/skills/[^/]+/SKILL\.md$ ]]; then
+  if awk 'NR==1 && $0!="---"{exit} NR>1 && $0=="---"{exit} {print}' "$FILE" 2>/dev/null \
+       | grep -q 'user-invocable'; then
+    fail "$REL contains 'user-invocable' in its frontmatter — it leaked into source. The claude.ai packager rejects it; agentic-engineering/install.sh adds it post-copy. Remove it."
   fi
 fi
 

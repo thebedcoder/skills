@@ -66,7 +66,7 @@ Every plugin follows the same shape:
 | Command behavior | `skills/<plugin>/commands/<name>.md` (real), not `commands/<name>.md` (wrapper) |
 | Add a new slash command | (1) `commands/<name>.md` wrapper, (2) `skills/<plugin>/commands/<name>.md` body, (3) `USER_COMMANDS` array in per-plugin `install.sh` if user-facing, (4) the skill's `commands/` table in `SKILL.md` |
 | Add a new agent | new dir under `agents/<name>/AGENT.md` with `name: <name>` in its frontmatter (omit it and Claude Code drops the agent silently) + `cp` line in per-plugin `install.sh` |
-| Add a new plugin | (1) `<plugin>/.claude-plugin/plugin.json`, (2) entry in top-level `.claude-plugin/marketplace.json`, (3) per-plugin `install.sh`, (4) `adapters/AGENTS.md.template` with `<plugin>:start v1` / `<plugin>:end` markers, (5) entry in top-level `install.sh` `--skill=` help text |
+| Add a new plugin | **Always:** (1) `<plugin>/.claude-plugin/plugin.json`, (2) entry in top-level `.claude-plugin/marketplace.json`, (3) per-plugin `install.sh`, (4) add to the installer loop in `.claude/skills/verify-install/SKILL.md`. **Only if it ships for non-Claude tools:** (5) `adapters/AGENTS.md.template` with `<plugin>:start v1` / `<plugin>:end` markers, (6) entry in top-level `install.sh` `--skill=` help text. Five of seven plugins are Claude-Code-only and correctly have neither — the top-level installer skips them with a message rather than failing. |
 | Edit portable (non-Claude) behavior | `adapters/AGENTS.md.template` — preserve the marker comments |
 | Add per-language convention rule | `agentic-engineering/rules-library/<stack>.md` with frontmatter `paths:` (becomes `globs:` for Cursor) |
 

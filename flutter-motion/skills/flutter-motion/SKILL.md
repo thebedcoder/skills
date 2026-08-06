@@ -94,7 +94,7 @@ Create or adopt the token file per `references/motion-system.md` §1–2. **No f
 
 Values are taste. **ASK, and wait.** Present the proposed durations and curves as numbers the user can argue with. A project with an existing scale adopts that scale (§2), it does not get Material's imposed on it.
 
-Verify. Commit alone: `feat(ui): motion token system`.
+Then run the Verify block — but **the approval you just took IS this wave's checkpoint.** A token file changes nothing on screen, so there is nothing for the user to open and watch; do not ask twice. Run steps 1, 2 and 5, and skip the step-3 checkpoint. Commit alone: `feat(ui): motion token system`.
 
 ## Step 5 — Wave 1: hygiene
 
@@ -162,7 +162,9 @@ This block owns the whole post-apply sequence. A wave's own section says what to
 
 ## Step 8 — Contract and final report
 
-Write `.claude/motion.md` (token source, everything declined this run, any path the user ruled out). Then:
+Write `.claude/motion.md` in the format shown at Step 1 — **that format, not the report format below.** Token source, everything declined this run, any path the user ruled out. Then `git add .claude/motion.md && git commit -m "chore(ui): record motion contract"`; it is the memory the next run reads, and an uncommitted one is lost to the first `git clean`.
+
+Then report:
 
 ```markdown
 ## Applied

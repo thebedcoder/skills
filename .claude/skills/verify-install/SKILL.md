@@ -47,7 +47,7 @@ summarize away a failure.
 | 5 | Every name in `USER_COMMANDS` has a file in `$SANDBOX/.claude/commands/` | user-facing commands actually landed |
 | 6 | `frontend.md`, `implement.md`, `review.md` are **absent** from `$SANDBOX/.claude/commands/` | internal commands stay hidden; they are called by `/ship` |
 | 7 | All 8 agentic-engineering agents exist in `$SANDBOX/.claude/agents/` — `ae-req.md`, `ae-doc.md`, `ae-scribe.md` as single files; `ae-red/`, `ae-test/`, `ae-sec/`, `ae-ux/`, `ae-edge/` as dirs | mixed single-file/dir shape is easy to break |
-| 8 | `$SANDBOX/cursor-test/.cursor/rules/*.mdc` exist and use `globs:` — no file still says `paths:` | one-way frontmatter rewrite for Cursor |
+| 8 | `$SANDBOX/cursor-test/.cursor/rules/*.mdc` exist and their **frontmatter** key is `globs:`, not `paths:` | one-way frontmatter rewrite for Cursor. Scope the check to the frontmatter — `grep -l 'paths:'` over the whole file matches prose (`testing-conventions.md:43` says "Critical paths: 100%") and reports a failure that isn't one. Use `head -3` or an awk range on the `---` block. |
 | 9 | Re-run any one installer; assert no duplicated `<!-- <plugin>:start` block in the written `AGENTS.md` | idempotency depends on the marker comments |
 
 ## Clean up

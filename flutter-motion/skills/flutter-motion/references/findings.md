@@ -492,7 +492,8 @@ Confirm by reading — clause 1 first, and it is the one that was missing:
    this rule.
 
 Confirmed real on Relaty:
-`features/smart_add/presentation/widgets/smart_add_voice_input.dart:72` —
+`features/smart_add/presentation/widgets/smart_add_voice_input.dart:72`, gated by
+`if (isRecording)` at `:66` —
 `if (isRecording) SizedBox(… CircularProgressIndicator(value: progress, …))` is one
 element of a `Stack.children` list whose sibling `Center(Icon(…))` stays mounted either
 way. The ring pops in and out against it with no fade. Clause 1's conditional and the
@@ -810,7 +811,7 @@ Fix: replace each transition literal with a `Motion` token (`motion-system.md` �
 
 A scheduling delay can be a `const` position **and** be out of scope for `style-1`
 entirely. It gets no token — not bare, not wrapped — and never enters the migration.
-Verified on Relaty: `core/utils/retry.dart:11` is consumed at `:26-29` as
+Verified on Relaty: `core/utils/retry.dart:11` is consumed at `:27-29` as
 `Future<void>.delayed(retryDelay * pow(2, …))`, exponential backoff whose literal is only
 a *base* (real delays 300/600/1200ms);
 `features/audio_record/…/audio_record_cubit.dart:23` is consumed at `:148` as
@@ -888,7 +889,11 @@ Confirm by reading:
    mechanical. `Curves.linear` on a looping or ambient animation (rotation, pulse) is
    correct. Do not converge those.
 
-Fix: collapse the tail into the two tokens, in the same commit as `style-1` — a call
+Fix: collapse the tail into the two tokens. A call site usually carries both a duration
+and a curve, so apply a site's `style-1` and `style-2` fixes together — but note the two
+rules split across waves by severity (cheap curves are high, the rest medium), so "same
+commit as `style-1`" only holds within one wave. Where they land in different waves, the
+later one picks up whatever the earlier left. A call
 site usually carries both a duration and a curve.
 
 Why it matters: curve is the half of motion design people cannot name but always feel.

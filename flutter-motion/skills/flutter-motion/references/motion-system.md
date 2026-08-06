@@ -243,6 +243,12 @@ router from `routing.md` §5, never from a `pubspec.yaml` grep.)
 | Card/tile morphs into detail screen | none | No — container transform's shape/elevation/color morph has no built-in equivalent; needs `package:animations` (`OpenContainer`) |
 | Spatial step navigation (shared axis) | `SlideTransition` + `FadeTransition` inside a hand-rolled `PageRouteBuilder` | Approximates it, more code, no built-in single widget |
 
+**Swapping a widget for its `Animated*` form usually forces `const` off the enclosing
+literal.** `const Container(…)` becomes `AnimatedContainer(…)`, which takes a runtime
+`duration:`, so the `const` on it — and on any ancestor literal that included it — has to
+go. The compiler catches every instance, so this costs a build cycle rather than a bug,
+but expect the diff to be wider than the one line the finding names.
+
 Rule of thumb: the implicit `Animated*` widgets above cover single-property,
 single-widget changes. The moment a fix needs to coordinate two animations
 (outgoing + incoming) with a named Material choreography — container
