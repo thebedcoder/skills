@@ -49,7 +49,26 @@ lines 1942–1951 and 1482–1502 — ctx7 returned no match for this query):
 
 Every animation this skill proposes or fixes wraps its duration in
 `Motion.of(context, Motion.standard)` (or whichever token applies), never a
-bare token.
+bare token — **at the site where the duration is consumed.**
+
+Reduce-motion is applied where a duration is *consumed*, not where it is
+*declared*. A `const` site — a default constructor parameter, a `static const`
+field, or a file-level `const` — takes the **bare token**: `Motion.standard` is
+itself `const`, while `Motion.of(…)` is a function call and is not a constant
+expression, so `this.duration = Motion.of(…)` does not compile. Wrap with
+`Motion.of(context, …)` at the build site that reads it. Relaty precedent, this
+exact shape already in the wild: `expandable_section.dart:11` declares
+`const Duration _kExpandCollapseDuration = Duration(milliseconds: 250)` and
+`:275` consumes it as
+`duration: _animateTransitions ? _kExpandCollapseDuration : Duration.zero`. The
+*structure* is what to copy — that literal is itself a `style-1` finding, and
+the fix replaces it with `Motion.standard` in place.
+
+Also never call `Motion.of` from `initState` — it reads `MediaQuery`, and
+`dependOnInheritedWidgetOfExactType` is forbidden there (SDK
+`widgets/framework.dart:999-1002`); `didChangeDependencies` is the earliest
+safe point. `findings.md` `style-1` enumerates the affected positions with
+counts.
 
 ## 2. Adopting an existing file
 
@@ -210,9 +229,10 @@ These read as novelty, not polish, on production UI — a settle-then-overshoot
 motion is correct for a game or a toy interaction, wrong for a form save or a
 page transition. Relaty's 11 distinct curves in use include `elasticOut`×4,
 `easeInBack`×2, `bounceOut`×1 raw (against `easeInOut`×28 as the dominant
-curve) — but 2 of those 7 raw hits are `///` doc lines documenting a default
-set two lines above (`animations/zoom_in.dart:49`, `zoom_out.dart:49`), so the
-real count is **5 code sites, 7 raw**. Always filter comment lines before
+curve) — but 2 of those 7 raw hits are `///` doc lines describing a default
+declared elsewhere in the same file (`animations/zoom_in.dart:49` documents the
+default at `:32`; `zoom_out.dart:49` documents `:32`), so the real count is
+**5 code sites, 7 raw**. Always filter comment lines before
 reporting a curve tally; `findings.md` `style-2` carries the filtered probe.
 These are not a hypothetical anti-pattern, they were found in a real, shipped
 app. When found, the finding is "replace with `Motion.enter` /

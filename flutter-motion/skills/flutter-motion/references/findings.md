@@ -107,10 +107,18 @@ done
 grep -rEn 'extends (MaterialPage|CupertinoPage|CustomTransitionPage)' lib --include='*.dart'
 ```
 
-**Stage 1 is a heuristic and it under-reports. The gap between the two stages is the
+**Stage 1 is a heuristic and it under-reports. A gap between the two stages is the
 signal — never treat stage 1 as coverage.** It cannot see a `pageBuilder:` with a block
-body or a line-wrapped arrow, because the class name is not on the matched line. Relaty:
-stage 1 resolves **13 of the 17** routes; stage 2 returns **19**. The four it misses are
+body or a line-wrapped arrow, because the class name is not on the matched line.
+
+The two stages count different populations, so read the gap rather than subtracting
+blindly: stage 1 counts **page classes it could resolve from a route**, stage 2 counts
+**every `Page` subclass in the project**, routed or not. Stage 2 legitimately exceeds the
+route count. Relaty: 17 `GoRoute`s → 17 distinct page classes (1:1, none shared); stage 1
+resolves **13**; stage 2 returns **19** = those 13 + the 4 it missed + 2 page classes no
+`GoRoute` references at all (`greeting_page.dart:16` `GreetingPage`,
+`edit_contact_page.dart:8` `EditContactPage`). Account for every line stage 2 returns
+before concluding stage 1 is complete. The four it misses are
 `core/navigation/router.dart:162` (block body → `AddEditReminderPage`), `:174` (→
 `ContactLogPage`), `:183` (→ `ContactNotePage`), and `:192-193` (arrow wrapped to the
 next line → `ContactDetailsPage`). Read those four by hand; all four also
@@ -696,13 +704,17 @@ Confirm by reading:
    is a defect the skill introduced.
 
 Fix: replace each transition literal with a `Motion` token (`motion-system.md` §1).
-**Two positions where `Motion.of(context, …)` is not usable — both measured, both must
-be handled or the fix will not compile:**
+**Positions where `Motion.of(context, …)` is not usable. Each must be handled or the fix
+will not compile. The three `const` rows below are one rule — reduce-motion is applied
+where a duration is *consumed*, never where it is *declared* (`motion-system.md` §1) —
+and the counts are what Relaty measured, not a claim that no fourth const position
+exists:**
 
 | Position | Why `Motion.of` fails | What to write |
 |---|---|---|
-| Default constructor parameter — **18 of the 75** on Relaty (`animations/fade_in.dart:29`, `zoom_in.dart:30`, `zoom_out.dart:30`, `zoom_in_motor.dart:30`, `zoom_out_motor.dart:31`, `fade_out.dart:29`, `listening_animation.dart:26,28,29`, `pulsing_animation.dart:83`, `animated.dart:8`, `vertical_handshake.dart:33`, `animated_step_linear_gradient.dart:41`, `animated_two_state_switcher.dart:26`, `expanded_page_view.dart:13,38`, `scroll_after_build.dart:7`, `debounced_button.dart:27`) | a default value must be a compile-time constant, and there is no `BuildContext` | the **bare token** — `Motion.standard` is `static const`, so `this.duration = Motion.standard` is legal. Apply `Motion.of` at the consuming build site. |
-| `static const` field — **9 more** on Relaty (`core/data/services/bootstrap_service.dart:50`, `smart_overlay/constants.dart:15,16`, `smart_overlay/overlay_widget_builders.dart:6,7`, `features/tutorial/presentation/utils/tutorial_constants.dart:4,5,6,7`) | same reason; `static const X = Motion.of(…)` is not a constant expression | same — the bare token. 27 of the 75 literals sit in one of these two positions. |
+| Default constructor parameter — **18 of the 75** on Relaty (`animations/` — `fade_in.dart:29`, `zoom_in.dart:30`, `zoom_out.dart:30`, `zoom_in_motor.dart:30`, `zoom_out_motor.dart:31`, `fade_out.dart:29`, `listening_animation.dart:26,28,29`, `pulsing_animation.dart:83`, `vertical_handshake.dart:33`, `animated_step_linear_gradient.dart:41`, `animated_two_state_switcher.dart:26`; `core/presentation/widgets/` — `animated.dart:8`, `expanded_page_view.dart:13,38`, `scroll_after_build.dart:7`, `debounced_button.dart:27`) | a default value must be a compile-time constant, and there is no `BuildContext` | the **bare token** — `Motion.standard` is `static const`, so `this.duration = Motion.standard` is legal. Apply `Motion.of` at the consuming build site. |
+| `static const` field — **9 more** (`core/data/services/bootstrap_service.dart:50`, `smart_overlay/constants.dart:15,16`, `smart_overlay/overlay_widget_builders.dart:6,7`, `features/tutorial/presentation/utils/tutorial_constants.dart:4,5,6,7`) | same reason; `static const X = Motion.of(…)` is not a constant expression | same — the bare token |
+| File-level `const` — **3 more** (`core/utils/retry.dart:11`, `core/presentation/widgets/expandable_section.dart:11`, `features/audio_record/presentation/cubit/audio_record_cubit.dart:23`) | same reason; a top-level `const` initializer must be a constant expression | same — the bare token. **30 of the 75 literals sit in one of these three const positions.** Worked precedent already in Relaty: `expandable_section.dart:11` declares `const Duration _kExpandCollapseDuration = Duration(milliseconds: 250)` and `:275` consumes it as `duration: _animateTransitions ? _kExpandCollapseDuration : Duration.zero` — bare const at the declaration, the conditional applied at the build site. Copy the structure, not the literal: that `250` is itself a `style-1` finding and the fix swaps it for `Motion.standard` in place. |
 | `AnimationController(duration: …)` inside `initState` — Relaty builds controllers in `initState` in 14 of its 16 controller files | `Motion.of` reads `MediaQuery`, and `dependOnInheritedWidgetOfExactType` must not be called from `initState` (SDK `flutter/lib/src/widgets/framework.dart:999-1002`; `didChangeDependencies` is the earliest safe point) | construct with the bare token, then assign `controller.duration = Motion.of(context, …)` in `didChangeDependencies`, or read the value in `build` |
 
 Why it matters: 92 literals is 92 independent decisions. One token file turns "the
@@ -836,14 +848,21 @@ Confirm by reading, in this order:
    the "slow, emphasized only" band and genuinely emphasized. Report as one pattern, not
    nine findings.
 
-Fix: retarget onto the nearest token, wrapped —
+Fix: retarget onto the nearest token, wrapped at the consuming site —
 `Motion.of(context, Motion.quick)` / `Motion.of(context, Motion.standard)` /
-`Motion.of(context, Motion.emphasized)` (`motion-system.md` §1; never a bare token at a
-build site). The two const-position constraints in `style-1`'s table apply, and they
-bite harder here: **16 of Relaty's 27 const-position sites sit in the slow or high
-bands** (13 of the 18 default parameters, 3 of the 9 `static const` fields), so most of
-this rule's fixes land exactly where `Motion.of(context, …)` is unavailable and the bare
-token is the correct thing to write.
+`Motion.of(context, Motion.emphasized)` (`motion-system.md` §1). The const-position
+constraints in `style-1`'s table apply, and they bite here: **16 of Relaty's 30
+const-position sites sit in the slow or high bands** — 13 of the 18 default parameters,
+3 of the 9 `static const` fields, 0 of the 3 file-level `const`s (all three are
+100–500ms).
+
+That 16 is a *pre-confirm* figure and this rule's own confirm step then removes some of
+it: `bootstrap_service.dart:50` (`splashFloor`, consumed at `:59` as
+`Future<void>.delayed(splashFloor)`) is dropped by clauses 1 and 3, and
+`tutorial_constants.dart:7` (`navigationDelayLong`, 600ms) is a navigation delay dropped
+by clause 1 — so only 1 of the 3 newly counted `static const` sites survives. Expect a
+real share of what does survive to land at a declaration, where the bare token is the
+correct thing to write; do not promise the user a number before the confirm step runs.
 
 Why it matters: this is the rule the user can feel before reading the report. It is also
 the one most likely to over-fire, which is why clauses 1 and 3 exist.
