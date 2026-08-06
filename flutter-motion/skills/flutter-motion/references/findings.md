@@ -24,6 +24,11 @@ Mechanics that apply to every probe:
 
 - Run from the project root. `--include='*.dart'` **must stay quoted** — unquoted it
   fails under zsh with "no matches found".
+- **Relaty site paths in this file are written relative to its source root, `lib/src/`.**
+  Every probe is rooted at `lib`, so a probe prints `lib/src/core/navigation/router.dart`
+  where the prose says `core/navigation/router.dart`. Prepend `lib/src/` to open one. An
+  app whose code sits directly under `lib/` needs no prefix — check where the project's
+  `features/` and `core/` directories actually live before matching a citation.
 - Exclude generated trees everywhere: `lib/gen/`, `*.g.dart`, `*.gr.dart`,
   `*.freezed.dart`. Generated code is not developer-authored and is not in scope.
 - Drop comment lines before counting: `| grep -vE ':[[:space:]]*//'`. On Relaty this
@@ -56,17 +61,17 @@ Mechanics that apply to every probe:
 |---|---|---|---|
 | `nav-1` | default page transition on a container tap | high | 2 → 1 (nuanced) + 17 routes on the platform default |
 | `nav-2` | tab / nav body swap is an instant cut | medium | 0 → **false negative**, custom tab widget |
-| `nav-3` | asymmetric motion inside a flow | medium | 2 flows → 1 |
+| `nav-3` | asymmetric motion inside a flow | medium | 2 flows → 0 (the 1 candidate is a multi-step bypass) |
 | `nav-4` | dialog / sheet on the platform default | low | 2 → 2 |
 | `nav-5` | shared-element transition missing (Hero) | low | 0 → 0 (real zero) |
 | `state-1` | setState child swap with no transition | medium | 39 → 1 confirmed |
-| `state-2` | bare loading indicator popped in and out | medium | 3 → 2 |
+| `state-2` | bare loading indicator popped in and out | medium | 3 → 2 filtered → **1** |
 | `state-3` | empty case never branched | medium | manual → 0 |
 | `state-4` | error case never branched | high | manual → **1 confirmed** |
 | `state-5` | visibility toggled with no fade | low | 6 → **0 (6/6 false)** |
 | `state-6` | Container whose visuals change, unanimated | low | 57 → **2** |
 | `state-7` | cross-fade inventory and consistency | low | 10 → 0 (all correct) |
-| `style-1` | inline durations instead of tokens | medium | 92 → 75 real literals |
+| `style-1` | inline durations instead of tokens | medium | 92 → 75 literals — a **pre-confirm** count; clause 1 then removes every scheduling site |
 | `style-2` | curve spread and cheap curves | medium (high for bounce/elastic/back) | 63 → 55; 7 → 5 cheap |
 | `style-3` | duration outside the 100–500ms band | by band; >800ms on a common path is high | 31 outside of 75 |
 | `hyg-1` | AnimationController never disposed | high | 50 → **0 leaks** |
@@ -107,7 +112,7 @@ they return extends `MaterialPage` — platform default everywhere. Resolve what
 for c in $(grep -rEn 'pageBuilder:' lib --include='*.dart' \
     | grep -oE '=> (const )?[A-Za-z_][A-Za-z0-9_.]*' \
     | grep -oE '[A-Za-z_][A-Za-z0-9_]*$' | sort -u); do
-  grep -rhn "class $c extends" lib --include='*.dart'
+  grep -rn "class $c extends" lib --include='*.dart'
 done
 
 # Stage 2 — completeness cross-check. Compare its count against stage 1's.
@@ -226,8 +231,8 @@ tell, and it fires on the very first screen the user sees.
 ### nav-3 — asymmetric motion inside a flow
 
 Severity: medium.
-Raw hits (Relaty): manual; 2 flows read, 1 asymmetry found — on a different axis than
-the rule name implies.
+Raw hits (Relaty): manual; 2 flows read, 1 candidate asymmetry found — on a different
+axis than the rule name implies — and clause 4 then disqualifies it. **0 findings.**
 
 Probe: none — read. Locate flows first:
 ```bash
@@ -245,8 +250,19 @@ Confirm by reading:
    `onboarding_content.dart:46-49` — `if (isSkipped) { _pageController.jumpToPage(index);
    return; }`. Skip is an instant cut while every other step animates. Grep the flow for
    `jumpTo*`, `Duration.zero`, or a direct index assignment sitting beside an animated
-   path.
-4. Flow built on a third-party stepper/wizard whose internals are not under `lib/`?
+   path. **That is a candidate, not a finding — clause 4 decides.**
+4. **Resolve how far the bypass jumps, in source, before reporting it.** A bypass that
+   moves one step is a finding; a bypass that skips several is correct as an instant cut,
+   because animating it scrolls the user through every intermediate page. Do not infer
+   the distance from the call site — the index is computed by the emitter. Open whatever
+   produces it and read the assignment. Relaty: `onboarding_content.dart:47`'s `index`
+   comes from `OnboardingInProgress.currentPageIndex`, and
+   `features/onboarding/presentation/bloc/onboarding_bloc.dart:61`
+   (`_onOnboardingSkipPressed`) sets `_currentPageIndex = _totalPages - 1` — skip jumps
+   straight to the last of four steps from wherever the user is. **Multi-step: not a
+   finding.** Reporting it was this rule's only false positive on Relaty, and it came
+   from stopping at clause 3.
+5. Flow built on a third-party stepper/wizard whose internals are not under `lib/`?
    Report "opaque — not auditable from app source" and stop, do not guess. Relaty's
    `features/add_contact/presentation/widgets/add_contact_content.dart` is this case:
    a `Stepper` + `StepperController` (`_controller.jumpToStep(currentStep)`) driven by
@@ -254,9 +270,9 @@ Confirm by reading:
    from back lives inside the package.
 
 Fix: route every direction through one animated call with
-`Motion.of(context, Motion.standard)` and `Motion.enter` / `Motion.exit`. **Exception:**
-if the bypass jumps several steps at once, animating it scrolls the user through every
-intermediate page — that is worse. Say the skip is instant by design and leave it.
+`Motion.of(context, Motion.standard)` and `Motion.enter` / `Motion.exit`. The multi-step
+bypass carve-out is confirm clause 4, not a fix-time exception — a site it disqualifies
+never reaches this section.
 
 Why it matters: an inconsistent flow reads as unfinished. The user learns the
 transition on step 1 and one path breaks the rule.
@@ -406,7 +422,8 @@ catches the jump, not the change.
 ### state-2 — bare loading indicator popped in and out
 
 Severity: medium.
-Raw hits (Relaty): 3 → 1 is a doc-comment, 2 real.
+Raw hits (Relaty): 3 → 1 is a doc-comment, 2 survive the filter, **1 real** — clause 1
+drops the other.
 
 Probe:
 ```bash
@@ -417,20 +434,37 @@ The filter is not optional:
 `core/presentation/widgets/animations/delay.dart:23` is
 `///   placeholder: CircularProgressIndicator(),` inside a dartdoc example.
 
-Confirm by reading:
-1. Is the indicator inside a conditional — `if (…)` in a `children:` list, a ternary at
-   a branch point, a `switch` arm?
-2. Is there an `AnimatedSwitcher` / `AnimatedOpacity` / `AnimatedCrossFade` around
+Confirm by reading — clause 1 first, and it is the one that was missing:
+
+1. **Find the nearest conditional that governs the indicator itself, and check it is in
+   the same `build` the indicator is written in.** The finding is the indicator popping
+   against a subtree that stays put. If the only conditional is an ancestor governing the
+   **whole widget** the indicator lives in, nothing pops relative to its surroundings —
+   the card comes and goes as a unit. **Discard, and hand it to `state-1` as a question
+   about the card.** Relaty:
+   `features/timeline/presentation/widgets/contacts_progress.dart:43` is a
+   `LinearProgressIndicator` in a stateless `ContactsProgress` card with no conditional
+   anywhere in that file; the nearest one is `if (showProgress) ContactsProgress(…)` in a
+   different file (`features/timeline/presentation/widgets/timeline_content.dart:209`).
+   Reporting it was this rule's only false positive on Relaty.
+   **Do not try to discriminate on `value:`.** A determinate `value:` is not evidence
+   either way and reading it as "meter, not spinner" drops a real finding: *both* Relaty
+   hits are determinate — the false positive is `value: contactsCount / 3` and the real
+   one is `value: progress`.
+2. Is that conditional an `if (…)` in a `children:` list, a ternary at a branch point, a
+   `switch` arm?
+3. Is there an `AnimatedSwitcher` / `AnimatedOpacity` / `AnimatedCrossFade` around
    **the branch**, not around the indicator? A switcher placed inside one arm animates
    nothing (`state-mgmt.md` §5).
-3. An indicator rendered unconditionally (always on screen while a stream runs) is not
+4. An indicator rendered unconditionally (always on screen while a stream runs) is not
    this rule.
 
 Confirmed real on Relaty:
 `features/smart_add/presentation/widgets/smart_add_voice_input.dart:72` —
-`if (isRecording) SizedBox(… CircularProgressIndicator(…))` inside a `Stack.children`
-list; the ring pops in and out with no fade. Same shape at
-`features/timeline/presentation/widgets/contacts_progress.dart:43`.
+`if (isRecording) SizedBox(… CircularProgressIndicator(value: progress, …))` is one
+element of a `Stack.children` list whose sibling `Center(Icon(…))` stays mounted either
+way. The ring pops in and out against it with no fade. Clause 1's conditional and the
+indicator are in the same build; that is what separates it from `contacts_progress.dart`.
 
 Fix: `AnimatedSwitcher` around the branch (`motion-system.md` §4) with
 `Motion.of(context, Motion.standard)` and distinct keys per branch. On BLoC or Riverpod
@@ -681,8 +715,11 @@ working duration convention shows up.
 ### style-1 — inline durations instead of tokens
 
 Severity: medium — no single site is wrong; the absence of a source of truth is.
-Raw hits (Relaty): 92 → 77 non-comment lines → 75 parse to a bare integer. Zero token
-files anywhere in the project.
+Raw hits (Relaty): 92 → 77 non-comment lines → 75 the histogram can read a leading
+integer from (74 of those are a bare integer; the 75th is the compound expression
+`style-3` documents). **All three are counts of literals, not of findings** — clause 1
+runs afterwards and removes every scheduling site. Zero token files anywhere in the
+project.
 
 Probe:
 ```bash
@@ -703,10 +740,17 @@ Confirm by reading:
    `smart_overlay/smart_overlay_details.dart:126,132` (`Future.delayed(16ms)`, a
    one-frame wait), `features/smart_add/.../smart_add_input_section.dart:93` (7ms, same
    pattern), `retry.dart`'s `retryDelay`.
-2. **No grep separates the two reliably.** Measured on Relaty: a 3-line-window
-   `Future\.delayed|Timer\(|debounceTime` scan finds 4 of the ~10 known scheduling
-   sites; widening the window to catch the rest also matches every widget that merely
-   has a `delay` *parameter*. Read the enclosing call.
+2. **No grep separates the two reliably, and the shortfall is much larger than it
+   looks.** Measured on Relaty: a 3-line-window `Future\.delayed|Timer\(|debounceTime`
+   scan finds **4**. Broadening the alternation by one alternative —
+   `Future(<void>)?\.delayed` — takes the same scan to **18**, because the codebase
+   writes `Future<void>.delayed`, which `Future\.delayed` cannot match; add the
+   const-position declarations consumed by a scheduler elsewhere in the file and the
+   population is larger still. Neither number is the answer: widening far enough to catch
+   the rest also matches every widget that merely has a `delay` *parameter*. **Treat any
+   grep here as a hint and read the enclosing call.** The specific lesson is that a
+   confident-looking scheduling grep under-reported this category by more than 4x, and
+   the sites it misses migrate into a `Motion` token silently.
 3. Report the two categories separately. Migrating a retry backoff to `Motion.standard`
    is a defect the skill introduced.
 

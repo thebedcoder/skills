@@ -48,7 +48,7 @@ Four detections. Each has a reference; none is a single grep.
 |---|---|---|
 | Router | `references/routing.md` §1–5 | **Never conclude from `pubspec.yaml` alone.** A wrapper package can re-export the real router under its own name with no trace in the manifest. Run §5's re-export check before deciding. |
 | State management | `references/state-mgmt.md` §0 | `flutter_bloc` re-exports Provider's `context.watch`/`context.select`, so those greps false-positive Provider on every BLoC app. §0's detection is AND-gated for this reason. |
-| Existing animation deps | `pubspec.yaml` — `animations`, `flutter_animate`, `lottie`, `rive` | Adopt the house style. **Never stack a second animation library** on a project that already has one. |
+| Existing animation deps | `pubspec.yaml` — `animations`, `flutter_animate`, `lottie`, `rive` | Adopt the house style. **Never stack a second animation library** on a project that already has one. **Two different categories, and only the first one collides:** `animations` / `flutter_animate` drive *UI transitions* — pick one, never both. `lottie` / `rive` play *authored assets* and drive no transition; their presence is not a reason to decline `package:animations`. Relaty ships `lottie` and no transition library, so the container transform and fade-through fixes still need one added — and that still gets asked, per the hard rules. |
 | Existing motion scale | `references/motion-system.md` §2 | Glob the paths §2 lists before proposing a new token file. A project with its own scale adopts that scale at Step 4 — never get Material's values imposed on it. **Cupertino-specific motion has no coverage in these references; on an all-Cupertino project say so rather than applying Material timings.** |
 
 ## Step 3 — Scan and report, before any edit
@@ -63,7 +63,8 @@ Emit the report before touching a file:
 
 ```markdown
 ## Motion system
-Tokens: absent | <path> | scattered literals (N distinct durations, M distinct curves)
+Tokens: absent | <path>          ← does a token file exist, per motion-system.md §2
+Spread: N distinct durations, M distinct curves   ← always report, token file or not
 
 ## Findings
 | # | Sev | Kind | Site | What's missing | Fix |
