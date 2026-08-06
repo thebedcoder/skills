@@ -75,8 +75,8 @@ Mechanics that apply to every probe:
 ### nav-1 — default page transition on a container tap
 
 Severity: high — primary list→detail is on every session's hot path.
-Raw hits (Relaty): 2 on the Navigator 1.0 probe; 17 routes / 13 page classes on the
-go_router probe, every one on the platform default.
+Raw hits (Relaty): 2 on the Navigator 1.0 probe; 17 `GoRoute`s on the go_router probe —
+13 resolved automatically, 4 read by hand — every one on the platform default.
 
 **Router-dependent. Establish the identity from `routing.md` first, and never from a
 bare `pubspec.yaml` grep.** Relaty's manifest names no `go_router` — it names
@@ -92,18 +92,36 @@ grep -rEn 'MaterialPageRoute|CupertinoPageRoute|PageRouteBuilder' lib --include=
 Dropping `PageRouteBuilder` from that alternation takes Relaty from 2 hits to 0.
 
 Probe — go_router (`routing.md` §2). **`builder:` vs `pageBuilder:` is not the
-discriminator.** All 17 of Relaty's `GoRoute`s use `pageBuilder:` and all 13 distinct
-page classes they return extend `MaterialPage` — platform default everywhere. Resolve
-what the `pageBuilder` returns:
+discriminator.** All 17 of Relaty's `GoRoute`s use `pageBuilder:`, and every page class
+they return extends `MaterialPage` — platform default everywhere. Resolve what the
+`pageBuilder` returns:
 ```bash
+# Stage 1 — ARROW FORM ONLY, class name on the same physical line as `pageBuilder:`.
 for c in $(grep -rEn 'pageBuilder:' lib --include='*.dart' \
     | grep -oE '=> (const )?[A-Za-z_][A-Za-z0-9_.]*' \
     | grep -oE '[A-Za-z_][A-Za-z0-9_]*$' | sort -u); do
   grep -rhn "class $c extends" lib --include='*.dart'
 done
+
+# Stage 2 — completeness cross-check. Compare its count against stage 1's.
+grep -rEn 'extends (MaterialPage|CupertinoPage|CustomTransitionPage)' lib --include='*.dart'
 ```
-Relaty output: 13 lines, every one `class …Page extends MaterialPage<…>`. Anything
-other than `CustomTransitionPage` — or a `Page` subclass that itself supplies a
+
+**Stage 1 is a heuristic and it under-reports. The gap between the two stages is the
+signal — never treat stage 1 as coverage.** It cannot see a `pageBuilder:` with a block
+body or a line-wrapped arrow, because the class name is not on the matched line. Relaty:
+stage 1 resolves **13 of the 17** routes; stage 2 returns **19**. The four it misses are
+`core/navigation/router.dart:162` (block body → `AddEditReminderPage`), `:174` (→
+`ContactLogPage`), `:183` (→ `ContactNotePage`), and `:192-193` (arrow wrapped to the
+next line → `ContactDetailsPage`). Read those four by hand; all four also
+`extends MaterialPage<void>`, so Relaty's verdict is unchanged — but
+**`ContactDetailsPage` is the app's flagship list→detail destination, the single highest-value
+container-transform candidate in the whole codebase, and stage 1 drops it silently.** On a
+project that block-bodies its `pageBuilder`s, stage 1 alone returns nothing while every
+route runs the platform default — a softer replay of the exact failure mode this rule
+was rewritten to eliminate.
+
+Anything other than `CustomTransitionPage` — or a `Page` subclass that itself supplies a
 transition — is the finding.
 
 Probe — auto_route (`routing.md` §3): route entries using `AutoRoute(page: …)` rather
@@ -683,7 +701,8 @@ be handled or the fix will not compile:**
 
 | Position | Why `Motion.of` fails | What to write |
 |---|---|---|
-| Default constructor parameter or `static const` — **18 of the 75** on Relaty (`animations/fade_in.dart:29`, `zoom_in.dart:30`, `zoom_out.dart:30`, `zoom_in_motor.dart:30`, `zoom_out_motor.dart:31`, `fade_out.dart:29`, `listening_animation.dart:26,28,29`, `pulsing_animation.dart:83`, `animated.dart:8`, `vertical_handshake.dart:33`, `animated_step_linear_gradient.dart:41`, `animated_two_state_switcher.dart:26`, `expanded_page_view.dart:13,38`, `scroll_after_build.dart:7`, `debounced_button.dart:27`) | a default value must be a compile-time constant, and there is no `BuildContext` | the **bare token** — `Motion.standard` is `static const`, so `this.duration = Motion.standard` is legal. Apply `Motion.of` at the consuming build site. |
+| Default constructor parameter — **18 of the 75** on Relaty (`animations/fade_in.dart:29`, `zoom_in.dart:30`, `zoom_out.dart:30`, `zoom_in_motor.dart:30`, `zoom_out_motor.dart:31`, `fade_out.dart:29`, `listening_animation.dart:26,28,29`, `pulsing_animation.dart:83`, `animated.dart:8`, `vertical_handshake.dart:33`, `animated_step_linear_gradient.dart:41`, `animated_two_state_switcher.dart:26`, `expanded_page_view.dart:13,38`, `scroll_after_build.dart:7`, `debounced_button.dart:27`) | a default value must be a compile-time constant, and there is no `BuildContext` | the **bare token** — `Motion.standard` is `static const`, so `this.duration = Motion.standard` is legal. Apply `Motion.of` at the consuming build site. |
+| `static const` field — **9 more** on Relaty (`core/data/services/bootstrap_service.dart:50`, `smart_overlay/constants.dart:15,16`, `smart_overlay/overlay_widget_builders.dart:6,7`, `features/tutorial/presentation/utils/tutorial_constants.dart:4,5,6,7`) | same reason; `static const X = Motion.of(…)` is not a constant expression | same — the bare token. 27 of the 75 literals sit in one of these two positions. |
 | `AnimationController(duration: …)` inside `initState` — Relaty builds controllers in `initState` in 14 of its 16 controller files | `Motion.of` reads `MediaQuery`, and `dependOnInheritedWidgetOfExactType` must not be called from `initState` (SDK `flutter/lib/src/widgets/framework.dart:999-1002`; `didChangeDependencies` is the earliest safe point) | construct with the bare token, then assign `controller.duration = Motion.of(context, …)` in `didChangeDependencies`, or read the value in `build` |
 
 Why it matters: 92 literals is 92 independent decisions. One token file turns "the
@@ -752,6 +771,10 @@ A bounce on a form save is the loudest cheap tell in the catalog.
 Severity: by band, per the table. **>800ms on a common path is high.**
 Raw hits (Relaty): 31 of 75 fall outside the band.
 
+The band and its rationale are `motion-system.md` §5; the table is repeated here because
+it is the rule's classification key, not because it is a second source of truth. §5
+governs if the two ever drift.
+
 | Duration | Reads as |
 |---|---|
 | < 100ms | glitch — the eye doesn't register motion, only a jump |
@@ -813,11 +836,14 @@ Confirm by reading, in this order:
    the "slow, emphasized only" band and genuinely emphasized. Report as one pattern, not
    nine findings.
 
-Fix: retarget onto the nearest token — `Motion.quick` / `Motion.standard` /
-`Motion.emphasized` (`motion-system.md` §1). The same two const-position constraints as
-`style-1` apply, and they bite harder here: **13 of Relaty's 18 const-declaration sites
-sit in the slow or high bands**, so most of this rule's fixes land exactly where
-`Motion.of(context, …)` is unavailable.
+Fix: retarget onto the nearest token, wrapped —
+`Motion.of(context, Motion.quick)` / `Motion.of(context, Motion.standard)` /
+`Motion.of(context, Motion.emphasized)` (`motion-system.md` §1; never a bare token at a
+build site). The two const-position constraints in `style-1`'s table apply, and they
+bite harder here: **16 of Relaty's 27 const-position sites sit in the slow or high
+bands** (13 of the 18 default parameters, 3 of the 9 `static const` fields), so most of
+this rule's fixes land exactly where `Motion.of(context, …)` is unavailable and the bare
+token is the correct thing to write.
 
 Why it matters: this is the rule the user can feel before reading the report. It is also
 the one most likely to over-fire, which is why clauses 1 and 3 exist.
@@ -851,7 +877,11 @@ it a finding.
    in-house wrapper (`press_feedback_animation.dart`), not `AnimationController`.
 2. For each true `AnimationController` field, find its owning class and check whether
    the **same field name** is called with `.dispose()` inside that class's own
-   `void dispose()`.
+   `void dispose()` — **or inside a helper that `dispose()` calls.** A
+   `void dispose() { _disposeControllers(); super.dispose(); }` is correct and a
+   literal search of the `dispose()` body alone will not see it; open any method it
+   calls. (Relaty has no such case — 45 `dispose()` bodies, zero dispose helpers — so
+   this clause is untested there and is here for the next project.)
 3. **Constructor-parameter fields are caller-owned.**
    `smart_overlay/smart_overlay_details.dart:55` declares
    `final AnimationController? pressFeedbackController;`, assigned via
@@ -863,7 +893,7 @@ it a finding.
    calling anything a leak. `smart_overlay_menu.dart`'s does.
 5. **Collection-typed fields are disposed by a loop, never by `<field>.dispose()`.**
    `core/presentation/widgets/animations/listening_animation.dart:70` declares
-   `List<AnimationController>? _rippleControllers;`, disposed at `:181-187` by
+   `List<AnimationController>? _rippleControllers;`, disposed at `:183-185` by
    `for (final controller in _rippleControllers!) { controller.dispose(); }`. The string
    `_rippleControllers.dispose()` never appears anywhere in that file, so clause 2 alone
    mechanically concludes "leak" — **wrong**. Before concluding a leak on a

@@ -209,7 +209,11 @@ Relaty evidence: of 75 real duration literals measured, 31 fall outside
 These read as novelty, not polish, on production UI — a settle-then-overshoot
 motion is correct for a game or a toy interaction, wrong for a form save or a
 page transition. Relaty's 11 distinct curves in use include `elasticOut`×4,
-`easeInBack`×2, `bounceOut`×1 (against `easeInOut`×28 as the dominant curve)
-— these are not a hypothetical anti-pattern, they were found in a real,
-shipped app. When found, the finding is "replace with `Motion.enter` /
+`easeInBack`×2, `bounceOut`×1 raw (against `easeInOut`×28 as the dominant
+curve) — but 2 of those 7 raw hits are `///` doc lines documenting a default
+set two lines above (`animations/zoom_in.dart:49`, `zoom_out.dart:49`), so the
+real count is **5 code sites, 7 raw**. Always filter comment lines before
+reporting a curve tally; `findings.md` `style-2` carries the filtered probe.
+These are not a hypothetical anti-pattern, they were found in a real, shipped
+app. When found, the finding is "replace with `Motion.enter` /
 `Motion.exit`" — never "here's a nicer bounce curve."
