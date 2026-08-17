@@ -19,6 +19,20 @@ Detect whether `$ARGUMENTS` contains the `--auto` token (not a substring inside 
 
 See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
 
+### Step 0b — Open the phase task list
+
+Per "Progress Tracking" in SKILL.md, create one task per phase before any work starts:
+
+1. `Diagnose — reproduce + root cause`
+2. `Fix + regression test`
+3. `RED review of the fix`
+4. `End-user docs + changelogs`
+5. `Cleanup — decisions + memory`
+
+Mark #1 `in_progress` at Phase 1. Advance one at a time. No user-facing change → complete #4 with `changelogs only (internal fix)`. RED concerns unresolved → leave the current task `in_progress`; do not complete #5, Phase 5 is skipped.
+
+Step 0 below mirrors the same list into the `# PLAN` section of `.agentic/focus.md`. The harness task list dies with the session; PLAN survives it.
+
 ### Step 0 — Auto-write focus
 
 Before diagnosing, update `.agentic/focus.md`:
@@ -106,6 +120,8 @@ Clean → continue.
 
 Spawn **ae-scribe** subagent:
 - User-noticeable change (UI response, workflow outcome, visible error, API shape they consume)? Yes → update the feature's `app-docs/features/[name].md`. No → returns `no user-facing change, app-docs unchanged`.
+
+`./app-docs/` absent → SCRIBE creates the tree first: `index.md`, `CHANGELOG.md` (seeded per `commands/init.md`), `features/`, `guides/`. Existence check, not mode check — lite projects skip the tree at init and grow it on first user-facing change.
 
 Prepend to both changelogs (newest first):
 

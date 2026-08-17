@@ -219,14 +219,18 @@ When CURRENT is written by an `--auto` command, `set_by:` gets ` (auto)` suffix.
 
 ## Progress Tracking
 
-Chain commands maintain a **live task list** — the harness task tool, not prose. `/ship`, `/ship-all`, `/plan-all` create one at start. Single-phase commands (`/note`, `/focus`, `/status`, `/analyze`, `/archive`) don't — a list for one step is noise.
+Chain commands maintain a **live task list** — the harness task tool, not prose. `/ship`, `/ship-all`, `/plan-all`, `/fix`, `/improve` create one at start. Single-phase commands (`/note`, `/focus`, `/status`, `/analyze`, `/archive`) don't — a list for one step is noise.
 
 | Command | One task per |
 |---|---|
 | `/ship` | phase (implement · review · frontend · review · docs · PR desc · cleanup) |
 | `/ship-all` | story |
 | `/plan-all` | epic |
+| `/fix` | phase (diagnose · fix · review · docs · cleanup) |
+| `/improve` | phase (plan · apply · review · docs · cleanup) |
 | `/implement`, `/review`, `/frontend` standalone | phase |
+
+Phase count is the test, not command weight. Multi-phase → list. One phase → no list.
 
 Rules:
 

@@ -34,6 +34,22 @@ See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambigu
 
 Mark the chosen item in `BACKLOG.md`: `**Status:** in-progress`. Set to `done` in Phase 5.
 
+### Step 0c — Open the phase task list
+
+Target resolved, so open the list now — never before Step 0b, which can stop the command with nothing to do.
+
+Per "Progress Tracking" in SKILL.md, create one task per phase:
+
+1. `Plan — precedent + scope + Done when`
+2. `Apply + tests`
+3. `Review — RED + TEST + 1 scoped`
+4. `End-user docs + changelogs`
+5. `Cleanup — decisions + memory`
+
+Mark #1 `in_progress` at Phase 1. Advance one at a time. `Behavior change: none` → complete #4 with `changelogs only (not user-facing)`. Review blockers unresolved → leave the current task `in_progress`; do not complete #5, Phase 5 is skipped.
+
+Step 0 below mirrors the same list into the `# PLAN` section of `.agentic/focus.md`. The harness task list dies with the session; PLAN survives it.
+
 ### Step 0 — Auto-write focus
 
 Before planning, update `.agentic/focus.md`:

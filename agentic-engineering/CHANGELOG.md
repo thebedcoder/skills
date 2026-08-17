@@ -15,6 +15,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
 ### Changed
 
 - `/note`'s closing line routed every captured item to `/ship` regardless of type. It now routes by type: bugs to `/fix`, improvements to `/improve`, ideas to `/ship`.
+- **`/fix` and `/improve` now open a harness phase task list**, like `/ship` already did. SKILL.md's "Progress Tracking" rule is that multi-phase chains get a list and single-phase commands don't, but the table enumerated only `/ship`, `/ship-all`, `/plan-all` — so these two five-phase chains fell through a gap rather than being deliberately excluded, and tracked their phases only in `.agentic/focus.md`'s `# PLAN`. Both now do what `/ship` does: open the list, mirror it into PLAN (the harness list dies with the session; PLAN survives it). The table gained both rows plus the criterion itself, so the next command added is measured against phase count rather than against the enumeration. `/improve` opens its list at Step 0c, *after* target resolution — Step 0b can stop the command with nothing to do, and a list opened before it would strand five tasks on a run that never started.
+
+### Fixed
+
+- **`/fix` and `/improve` prepended to `app-docs/CHANGELOG.md` with no existence check.** In a lite project that has not yet grown an `app-docs/` tree, the first user-facing fix or improvement wrote into a directory that was not there. `ship.md:256` and `doc.md:89` already carried the `absent → create the tree first` guard; both chains now carry it too.
 
 ## [1.2.0] — 2026-08-04
 
