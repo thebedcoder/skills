@@ -98,5 +98,13 @@ Priority:   low/medium/high
 
 Saved to: ./docs/BACKLOG.md
 
-When ready to implement: run /ship — it will pick this up and promote it automatically.
+Next: [routing line — see table below]
 ```
+
+Last line routes by `Type` — print exactly one:
+
+| Type | Line |
+|---|---|
+| bug | `Next: /fix [short title] — diagnose and fix it on a branch.` |
+| improvement | `Next: /improve — picks this up from BACKLOG.md, or /improve [short title] to name it directly.` |
+| idea | `Next: /ship — promotes this item into docs/features/ and ships it.` |

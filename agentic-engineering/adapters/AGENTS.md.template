@@ -12,7 +12,7 @@ Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
 - **Test-driven development.** Write a failing test before any implementation code. No exceptions, even for "quick" changes.
 - **Constitution.** `./docs/CONSTITUTION.md` lists non-negotiable project principles. Constitution violations are blockers — fix them before continuing, don't paper over them.
 - **Two changelogs, two audiences.**
-  - `./docs/CHANGELOG.md` — engineering log, terse, one line per change, newest first. Every ship/fix appends here.
+  - `./docs/CHANGELOG.md` — engineering log, terse, one line per change, newest first. Every ship/fix/improve appends here.
   - `./app-docs/CHANGELOG.md` — product release notes written for **end users**. Only changes a user can see go here. Pure refactors stay out.
 - **Docs structure.**
   - `./docs/` — for people who **build** the app (PRDs, stories, reviews, architecture).
@@ -136,7 +136,7 @@ If any of these fail, the story is not done.
 - `/focus clear` wipes both sections.
 - `/next <task>` appends to NEXT. `/next drop <N>` removes item N.
 
-Long-running commands (`/feature`, `/implement`, `/ship`, `/fix`, `/design`, `/review`, `/doc`, `/frontend`) auto-write CURRENT at their start using a story-id-match heuristic that prevents flicker when one command is nested in another (e.g. `/ship` calls `/implement` and `/review` inline; the inner phases only update `note:`). `/implement` and `/ship` also call `/focus done` on success (suppressed mid-chain inside `/ship-all`).
+Long-running commands (`/feature`, `/implement`, `/ship`, `/fix`, `/improve`, `/design`, `/review`, `/doc`, `/frontend`) auto-write CURRENT at their start using a story-id-match heuristic that prevents flicker when one command is nested in another (e.g. `/ship` calls `/implement` and `/review` inline; the inner phases only update `note:`). `/implement` and `/ship` also call `/focus done` on success (suppressed mid-chain inside `/ship-all`).
 
 Claude Code statusline integration is set up automatically by `/init` and `/bootstrap` via `./.claude/settings.local.json` (per-developer, untracked). Other tools can render the focus title themselves by reading `.agentic/focus.md`.
 
@@ -144,7 +144,7 @@ Claude Code statusline integration is set up automatically by `/init` and `/boot
 
 ## Auto Mode (`--auto`)
 
-Long-running commands accept a `--auto` flag: `/feature`, `/fix`, `/ship`, `/ship-all`, `/implement`, `/design`. Under `--auto`, the agent skips ceremonial checkpoints and applies defaults from `./docs/CONSTITUTION.md` (especially a `## Default Decisions` section, if present). Every auto-decision is announced inline (`DECISION: <choice> — reason: <why> [auto]`) and appended to `.agentic/auto-log.md` (gitignored, alongside `.agentic/focus.md`).
+Long-running commands accept a `--auto` flag: `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`. Under `--auto`, the agent skips ceremonial checkpoints and applies defaults from `./docs/CONSTITUTION.md` (especially a `## Default Decisions` section, if present). Every auto-decision is announced inline (`DECISION: <choice> — reason: <why> [auto]`) and appended to `.agentic/auto-log.md` (gitignored, alongside `.agentic/focus.md`).
 
 The agent always pauses regardless of `--auto` for:
 - Review blockers (high-severity bugs, requirements miss, constitution violation)

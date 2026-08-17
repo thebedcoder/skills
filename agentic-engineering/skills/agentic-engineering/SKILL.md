@@ -5,10 +5,19 @@ description: >
   Use this skill whenever the user wants to start a new project, initialize a feature,
   research a feature, implement a feature, run a code review, or follow a structured
   agentic development workflow. Triggers on: "/feature", "/implement",
-  "/review", "/status", "/design", "/frontend", "/ship", "/fix", "/bootstrap",
-  "/plan-all", "/doc", "/cleanup", "new feature", "implement feature",
+  "/review", "/status", "/design", "/frontend", "/ship", "/fix", "/improve",
+  "/bootstrap", "/plan-all", "/doc", "/cleanup", "new feature", "implement feature",
   "ship feature", "code review", "fix bug", "document feature", "plan all",
-  or any request to follow a structured step-by-step development process.
+  "improve existing feature", "add another supported file format", "add a
+  keyboard shortcut", "make an existing query or path faster", "split a long
+  module", "restructure this file", or any request to follow a structured
+  step-by-step development process.
+  /improve writes into an existing ./docs scaffold, so do NOT trigger on a bare
+  "add support for X" or "implement X" in a project with no ./docs/INDEX.md —
+  that is ordinary implementation work. Also NOT on "simplify this" or "clean up
+  the diff" (Claude Code's built-in /simplify and the code-simplifier agent own
+  quality-only passes), nor on Flutter motion, animation timing, or transition
+  polish (flutter-motion skill).
   Also triggers on "/agentic-engineering:init", "scaffold agentic docs", or
   "set up docs and constitution" — but NOT on a bare "/init" or "initialize
   CLAUDE.md", which belong to Claude Code's built-in init command. This skill's
@@ -39,6 +48,7 @@ Command invoked → read matching file from `commands/` first. File holds full i
 | `/ship` | `commands/ship.md` | Full chain: implement→review→frontend→review→docs |
 | `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories |
 | `/fix [description]` | `commands/fix.md` | Diagnose → fix → review |
+| `/improve [description]` | `commands/improve.md` | Non-bug change — plan → apply → review. Bare call → picks improvement from `BACKLOG.md`. Wants it done now; "we should improve X someday" → `/note` |
 | `/plan-all` | `commands/plan-all.md` | Plan all unplanned epics from INDEX.md |
 | `/doc [feature]` | `commands/doc.md` | Document one feature with Q&A |
 | `/doc-all` | `commands/doc-all.md` | Document many features. `--full` = new project (+ guides + index) |
@@ -164,7 +174,7 @@ Caveman rules above govern **agent-internal** output. These govern what the **hu
 
 ## Auto Mode (`--auto`)
 
-Long-running commands accept `--auto`: `/feature`, `/fix`, `/ship`, `/ship-all`, `/implement`, `/design`. Per-invocation only — no persistent toggle.
+Long-running commands accept `--auto`: `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`. Per-invocation only — no persistent toggle.
 
 Under `--auto`, every checkpoint is consulted by its tag:
 

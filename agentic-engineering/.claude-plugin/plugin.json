@@ -1,6 +1,6 @@
 {
   "name": "agentic-engineering",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Full SDLC agentic engineering workflow for Claude Code using named specialist agents — research, PRD, stories, implementation, 6-agent parallel review, end-user product docs",
   "author": {
     "name": "thebedcoder",

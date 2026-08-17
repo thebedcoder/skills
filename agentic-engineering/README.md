@@ -107,6 +107,9 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 ┌──────────────┐
 │    /fix      │  Bug reported → FIXER diagnoses → fix → review → docs
 └──────────────┘
+┌──────────────┐
+│   /improve   │  Non-bug change → ARCH plans → apply → review → docs
+└──────────────┘   (new shortcut, new format, faster path, refactor)
 ```
 
 ---
@@ -123,6 +126,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/ship-all` | Loop `/ship` across all unchecked stories |
 | `/plan-all` | Plan all unplanned epics from INDEX.md |
 | `/fix [desc]` | Diagnose bug → fix → review → docs |
+| `/improve [desc]` | A change that is neither a bug nor a whole feature — a new keyboard shortcut, support for a new file format, an extra export option, a faster query, a long module split in two. ARCH plans it against the precedent set by whatever already does the same kind of thing, states 2–4 inline `Done when:` conditions (printed only — never written to `STORIES.md` or a PRD), applies it, then `ae-red` + `ae-test` plus one specialist picked from the diff review it. The Phase 1 `Change type` (`feat` / `perf` / `refactor`) fixes the commit prefix up front, so additive work lands as `feat(` and gets its minor-version bump. Called bare, it picks an `improvement`-typed item out of `BACKLOG.md`. |
 | `/note [desc]` | Capture bug/idea/improvement to BACKLOG.md |
 | `/focus [task\|done\|clear]` | Set, clear, or advance the current-task pointer and step plan for this worktree (`.agentic/focus.md` — shown in the status bar, see below) |
 | `/next [task\|drop N]` | Queue a task to be picked up after the current one finishes |
@@ -131,7 +135,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/status` | Progress overview across all features + backlog (runs in forked context) |
 | `/analyze [question]` | Answer any question — searches docs and codebase (runs in forked context) |
 | `/archive [feature\|--all]` | Compact a shipped feature's docs (PRD, stories, progress, reviews, artifacts) into a single `SUMMARY.md` with story digests, links to the feature's `DEC-` entries, and a frozen test rollup. Originals are deleted — git history preserves them; `data-model.md` stays. `/status` and `/ship-all` skip archived features, keeping their scans fast as shipped features accumulate. `--all` archives every fully-shipped feature behind one combined confirmation, with a separate commit per feature so each can be reverted individually. |
-| `/cleanup [story\|feature]` | Promote finished work into durable docs: binding decisions appended to `docs/DECISIONS.md` as `DEC-NNN` entries, and `docs/MEMORY.md` rewritten within a hard line cap. Runs automatically as the last phase of every `/ship` and `/fix`; use it standalone for work done outside those chains. |
+| `/cleanup [story\|feature]` | Promote finished work into durable docs: binding decisions appended to `docs/DECISIONS.md` as `DEC-NNN` entries, and `docs/MEMORY.md` rewritten within a hard line cap. Runs automatically as the last phase of every `/ship`, `/fix`, and `/improve`; use it standalone for work done outside those chains. |
 
 ---
 
@@ -169,7 +173,7 @@ your-project/
     └── guides/                 ← user guides (getting-started, shortcuts, troubleshooting)
 ```
 
-> `./docs/` is for people who **build** the app. `./app-docs/` is for people who **use** the app. They never overlap — no file paths or code in app-docs, no user tutorials in docs. SCRIBE updates app-docs as the final step of every `/ship` and `/fix` so the published docs always match what the app can actually do.
+> `./docs/` is for people who **build** the app. `./app-docs/` is for people who **use** the app. They never overlap — no file paths or code in app-docs, no user tutorials in docs. SCRIBE updates app-docs as the final step of every `/ship` and `/fix`, and of every `/improve` that changes something a user can see, so the published docs always match what the app can actually do.
 
 A **lite** project (see below) starts with a much smaller subset of this tree — no `PRD.md`, no `EPICS.md`, no `app-docs/`, no `specs/` — and grows the rest only when something actually needs to be written.
 
@@ -207,7 +211,7 @@ Only four commands behave differently between modes (`/init`, `/feature`, `/stat
 
 ### Three memory documents
 
-Finished work leaves behind three different kinds of knowledge, and mixing them is how documentation rots. `/cleanup` — the last phase of every `/ship` and `/fix` — keeps them separate:
+Finished work leaves behind three different kinds of knowledge, and mixing them is how documentation rots. `/cleanup` — the last phase of every `/ship`, `/fix`, and `/improve` — keeps them separate:
 
 | File | Answers | How it's written |
 |---|---|---|
@@ -251,7 +255,7 @@ The workflow never auto-proceeds past:
 
 ### Auto mode (`--auto`)
 
-Long-running commands (`/feature`, `/fix`, `/ship`, `/ship-all`, `/implement`, `/design`) accept a per-invocation `--auto` flag. Ceremonial checkpoints are skipped, unambiguous decisions proceed automatically (citing `CONSTITUTION.md` when it settles the choice), and everything that matters still pauses: review blockers, anything touching CI configs / secrets / DB migrations / mass deletions, constitution conflicts, and any architectural or destructive choice. Every auto-decision is announced inline and logged to `.agentic/auto-log.md` (gitignored), and the command ends with a one-line summary of decisions and hard-pauses.
+Long-running commands (`/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`) accept a per-invocation `--auto` flag. Ceremonial checkpoints are skipped, unambiguous decisions proceed automatically (citing `CONSTITUTION.md` when it settles the choice), and everything that matters still pauses: review blockers, anything touching CI configs / secrets / DB migrations / mass deletions, constitution conflicts, and any architectural or destructive choice. Every auto-decision is announced inline and logged to `.agentic/auto-log.md` (gitignored), and the command ends with a one-line summary of decisions and hard-pauses.
 
 ### Parallel stories `[P]`
 
@@ -261,8 +265,8 @@ Stories tagged `[P]` have no dependencies on other stories. `/ship-all` surfaces
 
 Both maintained automatically — never skip this step:
 
-- **`./docs/CHANGELOG.md`** — agent-readable engineering log, terse, one line per action. Read at every session start alongside INDEX.md to orient without scanning the codebase. Every ship/fix appends here.
-- **`./app-docs/CHANGELOG.md`** — **product release notes, written to end users.** Only gets an entry when a ship or fix actually changed something a user can see. Pure internal refactors do not appear here — they stay in the engineering log.
+- **`./docs/CHANGELOG.md`** — agent-readable engineering log, terse, one line per action. Read at every session start alongside INDEX.md to orient without scanning the codebase. Every ship/fix/improve appends here.
+- **`./app-docs/CHANGELOG.md`** — **product release notes, written to end users.** Only gets an entry when a ship, fix, or improvement actually changed something a user can see. Pure internal refactors do not appear here — they stay in the engineering log.
 
 ### Context management
 
@@ -476,7 +480,7 @@ agentic-engineering/
 ├── skills/
 │   └── agentic-engineering/
 │       ├── SKILL.md              ← skill router
-│       └── commands/             ← 19 command implementation files, loaded on demand
+│       └── commands/             ← 21 command implementation files, loaded on demand
 ├── agents/
 │   ├── ae-red/                   ← bug hunter
 │   │   ├── AGENT.md
@@ -489,7 +493,7 @@ agentic-engineering/
 │   ├── ae-scribe.md              ← end-user docs writer
 │   ├── ae-sec/                   ← security reviewer (AGENT.md + references + languages)
 │   └── ae-ux/                    ← UX fidelity reviewer (AGENT.md + references)
-├── commands/                     ← 19 slash-command wrappers (16 user-facing, 3 internal)
+├── commands/                     ← 21 slash-command wrappers (18 user-facing, 3 internal)
 └── rules-library/                ← 16 rule templates for /init to offer
 ```
 

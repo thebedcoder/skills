@@ -4,6 +4,18 @@ All notable changes to the `agentic-engineering` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] — 2026-08-17
+
+### Added
+
+- **`/improve [description]` — a third weight class between `/fix` and `/feature`.** Covers changes that are neither a bug nor a whole feature: a new keyboard shortcut, support for a new file format, an extra export option, a faster query, a long module split in two. ARCH leads. The plan block requires a `Fits existing pattern:` line citing how whatever already does the same kind of thing does it — the failure mode for additive work is a correct change in the wrong shape, such as a third format handler that ignores how the first two work. It also requires 2–4 `Done when:` conditions, **printed in the plan only and never written to `STORIES.md`, `PRD.md`, or `docs/specs/`**; more than four means the work is a feature and the command routes to `/feature`. Review is a scoped parallel batch — `ae-red` and `ae-test` always, plus one of `ae-sec` / `ae-ux` / `ae-edge` chosen from what the diff touches. `ae-req` is deliberately absent: with nothing persisted, it would have only `CONSTITUTION.md` to check, so `ae-test` carries the `Done when:` verification instead. Test obligation keys off `Change type`: `feat` needs one test per condition including the negative case, `perf` needs a recorded before/after, `refactor` needs a characterization test written *before* the restructuring when nothing covers the touched code. The Phase 1 `Change type` also fixes the commit prefix up front, so additive work lands as `feat(` and keeps its minor-version bump instead of hiding under `refactor(`.
+- Bare `/improve` (no arguments) picks an `improvement`-typed item out of `docs/BACKLOG.md`, marks it in-progress, and sets it `done` at cleanup — closing a loop `/note` previously punted to `/ship`.
+- New `### Improved` section in `app-docs/CHANGELOG.md`, owned by `/improve` the way `### Fixed` is owned by `/fix`. Written only when the plan declared `Behavior change: user-visible`, which is most `feat`-type improvements and almost no `perf` / `refactor` ones.
+
+### Changed
+
+- `/note`'s closing line routed every captured item to `/ship` regardless of type. It now routes by type: bugs to `/fix`, improvements to `/improve`, ideas to `/ship`.
+
 ## [1.2.0] — 2026-08-04
 
 ### Fixed

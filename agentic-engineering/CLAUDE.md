@@ -8,7 +8,7 @@ The parent `../CLAUDE.md` covers the monorepo (per-plugin layout, the wrapper/re
 
 ## Architecture at a glance
 
-The plugin is the entire `/ship`, `/feature`, `/review`, `/fix` SDLC workflow — a router skill (`skills/agentic-engineering/SKILL.md`) that dispatches into one of 19 command files in `skills/agentic-engineering/commands/`, plus 8 named specialist agents under `agents/` that the commands invoke (often in parallel) as Claude Code subagents. The end-user `README.md` is the workflow-level overview; this file is for authoring inside the plugin.
+The plugin is the entire `/ship`, `/feature`, `/review`, `/fix` SDLC workflow — a router skill (`skills/agentic-engineering/SKILL.md`) that dispatches into one of 21 command files in `skills/agentic-engineering/commands/`, plus 8 named specialist agents under `agents/` that the commands invoke (often in parallel) as Claude Code subagents. The end-user `README.md` is the workflow-level overview; this file is for authoring inside the plugin.
 
 Three pieces of the architecture are non-obvious and load-bearing:
 
@@ -29,16 +29,16 @@ When adding language/topic depth to an existing single-file agent, **migrate it 
 
 ## User-facing vs. internal commands
 
-Nineteen commands exist in `commands/`. `implement`, `review`, `frontend` are **internal by intent** — designed to be invoked by `ship` and `ship-all`, not driven by hand. But "internal" is enforced on exactly one of the two install paths, and that asymmetry is load-bearing:
+Twenty-one commands exist in `commands/`. `implement`, `review`, `frontend` are **internal by intent** — designed to be invoked by `ship` and `ship-all`, not driven by hand. But "internal" is enforced on exactly one of the two install paths, and that asymmetry is load-bearing:
 
 | Install path | What the user sees |
 |---|---|
-| Per-plugin `install.sh` (bash) | 16 commands. The `USER_COMMANDS` array is the gate — a new command file is **not** user-visible until you append its name there. |
-| Marketplace / `/plugin install` | **All 19.** Plugin auto-discovery registers every `.md` in `commands/`, so `/agentic-engineering:implement`, `:review`, and `:frontend` do appear in the palette. `USER_COMMANDS` has no effect here. |
+| Per-plugin `install.sh` (bash) | 18 commands. The `USER_COMMANDS` array is the gate — a new command file is **not** user-visible until you append its name there. |
+| Marketplace / `/plugin install` | **All 21.** Plugin auto-discovery registers every `.md` in `commands/`, so `/agentic-engineering:implement`, `:review`, and `:frontend` do appear in the palette. `USER_COMMANDS` has no effect here. |
 
 This is deliberate, not a bug to paper over: standalone `/agentic-engineering:review` is genuinely useful (review without shipping), and the three wrappers are kept for it. What you must **not** do is assume the bash-installer filter hides them everywhere — it doesn't. If you ever need a command hidden on both paths, delete its root `commands/<name>.md` wrapper; the skill router still dispatches from `skills/agentic-engineering/commands/<name>.md`.
 
-The skill's `commands/` table in `SKILL.md` lists all 19 because the router needs to dispatch them regardless of palette visibility.
+The skill's `commands/` table in `SKILL.md` lists all 21 because the router needs to dispatch them regardless of palette visibility.
 
 ## Post-install SKILL.md patch (do not pre-add)
 

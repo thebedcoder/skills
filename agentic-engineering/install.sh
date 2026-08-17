@@ -66,6 +66,7 @@ USER_COMMANDS=(
   ship-all
   plan-all
   fix
+  improve
   note
   focus
   next
@@ -98,6 +99,7 @@ echo "  /ship         implement → review → frontend → docs (one story)"
 echo "  /ship-all     ship all unchecked stories"
 echo "  /plan-all     plan all unplanned epics"
 echo "  /fix          diagnose + fix + review"
+echo "  /improve      plan + apply + review a non-bug change"
 echo "  /note         capture a bug, idea, or improvement for later"
 echo "  /focus        set current task (or /focus done|clear)"
 echo "  /next         queue a task for after current is done"
