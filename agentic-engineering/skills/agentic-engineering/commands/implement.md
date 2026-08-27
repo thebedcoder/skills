@@ -2,7 +2,7 @@
 
 **Goal:** Ship one story end-to-end — plan approved, code + tests written, acceptance criteria verified, progress recorded.
 
-**Agents:** ARCH (plan), PROD (validation)
+**Agents:** ARCH (plan), PROD (validation), `ae-red` + `ae-sec` (pre-review of the plan)
 
 **Inputs (read first):**
 - `./CLAUDE.md` — conventions
@@ -11,6 +11,7 @@
 
 **Constraints:**
 - No code before plan approved
+- No code while a Contract claim is unproven — assertion is not proof
 - Tests drive implementation (red → green) — never written after
 - No files outside ARCH's explicit plan — scope creep forbidden
 - Story marked complete only when all acceptance criteria verified
@@ -59,6 +60,12 @@ Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by
 ```
 ARCH — Implementation Plan: STORY-XXX
 
+Contract claims:
+  - [claim about behavior this story does not own]
+    proof: [file:line] OR [probe command + its actual output]
+Failure states:
+  | Failure point | State of each affected resource | What the outcome reports |
+  | [step that can fail] | [per-resource state] | [what the caller is told] |
 Files to create:
   - [path] — [purpose]
 Files to modify:
@@ -73,16 +80,65 @@ Risks:
   - [anything that could go wrong]
 ```
 
+**Contract claims — required.** Every behavior the story depends on but does not
+own: another module's data shape, a syscall's semantics, a library's guarantee, a
+language primitive's depth. Each needs `file:line` in the real source, or a probe
+that was actually run with its actual output pasted in. Reasoning from the name of
+a thing is not proof. "Obviously it does X" is the exact sentence this section
+exists to catch — an unproven claim is a defect that ships silently, because code
+built on a wrong belief still runs, still returns a plausible value, and still
+passes tests the same author wrote from the same belief.
+
+If a claim cannot be proven from source, spike it first: write the smallest program
+that makes the system state the answer, run it, and paste the output. A spike that
+*contradicts* the hypothesis has paid for itself several times over.
+
+**Failure states — required whenever the story can fail partway.** Any commit,
+rollback, migration, batch write, or multi-step mutation. Enumerate as a table
+before writing code, because these bugs do not arrive one at a time: a reversal
+path designed in prose and implemented ad hoc produces a *cluster* of defects, each
+individually plausible, all found at once and late. Include the resource that was
+never written, the one written then reverted, and the one that can be neither.
+
+Omit the section only when no partial state is reachable — and say so explicitly
+rather than dropping the heading.
+
 ```
 PROD — Plan Review:
 [Does plan deliver every acceptance criterion?
 Any criterion ARCH's plan doesn't address?
-Any scope in plan not in story?]
+Any scope in plan not in story?
+Is every Contract claim backed by file:line or real probe output — not by assertion?
+Does the Failure states table cover every step that can fail, or is it missing one?]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: Show both, then ask *"Start implementation?"* → Go / Stop. Under `--auto`: SKIP — emit `SKIPPED: plan approval (clear story, no ambiguous decisions in plan) [auto]` and proceed. Exception per hard-override #4: if plan introduces a new dependency or alters a public interface, treat as `[AUTO: always-ask]` instead.
+**Pre-review.** Dispatch `ae-red` and `ae-sec` in parallel against the plan — **not**
+the codebase. Each reads only: the story + its acceptance criteria, ARCH's Contract
+claims, ARCH's Failure states. Prompt both with:
+
+> Attack this plan's model of the world, not its style. For each Contract claim:
+> does the cited `file:line` actually say what the claim says, and is the claim's
+> *converse* also consistent with it? For the Failure states table: name a failure
+> point it omits, or a row whose per-resource state is wrong. Report only what you
+> can point at. "Looks fine" is a valid finding.
+
+Skip when the plan has no Contract claims **and** no Failure states — a pure
+function over owned types has no external model to be wrong about. Emit
+`SKIPPED: pre-review (no external contract, no partial state)`.
+
+This runs under `--auto`. It is not a human checkpoint and never pauses: it is the
+same pair of reviewers that would find these defects after implementation, moved to
+where a fix costs an edit instead of a full re-verify cycle. Findings amend the
+plan before any code is written.
+
+⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: Show plan, PROD review, and pre-review findings, then ask *"Start implementation?"* → Go / Stop. Under `--auto`: SKIP — emit `SKIPPED: plan approval (clear story, no ambiguous decisions in plan) [auto]` and proceed. Exception per hard-override #4: if plan introduces a new dependency or alters a public interface, treat as `[AUTO: always-ask]` instead. Second exception: if pre-review returned an unresolved finding on a Contract claim, treat as `[AUTO: always-ask]` — proceeding on a disputed claim is how the cluster forms.
 
 **Implement.** Per plan. Write each test before code it covers — watch fail with meaningful error, then pass.
+
+Where a Contract claim is load-bearing, the test that covers it must exercise the
+*real* collaborator, not the author's model of it — a fixture that only contains
+cases where the claim holds proves nothing. Pick the fixture that would expose the
+claim being backwards.
 
 **Verify.** PROD checks each acceptance criterion:
 
@@ -179,6 +235,8 @@ If `AUTO=false`: skip.
 |---|---|
 | Plan-approval ('go' to start) | `[AUTO: skip]` — proceed silently when plan has no new deps / interface changes |
 | Plan introduces new library or alters public API | `[AUTO: always-ask]` — escalates from skip to ask |
+| Pre-review disputes a Contract claim, unresolved | `[AUTO: always-ask]` — escalates from skip to ask |
+| Pre-review itself (`ae-red` + `ae-sec` on the plan) | not a checkpoint — always runs, never pauses |
 | Tests passing → commit | `[AUTO: skip]` — tests verify correctness; no user judgment needed |
 
 ### Gotchas
@@ -189,5 +247,7 @@ If `AUTO=false`: skip.
 - **Complete ≠ implementation done.** Code works + tests pass + criteria verified + PROGRESS.md updated. Early mark = review on stale state.
 - **Criteria are checks, not goals.** Satisfies all but feels wrong → PRD incomplete. Flag it, don't ship on technicality.
 - **No pseudo-tests.** `assert result is not None` proves nothing. Every test must fail when logic broken.
+- **A green suite is not evidence of a correct model.** Tests written by the author who holds the wrong belief encode that belief and pass. When a Contract claim is wrong, the suite agrees with the bug. Only the *real* collaborator, or a fixture chosen to break the claim, is evidence.
+- **Contract claims are not Risks.** Risks are things that might go wrong later. A claim is something asserted as true *now* that the code is built on. Writing "I'm assuming X" under Risks and proceeding is the failure this section replaces — prove it or spike it.
 
 ---

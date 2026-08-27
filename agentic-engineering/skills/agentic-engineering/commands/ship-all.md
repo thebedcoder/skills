@@ -78,19 +78,23 @@ You'll approve each implementation plan before it runs.
 
 **Step 1 — Plan** *(always pauses)*
 
-ARCH + PROD generate plan as in `/ship`.
+ARCH + PROD generate plan as in `/ship`, including the Contract claims and Failure
+states sections and the `ae-red` + `ae-sec` pre-review pass over them.
 
 ```
 ━━━ STORY-XXX ([X] of [Y]) ━━━
 
 ARCH — Implementation Plan:
-[plan]
+[plan, incl. Contract claims + Failure states]
 
 PROD — Plan Review:
 [validation]
+
+Pre-review (ae-red + ae-sec on the plan):
+[findings, or "no findings" / "skipped — no external contract, no partial state"]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"STORY-XXX ([X] of [Y]) — proceed?"* → **Ship it (Recommended)** · **Skip this story** · **End session**. Under `--auto`: SKIP and proceed to the ship chain. (Each story's internal `/ship --auto` still respects hard-overrides.)
+⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"STORY-XXX ([X] of [Y]) — proceed?"* → **Ship it (Recommended)** · **Skip this story** · **End session**. Under `--auto`: SKIP and proceed to the ship chain — **unless** pre-review left an unresolved finding on a Contract claim, which escalates to `[AUTO: always-ask]`. (Each story's internal `/ship --auto` still respects hard-overrides.)
 
 **Step 2 — Ship chain** *(automatic on 'go')*
 

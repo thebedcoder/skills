@@ -4,6 +4,21 @@ All notable changes to the `agentic-engineering` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] — 2026-08-27
+
+### Added
+
+- **`Contract claims` — a required section in ARCH's implementation plan.** Every behavior a story depends on but does not own — another module's data shape, a syscall's semantics, a library guarantee, a language primitive's depth — must now be listed with `file:line` in the real source, or a probe command *and its pasted output*. Reasoning from the name of a thing is not proof, and an unproven claim is the defect class that ships silently: code built on a wrong belief still runs, still returns a plausible value, and still passes the tests its author wrote from that same belief. `Risks:` is explicitly not the place for these — a risk is what might go wrong later, a claim is what the code is built on now. Plans that cannot prove a claim from source are told to spike it and paste the output.
+- **`Failure states` — a required table whenever a story can fail partway.** Any commit, rollback, migration, batch write, or multi-step mutation enumerates failure point x per-resource state x what the outcome reports, *before* the code. The rationale is that these bugs do not arrive one at a time: a reversal path designed in prose and implemented ad hoc produces a cluster of individually-plausible defects, all found at once and late. The section is omitted only by saying so, never by dropping the heading.
+- **A pre-review pass — `ae-red` + `ae-sec` dispatched against the plan, not the codebase.** Both read only the story, its acceptance criteria, and the two new sections, and are prompted to attack the plan's model of the world rather than its style. It runs under `--auto` and never pauses; it is skipped entirely when a plan has no Contract claims and no Failure states, since a pure function over owned types has no external model to be wrong about. This is the same pair of reviewers that would find these defects after implementation, moved to where a fix costs an edit instead of a full re-verify cycle.
+
+### Changed
+
+- **The plan-approval checkpoint gains a second `[AUTO: always-ask]` escalation.** Alongside "introduces a new dependency or alters a public interface", an unresolved pre-review finding on a Contract claim now stops `--auto` — proceeding on a disputed claim is precisely how the defect cluster forms. Mirrored in `/ship-all`'s per-story checkpoint, whose display block also now shows the pre-review result.
+- PROD's plan review gained two questions: whether every Contract claim is backed by `file:line` or real probe output rather than assertion, and whether the Failure states table is missing a step that can fail. Previously PROD checked the plan against the *story* only — which is why a plan could be complete and wrong at the same time.
+- The `Implement` step now requires that a test covering a load-bearing Contract claim exercise the **real** collaborator: a fixture containing only cases where the claim holds proves nothing, so the instruction is to pick the fixture that would expose the claim being backwards.
+- Two new Gotchas: *a green suite is not evidence of a correct model* (the suite agrees with the bug when the model is wrong), and *Contract claims are not Risks*.
+
 ## [1.3.0] — 2026-08-17
 
 ### Added
