@@ -103,6 +103,15 @@ never written, the one written then reverted, and the one that can be neither.
 Omit the section only when no partial state is reachable — and say so explicitly
 rather than dropping the heading.
 
+**Both sections must be PERSISTED, not left in the plan.** A plan lives in the
+conversation and dies with it. Copy the Contract claims and the Failure states
+table into the story's `PROGRESS.md` entry during the Record step — claims with
+their proofs, the table as written *before* implementation, plus any correction
+implementation forced on them. A rule whose artifact vanishes cannot be audited
+later, and "it was in the plan" is unverifiable once the session ends. This was
+caught by `ae-doc` on the first story shipped under the rule: the table had been
+written before coding, into a scratchpad, and no trace survived.
+
 ```
 PROD — Plan Review:
 [Does plan deliver every acceptance criterion?
@@ -249,5 +258,8 @@ If `AUTO=false`: skip.
 - **No pseudo-tests.** `assert result is not None` proves nothing. Every test must fail when logic broken.
 - **A green suite is not evidence of a correct model.** Tests written by the author who holds the wrong belief encode that belief and pass. When a Contract claim is wrong, the suite agrees with the bug. Only the *real* collaborator, or a fixture chosen to break the claim, is evidence.
 - **Contract claims are not Risks.** Risks are things that might go wrong later. A claim is something asserted as true *now* that the code is built on. Writing "I'm assuming X" under Risks and proceeding is the failure this section replaces — prove it or spike it.
+- **A regression test that passes without its fix is not a regression test.** After fixing a review blocker, revert the fix, watch the new test fail, restore. Do it per-fix, not in a batch — a batch revert can leave a test passing for the wrong reason. Two "verified" fixes on the first story under this rule turned out to have one test that did not bite; the revert is what found it.
+- **Pre-review does not replace review.** It moves the CONTRACT errors earlier. On the first story under this rule, pre-review found six plan defects and the six-agent pass still found six implementation defects, two of them security. Do not shorten the review tier because the plan was pre-reviewed.
+- **An unreachable branch gets a recorded gap, not a stubbed test.** If no real input can reach an error path, say so in `PROGRESS.md` with what you probed. A stub tests the stub. Never weaken a failing test until it passes.
 
 ---

@@ -28,6 +28,7 @@ Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by
 
 **Constraints:**
 - All six subagents dispatched **in single tool-call batch** — not sequentially
+- Every dispatch prompt states: **do NOT write, edit, or create any file in the repository** — no debug statements, no scratch or repro test files, no temporary edits, not even ones the agent intends to delete
 - Each subagent gets only files it needs — pass paths, not full content
 - Consolidate into one fix list before reporting
 - Before consolidating, read `./docs/improvements.md` (missing → skip). Finding matches prior won't-fix entry → report under Won't-fix as "previously logged [date]", never re-litigate
@@ -76,6 +77,8 @@ Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`
 
 - **Sequential dispatch = failure.** Six subagents in one batched tool call. Never spawn-wait-spawn. 6 separate calls → re-batch.
 - **No story summary before dispatch.** Reviewers read files themselves. Paraphrase → token waste + meaning drift.
+- **Reviewers must not write to the repo.** A reviewer with Bash will reach for `console.log` or a scratch repro to confirm a finding, and two agents doing that concurrently corrupt the thing under review. Observed: one agent's edit clobbered a test another had just written, and a second left debug lines in a COMMITTED file. State the ban in every dispatch prompt; a finding an agent cannot reach without editing is reported as reasoning with stated confidence, not proven by mutation.
+- **A reviewer's reproduction can be wrong.** One agent reported a delimiter collision and "reproduced" it with a debug line that joined differently than the code did — it measured its own string. Confirm a claimed repro against the actual source before acting; agreeing and refusing are both wrong when the evidence is the agent's own artifact.
 - **Don't merge findings early.** ae-red + ae-sec flag same line → keep both voices. Reasoning differs, context varies.
 - **No 7th reviewer ad-hoc.** Roster is exactly the six above. New dimension missing → skill change, not improvisation. Flag it.
 - **Constitution violations = always blockers.** Never downgrade to "should-fix." Fix cost irrelevant.
