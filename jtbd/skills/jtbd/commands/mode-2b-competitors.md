@@ -24,7 +24,7 @@ Before spawning: verify focus job statement + primary persona are available. If 
 
 ultrathink
 
-Spawn 4 **jtbd-scout** agents simultaneously, each assigned one tier:
+Spawn 4 `jtbd:jtbd-scout` agents simultaneously — one message, 4 Agent calls — each assigned one tier:
 - SCOUT-1: Direct (same category, same job)
 - SCOUT-2: Adjacent (different category, same job)  
 - SCOUT-3: Workarounds (DIY, spreadsheets, manual)

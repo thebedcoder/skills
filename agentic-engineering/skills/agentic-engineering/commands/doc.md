@@ -12,12 +12,7 @@ Use to document existing feature with Q&A for what code alone can't infer. ARCH 
 
 Before documenting, update `.agentic/focus.md`:
 
-1. Ensure `.agentic/` exists + gitignored (idempotent):
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 2. Read existing CURRENT. Apply story-id-match heuristic:
    - Existing CURRENT references the same feature → update `note:` to `phase: documenting` and `set_by:` to `/doc`. Leave `title:` + `since:` alone.
@@ -88,7 +83,7 @@ Wait for answers.
 
 `./app-docs/` absent → SCRIBE creates the tree first: `index.md`, `CHANGELOG.md` (seeded per `commands/init.md`), `features/`, `guides/`. Existence check, not a mode check — lite projects skip the tree at init and grow it here, on the first user-facing feature.
 
-SCRIBE writes/updates `./app-docs/features/[feature-name].md`. Full template + self-check → `ae-scribe.md`. Structure: frontmatter → intro → **What you can do** → **How to use it** (numbered, real UI labels) → **Tips** → **FAQ** (only if real recurring Qs) → **Related**. No file paths / function names / code blocks.
+SCRIBE writes/updates `./app-docs/features/[feature-name].md`. Full template + self-check → `agents/ae-scribe.md`. Structure: frontmatter → intro → **What you can do** → **How to use it** (numbered, real UI labels) → **Tips** → **FAQ** (only if real recurring Qs) → **Related**. No file paths / function names / code blocks.
 
 ---
 

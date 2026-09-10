@@ -7,28 +7,13 @@ No `/design` yet → prompt user to run it first or confirm proceeding without d
 
 ### Step 0a — Parse `--auto` flag
 
-Detect whether `$ARGUMENTS` contains the `--auto` token. `/frontend` is normally nested inside `/ship`, which propagates `AUTO=true` down — inherit it when present.
-
-- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
-- Set internal flag `AUTO=true` for this run.
-- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
-- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
-  ```markdown
-  ## [now YYYY-MM-DD HH:MM] — /frontend <STORY-ID> --auto
-  ```
-
-See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/frontend <STORY-ID> --auto`. `/frontend` is normally nested inside `/ship`, which propagates `AUTO=true` down — inherit it when present rather than re-parsing.
 
 ### Step 0 — Auto-write focus
 
 `/frontend` is almost always nested inside `/ship`. Update `.agentic/focus.md` accordingly:
 
-1. Ensure `.agentic/` exists + gitignored (idempotent):
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 2. Read existing CURRENT. Apply story-id-match heuristic:
    - Existing CURRENT.title already references this STORY-ID (set by parent `/ship`) → only update `note:` to `phase: frontend pass` and `set_by:` to `/frontend`. Leave `title:` + `since:` alone. **Expected path when nested.**
@@ -80,9 +65,16 @@ Any shortcut diverging from approved design?]
 
 5. **ae-ux** runs structured fidelity review.
 
-Spawn `ae-ux` subagent. Pass:
-- `./docs/specs/[feature-name]-design.md` — approved handoff
-- All changed frontend files for story
+**This is the only place `ae-ux` is dispatched in the `/ship` chain.** It is not in
+`/review`'s six-agent batch — that batch is fixed. `/improve` dispatches it separately
+for UI-touching diffs, in no-spec mode.
+
+Dispatch `agentic-engineering:ae-ux`. Pass all four:
+- `./docs/specs/[feature-name]-design.md` — approved handoff (omit if none exists; ae-ux switches to no-spec mode)
+- changed frontend files for this story
+- `./docs/features/<feature-name>/PROGRESS.md` — it validates the Visual Artifacts table against it
+- `./docs/CONSTITUTION.md`
+- the plugin root `${CLAUDE_PLUGIN_ROOT}`, so it can reach its reference files
 
 ae-ux loads own references based on story + returns structured report:
 ```
@@ -95,7 +87,15 @@ POLISH (noticeable, not blocking):
 1. [issue] — [file:component] — [fix]
 
 CLEAN: [what was checked + done well]
+
+Visual Artifacts:
+  ✅ M/N references valid (STORY-XXX) | ⚠️ Stale: <path> not found | (non-UI story — skipped)
+
+SUMMARY: X findings — Blockers: N, Polish: M
 ```
+
+The `Visual Artifacts:` block is part of the report, not an extra. ae-ux appends it every
+run; a report without it means ae-ux never got `PROGRESS.md`.
 
 6. **PROD** final UX spot-check:
 ```

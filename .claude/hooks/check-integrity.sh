@@ -41,30 +41,35 @@ if [[ "$REL" =~ ^([^/]+)/commands/([^/]+)\.md$ ]]; then
   fi
 fi
 
-# --- B. agentic-engineering commands must be gated by USER_COMMANDS ----------
-# Every command is either user-facing (in the USER_COMMANDS array, so the
-# installer copies it to ~/.claude/commands/) or deliberately internal
-# (dispatched by /ship, never exposed). Anything else is an unreachable command.
-# Scoped to agentic-engineering: jtbd modes and premortem commands are all
-# internal by design and have no wrapper.
-if [[ "$REL" =~ ^agentic-engineering/(skills/[^/]+/)?commands/([^/]+)\.md$ ]]; then
-  name="${BASH_REMATCH[2]}"
-  installer="$REPO/agentic-engineering/install.sh"
-  if [[ -f "$installer" ]]; then
-    user_cmds="$(awk '/^USER_COMMANDS=\(/,/^\)/' "$installer" | grep -v 'USER_COMMANDS\|^)' | tr -d ' \t')"
-    case "$name" in
-      frontend|implement|review) : ;;  # documented internal — called by /ship
-      *)
-        if ! grep -qx "$name" <<<"$user_cmds"; then
-          fail "Command '$name' is in neither USER_COMMANDS (agentic-engineering/install.sh) nor the internal set (frontend/implement/review). It will not install and cannot be invoked."
-        fi ;;
-    esac
+# --- B. agentic-engineering command bodies must be routable ------------------
+# agentic-engineering is marketplace-only: plugin auto-discovery registers every
+# commands/*.md, so there is no USER_COMMANDS gate any more. What still breaks
+# silently is a body the router cannot reach — SKILL.md's Command -> File Map is
+# the only thing telling the model which file to read.
+if [[ "$REL" =~ ^agentic-engineering/skills/[^/]+/commands/([^/]+)\.md$ ]]; then
+  name="${BASH_REMATCH[1]}"
+  skillmd="$REPO/agentic-engineering/skills/agentic-engineering/SKILL.md"
+  if [[ -f "$skillmd" ]] && ! grep -q "commands/$name\.md" "$skillmd"; then
+    fail "Command body '$name' is not in SKILL.md's Command -> File Map. The router dispatches from that table; a body missing from it is unreachable. Add a row."
   fi
+fi
+
+# --- B2. Root wrappers need an absolute base and must pass arguments --------
+# Under a plugin install, <plugin>/commands/<n>.md IS the wrapper, so a bare
+# relative "read commands/<n>.md" instruction is self-recursion. And a wrapper
+# that never forwards its arguments swallows --auto and every other flag.
+if [[ "$REL" =~ ^agentic-engineering/commands/([^/]+)\.md$ ]]; then
+  name="${BASH_REMATCH[1]}"
+  grep -q 'CLAUDE_PLUGIN_ROOT' "$FILE" 2>/dev/null \
+    || fail "$REL names no absolute base directory. Point it at CLAUDE_PLUGIN_ROOT/skills/agentic-engineering/commands/$name.md — a bare 'commands/$name.md' resolves to this wrapper itself under a plugin install."
+  grep -q 'ARGUMENTS' "$FILE" 2>/dev/null \
+    || fail "$REL never forwards its arguments. Every wrapper passes them through, even for a command that takes none — otherwise --auto and every flag are dropped before the body runs."
 fi
 
 # --- C. 'user-invocable' must never appear in a source SKILL.md --------------
 # The field is valid in the CLI but rejected by the claude.ai skill packager.
-# agentic-engineering's installer patches it in post-copy; source must stay clean.
+# agentic-engineering is marketplace-only with no installer to patch it in, so
+# there is nowhere for it to live at all. Source must stay clean.
 #
 # Two scoping rules, both learned from false positives:
 #   1. First segment must not start with a dot. Plain `[^/]+` also matches
@@ -76,7 +81,7 @@ fi
 if [[ "$REL" =~ ^[^./][^/]*/skills/[^/]+/SKILL\.md$ ]]; then
   if awk 'NR==1 && $0!="---"{exit} NR>1 && $0=="---"{exit} {print}' "$FILE" 2>/dev/null \
        | grep -q 'user-invocable'; then
-    fail "$REL contains 'user-invocable' in its frontmatter — it leaked into source. The claude.ai packager rejects it; agentic-engineering/install.sh adds it post-copy. Remove it."
+    fail "$REL contains 'user-invocable' in its frontmatter — it leaked into source. The claude.ai packager rejects it. Remove it."
   fi
 fi
 
@@ -138,6 +143,65 @@ if [[ -n "$agent_slug" && "$agent_slug" != "README" && -f "$FILE" ]]; then
     fail "$REL has no 'name:' in its frontmatter. Claude Code drops such agents silently — it will never register, and every dispatch to it degrades to inline role-play with no error. Add 'name: $agent_slug'."
   elif [[ "$declared" != "$agent_slug" ]]; then
     fail "$REL declares 'name: $declared' but lives at agents/$agent_slug. Dispatch resolves by the declared name, so callers referencing '$agent_slug' (install.sh, commands/review.md) silently get nothing. Make them match."
+  fi
+fi
+
+
+# --- G. agents/ holds nothing but flat agent files --------------------------
+# Verified against 2.1.267 with --plugin-dir: a plugin's agents/<n>/AGENT.md
+# registers as `plugin:<n>:<n>` (so every dispatch by `<n>` fails), and EVERY
+# other .md under agents/<n>/ registers as its own agent type. One plugin
+# contributed 59 phantom subagents named after reference docs, each sitting in
+# the Agent tool description of every turn of every session.
+#
+# Nothing else catches this: the dispatch failure is silent, and /review still
+# emits a normal-looking report from the main model role-playing six reviewers.
+#
+# SCOPED to the migrated plugins. `premortem-skill` (1 agent, 2 reference files)
+# still carries the nested layout and has the same defect, but it has not been
+# migrated yet. Add it to the alternation on the day it moves; until then a
+# repo-wide check would fire on every premortem edit and get itself disabled.
+if [[ "$REL" =~ ^(agentic-engineering|jtbd)/agents/(.+)$ ]]; then
+  g_plugin="${BASH_REMATCH[1]}"
+  g_rest="${BASH_REMATCH[2]}"
+  if [[ "$g_rest" == */* ]]; then
+    fail "$REL is nested under agents/. Agent files must be flat: $g_plugin/agents/<name>.md. A directory here registers as '$g_plugin:<dir>:<dir>' instead of '$g_plugin:<dir>', and every other .md beside it becomes a phantom agent type. Move reference material to $g_plugin/references/<agent>/ and address it as CLAUDE_PLUGIN_ROOT/references/<agent>/<file>."
+  fi
+fi
+
+# --- H. Reviewer agents must not hold Bash ----------------------------------
+# `tools:` accepts permission-rule syntax but does not enforce it: an agent
+# declaring `Bash(git diff:*)` gets a general Bash tool (verified — the agent
+# ran `git status`). Reviewers that can write have clobbered a test another
+# agent had just written and left debug lines in a committed file.
+if [[ "$REL" =~ ^agentic-engineering/agents/ae-(red|sec|edge|test|ux|req|doc|lean)\.md$ ]]; then
+  if awk 'NR==1 && $0!="---"{exit} NR>1 && $0=="---"{exit} /^tools:/{print}' "$FILE" 2>/dev/null \
+       | grep -q 'Bash'; then
+    fail "$REL declares Bash in its tools:. Reviewers are read-only, and 'Bash(git diff:*)' is NOT honoured as a restriction — the agent gets full Bash. /review captures the diff into .agentic/review/<STORY-ID>.diff and passes the path; read that."
+  fi
+fi
+
+# --- I. No ~/.claude literal in shipped agentic-engineering content ----------
+# The plugin is marketplace-only; its files live under
+# ~/.claude/plugins/cache/<owner>/<plugin>/<version>/, so a ~/.claude/skills/…
+# or ~/.claude/agents/… path resolves to nothing and fails silently — a missing
+# rules library, a statusline that never renders, an agent with no references.
+if [[ "$REL" =~ ^agentic-engineering/(skills|agents|references|commands|adapters|capture-tools|rules-library)/ ]]; then
+  if grep -q '~/\.claude' "$FILE" 2>/dev/null; then
+    fail "$REL contains a literal ~/.claude path. agentic-engineering installs only through the marketplace, where its files live in the plugin cache. Use CLAUDE_PLUGIN_ROOT/... instead."
+  fi
+fi
+
+# --- J. SKILL.md description must fit the 1,024-character cap ---------------
+# Over the cap the TAIL is truncated — and the tail is exactly where the
+# "do NOT trigger on" disambiguation lives.
+if [[ "$REL" =~ ^[^./][^/]*/skills/[^/]+/SKILL\.md$ ]]; then
+  helper="$(dirname "${BASH_SOURCE[0]}")/desc-length.py"
+  if [[ -f "$helper" ]]; then
+    desc_len="$(python3 "$helper" "$FILE" 2>/dev/null)"
+    if [[ -n "$desc_len" ]] && ((desc_len > 1024)); then
+      fail "$REL description is $desc_len characters, over the 1024 cap. The tail is silently truncated, and the tail is where the 'do NOT trigger on' disambiguation lives. Trim it."
+    fi
   fi
 fi
 

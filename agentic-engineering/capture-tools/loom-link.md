@@ -30,6 +30,6 @@ Account on the chosen hosted service. Loom is the most common (free tier availab
 
 External hosting (no file in repo). `ae-ux` recognizes `http://` / `https://` prefixes and skips file-existence validation for URL rows.
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-When `.claude/visual-capture.md` declares `mechanism: external-link`, `/ship` Phase 4 emits a reminder to record + paste URL — no dispatch, no automation.
+When `.claude/visual-capture.md` declares `mechanism: external-link`, `/ship` Phase 3 emits a reminder to record + paste URL — no dispatch, no automation.

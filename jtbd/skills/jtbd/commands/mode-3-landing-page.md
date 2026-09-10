@@ -31,7 +31,7 @@ If missing: offer to derive from product brief (labeled "unvalidated") or run pr
 
 ## Execution
 
-Spawn 7 **jtbd-copywriter** agents simultaneously:
+Spawn 7 `jtbd:jtbd-copywriter` agents simultaneously — one message, 7 Agent calls:
 COPY-1: HERO | COPY-2: PROBLEM | COPY-3: VALUE PROP | COPY-4: SOCIAL PROOF | COPY-5: HOW IT WORKS | COPY-6: FAQ | COPY-7: FINAL CTA
 
 Each agent receives: section assignment, focus job, persona, positioning statement.

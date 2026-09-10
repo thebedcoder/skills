@@ -3,25 +3,18 @@
 **Chain:** diagnose → fix → review
 **Agents:** FIXER (lead), RED (reviewer)
 
-Read `./CLAUDE.md` + relevant feature docs in `./app-docs/features/` before starting.
+**Inputs (read first):**
+- `./CLAUDE.md` — conventions
+- relevant feature docs in `./app-docs/features/`
+- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`. `/cleanup` writes these after every chain; a chain that never reads them is a write-only log
 
 ### Step 0a — Parse `--auto` flag
 
-Detect whether `$ARGUMENTS` contains the `--auto` token (not a substring inside a name).
+Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/fix <bug summary> --auto`.
 
-- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
-- Set internal flag `AUTO=true` for this run.
-- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
-- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
-  ```markdown
-  ## [now YYYY-MM-DD HH:MM] — /fix <bug summary> --auto
-  ```
+### Step 0b — Write the phase PLAN
 
-See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
-
-### Step 0b — Open the phase task list
-
-Per "Progress Tracking" in SKILL.md, create one task per phase before any work starts:
+Per "Progress Tracking" in SKILL.md, write one PLAN line per phase before any work starts:
 
 1. `Diagnose — reproduce + root cause`
 2. `Fix + regression test`
@@ -29,20 +22,16 @@ Per "Progress Tracking" in SKILL.md, create one task per phase before any work s
 4. `End-user docs + changelogs`
 5. `Cleanup — decisions + memory`
 
-Mark #1 `in_progress` at Phase 1. Advance one at a time. No user-facing change → complete #4 with `changelogs only (internal fix)`. RED concerns unresolved → leave the current task `in_progress`; do not complete #5, Phase 5 is skipped.
+Mark #1 in progress at Phase 1. Advance one at a time. No user-facing change → close #4 with `changelogs only (internal fix)`. RED concerns unresolved → leave the current line open; do not close #5, Phase 5 is skipped.
 
-Step 0 below mirrors the same list into the `# PLAN` section of `.agentic/focus.md`. The harness task list dies with the session; PLAN survives it.
+Write these into the `# PLAN` section of `.agentic/focus.md`. Mirror into a harness task list **if this session exposes one** — it is a convenience view, not the record. PLAN survives compaction and session end.
+
 
 ### Step 0 — Auto-write focus
 
 Before diagnosing, update `.agentic/focus.md`:
 
-1. Ensure `.agentic/` exists + gitignored (idempotent):
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 2. Read existing CURRENT. Apply story-id-match heuristic:
    - Existing CURRENT.title already references the same bug summary → update `note:` to `phase: fixing` and `set_by:` to `/fix`. Leave `title:` + `since:` alone.
@@ -118,10 +107,10 @@ Clean → continue.
 
 `./app-docs/` updated only if user-facing behaviour changed.
 
-Spawn **ae-scribe** subagent:
+Dispatch `agentic-engineering:ae-scribe` — **app-docs pages only; this command writes both changelogs, below**:
 - User-noticeable change (UI response, workflow outcome, visible error, API shape they consume)? Yes → update the feature's `app-docs/features/[name].md`. No → returns `no user-facing change, app-docs unchanged`.
 
-`./app-docs/` absent → SCRIBE creates the tree first: `index.md`, `CHANGELOG.md` (seeded per `commands/init.md`), `features/`, `guides/`. Existence check, not mode check — lite projects skip the tree at init and grow it on first user-facing change.
+`./app-docs/` absent → **the parent creates the tree, not SCRIBE**: `index.md`, `CHANGELOG.md`, `features/`, `guides/`, seeded from the templates in `commands/init.md`. Do it before dispatching. Existence check, not mode check — lite projects skip the tree at init and grow it on first user-facing change. SCRIBE writes pages into a tree that already exists; it has no create-tree rule.
 
 Prepend to both changelogs (newest first):
 

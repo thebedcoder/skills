@@ -10,9 +10,9 @@ Seven plugins live here:
 
 | Plugin | Role | Marketplace |
 |---|---|---|
-| `agentic-engineering/` | Full SDLC workflow — named specialist agents, 6-agent parallel review, end-user docs | listed in `.claude-plugin/marketplace.json` |
+| `agentic-engineering/` | Full SDLC workflow — named specialist agents, 6-agent parallel review, end-user docs | listed in `.claude-plugin/marketplace.json`; **marketplace-only for Claude Code — ships no `install.sh`.** Its content resolves every path through `${CLAUDE_PLUGIN_ROOT}`, so a hand copy into `~/.claude` breaks the rules library, capture tools and agent references. Still serves non-Claude tools through the top-level installer and `adapters/` |
 | `flutter-motion/` | `/flutter-motion` — audits a Flutter project's motion (token consistency, reduce-motion, animation hygiene, missing transitions) and applies fixes in approval-gated waves, each verified against a captured `flutter analyze` + `flutter test` baseline. Single skill, exposed as `/flutter-motion` via a same-name command wrapper | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); simple per-plugin installer (one skill + one command, no `rules-library`) |
-| `jtbd/` | Jobs-to-Be-Done megaskill (MODE 0–4) — research → personas → competitors → landing copy → ad scripts | listed in `.claude-plugin/marketplace.json` |
+| `jtbd/` | Jobs-to-Be-Done megaskill (MODE 0–4) — research → personas → competitors → landing copy → ad scripts, via 5 parallel specialist agents | listed in `.claude-plugin/marketplace.json`; **marketplace-only for Claude Code — ships no `install.sh`.** Its agents dispatch as `jtbd:jtbd-<name>` and read `references/<agent>/` through `${CLAUDE_PLUGIN_ROOT}`; neither survives a hand copy. Still serves non-Claude tools through the top-level installer and `adapters/` |
 | `premortem-skill/` | `/premortem` command + investigator agent | **not yet** in the marketplace |
 | `smart-setup/` | `/smart-setup` — scans/interviews a project, sizes it into a tier, generates right-sized project-local config (Skills, Memory, Agents, Rules, Tools) plus `.claude/workflow.md`; sizing/dispatch layer in front of agentic-engineering. Routes the workflow's Maintain phase to `update-dependencies` when that plugin is installed alongside it | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); its bash installer copies `rules-library/` from the agentic-engineering sibling (marketplace installs fall back to agentic-engineering's copy or observed-convention rules) |
 | `squash-merge/` | `/squash-merge [target-branch]` — squash-merges the current branch into a target branch: clean preconditions, a Conventional Commit message synthesized from the squashed commits, then a post-merge push/delete prompt. Single skill, exposed as `/squash-merge` via a same-name command wrapper (also trigger-invoked) | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); simplest per-plugin installer (copies one skill + one command, no `rules-library`) |
@@ -34,30 +34,33 @@ Every plugin follows the same shape:
   commands/<name>.md                 ← THIN WRAPPER slash commands (1–2 lines)
   skills/<plugin>/SKILL.md           ← skill entrypoint (frontmatter + routing)
   skills/<plugin>/commands/<name>.md ← REAL command logic
-  agents/<agent>/AGENT.md            ← agent system prompt
-  agents/<agent>/languages/          ← optional per-language guides
-  agents/<agent>/references/         ← optional per-topic deep dives
+  agents/<agent>.md                  ← agent system prompt — FLAT FILE, never a directory
   adapters/AGENTS.md.template        ← portable rules for non-Claude tools
   rules-library/                     ← (agentic-engineering only) per-stack conventions
+  references/<agent>/                ← (agentic-engineering only) agent reference + language docs
+  skills/<plugin>/shared/            ← (agentic-engineering only) blocks shared by many command bodies
 ```
 
-**The wrapper/real-command split is the most common gotcha.** `commands/<name>.md` at the plugin root is a 4-line shim that says *"Read `commands/<name>.md` from the agentic-engineering skill, then follow those instructions."* The actual command body lives at `skills/<plugin>/commands/<name>.md`. When editing command behavior, edit the real one — the wrapper rarely changes. The split lets the same command be invoked as either a top-level slash command or through the `Skill` tool.
+**The wrapper/real-command split is the most common gotcha.** `commands/<name>.md` at the plugin root is a shim pointing at the real body. The actual command body lives at `skills/<plugin>/commands/<name>.md`. When editing command behavior, edit the real one — the wrapper rarely changes. The split lets the same command be invoked as either a top-level slash command or through the `Skill` tool.
 
-`.skill` files at the root of each plugin (`agentic-engineering.skill`, `jtbd.skill`) are **zip archives** built for the claude.ai skill packager. They are build output, not source: `*.skill` is gitignored and a PreToolUse hook blocks editing them. Rebuild at release time with `/rebuild-artifacts`. The two recipes differ — `jtbd.skill` stages `jtbd/agents/` into the archive, `agentic-engineering.skill` bundles no agents.
+**Write the pointer as an absolute `${CLAUDE_PLUGIN_ROOT}/skills/<plugin>/commands/<name>.md` path.** A bare relative `commands/<name>.md` is ambiguous under a plugin install — that path *is* the wrapper, so the instruction reads as self-recursion. And always pass `$ARGUMENTS` through, even for a command that takes none; a wrapper that drops it discards `--auto` and every other flag.
+
+`.skill` files at the root of each plugin (`agentic-engineering.skill`, `jtbd.skill`) are **zip archives** built for the claude.ai skill packager. They are build output, not source: `*.skill` is gitignored and a PreToolUse hook blocks editing them. Rebuild at release time with `/rebuild-artifacts`. The two recipes differ — `jtbd.skill` stages `jtbd/agents/` **and** `jtbd/references/` into the archive (two separate copies since the 2.0.0 flattening), `agentic-engineering.skill` bundles no agents.
 
 ## Two installers — know which one to touch
 
 **Top-level `install.sh`** (universal, multi-tool):
 - Entry point for the curl-pipe-bash flow: `curl … | bash -s -- --tool=cursor --skill=agentic-engineering`.
 - Resolves source from local checkout if running from inside the repo; else clones to `$HOME/.local/share/bedcode-skills`.
-- For `--tool=claude-code`, delegates to the per-plugin `install.sh`.
+- For `--tool=claude-code`, delegates to the per-plugin `install.sh` when the plugin ships one; otherwise calls `plugin_only_notice()` and writes nothing (agentic-engineering, jtbd).
 - For every other tool, calls `install_agents_md_style()` which writes `adapters/AGENTS.md.template` into the tool-appropriate file. **Idempotency depends on the `<!-- <plugin>:start v1 -->` … `<!-- <plugin>:end -->` HTML comment markers** inside the template — these let re-installs replace the block in place. Do not rename, remove, or duplicate those markers.
 - For `--tool=cursor`, additionally copies `rules-library/*.md` → `.cursor/rules/*.mdc`, rewriting the `paths:` / `pattern:` frontmatter key → Cursor's `globs:`. Cursor expects MDC.
 - `--tool=auto` detects installed tools by probing for `~/.claude`, `~/.codex`, `~/.cursor`, `~/.config/github-copilot`, VS Code extensions, etc., and installs for each.
 
-**Per-plugin `install.sh`** (Claude-Code-only):
-- Copies `skills/<plugin>/` → `~/.claude/skills/`, named agents (with optional `languages/` + `references/` subdirs) → `~/.claude/agents/`, and the **user-facing subset** of `commands/*.md` → `~/.claude/commands/`. Some commands are internal (e.g. `implement`, `review`, `frontend` are called by `ship`, not exposed) — see the `USER_COMMANDS` array in `agentic-engineering/install.sh`.
-- **Post-copy patch** (agentic-engineering only): rewrites `SKILL.md` frontmatter to add `user-invocable: false`. That field is valid in the CLI but rejected by the claude.ai packager, so it lives only in the installed copy. If you see `user-invocable: false` in a source SKILL.md, it leaked — remove it. `smart-setup` and `jtbd` deliberately skip this patch: each exposes exactly one command whose name is identical to the skill's own name, and Claude Code resolves same-name skill/command collisions in favor of the skill — patching `user-invocable: false` there shadows the command too, breaking direct invocation (`/smart-setup`, `/jtbd`).
+**Per-plugin `install.sh`** (Claude-Code-only; five of seven plugins ship one — **agentic-engineering and jtbd do not**):
+- Copies `skills/<plugin>/` → `~/.claude/skills/`, named agents → `~/.claude/agents/`, and the **user-facing subset** of `commands/*.md` → `~/.claude/commands/` (the `USER_COMMANDS` array).
+- **Post-copy patch**: rewrites `SKILL.md` frontmatter to add `user-invocable: false`. That field is valid in the CLI but rejected by the claude.ai packager, so it lives only in the installed copy. If you see `user-invocable: false` in a source SKILL.md, it leaked — remove it. `smart-setup` deliberately skips this patch: it exposes exactly one command whose name is identical to the skill's own name, and Claude Code resolves same-name skill/command collisions in favor of the skill — patching `user-invocable: false` there shadows the command too, breaking direct invocation (`/smart-setup`). The same rule protects `/jtbd`, which has no installer to patch it in either way.
+- **agentic-engineering and jtbd have no such installer**, on purpose. agentic-engineering resolves `rules-library/`, `capture-tools/`, `agentic-statusline.sh` and `references/<agent>/` through `${CLAUDE_PLUGIN_ROOT}`; jtbd resolves `references/<agent>/` the same way *and* dispatches its five agents by the plugin-namespaced `jtbd:jtbd-<name>`. Only a marketplace install provides either. `--tool=claude-code` prints the marketplace instructions for both and writes nothing; that is success, not failure. Never reintroduce a hand-copy path without also making every one of those paths installer-aware.
 
 ## When you change something
 
@@ -65,8 +68,8 @@ Every plugin follows the same shape:
 |---|---|
 | Command behavior | `skills/<plugin>/commands/<name>.md` (real), not `commands/<name>.md` (wrapper) |
 | Add a new slash command | (1) `commands/<name>.md` wrapper, (2) `skills/<plugin>/commands/<name>.md` body, (3) `USER_COMMANDS` array in per-plugin `install.sh` if user-facing, (4) the skill's `commands/` table in `SKILL.md` |
-| Add a new agent | new dir under `agents/<name>/AGENT.md` with `name: <name>` in its frontmatter (omit it and Claude Code drops the agent silently) + `cp` line in per-plugin `install.sh` |
-| Add a new plugin | **Always:** (1) `<plugin>/.claude-plugin/plugin.json`, (2) entry in top-level `.claude-plugin/marketplace.json`, (3) per-plugin `install.sh`, (4) add to the installer loop in `.claude/skills/verify-install/SKILL.md`. **Only if it ships for non-Claude tools:** (5) `adapters/AGENTS.md.template` with `<plugin>:start v1` / `<plugin>:end` markers, (6) entry in top-level `install.sh` `--skill=` help text. Five of seven plugins are Claude-Code-only and correctly have neither — the top-level installer skips them with a message rather than failing. |
+| Add a new agent | new **flat** file `agents/<name>.md` with `name: <name>` in its frontmatter (omit it and Claude Code drops the agent silently). Never `agents/<name>/AGENT.md` — under a plugin install it registers as `plugin:<name>:<name>` and every file beside it becomes a phantom agent. Reference docs go in `references/<name>/`, reachable as `${CLAUDE_PLUGIN_ROOT}/references/<name>/…` |
+| Add a new plugin | **Always:** (1) `<plugin>/.claude-plugin/plugin.json`, (2) entry in top-level `.claude-plugin/marketplace.json`, (3) per-plugin `install.sh` — **unless** any shipped file resolves a path through `${CLAUDE_PLUGIN_ROOT}` or dispatches a `<plugin>:<agent>` subagent, in which case the plugin is marketplace-only and ships none, (4) add to the installer loop in `.claude/skills/verify-install/SKILL.md`. **Only if it ships for non-Claude tools:** (5) `adapters/AGENTS.md.template` with `<plugin>:start v1` / `<plugin>:end` markers, (6) entry in top-level `install.sh` `--skill=` help text. Five of seven plugins are Claude-Code-only and correctly have neither — the top-level installer skips them with a message rather than failing. |
 | Edit portable (non-Claude) behavior | `adapters/AGENTS.md.template` — preserve the marker comments |
 | Add per-language convention rule | `agentic-engineering/rules-library/<stack>.md` with frontmatter `paths:` (becomes `globs:` for Cursor) |
 
@@ -76,14 +79,24 @@ Conventional Commits with a scope: `feat(agentic-engineering):`, `chore(jtbd):`,
 
 ## Testing changes locally
 
-There is no test suite. Run `/verify-install` — it executes all six installers with `HOME` pointed at a throwaway dir and asserts the results.
+There is no test suite. Run `/verify-install` — it executes every per-plugin installer with `HOME` pointed at a throwaway dir and asserts the results, then checks the plugin-only invariants for agentic-engineering and jtbd separately.
 
-**Never run an installer directly.** Every installer writes to `~/.claude`; there is no `--prefix` flag, so `bash agentic-engineering/install.sh` clobbers your real config. `HOME` is the only seam:
+**Never run an installer directly.** Every installer writes to `~/.claude`; there is no `--prefix` flag, so running one clobbers your real config. `HOME` is the only seam:
 
 ```bash
 SANDBOX=$(mktemp -d)
-HOME="$SANDBOX" bash agentic-engineering/install.sh
+HOME="$SANDBOX" bash smart-setup/install.sh
 ```
+
+For **agentic-engineering** and **jtbd** there is no installer to sandbox. Verify each by loading the working tree as a plugin and enumerating what registers:
+
+```bash
+cd "$(mktemp -d)" && git init -q
+claude -p --model haiku --plugin-dir /path/to/skills/agentic-engineering \
+  "List the exact names of every agent type available to the Agent tool, one per line." </dev/null
+```
+
+Expect exactly nine `agentic-engineering:ae-*` names, and exactly five `jtbd:jtbd-*` names for `--plugin-dir .../jtbd`. A doubled `:ae-red:ae-red`, or any `:references:` entry, means agent files or reference docs drifted back into a nested layout.
 
 Then inspect `$SANDBOX/.claude/skills/`, `$SANDBOX/.claude/agents/`, `$SANDBOX/.claude/commands/`, or (for non-Claude tools) the written AGENTS.md / `.cursor/rules/` / etc.
 

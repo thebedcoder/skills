@@ -65,9 +65,9 @@ mvn test -Dgroups=mobile
 
 `appium-screenshots/` (or wherever the test framework's `afterTest` / `tearDown` writes). Naming convention is up to the test framework — typical: `<test-name>.png` per test.
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 runs the project's Appium test command.
+1. `/ship` Phase 3 runs the project's Appium test command.
 2. Implementer agent scans the declared `output_dir` (default `appium-screenshots/`, but operator can edit `.claude/visual-capture.md` to point elsewhere).
 3. Matches test names against AC Coverage matrix Tests cells.
 4. Moves files into `docs/features/<feature-name>/artifacts/STORY-XXX/`.

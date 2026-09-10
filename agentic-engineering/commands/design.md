@@ -2,4 +2,8 @@
 description: Generate UI mockups for the current feature using Figma, Pencil.dev, or Markdown specs
 argument-hint: [--auto]
 ---
-Read commands/design.md from the agentic-engineering skill, then follow those instructions. Arguments: $ARGUMENTS
+Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/design.md` — that file holds the real instructions; this wrapper holds none.
+
+Follow it, . Arguments: $ARGUMENTS
+
+It references policy sections of `SKILL.md` and blocks of `shared/preamble.md`, both under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/`. Read those when it points you there — the wrapper does not load them for you.

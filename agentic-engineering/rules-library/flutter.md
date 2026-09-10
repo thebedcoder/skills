@@ -37,18 +37,18 @@ paths:
 - Profile with DevTools — never guess
 
 ## Platform-specific
-- Platform checks via `Platform.isIOS` / `Platform.isAndroid`
+- Platform checks via `Theme.of(context).platform` or `defaultTargetPlatform`. **`Platform.isIOS` / `Platform.isAndroid` throw on web** — `dart:io` has no web implementation. Guard with `kIsWeb` first if you must use them
 - iOS: `CupertinoPageRoute` where iOS users expect native feel
-- Android: back button handling — `WillPopScope` or PopScope
+- Android: back button handling — `PopScope`. `WillPopScope` is deprecated (Flutter 3.12) and does not work with predictive back
 - Web considerations: don't use plugins that require native code unless needed
 
 ## Testing
 - Widget tests for every screen — verify states: loading, loaded, error, empty
 - `pumpAndSettle()` with timeout — avoid infinite hangs on animations
 - Integration tests (`integration_test` package) for critical user flows
-- Mock native plugins with `package:plugin_platform_interface`
+- Mock native plugins by setting a mock message handler on the plugin's `MethodChannel` (`TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler`), or by injecting the plugin's platform-interface implementation. `plugin_platform_interface` itself is the base class plugin authors extend, not a mocking mechanism
 
 ## Dependencies
-- Lock versions in `pubspec.yaml` — no `^` for production apps
+- Apps: keep caret ranges in `pubspec.yaml` and commit `pubspec.lock` — the lockfile is what pins an app's builds. Packages: never commit the lockfile; the consuming app resolves. Pin an exact version only to work around a specific broken release, with a comment saying which
 - `flutter pub outdated` before upgrades
 - Check `pub.dev` score before adding packages — abandoned packages are risk

@@ -92,9 +92,9 @@ fastlane/screenshots/
 
 Per-language, per-device, per-named-snapshot.
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 runs `fastlane snapshot`.
+1. `/ship` Phase 3 runs `fastlane snapshot`.
 2. Implementer agent scans `fastlane/screenshots/<lang>/<device>-<name>.png`.
 3. The `<name>` portion (e.g., `01_login_screen`) maps to AC — typically `01_*` ↔ AC-1, `02_*` ↔ AC-2 (operator-confirmable convention).
 4. Moves screenshots into `docs/features/<feature-name>/artifacts/STORY-XXX/<lang>-<device>-<name>.png`.

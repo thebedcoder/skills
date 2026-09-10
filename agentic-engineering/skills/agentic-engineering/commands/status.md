@@ -15,7 +15,7 @@ Stale check: if CURRENT.`since` ≥ 7 days ago, flag with ⚠️.
 
 Read `./docs/INDEX.md` (including its `mode:` frontmatter), `./docs/BACKLOG.md`, then scan all `./docs/features/*/STORIES.md` + `PROGRESS.md`.
 
-Mode gates what counts as a gap. In `lite`, absent `PRD.md`, `EPICS.md`, `docs/specs/`, `improvements.md`, and `app-docs/` are **expected** — never report them as missing. In `full` they're reportable gaps. No `mode:` key → treat as `full`. See "Project Mode" in SKILL.md.
+Mode gates what counts as a gap. In `lite`, absent `PRD.md`, `EPICS.md`, `docs/specs/`, `improvements.md`, and `app-docs/` are **expected** — never report them as missing. In `full` they're reportable gaps. No `mode:` key → treat as `full`. See `shared/project-mode.md`.
 
 Feature marked `archived` in INDEX (or has `SUMMARY.md` + no `STORIES.md`) → read `SUMMARY.md` only. Never scan archived features for stories or progress.
 

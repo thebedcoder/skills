@@ -8,37 +8,24 @@ Use to ship all remaining stories without manual trigger. User stays in loop —
 
 ### Step 0a — Parse `--auto` flag
 
-Detect whether `$ARGUMENTS` contains the `--auto` token.
+Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/ship-all --auto`. **Propagate `AUTO=true` to every story's `/ship` invocation**, and through each story's nested `/implement` and `/review`.
 
-- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
-- Set internal flag `AUTO=true` for this run.
-- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
-- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
-  ```markdown
-  ## [now YYYY-MM-DD HH:MM] — /ship-all --auto
-  ```
-- **Propagate `AUTO=true` to every story's `/ship` invocation in the chain.** Each story's nested `/implement` and `/review` phases also inherit auto.
+### Step 0b — Write the story PLAN
 
-See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+Per "Progress Tracking" in SKILL.md, write one PLAN line per unchecked story into `.agentic/focus.md` before the session starts — subject `STORY-XXX: [title]`, in the recommended order. This is the chain's progress bar; the per-story `/ship` does **not** write a nested plan, it advances this one.
 
-### Step 0b — Open the story task list
+- Mark each story in progress at its plan gate, closed after its ship chain closes.
+- User picks **Skip this story** → close the line with `skipped` noted; story stays unchecked in `STORIES.md`.
+- User picks **End session** → leave remaining lines open; they show as unfinished, which is accurate.
 
-Per "Progress Tracking" in SKILL.md, create one task per unchecked story before the session starts — subject `STORY-XXX: [title]`, in the recommended order. This is the chain's progress bar; the per-story `/ship` does **not** open a nested list, it advances this one.
+Mirror into a harness task list **if this session exposes one** — it is a convenience view, not the record. PLAN survives compaction and session end.
 
-- Mark each story `in_progress` at its plan gate, `completed` after its ship chain closes.
-- User picks **Skip this story** → complete the task with `skipped` noted; story stays unchecked in `STORIES.md`.
-- User picks **End session** → leave remaining tasks `pending`; they show as unfinished, which is accurate.
 
 ### Step 0 — Auto-write focus
 
 At the start of the chain, update `.agentic/focus.md`:
 
-1. Ensure `.agentic/` exists + gitignored (idempotent):
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 2. Overwrite CURRENT to represent the whole chain: `title: ship-all: <feature> (N stories)`, `since: [now]`, `set_by: /ship-all`, `note: starting`.
 
@@ -109,11 +96,16 @@ Pauses only on review blockers, same as `/ship`.
 [1 line of what was built]
 ```
 
-Before next story:
+Before next story — **the model cannot compact; only the human can.** Print the block, then gate:
+
 ```
 /compact Focus on: [feature name], STORY-XXX complete, next story is STORY-XXX,
 branch [name], any open blockers. Discard: file contents read, review reports, diffs.
 ```
+
+⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: confirm]`: *"Context is full for this story. Run the compact command above, then choose Continue."* → **Continue (Recommended)** · **End session here**
+
+Continue chosen without compacting → proceed anyway. That is the human's call; do not re-ask, do not refuse to continue.
 
 Then next story plan.
 
@@ -183,7 +175,7 @@ If `AUTO=false`: skip.
 
 ### Gotchas
 
-- **Compact non-negotiable.** After 3-4 stories, context fills → quality drops. Never skip because "stories are small."
+- **Compaction is the human's action, not yours.** `/compact` is a user command; no tool invokes it. After 3-4 stories context fills and quality drops, so always surface the gate — but never claim the chain compacted by itself, and never stall waiting for it.
 - **One story = its own commit(s).** No batching. User must revert story without touching others.
 - **`[P]` markers are user-facing suggestions, not self-instructions.** Ship-all runs sequential. No interleaving.
 - **Recurring blockers → stop + fix pattern.** Same blocker class 3 stories in row → update constitution/conventions, not more fixes.

@@ -1,27 +1,20 @@
 ## `/improve [description]` — Improvement Chain
 
 **Chain:** plan → apply → review → docs → cleanup
-**Agents:** ARCH (lead), RED + TEST + one scoped specialist (reviewers)
+**Agents:** ARCH (lead), RED + TEST + LEAN + one scoped specialist (reviewers)
 
 For changes that are neither bug nor whole feature. Adding keyboard shortcut, supporting new file format, new export option, faster query, 400-line hook split in two. Existing thing gets better, or small new capability lands on existing feature.
 
 Not `/fix` — nothing is broken. Not `/feature` — no research, no PRD, no epics, no `STORIES.md`. Nothing this command produces is persisted as planning doc.
 
-Read `./CLAUDE.md` + relevant feature docs in `./app-docs/features/` before starting.
+**Inputs (read first):**
+- `./CLAUDE.md` — conventions
+- relevant feature docs in `./app-docs/features/`
+- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`. `/cleanup` writes these after every chain; a chain that never reads them is a write-only log
 
 ### Step 0a — Parse `--auto` flag
 
-Detect whether `$ARGUMENTS` contains the `--auto` token (not a substring inside a name).
-
-- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
-- Set internal flag `AUTO=true` for this run.
-- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
-- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
-  ```markdown
-  ## [now YYYY-MM-DD HH:MM] — /improve <improvement summary> --auto
-  ```
-
-See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/improve <improvement summary> --auto`.
 
 ### Step 0b — Resolve target (empty `$ARGUMENTS` only)
 
@@ -34,11 +27,13 @@ See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambigu
 
 Mark the chosen item in `BACKLOG.md`: `**Status:** in-progress`. Set to `done` in Phase 5.
 
-### Step 0c — Open the phase task list
+### Step 0c — Write the phase PLAN
 
-Target resolved, so open the list now — never before Step 0b, which can stop the command with nothing to do.
+Target resolved, so write PLAN now — never before Step 0b, which can stop the command with nothing to do.
 
-Per "Progress Tracking" in SKILL.md, create one task per phase:
+Per "Progress Tracking" in SKILL.md, one PLAN line per phase in `.agentic/focus.md`. Mirror into a harness task list **if this session exposes one** — it is a convenience view, not the record. PLAN survives compaction and session end.
+
+
 
 1. `Plan — precedent + scope + Done when`
 2. `Apply + tests`
@@ -54,12 +49,7 @@ Step 0 below mirrors the same list into the `# PLAN` section of `.agentic/focus.
 
 Before planning, update `.agentic/focus.md`:
 
-1. Ensure `.agentic/` exists + gitignored (idempotent):
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 2. Read existing CURRENT. Apply story-id-match heuristic:
    - Existing CURRENT.title already references the same improvement → update `note:` to `phase: improving` and `set_by:` to `/improve`. Leave `title:` + `since:` alone.
@@ -151,15 +141,18 @@ Dispatch reviewers in **single tool-call batch**, not sequentially. Each gets pa
 
 | Agent | When | Receives | Looks for |
 |---|---|---|---|
-| **ae-red** | always | changed impl files + git diff | regression risk in changed code, null safety, async bugs |
-| **ae-test** | always | changed files + tests + the `Done when:` list | each condition covered by a test; tests that would not catch regression |
-| **ae-sec** | diff touches auth, input parsing, crypto, file I/O | changed impl files + git diff | high-confidence exploitable vulnerabilities |
-| **ae-ux** | diff touches UI components | changed files + design context | fidelity, empty/error/loading states, keyboard + focus behavior |
-| **ae-edge** | diff touches data or async paths | changed impl files + tests + `Done when:` | boundary, null, race, malformed, resource, error-path gaps |
+| `agentic-engineering:ae-red` | always | diff path + changed impl files | regression risk in changed code, null safety, async bugs |
+| `agentic-engineering:ae-test` | always | diff path + changed files + tests + the `Done when:` list | its **Step 8** check: each condition covered by a test; tests that would not catch regression |
+| `agentic-engineering:ae-lean` | always | diff path + changed impl files + `CLAUDE.md` + dependency manifest | reuse, simplification, efficiency, altitude. **Home ground for a `refactor`-type improvement** — the change is itself a simplification claim, and this is the reviewer that checks it landed |
+| `agentic-engineering:ae-sec` | diff touches auth, input parsing, crypto, file I/O | diff path + changed impl files | high-confidence exploitable vulnerabilities |
+| `agentic-engineering:ae-ux` | diff touches UI components | changed files + `CONSTITUTION.md`; **no design spec exists** — it runs in no-spec mode, where fidelity findings are POLISH, not blockers | empty/error/loading states, keyboard + focus behavior |
+| `agentic-engineering:ae-edge` | diff touches data or async paths | diff path + changed impl files + tests + `Done when:` | boundary, null, race, malformed, resource, error-path gaps |
 
-Exactly one of ae-sec / ae-ux / ae-edge runs — pick by what the diff touches. Ambiguous → ae-edge.
+ae-red, ae-test and ae-lean always run. Exactly one of ae-sec / ae-ux / ae-edge joins them — pick by what the diff touches. Ambiguous → ae-edge.
 
-`ae-req` does not run: no persisted acceptance criteria for it to check. `ae-test` carries the `Done when:` check instead. `ae-doc` does not run either — convention drift on a scoped diff is ARCH's `Fits existing pattern` job.
+Reviewers have no Bash: capture the diff first exactly as `/review` Step 0c does (`.agentic/review/<slug>.diff`) and pass the path.
+
+`ae-req` does not run: no persisted acceptance criteria for it to check. `ae-test` carries the `Done when:` check instead — its Step 8, which needs the `Done when:` list in the prompt and emits per-condition ✅/❌. `ae-doc` does not run either — convention drift on a scoped diff is ARCH's `Fits existing pattern` job.
 
 Before consolidating, read `./docs/improvements.md` (missing → skip). Finding matches prior won't-fix entry → report as "previously logged [date]", never re-litigate.
 
@@ -186,9 +179,9 @@ Clean → continue.
 
 **Phase 4 — End-user docs + Changelogs** *(automatic — final step before commit)*
 
-Spawn **ae-scribe** subagent when Phase 1 said `Behavior change: user-visible`. Most `feat` improvements are: new shortcut, new format, new option all change what user can do → update `./app-docs/features/[name].md`. `Behavior change: none` (typical `perf` / `refactor`) → skip ae-scribe entirely.
+Dispatch `agentic-engineering:ae-scribe` when Phase 1 said `Behavior change: user-visible`. **SCRIBE writes app-docs pages only — this command writes both changelogs, below.** Most `feat` improvements are: new shortcut, new format, new option all change what user can do → update `./app-docs/features/[name].md`. `Behavior change: none` (typical `perf` / `refactor`) → skip ae-scribe entirely.
 
-`./app-docs/` absent → SCRIBE creates the tree first: `index.md`, `CHANGELOG.md` (seeded per `commands/init.md`), `features/`, `guides/`. Existence check, not mode check — lite projects skip the tree at init and grow it on first user-facing change.
+`./app-docs/` absent → **the parent creates the tree, not SCRIBE**: `index.md`, `CHANGELOG.md`, `features/`, `guides/`, seeded from the templates in `commands/init.md`. Do it before dispatching. Existence check, not mode check — lite projects skip the tree at init and grow it on first user-facing change. SCRIBE writes pages into a tree that already exists; it has no create-tree rule.
 
 Prepend to both changelogs (newest first):
 

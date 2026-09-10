@@ -166,11 +166,11 @@ Before starting any mode, check the working dir for prior `jtbd-*.md` files and 
 Each mode has detailed references in the source repo — load on demand if your tool supports it:
 
 ```
-jtbd/agents/jtbd-researcher/references/    competitor-research, customer-voice, pain-points, pricing-signals
-jtbd/agents/jtbd-analyst/references/       interview-analysis, review-analysis, support-analysis
-jtbd/agents/jtbd-scout/references/         direct, adjacent, workarounds, do-nothing
-jtbd/agents/jtbd-copywriter/references/    hero, problem, value-prop, social-proof, how-it-works, faq, final-cta
-jtbd/agents/jtbd-scriptwriter/references/  hooks, angles, tiktok, instagram-reel, youtube-shorts, threads
+jtbd/references/jtbd-researcher/    competitor-research, customer-voice, pain-points, pricing-signals
+jtbd/references/jtbd-analyst/       interview-analysis, review-analysis, support-analysis
+jtbd/references/jtbd-scout/         direct, adjacent, workarounds, do-nothing
+jtbd/references/jtbd-copywriter/    hero, problem, value-prop, social-proof, how-it-works, faq, final-cta
+jtbd/references/jtbd-scriptwriter/  hooks, angles, tiktok, instagram-reel, youtube-shorts, threads
 ```
 
 ---

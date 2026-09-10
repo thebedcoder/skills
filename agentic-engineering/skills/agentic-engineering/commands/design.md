@@ -6,28 +6,13 @@ Read `./CLAUDE.md` + `./docs/features/[feature-name]/PRD.md` before starting. PR
 
 ### Step 0a — Parse `--auto` flag
 
-Detect whether `$ARGUMENTS` contains the `--auto` token.
-
-- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
-- Set internal flag `AUTO=true` for this run.
-- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
-- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
-  ```markdown
-  ## [now YYYY-MM-DD HH:MM] — /design <feature> --auto
-  ```
-
-See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/design <feature> --auto`.
 
 ### Step 0 — Auto-write focus
 
 Before designing, update `.agentic/focus.md`:
 
-1. Ensure `.agentic/` exists + gitignored (idempotent):
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 2. Read existing CURRENT. Apply story-id-match heuristic:
    - Existing CURRENT references the same feature → update `note:` to `phase: designing UI` and `set_by:` to `/design`. Leave `title:` + `since:` alone.

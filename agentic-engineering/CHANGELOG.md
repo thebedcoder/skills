@@ -4,6 +4,221 @@ All notable changes to the `agentic-engineering` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`ae-lean` — a seventh reviewer, owning reuse, simplification, efficiency and
+  altitude.** The roster had no quality lens at all: grep the eight agent prompts
+  for duplication, reuse, simplification or efficiency and the only hits are in
+  `ae-red`'s *exclusion* list, which explicitly banned "performance issues unless
+  they cause functional failure" and "dead code that can never be reached", while
+  `ae-ux`'s golden rule reads "not code style". Every reviewer hunted for
+  something *wrong*; nothing hunted for something *unnecessary*. That is why
+  `/simplify` and `/code-review` kept finding work after a clean six-agent review
+  — those two own exactly the axis nobody was assigned.
+
+  `ae-lean` runs on Sonnet, read-only, in the parallel batch. Its Step 2 is a
+  **mandatory repo search**: its defining finding ("this already exists at
+  `utils/x.ts:40`") is unreachable from a diff, so a report without a `Reuse:`
+  line is treated as incomplete. It receives the dependency manifest so it does
+  not recommend a library the project deliberately does without, and it is scoped
+  to code the diff added or changed, because `/implement` bans drive-by refactors
+  and a finding the author cannot act on inside this story is noise.
+
+  **Findings are `should-fix`, never blockers** — with one exception, a verbatim
+  duplicate of an existing function with both locations cited, which is a defect
+  being introduced rather than a preference. Working code does not stop a ship.
+
+### Changed
+
+- **`/review` takes `--frontend-pass`**, which drops `ae-lean` and runs the other
+  six. `/ship` Phase 4 passes it: `ae-lean` reviewed the same branch in Phase 2,
+  and component-level duplication is `ae-ux`'s beat. Phase 2 is a seven-agent
+  batch, Phase 4 a six-agent one.
+- **`/improve` always dispatches `ae-lean`** alongside `ae-red` and `ae-test`. A
+  `refactor`-type improvement is itself a simplification claim, and this is the
+  reviewer that checks it landed.
+- `ae-red`'s exclusion list now names where those findings go instead of dropping
+  them: efficiency, dead code, duplication and needless indirection are
+  `ae-lean`'s.
+- Integrity check H (no `Bash` in a reviewer's `tools:`) extended to `ae-lean`.
+
+## [2.0.0] — 2026-09-10
+
+Breaking for anyone who installed this plugin with the bash installer. **Claude
+Code now installs it through the marketplace only.**
+
+### Removed
+
+- **`agentic-engineering/install.sh` is gone.** The plugin had two install paths
+  with divergent layouts, and everything in it was written against the bash one
+  and never re-verified against the plugin cache. That is the root cause of every
+  entry under "Fixed" below. `--tool=claude-code` in the top-level installer now
+  prints the `/plugin marketplace add` instructions and writes nothing; the
+  top-level installer still serves Cursor, Codex, Copilot and the rest from
+  `adapters/AGENTS.md.template`, unchanged.
+- The `USER_COMMANDS` gate went with it. Plugin auto-discovery registers all 21
+  commands and always did — the gate only ever hid `implement`, `review` and
+  `frontend` on the path nobody uses.
+- The post-install `user-invocable: false` patch went with it. Nothing injects
+  that field anywhere now, and the source must stay clean for the claude.ai
+  packager.
+
+### Fixed
+
+- **The six-agent review did not dispatch under a plugin install.** Verified
+  against Claude Code 2.1.267: `agents/ae-red/AGENT.md` registered as
+  `agentic-engineering:ae-red:ae-red`, so every dispatch site's bare `ae-red`
+  resolved to nothing. The failure is silent — the main model role-plays six
+  reviewers inline and emits a normal-looking report. Agents are now flat
+  `agents/<name>.md` files and every dispatch site names the full
+  `agentic-engineering:ae-*` type.
+- **59 reference and language files registered as dispatchable subagents.**
+  Every `.md` under `agents/*/` became its own agent type — `…:ae-sec:references:xss`,
+  `…:ae-test:languages:jest` — sitting in the Agent tool description of every turn
+  of every session. Reference material moved to `references/<agent>/`, outside
+  `agents/` entirely.
+- **Reviewers could write to the repo under review.** `tools: Read, Glob, Grep, Bash(git diff:*)`
+  reads like a restriction and is not one: `tools:` accepts permission-rule
+  syntax but does not enforce it, so `ae-red`, `ae-sec` and `ae-edge` each held a
+  general Bash tool. Observed consequences: one agent's edit clobbered a test
+  another had just written; a second left debug lines in a committed file. Bash
+  is removed from all three.
+- **Reviewers each guessed their own base branch.** `ae-sec` fell back to
+  `git diff HEAD~1` and reviewed one commit of a multi-commit branch while its
+  peers reviewed the whole thing. `/review` now captures the diff once into
+  `.agentic/review/<STORY-ID>.diff` and passes the path.
+- **`/init` and `/bootstrap` read paths that only the bash installer created.**
+  The rules library, the capture-tools catalog and the statusline script were
+  addressed as `~/.claude/skills/agentic-engineering/…`; under the marketplace
+  they live in the plugin cache. Every path is now `${CLAUDE_PLUGIN_ROOT}/…`, and
+  `/init` copies the statusline script into the project's own `.claude/` so it
+  survives plugin version bumps. `ae-edge` reached for `ae-test`'s references the
+  same way and silently ran with no race, coverage or language material.
+- **The skill description exceeded the 1,024-character cap**, so its tail was
+  silently truncated — and the tail is where the "do NOT trigger on"
+  disambiguation lives. Rewritten to 1,020 characters, dropping ~60 words of
+  slash-command names that never routed through it anyway (the CLI dispatches
+  slash commands before the model reads any description).
+- **`/compact` was called "mandatory" and "non-negotiable" in `ship-all` and
+  `plan-all`, and the model cannot invoke it.** It is a user command. Both now
+  print the compact block and fire a real checkpoint asking the human to run it.
+  The `/ship-all` wrapper no longer claims it "compacts context automatically".
+- **The progress tracker named no tool.** "The harness task tool" is not
+  available in every session (`TaskCreate`/`TaskUpdate`/`TodoWrite` are env-gated
+  on newer models). `# PLAN` in `.agentic/focus.md` is now the record; a harness
+  list is an opportunistic mirror, and its absence is never narrated.
+- **Command wrappers pointed at a relative `commands/<name>.md`**, which under a
+  plugin install is the wrapper itself. All 21 now name
+  `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/<name>.md`, and all
+  21 forward `$ARGUMENTS` — `archive`, `implement` and `frontend` previously
+  dropped it, silently discarding `--auto`.
+- **`ae-scribe` had no `Edit` tool** but was told to update existing pages, so it
+  rewrote whole files to change one section.
+- **`ae-ux` was told to run `git diff`** with no Bash tool, and its `.swiftui`
+  frontend detection matched an extension that does not exist — a SwiftUI-only
+  diff was probed as backend.
+- **`/ship` had no branch guard.** `/fix` and `/improve` gate on `main`; lite
+  mode's `/note` → `/ship` path has no branching step at all, so every lite story
+  landed on `main`.
+
+### Added
+
+- **Mode B — plan pre-review** in `ae-red` and `ae-sec`. `/implement` dispatched
+  both against a plan rather than a diff, and neither had any instruction for
+  that: both opened with `git diff main...HEAD` and reviewed unrelated branch
+  state. They now skip the diff step, verify each Contract claim against the
+  `file:line` it cites, test the claim's converse, and audit the Failure states
+  table for omissions.
+- **`ae-test` gained the two modes it was already credited with**: validating the
+  `### Edge probes` table the same way it validates the AC Coverage matrix, and
+  carrying the `Done when:` check for `/improve` with per-condition pass/fail.
+- **`ae-ux` gained a no-spec mode.** It hard-required
+  `docs/specs/<feature>-design.md`; `/improve` dispatches it with no spec at all.
+  Without a design to be unfaithful to, fidelity findings drop to POLISH while
+  broken states stay blockers.
+- **`ae-doc` now checks that Contract claims and Failure states were persisted**
+  into `PROGRESS.md`. 1.4.0 credited it with catching exactly this and no prompt
+  asked for it.
+- **A severity mapping table in `/review`.** Six reviewers emitted six dialects
+  (`CRITICAL`, `Critical`, `Blocker`, `should-cover`, `should-fix`) with nothing
+  saying how they collapse into Blockers / Should-fix / Won't-fix. Every reviewer
+  now also emits a `SUMMARY:` count line, which `/review` expected and only
+  `ae-sec` produced.
+- **`MEMORY.md` and `DECISIONS.md` are read, not just written.** `/cleanup` wrote
+  both after every chain and no command listed either as an input. They are now
+  in the inputs of `/implement`, `/ship`, `/fix`, `/improve` and `/feature`
+  — MEMORY in full, DECISIONS titles only.
+- **`shared/preamble.md`** holds the four blocks that were copy-pasted across
+  8–12 command files (parse `--auto`, focus write, auto summary, memory inputs).
+- **Integrity checks G–J** in `.claude/hooks/check-integrity.sh`: no nesting under
+  `agents/`, no `Bash` in a reviewer's `tools:`, no `~/.claude` literal in shipped
+  content, description within the 1,024-character cap.
+
+### Changed
+
+- **`ae-red` and `ae-edge` move from Haiku to Sonnet.** Both are pure multi-file
+  reasoning with no ability to execute anything — `ae-red` traces an execution
+  path, `ae-edge` mentally runs a test it just wrote against the current
+  implementation. That is the worst possible task for a cheap tier, and it showed:
+  one reviewer "reproduced" a delimiter collision with a debug line that joined
+  differently than the code did, and measured its own string. `ae-sec` was already
+  on Sonnet. `ae-req`, `ae-test` and `ae-doc` stay on Haiku — checklist and parsing
+  work, where the tier is right.
+- **Nesting rules are explicit.** `/implement` under `/ship` fires no second start
+  gate and opens no second plan; `/review` under `/ship` reports and lets the
+  parent gate; `/ship` under `/ship-all` advances the parent's plan.
+- **The `ae-red` / `ae-edge` overlap is carved.** `ae-red` owns "crashes on the
+  current path", `ae-edge` owns "no test proves the guard" — one null dereference
+  was producing a RED CRITICAL and an EDGE Blocker from the same line.
+- **The agent roster distinguishes the eight subagents from the four inline
+  roles.** ARCH, PROD, FIXER and GIT are the main model wearing a hat and were
+  listed identically to dispatchable agents.
+- **The visual-capture dispatch is documented as Phase 3, where it runs.**
+  Twenty-three files said Phase 4. Separately, "Phase 1 / Phase 2" meaning a
+  rollout stage of the visual-artifacts feature collided with ship-chain phase
+  numbers and is gone.
+- **`ae-sec` reports in the same shape as the other five** — a `SEC —` header
+  rather than markdown headings, which the consolidator could not parse.
+- **`adapters/AGENTS.md.template` is portable again.** It named `ae-edge`,
+  `ae-test`, `ae-ux`, a dozen slash commands, `.claude/settings.local.json` and
+  the Claude Code statusline, in a file whose own first line says "regardless of
+  which AI assistant you are". It also gained the `/improve` flow, Contract
+  claims, Failure states and plan pre-review, and no longer says a done story is
+  "pushed" — no chain pushes.
+- Changelog ownership is settled: `ae-scribe` writes `app-docs/` pages only, the
+  parent command writes both changelogs, and the parent creates the `app-docs/`
+  tree. Three files each claimed a different owner.
+
+### Backfilled — shipped in 1.1.0 through 1.4.0 with no changelog entry
+
+These were found missing during the 2026-09-10 audit. Dates are the release they
+went out in, not the date of this entry.
+
+- **`/cleanup` + `docs/DECISIONS.md` + `docs/MEMORY.md`** — the memory-doc layer.
+  `/cleanup` runs as the last phase of `/ship`, `/fix` and `/improve`, appends
+  binding decisions as `DEC-NNN`, and rewrites a line-capped `MEMORY.md`.
+- **`/archive [feature|--all]`** — compacts a shipped feature's docs into one
+  `SUMMARY.md` and deletes the originals; `--all` archives every eligible feature
+  behind one combined gate.
+- **`/focus` and `/next`** — the per-worktree `.agentic/focus.md` pointer with
+  `# CURRENT`, `# PLAN` and `# NEXT`, auto-written by every long-running command
+  under a story-id-match heuristic.
+- **`--auto` mode** — the `[AUTO: skip|ask-if-ambiguous|always-ask]` tag taxonomy,
+  the hard-override list, the ambiguity heuristic and `.agentic/auto-log.md`.
+- **The AC Coverage matrix and the test pyramid** — every story maps each
+  acceptance criterion to the tests that prove it, with a `Level` column and a
+  soft inverted-pyramid warning.
+- **Visual Artifacts and `capture-tools/`** — a 15-entry catalog of capture tools
+  selected at `/init`, dispatched during the frontend phase, auto-populating a
+  Visual Artifacts table in `PROGRESS.md`.
+- **`ae-edge`** — the sixth reviewer, making the batch six agents rather than five.
+- **The focus statusline** (`agentic-statusline.sh`).
+- **lite / full project mode** — the `mode:` marker in `docs/INDEX.md` frontmatter.
+- **The won't-fix loop** — `/review` re-reads `docs/improvements.md` and reports a
+  matching finding as "previously logged", never re-litigating it.
+
 ## [1.4.0] — 2026-08-27
 
 ### Added
@@ -150,5 +365,17 @@ First version of the agentic-engineering skill — installed by manual clone bef
 - **Parallel-story markers** `[P]` — stories tagged `[P]` have no dependencies and can be shipped in separate Claude Code sessions concurrently.
 - **Mandatory `/compact` between stories** in `/ship-all` and `/plan-all` to keep context lean across long sessions.
 
-[Unreleased]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v1.0.0...HEAD
-[1.0.0]: https://github.com/thebedcoder/skills/releases/tag/agentic-engineering-v1.0.0
+[Unreleased]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v2.0.0...HEAD
+[2.0.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v1.4.0...agentic-engineering-v2.0.0
+[1.4.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v1.3.0...agentic-engineering-v1.4.0
+[1.3.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v1.2.0...agentic-engineering-v1.3.0
+[1.2.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v1.1.0...agentic-engineering-v1.2.0
+[1.1.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v1.0.0...agentic-engineering-v1.1.0
+[1.0.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v0.3.0...agentic-engineering-v1.0.0
+[0.3.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v0.2.0...agentic-engineering-v0.3.0
+[0.2.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v0.1.0...agentic-engineering-v0.2.0
+[0.1.0]: https://github.com/thebedcoder/skills/releases/tag/agentic-engineering-v0.1.0
+
+**Note on tags.** These compare links assume `agentic-engineering-vX.Y.Z` tags.
+Only some exist; create the missing ones from the release commits, or the links
+404.

@@ -68,7 +68,7 @@ npx playwright test
 
 Same as web Playwright: `test-results/<test-name>-<project>/test-finished-N.png` + `.webm`.
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
 Identical to the `playwright` catalog entry. The agent matches test names to AC Coverage matrix Tests cells, moves captures into the artifacts directory.
 

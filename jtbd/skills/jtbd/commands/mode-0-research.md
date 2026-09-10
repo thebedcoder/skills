@@ -27,7 +27,7 @@ If prior `jtbd-*.md` files exist in the working dir, ask if any are relevant bef
 
 ultrathink
 
-Spawn **jtbd-researcher** with: product name, category, problem, rough target audience.
+Spawn subagent type `jtbd:jtbd-researcher` with: product name, category, problem, rough target audience.
 While it runs, draft job performer candidates from your own knowledge.
 When RESEARCHER returns, enrich or replace your drafts with real signal. If it returns no data, label report `HYPOTHESIS-ONLY` and proceed.
 

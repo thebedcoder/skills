@@ -1,30 +1,20 @@
 ---
 name: agentic-engineering
 description: >
-  Full SDLC agentic engineering workflow for Claude Code using named specialist agents.
-  Use this skill whenever the user wants to start a new project, initialize a feature,
-  research a feature, implement a feature, run a code review, or follow a structured
-  agentic development workflow. Triggers on: "/feature", "/implement",
-  "/review", "/status", "/design", "/frontend", "/ship", "/fix", "/improve",
-  "/bootstrap", "/plan-all", "/doc", "/cleanup", "new feature", "implement feature",
-  "ship feature", "code review", "fix bug", "document feature", "plan all",
-  "improve existing feature", "add another supported file format", "add a
-  keyboard shortcut", "make an existing query or path faster", "split a long
-  module", "restructure this file", or any request to follow a structured
-  step-by-step development process.
-  /improve writes into an existing ./docs scaffold, so do NOT trigger on a bare
-  "add support for X" or "implement X" in a project with no ./docs/INDEX.md —
-  that is ordinary implementation work. Also NOT on "simplify this" or "clean up
-  the diff" (Claude Code's built-in /simplify and the code-simplifier agent own
-  quality-only passes), nor on Flutter motion, animation timing, or transition
-  polish (flutter-motion skill).
-  Also triggers on "/agentic-engineering:init", "scaffold agentic docs", or
-  "set up docs and constitution" — but NOT on a bare "/init" or "initialize
-  CLAUDE.md", which belong to Claude Code's built-in init command. This skill's
-  init builds the full ./docs scaffold (INDEX, CONSTITUTION, BACKLOG, CHANGELOG),
-  not just a CLAUDE.md.
-  Always use this skill when the user is beginning or continuing structured development
-  work — even if they just say "let's start coding" or "what's next".
+  Full SDLC workflow (research → PRD → stories → implement → 7-agent review →
+  end-user docs) with named specialist agents. Fires only in a project that
+  already has ./docs/INDEX.md; elsewhere feature, bug and refactor requests are
+  ordinary implementation work. In a scaffolded project use for: new feature,
+  ship/implement a story, fix a bug, improve an existing feature (new format,
+  shortcut, faster path, module split), document a feature, plan all epics,
+  "what's next" / "let's start coding" (route to /status). Also "bootstrap a
+  greenfield project", "scaffold agentic docs", "set up docs and constitution" —
+  NOT bare /init or "initialize CLAUDE.md" (built-in /init). Do NOT trigger on:
+  "review my diff/PR" (built-in /code-review); "simplify this", "clean up the
+  diff" (built-in /simplify); bare /design with no current story (built-in
+  /design); "set up this project for Claude" (smart-setup); "update deps" or
+  "fix vulnerabilities" from an advisory (update-dependencies); UI motion in a
+  Flutter project (flutter-motion).
 ---
 
 # Agentic Engineering
@@ -33,7 +23,14 @@ Phase-gated SDLC workflow. Named specialist agents. On-demand command loading.
 
 ## How to use
 
-Command invoked → read matching file from `commands/` first. File holds full instructions.
+Command invoked → read the matching file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/`. That file holds the full instructions; this one holds the policy every command inherits.
+
+Command bodies reference two other things by name:
+
+- **`shared/preamble.md`** — §A parse `--auto`, §B write focus, §C auto-mode summary, §D project-memory inputs. Blocks that used to be pasted into a dozen files.
+- **Sections of this file** — Auto Mode, Progress Tracking, Human Checkpoint Interaction, Context Management, Test Execution Rules.
+
+Both live under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/`.
 
 ## Command → File Map
 
@@ -44,7 +41,7 @@ Command invoked → read matching file from `commands/` first. File holds full i
 | `/feature [name]` | `commands/feature.md` | Research + PRD + stories |
 | `/design` | `commands/design.md` | Mockups via Figma/Pencil/Markdown |
 | `/implement` | `commands/implement.md` | Next unchecked story + tests |
-| `/review` | `commands/review.md` | 6-agent parallel review |
+| `/review` | `commands/review.md` | 7-agent parallel review (`--frontend-pass` drops LEAN) |
 | `/ship` | `commands/ship.md` | Full chain: implement→review→frontend→review→docs |
 | `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories |
 | `/fix [description]` | `commands/fix.md` | Diagnose → fix → review |
@@ -65,67 +62,45 @@ Command invoked → read matching file from `commands/` first. File holds full i
 
 Agent speaks → prefix output with name. Internal output = caveman rules.
 
-| Agent | Role | Bias |
+**Nine are real subagents.** Dispatch by the full plugin-namespaced `subagent_type`. A bare name (`ae-red`) does not resolve under a plugin install: the Agent tool errors, the model falls back to role-playing the reviewer inline, and the report looks normal. Always dispatch the left column verbatim.
+
+| `subagent_type` | Speaks as | Role | Bias |
+|---|---|---|---|
+| `agentic-engineering:ae-red` | 🔴 **RED** | Bugs — null/async/logic | Assumes code broken |
+| `agentic-engineering:ae-req` | ✅ **REQ** | Requirements + constitution | Binary. Constitution violation = blocker |
+| `agentic-engineering:ae-test` | 🧪 **TEST** | Test coverage + quality | Flags tests that prove nothing |
+| `agentic-engineering:ae-doc` | 📖 **DOC** | Convention alignment, CLAUDE.md drift | Notices mismatch |
+| `agentic-engineering:ae-sec` | 🔐 **SEC** | Security — high-confidence only | No noise |
+| `agentic-engineering:ae-edge` | 🔍 **EDGE** | Adversarial edge probe — boundary, null, race, malformed, resource, error-path | Probes for what's *missing*, not what's wrong |
+| `agentic-engineering:ae-lean` | ♻️ **LEAN** | Reuse, simplification, efficiency, altitude | Only reviewer looking at code that is *correct*. Searches the repo before flagging |
+| `agentic-engineering:ae-ux` | 🎨 **UX** | Design flows, mockups, fidelity | Never skips empty/error/loading |
+| `agentic-engineering:ae-scribe` | ✍️ **SCRIBE** | End-user product docs in `./app-docs/` | Writes for app users, not dev team |
+
+**Four are inline roles**, not subagents — the main model wearing a hat. Never dispatch them.
+
+| Speaks as | Role | Bias |
 |---|---|---|
 | 🏗 **ARCH** | Architecture, planning, structure | Suspects shortcuts + hidden debt |
 | 📋 **PROD** | PRD, stories, acceptance | Challenges vague specs |
-| 🎨 **UX** | Design flows, mockups, fidelity | Never skips empty/error/loading |
-| 🔴 **RED** | Bugs — null/async/logic | Assumes code broken |
 | 🔧 **FIXER** | Root cause, surgical fixes | One bug, one fix |
-| ✅ **REQ** | Requirements + constitution | Binary. Constitution violation = blocker |
-| 🧪 **TEST** | Test coverage + quality | Flags tests that prove nothing |
-| 🔍 **EDGE** | Adversarial edge-case probe — boundary, null, race, malformed, resource, error-path | Probes for what's *missing*, not what's wrong |
-| 📖 **DOC** | Convention alignment, CLAUDE.md drift | Notices mismatch |
-| 🔐 **SEC** | Security — high-confidence only | No noise |
-| ✍️ **SCRIBE** | End-user product docs in `./app-docs/` | Writes for app users, not dev team |
 | 🔀 **GIT** | Commits, branches, PR desc | Conventional only |
 
-## Project Mode
+Subagents have no Bash and cannot call `AskUserQuestion`. Anything needing a command run or a human answer stays with the parent.
 
-Workflow sizes itself to project. Marker lives in `./docs/INDEX.md` frontmatter:
+## Project Mode and Memory Docs
 
-```yaml
----
-mode: lite   # lite | full
----
-```
+Read `shared/project-mode.md` for the `mode: lite | full` marker and the three
+memory documents (`CHANGELOG.md`, `DECISIONS.md`, `MEMORY.md`).
 
-`/init` asks once, proposes from signals (test framework, CI, deploy config, contributor count). Ambiguous → propose lite.
-
-| | lite | full |
-|---|---|---|
-| Planning | stories only | research → PRD → epics → stories |
-| `PRD.md`, `EPICS.md` | never | always |
-| `improvements.md`, `specs/`, `app-docs/` | on first write | at init |
-| `CONSTITUTION.md` | short form (~10 lines) | full articles |
-| `STORIES.md`, `PROGRESS.md`, `reviews/` | same | same |
-| 6-agent review, tests, checkpoints | same | same |
-
-**Only `/init`, `/feature`, `/status`, `/cleanup` read the marker.** `/cleanup` reads it for one thing — `MEMORY.md`'s line cap. Every other command is mode-blind: they consume `STORIES.md` + `PROGRESS.md`, which both modes produce. Adding a mode branch anywhere else is a design break, not a feature.
-
-No `mode:` key (project predates modes) → treat as `full`.
-
-Lite's shipping path is `/note` → `/ship`, not `/feature` → `/ship`. `/ship` promotes a BACKLOG item into `docs/features/main/` when no feature exists.
-
-## Project Memory Docs
-
-Three files, three jobs. Overlap between them is the failure mode.
-
-| File | Answers | Write pattern |
-|---|---|---|
-| `docs/CHANGELOG.md` | what shipped, when | append, newest first, unbounded |
-| `docs/DECISIONS.md` | why it's built this way | append `DEC-NNN`, supersede never delete |
-| `docs/MEMORY.md` | what to know before touching anything | **rewritten** each cleanup, hard line cap (150 full / 50 lite) |
-
-`/cleanup` owns all three after a task. `CONSTITUTION.md` is separate — rules that must not be broken, not choices that were made.
-
-`.agentic/focus.md` holds CURRENT + PLAN + NEXT for this worktree. Gitignored, per-developer, never committed.
+**Only `/init`, `/feature`, `/status` and `/cleanup` need it.** Every other
+command is mode-blind — they consume `STORIES.md` + `PROGRESS.md`, which both
+modes produce. Adding a mode branch anywhere else is a design break.
 
 ## Core Principles
 
 Apply to every command. Not command-specific.
 
-1. **Never skip human checkpoint.** Every gate exists for reason. `--auto` skips by tag, never by improvisation.
+1. **Never skip a gate by improvisation.** Gates are skipped only by their own `[AUTO:]` tag under `--auto`, never because the answer looks obvious. A gate tagged `[AUTO: skip]` is ceremony by design; every other tag stands.
 2. **Agents challenge each other.** PROD vs ARCH. RED assumes failure. Tension is the point.
 3. **One story at a time.** No batching.
 4. **Tests not optional.** Done = implemented + tested.
@@ -134,7 +109,9 @@ Apply to every command. Not command-specific.
 
 ## Caveman Communication Rules
 
-Apply to all agent internal output (plans, reports, reviews). NOT to human checkpoints, code, commits, app-docs pages.
+Apply to agent-internal output — reports, reviews, agent-to-agent handoffs. NOT to human checkpoints, code, commits, app-docs pages.
+
+**A plan shown at an approval gate is human-facing.** ARCH's implementation plan, the PRD summary, the `Done when:` list: the human reads and approves those, so they follow the Human-Facing Output Rules below, not caveman. Caveman applies to the plan only while agents are passing it between themselves.
 
 - **Drop:** articles (a/an/the), filler (just/really/basically), pleasantries, hedging
 - **Keep:** technical terms exact, code blocks unchanged, file paths verbatim
@@ -144,7 +121,9 @@ Apply to all agent internal output (plans, reports, reviews). NOT to human check
 
 ## Human Checkpoint Interaction (`[ASK: ...]`)
 
-Every `⚠️ Human checkpoint` carries an `[ASK: ...]` tag beside its `[AUTO: ...]` tag. The ASK tag picks the input mechanism; the AUTO tag decides whether the gate fires at all.
+Every `⚠️ Human checkpoint` carries an `[ASK: ...]` tag, which picks the input mechanism. Most also carry an `[AUTO: ...]` tag, which decides whether the gate fires at all under `--auto`.
+
+**An untagged `[AUTO:]` is deliberate, not an omission.** Gates in `/note`, `/plan-all`, `/bootstrap`, `/focus`, `/init` and `/doc-all` ship without one and take the untagged default below (`always-ask`). Do not add tags to them on sight.
 
 | Tag | Mechanism | Use for |
 |---|---|---|
@@ -166,21 +145,21 @@ Rules:
 
 Caveman rules above govern **agent-internal** output. These govern what the **human** reads — checkpoint messages, `━━━` summary blocks, consolidated review findings. The two registers never mix.
 
-1. **Restate state.** Every chain turn says where it is: `STORY-003 (2 of 5) · Phase 4 of 6`. The task list does this structurally — don't also narrate the full plan in prose.
-2. **End with one concrete next action.** Every command's last line is a runnable thing: `Next: /ship for STORY-004`. Not "let me know how you'd like to proceed." `/analyze` and `/review` currently under-do this — fix on sight.
+1. **Restate state.** Every chain turn says where it is: `STORY-003 (2 of 5) · Phase 4 of 7`. Use the phase count the command actually has (`/ship` has 7). PLAN does this structurally — don't also narrate the full plan in prose.
+2. **End with one concrete next action.** Every command's last line is a runnable thing: `Next: /ship for STORY-004`. Not "let me know how you'd like to proceed." A command that ends on a checkpoint still prints its `Next:` line after the answer.
 3. **Cap surfaced lists at 5.** Blocker lists, epic inventories, gap reports. Six blockers → show 5 + `+1 more in reviews/STORY-XXX-review.md`. Ranked-and-truncated beats complete-and-unreadable.
 4. **Errors are matter-of-fact.** State cause and fix. `Test fails at auth.spec.ts:42 — expected 200, got 401. Cause: missing auth header.` No "Uh oh", no "There seems to be a problem".
-5. **No caveman shorthand in human-facing text.** No arrows for causality, no dropped articles, no invented abbreviations, no stacked compounds. Ultra mode (below) applies to agent reports during `ship-all` / `plan-all` — it never reaches a checkpoint prompt or a `━━━` block. A user reading only the first and last line of your output should know what happened and what to do next.
+5. **No caveman shorthand in human-facing text.** No arrows for causality, no dropped articles, no invented abbreviations, no stacked compounds. Ultra mode (in the caveman rules above) applies to agent reports during `ship-all` / `plan-all` — it never reaches a checkpoint prompt or a `━━━` block. A user reading only the first and last line of your output should know what happened and what to do next.
 
 ## Auto Mode (`--auto`)
 
-Long-running commands accept `--auto`: `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`. Per-invocation only — no persistent toggle.
+Long-running commands accept `--auto`: `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`, `/doc`. Per-invocation only — no persistent toggle.
 
 Under `--auto`, every checkpoint is consulted by its tag:
 
 | Tag | Behavior under `--auto` |
 |---|---|
-| `[AUTO: skip]` | Always skipped. For pure ceremony (e.g. "Reply 'go' to start"). |
+| `[AUTO: skip]` | Always skipped. For pure ceremony — a gate whose only options are "start" and "don't start". |
 | `[AUTO: ask-if-ambiguous]` | Skip if answer is obvious from CONSTITUTION.md or context. Ask otherwise. |
 | `[AUTO: always-ask]` | Never skipped. For architectural / destructive / unrecoverable choices. |
 | (untagged) | Defaults to `always-ask` (safe failure). |
@@ -211,40 +190,60 @@ DECISION: <choice>
   [auto]
 ```
 
-`SKIPPED:` for ceremonial skips. `HARD-PAUSE:` for forced pauses. Command ends with one-line summary: `🤖 Auto mode: N decisions, M hard-pauses. See .agentic/auto-log.md`.
+`SKIPPED:` for ceremonial skips. `HARD-PAUSE:` for forced pauses. Command ends with the one-line summary in `shared/preamble.md` §C: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`.
 
 ### Composition with /focus
 
-When CURRENT is written by an `--auto` command, `set_by:` gets ` (auto)` suffix. `/focus done` under auto mode auto-promotes NEXT item #1 silently (no y/n/b prompt) — parent passes `auto` as `$ARGUMENTS` to `/focus done`.
+When CURRENT is written by an `--auto` command, `set_by:` gets ` (auto)` suffix. Auto-mode behaviour of `/focus done` is defined in `commands/focus.md` — that file is the single source of truth; don't restate its rules here.
 
 ## Progress Tracking
 
-Chain commands maintain a **live task list** — the harness task tool, not prose. `/ship`, `/ship-all`, `/plan-all`, `/fix`, `/improve` create one at start. Single-phase commands (`/note`, `/focus`, `/status`, `/analyze`, `/archive`) don't — a list for one step is noise.
+**`# PLAN` in `.agentic/focus.md` is the tracker.** It is durable, survives a compaction, and is always available. Write it at the start of a multi-phase command and tick lines off as phases close.
 
-| Command | One task per |
+A harness task tool (`TaskCreate` / `TaskUpdate` / `TodoWrite`) is a *mirror* of PLAN when the session exposes one — it is not available in every session and is env-gated on newer models. Open it if it is there; skip it silently if it isn't. **Never block, warn, or narrate its absence, and never treat it as the record of what happened.**
+
+Chain commands write PLAN. Single-phase commands (`/note`, `/focus`, `/status`, `/analyze`, `/archive`) don't — a plan for one step is noise.
+
+| Command | One PLAN line per |
 |---|---|
 | `/ship` | phase (implement · review · frontend · review · docs · PR desc · cleanup) |
 | `/ship-all` | story |
 | `/plan-all` | epic |
 | `/fix` | phase (diagnose · fix · review · docs · cleanup) |
 | `/improve` | phase (plan · apply · review · docs · cleanup) |
+| `/feature` | phase (research · PRD · epics · stories) |
+| `/doc-all` | feature |
 | `/implement`, `/review`, `/frontend` standalone | phase |
 
-Phase count is the test, not command weight. Multi-phase → list. One phase → no list.
+Multi-phase → PLAN. One phase → no PLAN. `/init`, `/design` and `/bootstrap` are multi-phase but interview-shaped: their phases are the human's answers, so they narrate instead.
 
 Rules:
 
-- **Exactly one task `in_progress`.** Mark it before the phase starts, complete it as the phase closes — never batch completions at the end.
-- **Nested commands don't open their own list.** `/implement` inside `/ship` advances the parent's task; it does not create a second one.
-- **Blocker pause leaves the task `in_progress`.** Completing a phase that ended in a pause reports work that didn't happen.
-- **Skipped phase → complete the task with the skip noted**, don't delete it. Backend-only story still shows "Frontend — skipped (no UI)".
-- **The list replaces mid-chain narration**, not the `━━━` summary blocks. Those still print — they are the deliverable, the list is the progress bar.
+- **Exactly one line in progress.** Mark it before the phase starts, close it as the phase closes — never batch completions at the end.
+- **Nested commands don't open their own PLAN.** `/implement` inside `/ship` advances the parent's line; it does not start a second plan.
+- **Blocker pause leaves the line open.** Closing a phase that ended in a pause reports work that didn't happen.
+- **Skipped phase → close the line with the skip noted**, don't delete it. Backend-only story still shows "Frontend — skipped (no UI)".
+- **PLAN replaces mid-chain narration**, not the `━━━` summary blocks. Those still print — they are the deliverable, PLAN is the progress bar.
 
 ## Context Management
 
-- **Compact between stories** in `ship-all` + `plan-all` — mandatory
-- **Compact instruction:** `/compact Focus on: current feature, last story done, next story, branch, blockers, last changelog entry, constitution key points. Discard: file contents, review reports, diffs.`
-- **Read INDEX.md, MEMORY.md, DECISIONS.md, CHANGELOG.md, CONSTITUTION.md first** every session — no codebase scan to orient
+**`/compact` is a user command. The model cannot invoke it.** Any instruction that says "compact now" is really a checkpoint asking the human to do it.
+
+Between stories in `ship-all` and between epics in `plan-all`:
+
+⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: confirm]`: *"Context is full for this story. Run the compact command below, then choose Continue."* → **Continue** · **Stop here**
+
+Show this block above the widget so it can be copy-pasted:
+
+```
+/compact Focus on: current feature, last story done, next story, branch, blockers, last changelog entry, constitution key points. Discard: file contents, review reports, diffs.
+```
+
+The human may choose Continue without compacting. That is their call — proceed, don't re-ask.
+
+Other rules:
+
+- **Read INDEX.md, MEMORY.md, CONSTITUTION.md in full at session start**; read the newest 20 entries of CHANGELOG.md and the *titles only* of DECISIONS.md — both are unbounded append-only files and reading them whole grows with project age
 - **Read only files relevant to current story** — not whole project
 - **Never re-read** files already in context
 
@@ -258,4 +257,4 @@ Non-watch mode only. Watch workers outlive Bash timeout → pile up across chain
 - **Go:** `go test ./...` — no watcher wrapper
 - **Other:** pass explicit one-shot / non-watch flag
 
-Applies to main conversation + every subagent dispatched by review, fix, ship, ship-all. No exceptions, even "quick checks."
+Applies to the main conversation. **Subagents never read this file** — a dispatch prompt that lets a subagent run tests must restate the non-watch rule inline. Today only the parent runs tests; the batch reviewers have no Bash at all. No exceptions, even "quick checks."

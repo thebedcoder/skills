@@ -35,6 +35,6 @@ None.
 
 Wherever the operator chooses inside `docs/features/<feature-name>/artifacts/STORY-XXX/`. Filenames aren't validated against a pattern — the matrix's `File` column is the source of truth.
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-When `.claude/visual-capture.md` declares `mechanism: manual`, `/ship` Phase 4 emits a reminder only — no dispatch, no automation. Operator has already captured (or captures now, before continuing).
+When `.claude/visual-capture.md` declares `mechanism: manual`, `/ship` Phase 3 emits a reminder only — no dispatch, no automation. Operator has already captured (or captures now, before continuing).

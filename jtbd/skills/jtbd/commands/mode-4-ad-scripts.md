@@ -22,7 +22,7 @@ If no focus job: synthesize one from product description, label "(synthesized)".
 If no platform specified: ask once — "TikTok / Reels / YouTube Shorts / Threads / all?"
 Default funnel stage: cold traffic.
 
-Spawn one **jtbd-scriptwriter** per selected platform simultaneously.
+Spawn one `jtbd:jtbd-scriptwriter` per selected platform simultaneously — one message, N Agent calls.
 Each receives: platform, focus job, persona (four forces + voice sample), primary desired outcome, funnel stage.
 
 Assemble results. Add cross-platform test recommendation and universal hook.

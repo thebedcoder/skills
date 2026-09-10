@@ -18,13 +18,7 @@ Input received: $ARGUMENTS
 
 ### Phase 2 — Append to NEXT
 
-Ensure `.agentic/` exists + gitignored:
-
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 Read existing `.agentic/focus.md`. Locate `# NEXT` section (create if absent). Append new numbered item with `$ARGUMENTS` as text. Renumber if needed (always 1..N sequential).
 

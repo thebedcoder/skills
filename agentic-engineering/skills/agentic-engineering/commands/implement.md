@@ -8,6 +8,7 @@
 - `./CLAUDE.md` — conventions
 - `./docs/INDEX.md` — current feature
 - `./docs/features/[feature-name]/STORIES.md` + `PROGRESS.md` — find next unchecked story
+- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`. `/cleanup` writes these after every chain; a chain that never reads them is a write-only log
 
 **Constraints:**
 - No code before plan approved
@@ -18,32 +19,20 @@
 
 ### Step 0a — Parse `--auto` flag
 
-Detect whether `$ARGUMENTS` contains the `--auto` token.
+Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/implement <STORY-ID> --auto`. Nested inside `/ship` → inherit the parent's flag.
 
-- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
-- Set internal flag `AUTO=true` for this run.
-- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
-- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
-  ```markdown
-  ## [now YYYY-MM-DD HH:MM] — /implement <STORY-ID> --auto
-  ```
+### Step 0b — PLAN
 
-See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+Nested under `/ship` or `/ship-all` → **do not write a PLAN**; advance the parent's. The parent also owns the start gate — nested, this command's own gate does not fire.
 
-### Step 0b — Task list
+Standalone → write one PLAN line per phase (plan · implement + tests · verify AC · record progress) into `.agentic/focus.md`. See "Progress Tracking" in SKILL.md. Mirror into a harness task list **if this session exposes one** — it is a convenience view, not the record. PLAN survives compaction and session end.
 
-Nested under `/ship` or `/ship-all` → **do not open a task list**; advance the parent's. Standalone → open one task per phase (plan · implement + tests · verify AC · record progress). See "Progress Tracking" in SKILL.md.
 
 ### Step 0 — Auto-write focus
 
 Before planning, update `.agentic/focus.md`:
 
-1. Ensure `.agentic/` exists + gitignored (idempotent):
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 2. Read existing CURRENT. Apply story-id-match heuristic:
    - Existing CURRENT.title already references this STORY-ID (likely because `/ship` or `/ship-all` set it as parent) → update `note:` to `phase: implementing` and `set_by:` to `/implement`. Leave `title:` + `since:` alone.
@@ -110,7 +99,8 @@ their proofs, the table as written *before* implementation, plus any correction
 implementation forced on them. A rule whose artifact vanishes cannot be audited
 later, and "it was in the plan" is unverifiable once the session ends. This was
 caught by `ae-doc` on the first story shipped under the rule: the table had been
-written before coding, into a scratchpad, and no trace survived.
+written before coding, into a scratchpad, and no trace survived. `ae-doc` checks
+for it by name — see its "Persisted plan artifacts" rule.
 
 ```
 PROD — Plan Review:
@@ -121,8 +111,9 @@ Is every Contract claim backed by file:line or real probe output — not by asse
 Does the Failure states table cover every step that can fail, or is it missing one?]
 ```
 
-**Pre-review.** Dispatch `ae-red` and `ae-sec` in parallel against the plan — **not**
-the codebase. Each reads only: the story + its acceptance criteria, ARCH's Contract
+**Pre-review.** Dispatch `agentic-engineering:ae-red` and `agentic-engineering:ae-sec`
+in parallel against the plan — **not** the codebase. Both have a **Mode B — Plan
+pre-review** section; say "Mode B" in the prompt so they skip their diff step. Each reads only: the story + its acceptance criteria, ARCH's Contract
 claims, ARCH's Failure states. Prompt both with:
 
 > Attack this plan's model of the world, not its style. For each Contract claim:
@@ -195,7 +186,7 @@ PROD — Acceptance Check:
 - One row per AC in `STORIES.md`. Match AC text exactly.
 - Tests column lists tests that prove this AC, formatted as `file:test_name` — format test runner emits (`tests/foo.py::test_bar` for pytest, similar for jest/go-test/etc.). Multiple tests per AC → join with `<br>`.
 - Wrote test that doesn't map to specific AC (helper, smoke, framework boilerplate)? Don't include it. Orphans surface as `ae-test` informational findings, not blockers.
-- `### Edge probes` section starts EMPTY. Populated during Phase 2 blocker-fix when `ae-edge` raises findings. Omit section entirely if `ae-edge` returned no findings for this story.
+- `### Edge probes` section starts EMPTY. Populated during the `/ship` Phase 2 blocker-fix when `ae-edge` raises findings. Omit section entirely if `ae-edge` returned no findings for this story.
 - Existing `Files changed` + `Notes` unchanged from prior format.
 
 **Level column:** Each matrix row declares one Level: `unit`, `integration`, or `e2e`.
@@ -209,9 +200,9 @@ Projects that need other levels (`contract`, `smoke`, `perf`) can use them — `
 
 **Visual Artifacts:** For UI-touching stories, capture screenshots or recordings of each AC's behavior. Drop files in `docs/features/<feature-name>/artifacts/STORY-XXX/`. Reference each capture as row in Visual Artifacts table — multiple rows per AC fine (different viewports, scenarios). `Type` informational (`screenshot` / `video` / `animated-gif` / `loom-link` / `youtube-link`). `File` relative path from repo root OR URL (Loom, Notion, YouTube). `Notes` freeform — viewport, browser, scenario.
 
-Omit entire `### Visual Artifacts` section for backend-only or CLI-only stories. `ae-ux` validates references during `/review` — missing / stale / empty file references emit `should-fix` warnings (informational, never blockers in Phase 1).
+Omit entire `### Visual Artifacts` section for backend-only or CLI-only stories. `ae-ux` validates references during `/frontend` (it is not in `/review`'s batch) — missing / stale / empty file references emit `should-fix` warnings (informational unless CONSTITUTION.md requires artifacts).
 
-**`(auto)` row marker:** When `/ship` Phase 4 dispatches a capture tool (Phase 2 behavior), rows it auto-appends to the Visual Artifacts table use a Notes prefix:
+**`(auto)` row marker:** When `/ship` Phase 3 dispatches a capture tool, rows it auto-appends to the Visual Artifacts table use a Notes prefix:
 
 - `(auto, backfill scenario)` — capture matched an AC via test name; operator updates the Notes column with viewport / browser / scenario context
 - `(auto, no test-match, backfill AC)` — capture didn't match any AC matrix Tests cell; operator corrects the AC column AND backfills scenario

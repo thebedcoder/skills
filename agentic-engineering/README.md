@@ -37,7 +37,7 @@ Commands are handled by a cast of named specialist agents. Each has a distinct r
 └───────────┴────────────────────────────────┴────────────────────────┘
 ```
 
-Six review agents (RED, REQ, TEST, DOC, SEC, EDGE) run as **parallel Haiku subagents** after every story — results back simultaneously, main context stays clean. Now includes `ae-edge`, which adversarially probes backend code for missing edge cases (boundary, null, race, malformed, resource, error-path) and emits failing test code + suggested fixes into the consolidated blocker list.
+Seven review agents (RED, REQ, TEST, DOC, SEC, EDGE, LEAN) run as **parallel subagents** after every story — RED, SEC, EDGE and LEAN on Sonnet, REQ, TEST and DOC on Haiku — results back simultaneously, main context stays clean. Now includes `ae-edge`, which adversarially probes backend code for missing edge cases (boundary, null, race, malformed, resource, error-path) and emits failing test code + suggested fixes into the consolidated blocker list.
 
 One UX subagent (ae-ux) runs after the frontend pass with a structured checklist across 6 dimensions.
 
@@ -74,7 +74,9 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │                                                                      │
 │  /ship  (per story)                                                  │
 │    ┌─────────────┐                                                   │
-│    │ implement   │  ARCH plans → PROD validates → code + tests       │
+│    │ implement   │  ARCH plans (Contract claims + Failure states)    │
+│    │             │  → RED + SEC pre-review the PLAN, not the code    │
+│    │             │  → PROD validates → code + tests                  │
 │    └──────┬──────┘                                                   │
 │           │                                                          │
 │    ┌──────▼──────────────────────────────────────────────────┐       │
@@ -100,7 +102,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │                                                                      │
 │  /ship-all — chains /ship across all stories                         │
 │    Shows [P] parallel groups upfront                                 │
-│    Mandatory /compact between stories                                │
+│    Prompts you to /compact between stories                                │
 └──────────────────────────────────────────────────────────────────────┘
        │
        ▼
@@ -122,7 +124,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/init` | Pick project mode (lite or full), then create the docs scaffold, CLAUDE.md, and CONSTITUTION.md |
 | `/feature [name]` | Research → PRD → clarifications → constitution check → stories. In lite mode: stories only, no PRD or epics |
 | `/design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown |
-| `/ship` | Full story: implement → 6-agent review → frontend → UX check → docs → git. Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates references during `/review` — stale or missing references become should-fix warnings. Projects opt into automated capture during `/init` by picking a tool from the 15-entry catalog (`agentic-engineering/capture-tools/`); `/ship` Phase 4 then dispatches per mechanism and auto-populates the table. To require captures, add a "Visual artifacts" article to CONSTITUTION.md — `ae-ux` then escalates missing-artifact findings to blockers. |
+| `/ship` | Full story, seven phases: implement → 7-agent review → frontend (+ visual capture) → 6-agent review + UX fidelity → end-user docs & changelogs → PR description → cleanup. Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates the references during the frontend pass — stale or missing references become should-fix warnings. Projects opt into automated capture during `/init` by picking a tool from the 15-entry catalog (`agentic-engineering/capture-tools/`); `/ship` Phase 3 then dispatches per mechanism and auto-populates the table. To require captures, add a "Visual artifacts" article to CONSTITUTION.md — `ae-ux` then escalates missing-artifact findings to blockers. |
 | `/ship-all` | Loop `/ship` across all unchecked stories |
 | `/plan-all` | Plan all unplanned epics from INDEX.md |
 | `/fix [desc]` | Diagnose bug → fix → review → docs |
@@ -200,7 +202,7 @@ mode: lite
 | `improvements.md`, `specs/`, `app-docs/` | created on first write | created at `/init` |
 | `CONSTITUTION.md` | short form, ~10 lines | full articles |
 | Stories, acceptance criteria, `PROGRESS.md` | identical | identical |
-| 6-agent parallel review | identical | identical |
+| 7-agent parallel review | identical | identical |
 | Mandatory tests, human checkpoints | identical | identical |
 
 `/init` proposes a mode from what it can observe — test framework, CI config, deploy config, contributor count — and defaults to lite when the signals are ambiguous. You can override at the prompt, and re-running `/init` changes the marker.
@@ -244,14 +246,27 @@ All APIs must follow JSON:API specification.
 
 Constitution violations found in review are always blockers.
 
+### Contract claims, failure states, and plan pre-review
+
+Two required sections in ARCH's implementation plan, both of which outlive it.
+
+**Contract claims** — every behaviour the story depends on but does not own: another module's return shape on a miss, whether a call is idempotent, what a library actually guarantees. Each needs a `file:line` in real source, or a probe command *and its pasted output*. Reasoning from the name of a thing is not proof, and an unproven claim is the defect class that ships silently: code built on a wrong belief still runs, still returns a plausible value, and still passes the tests its author wrote from that same belief.
+
+**Failure states** — whenever a story can fail partway (a commit, rollback, migration, batch write), a table of failure point × per-resource state × what the outcome reports, written *before* the code. These bugs do not arrive one at a time; a reversal path designed in prose and implemented ad hoc produces a cluster of individually plausible defects, all found late.
+
+**Pre-review** dispatches RED and SEC against the plan rather than the codebase. They re-open each cited `file:line` and ask whether it says what the claim says — and whether the claim's converse is also consistent with it — then look for a failure point the table omits. It runs under `--auto` and never pauses; a disputed claim escalates the plan gate instead. Both sections are persisted into `PROGRESS.md`, because "it was in the plan" is unverifiable once the session ends.
+
 ### Human checkpoints
 
-The workflow never auto-proceeds past:
+Interactively, the workflow stops at each of these:
 - Approach selection (after 3 options presented)
-- PRD approval (after clarification pass resolves all `[NEEDS CLARIFICATION]` items)
+- PRD approval (after the clarification pass resolves all `[NEEDS CLARIFICATION]` items)
 - Constitution violations (must be resolved before stories are written)
 - Implementation plan (before any code is written)
 - Design approval (mobile and desktop separately)
+- Review blockers
+
+**Under `--auto`, the plan and PRD gates are skipped** — they are approval ceremony, and that is what auto mode exists to skip. Three things re-arm them anyway: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the hard-override list below. Constitution violations, review blockers and destructive operations are never skipped under any flag.
 
 ### Auto mode (`--auto`)
 
@@ -272,7 +287,7 @@ Both maintained automatically — never skip this step:
 
 Long sessions stay lean through three mechanisms:
 - **Caveman rules** — agent-to-agent output drops filler words (~75% token reduction), technical terms kept exact
-- **Mandatory `/compact`** between stories in `ship-all` and `plan-all`
+- **A compact checkpoint** between stories in `ship-all` and between epics in `plan-all`. `/compact` is a user command — the workflow prints the command and asks you to run it; it cannot run it for you
 - **On-demand loading** — only the command file for the current command is loaded into context, not the full skill
 
 ### Context forking
@@ -319,9 +334,9 @@ Every project gets path-scoped rules in `./.claude/rules/` that auto-load when C
 | `api-design` | REST conventions, status codes, pagination, errors |
 | `secrets-management` | Env var handling, rotation, never-in-code policy |
 
-Rules are starting points — copy what fits, edit as needed, delete what doesn't. Each rule is under 2KB so the context budget stays reasonable.
+Rules are starting points — copy what fits, edit as needed, delete what doesn't. Most are 2–4KB; they load only for files matching their `paths:` glob, so the ones that don't apply cost nothing.
 
-You can add your own rules any time by dropping a markdown file with YAML frontmatter into `./.claude/rules/`. See `~/.claude/skills/agentic-engineering/rules-library/README.md` for the full reference.
+You can add your own rules any time by dropping a markdown file with YAML frontmatter into `./.claude/rules/`. The full reference is [`rules-library/README.md`](rules-library/README.md) in this repo.
 
 ---
 
@@ -329,65 +344,7 @@ You can add your own rules any time by dropping a markdown file with YAML frontm
 
 Each review agent loads reference files on demand based on what's in the diff. No generic checklists, no pattern-matching noise — each reference defines what "vulnerable", "broken", or "missing" looks like in that specific context with real code examples.
 
-### 🔴 RED — Bug Hunter
-```
-references/
-  null-safety.md          null dereference, forced unwrap, map access
-  async-concurrency.md    unhandled promises, goroutine bugs, deadlocks
-  error-handling.md       swallowed errors, fail-open, wrong propagation
-  type-data.md            overflow, float precision, NaN, coercion
-  resource-management.md  file/connection/goroutine leaks
-  logic-bugs.md           off-by-one, wrong comparators, mutation in loop
-  state-bugs.md           mutable defaults, shared state, closure capture
-languages/
-  python.md  javascript.md  go.md  rust.md  swift.md  kotlin-java.md  dart.md
-```
-
-### 🧪 TEST — Coverage Reviewer
-```
-references/
-  coverage-principles.md  what to test, scenario types, regression thinking
-  test-doubles.md         mocks/stubs/fakes and when each is right
-  async-testing.md        async test patterns, fake timers, timing bugs
-  test-quality.md         trivial tests, over-mocking, flaky patterns
-languages/
-  pytest.md  jest.md  go-test.md  rust-test.md  xctest.md  junit.md  flutter-test.md
-```
-
-### 🔐 SEC — Security Reviewer
-```
-references/
-  injection.md          SQL, NoSQL, OS command, LDAP, template
-  xss.md                reflected, stored, DOM-based XSS
-  authorization.md      IDOR, privilege escalation, JWT issues
-  authentication.md     password hashing, sessions, OAuth flows
-  cryptography.md       weak algorithms, insecure random, TLS
-  data-protection.md    hardcoded secrets, PII, sensitive logging
-  ssrf.md               server-side request forgery
-  csrf.md               cross-site request forgery
-  file-security.md      path traversal, file upload, XXE, zip slip
-  api-security.md       mass assignment, GraphQL, rate limiting
-  business-logic.md     race conditions, workflow bypass, numeric issues
-  modern-threats.md     LLM injection, WebSocket, prototype pollution
-  misconfiguration.md   debug mode, CORS, hardcoded config
-  error-handling.md     verbose errors, fail-open patterns
-  deserialization.md    pickle, YAML, Java ObjectInputStream
-  supply-chain.md       dependency confusion, CI/CD injection
-languages/
-  python.md  javascript.md  go.md  rust.md  java.md  swift.md  kotlin.md  dart.md
-```
-
-### 🎨 UX — Fidelity Reviewer
-Runs after frontend implementation — not in the parallel pass.
-```
-references/
-  interaction-states.md   loading, empty, error, disabled, success states
-  forms-validation.md     input feedback, error messages, submission handling
-  visual-consistency.md   spacing, hierarchy, color, typography
-  copy-feedback.md        labels, error text, empty states, confirmations
-  responsive.md           breakpoints, mobile behavior, touch targets
-  accessibility.md        keyboard nav, screen readers, contrast, focus
-```
+RED carries 7 bug-category references and 7 language guides; TEST 4 references and 7 framework guides; SEC 17 topic references and 8 language guides; EDGE 4 probe categories; UX 6 fidelity dimensions. The full file listing is in [`docs/review-agent-references.md`](docs/review-agent-references.md).
 
 ---
 
@@ -405,7 +362,7 @@ Configured once during `/init`, used by `/design`:
 
 ## Installation
 
-### Option A — Claude Code plugin (recommended)
+### Claude Code — the marketplace plugin
 
 ```
 /plugin marketplace add thebedcoder/skills
@@ -414,33 +371,28 @@ Configured once during `/init`, used by `/design`:
 
 Restart Claude Code — commands appear in the `/` palette as `/bootstrap`, `/init`, `/ship`, etc. (or fully namespaced as `/agentic-engineering:ship`).
 
-**Updates:** `/plugin update agentic-engineering` — Claude Code pulls latest from the marketplace.
+**Updates:** `/plugin update agentic-engineering`. **Uninstall:** `/plugin uninstall agentic-engineering`.
 
-**Uninstall:** `/plugin uninstall agentic-engineering`.
+> **This is the only supported Claude Code install, and it is deliberate.** The plugin resolves its rules library, capture-tools catalog, statusline script and every agent reference file through `${CLAUDE_PLUGIN_ROOT}`, which only a marketplace install sets. Earlier versions also shipped a `bash install.sh` that copied files into `~/.claude/`; that path is gone. If you used it, uninstall it first — see below.
 
-### Option B — Shell installer (fallback, pre-plugin Claude Code)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh | bash
-```
-
-Clones the repo into `~/.local/share/bedcode-skills` and copies skill files into `~/.claude/`. Re-run the same command to update.
-
-Override the cache location with `BEDCODE_SKILLS_DIR=~/dev/bedcode-skills`.
-
-### Option C — Local clone
+**Uninstalling an old shell install.** Versions before 2.0.0 wrote directly into your home directory. Remove them or you will run two copies of everything — duplicate skills, duplicate agents, and slash commands that resolve to whichever loaded first:
 
 ```bash
-git clone https://github.com/thebedcoder/skills.git
-cd skills
-./install.sh
+rm -rf ~/.claude/skills/agentic-engineering
+rm -f  ~/.claude/agents/ae-*.md
+rm -rf ~/.claude/agents/ae-red ~/.claude/agents/ae-test ~/.claude/agents/ae-sec \
+       ~/.claude/agents/ae-ux ~/.claude/agents/ae-edge
+rm -f  ~/.claude/agentic-statusline.sh
+cd ~/.claude/commands && rm -f bootstrap.md init.md feature.md design.md ship.md \
+  ship-all.md plan-all.md fix.md improve.md note.md focus.md next.md doc.md \
+  doc-all.md status.md analyze.md archive.md cleanup.md
 ```
 
-Re-run `./install.sh` after `git pull` to update.
+Then re-run `/init` in each project so the statusline points at the project-local copy of the script rather than the deleted `~/.claude/agentic-statusline.sh`.
 
-### Option D — Other coding agents (portable workflow)
+### Other coding agents — the portable workflow
 
-The full workflow (slash commands + specialist agents) is Claude Code-native and doesn't port directly. The **portable workflow rules** do — they're plain markdown that any agent can follow. Run the installer with `--tool=<name>` from your project root and it writes the right file in the right place:
+The full workflow (slash commands + specialist subagents) is Claude Code-native and doesn't port. The **portable workflow rules** do — plain markdown any agent can follow. Run the installer with `--tool=<name>` from your project root:
 
 ```bash
 # From inside your project:
@@ -462,93 +414,62 @@ curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh 
 | `copilot-cli` | (instructions only) | Copilot CLI uses its own marketplace |
 | `auto` | Detects installed tools and runs each | — |
 
-**Re-running is safe.** The script wraps content between `<!-- agentic-engineering:start -->` and `<!-- agentic-engineering:end -->` markers — repeat runs replace the block in place, leaving any other content in the file untouched.
+`--tool=claude-code` prints the marketplace instructions above and writes nothing. That is the intended outcome.
 
-**Global scope.** Some tools support user-global config — pass `--scope=user` for `cursor`, `codex`, `gemini` to write to `~/.cursor/`, `~/.codex/`, `~/.gemini/` respectively.
+**Re-running is safe.** The script wraps content between `<!-- agentic-engineering:start v1 -->` and `<!-- agentic-engineering:end v1 -->` markers — repeat runs replace the block in place, leaving other content untouched.
 
-**Override paths.** Use environment variables like `CURSOR_RULES_DIR`, `CLINERULES`, `WINDSURFRULES`, `AIDER_CONVENTIONS`, `GEMINI_MD` if you want a non-default location.
+**Global scope.** Pass `--scope=user` for `cursor`, `codex`, `gemini` to write to `~/.cursor/`, `~/.codex/`, `~/.gemini/`.
 
-### Option E — Claude.ai
+**Override paths.** `CURSOR_RULES_DIR`, `CLINERULES`, `WINDSURFRULES`, `AIDER_CONVENTIONS`, `GEMINI_MD`.
 
-Upload `agentic-engineering.skill` via **Settings → Customize → Skills → Upload**.
+### Claude.ai
+
+Upload `agentic-engineering.skill` via **Settings → Customize → Skills → Upload**. This is the skill only — no subagents, so `/review` runs as a single pass rather than six parallel ones.
 
 **What's inside the plugin:**
 
 ```
 agentic-engineering/
 ├── .claude-plugin/plugin.json    ← plugin metadata
-├── skills/
-│   └── agentic-engineering/
-│       ├── SKILL.md              ← skill router
-│       └── commands/             ← 21 command implementation files, loaded on demand
-├── agents/
-│   ├── ae-red/                   ← bug hunter
-│   │   ├── AGENT.md
-│   │   ├── references/           ← 7 bug category references
-│   │   └── languages/            ← 7 language guides
+├── skills/agentic-engineering/
+│   ├── SKILL.md                  ← router + the policy every command inherits
+│   ├── commands/                 ← 21 command bodies, loaded on demand
+│   └── shared/preamble.md        ← blocks many command bodies reuse
+├── agents/                       ← 9 flat agent files, nothing else
+│   ├── ae-red.md                 ← bug hunter
 │   ├── ae-req.md                 ← requirements + constitution
-│   ├── ae-test/                  ← test quality reviewer (AGENT.md + references + languages)
-│   ├── ae-edge/                  ← adversarial edge-case prober (AGENT.md + references)
-│   ├── ae-doc.md                 ← convention checker
-│   ├── ae-scribe.md              ← end-user docs writer
-│   ├── ae-sec/                   ← security reviewer (AGENT.md + references + languages)
-│   └── ae-ux/                    ← UX fidelity reviewer (AGENT.md + references)
-├── commands/                     ← 21 slash-command wrappers (18 user-facing, 3 internal)
-└── rules-library/                ← 16 rule templates for /init to offer
+│   ├── ae-test.md                ← test quality + AC coverage matrix
+│   ├── ae-doc.md                 ← convention drift
+│   ├── ae-sec.md                 ← security (Sonnet, with ae-red and ae-edge)
+│   ├── ae-edge.md                ← adversarial edge-case prober
+│   ├── ae-lean.md                ← reuse, simplification, efficiency, altitude
+│   ├── ae-ux.md                  ← UX fidelity (runs after the frontend pass)
+│   └── ae-scribe.md              ← end-user docs writer
+├── references/<agent>/           ← the agents' on-demand reference + language docs
+├── commands/                     ← 21 slash-command wrappers
+├── rules-library/                ← 16 rule templates for /init to offer
+├── capture-tools/                ← 15-entry visual-capture catalog for /init to offer
+├── adapters/AGENTS.md.template   ← portable rules for non-Claude tools
+├── agentic-statusline.sh         ← copied into your project by /init
+├── docs/                         ← reference material split out of this README
+├── CHANGELOG.md
+└── CLAUDE.md                     ← authoring guide for this plugin
 ```
 
----
+**Why `references/` sits outside `agents/`:** under a plugin install, every `.md`
+file beneath `agents/<name>/` registers as its own dispatchable subagent type.
+The nested layout produced 59 phantom agents named after reference documents.
 
-## Status bar focus hint (optional)
+## Status bar focus hint
 
-`/focus <task>` writes a current-task pointer to `.agentic/focus.md` (per-worktree, gitignored). Surface it in Claude Code's status bar so it stays visible while you work — title on its own line, optional `note:` dimmed below it.
+`/init` and `/bootstrap` wire this up automatically: they copy the statusline script into your project's `.claude/` and point `.claude/settings.local.json` at it. Nothing to do on new projects.
 
 ```
 ~/dev/myapp  feat/payments  Sonnet 4.6  ctx:42%
 🎯 STORY-003: Stripe webhook handler
-   Validates signature before parsing body
 ```
 
-**Set up automatically.** The installer ships `~/.claude/agentic-statusline.sh`, and `/init` / `/bootstrap` enable it per project by writing `.claude/settings.local.json` — nothing to do on new projects. If you already have a custom `statusLine`, they leave it untouched; use one of the options below to merge the focus hint into it.
-
-### Option 1 — ask Claude
-
-Type this prompt:
-
-```
-/statusline extend my status bar with a second line that reads `title:` and `note:` from .agentic/focus.md
-```
-
-Claude Code routes to the `statusline-setup` agent, which reads your current `statusLine` config, extends the existing script in place (so your dir/branch/model/context segments stay), and reloads the bar.
-
-### Option 2 — manual
-
-**If you already have a custom `~/.claude/statusline-command.sh`** (your `statusLine.command` in `settings.json` points to a script), paste this block before the trailing `printf '\n'`:
-
-```sh
-# Focus from .agentic/focus.md — second line, dim note below
-if [ -f "$cwd/.agentic/focus.md" ]; then
-  focus=$(grep -m1 '^title:' "$cwd/.agentic/focus.md" | sed 's/^title:[[:space:]]*//')
-  [ -n "$focus" ] && printf '\n\033[36m🎯 %s\033[0m' "$focus"
-  note=$(grep -m1 '^note:' "$cwd/.agentic/focus.md" | sed 's/^note:[[:space:]]*//')
-  [ -n "$note" ] && printf '\n\033[90m   %s\033[0m' "$note"
-fi
-```
-
-The script reads `$cwd` (the workspace dir Claude Code passes via stdin JSON) so it stays silent in projects without `.agentic/focus.md`.
-
-**If you don't have a custom status line yet**, add this to `~/.claude/settings.json`:
-
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "[ -f .agentic/focus.md ] && awk '/^title:/{sub(/^title:[ ]*/,\"\");print \"🎯 \"$0} /^note:/{sub(/^note:[ ]*/,\"\");print \"   \"$0}' .agentic/focus.md"
-  }
-}
-```
-
-Restart Claude Code to pick up the change. The relative path works because status line commands run in the workspace directory.
+Already have a custom `statusLine`? They leave it untouched. Merge the focus hint in yourself — recipes in [`docs/statusline.md`](docs/statusline.md).
 
 ---
 

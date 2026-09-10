@@ -103,37 +103,39 @@ Quick win (ads only):         MODE 4 — provide job + persona + specify platfor
 
 ## Agent knowledge base
 
-Each agent loads reference files on demand based on the task at hand.
+Each agent loads reference files on demand based on the task at hand. Paths below
+are relative to the plugin root; agents address them as
+`${CLAUDE_PLUGIN_ROOT}/references/<agent>/<file>.md`.
 
-### 🔍 RESEARCHER
+### 🔍 RESEARCHER — dispatched as `jtbd:jtbd-researcher`
 ```
-references/
+references/jtbd-researcher/
   competitor-research.md   search patterns, tier classification, signal quality rules
   customer-voice.md        review sources, quote extraction, JTBD signal markers
   pain-points.md           force mapping, frequency heuristics
   pricing-signals.md       price range extraction, WTP signal patterns
 ```
 
-### 🧪 ANALYST
+### 🧪 ANALYST — dispatched as `jtbd:jtbd-analyst`
 ```
-references/
+references/jtbd-analyst/
   interview-analysis.md    timeline markers, four forces language patterns, job map steps
   review-analysis.md       star rating signal density, volume heuristics
   support-analysis.md      ticket categories → JTBD mapping, cancellation signal
 ```
 
-### 🕵️ SCOUT
+### 🕵️ SCOUT — dispatched as `jtbd:jtbd-scout`
 ```
-references/
+references/jtbd-scout/
   direct.md        same-category competitor analysis
   adjacent.md      different-category tools hired for the same job
   workarounds.md   DIY / spreadsheet / manual process analysis
   do-nothing.md    acceptance threshold, rationalizations, forcing events
 ```
 
-### ✍️ COPYWRITER
+### ✍️ COPYWRITER — dispatched as `jtbd:jtbd-copywriter`
 ```
-references/
+references/jtbd-copywriter/
   hero.md          headline formulas, CTA framing, anti-patterns
   problem.md       pain point format, empathy tone, anti-patterns
   value-prop.md    outcome card structure, feature-vs-outcome rules
@@ -143,9 +145,9 @@ references/
   final-cta.md     echo/amplify pattern, risk reversal options
 ```
 
-### 🎬 SCRIPTWRITER
+### 🎬 SCRIPTWRITER — dispatched as `jtbd:jtbd-scriptwriter`
 ```
-references/
+references/jtbd-scriptwriter/
   hooks.md           5 hook types with formulas (Pain / Outcome / Proof / Interrupt / Identity)
   angles.md          3-angle framework, A/B test priority, cross-platform consistency
   tiktok.md          2s hook window, sound-off rules, format template
@@ -158,7 +160,7 @@ references/
 
 ## Installation
 
-### Option A — Claude Code plugin (recommended)
+### Option A — Claude Code plugin (the only Claude Code path)
 
 ```text
 /plugin marketplace add thebedcoder/skills
@@ -166,6 +168,12 @@ references/
 ```
 
 Once installed, `/jtbd` is available immediately — no restart needed.
+
+There is no hand-copy install for Claude Code. The five specialist agents address
+their reference guides through `${CLAUDE_PLUGIN_ROOT}`, which only a marketplace
+install sets, and they dispatch as `jtbd:jtbd-<name>` — a name that only exists
+under a plugin install. Copied into `~/.claude` by hand, the modes still run and
+still produce reports; they just produce them without the agents.
 
 ### Option B — Other agentic tools (Cursor, Codex, Copilot, Gemini, Cline, Windsurf, Aider, Zed, OpenHands)
 
@@ -179,42 +187,7 @@ bash install.sh --skill=jtbd --tool=auto
 
 This writes a JTBD workflow block into the tool's AGENTS.md (or equivalent), making the modes, four-forces framework, and references invocable from that tool. Note: parallel subagent dispatch is Claude-Code-specific; other tools run modes sequentially with the same prompts and references.
 
-### Option C — Claude Code CLI (manual install)
-
-```bash
-git clone https://github.com/thebedcoder/skills.git
-cd skills/jtbd
-./install.sh
-```
-
-Restart Claude Code. The skill is available immediately.
-
-**What gets installed:**
-```
-~/.claude/
-├── skills/
-│   └── jtbd/
-│       ├── SKILL.md              ← router + mode guide + mental model
-│       └── commands/             ← 6 mode files, loaded on demand
-└── agents/
-    ├── jtbd-researcher/
-    │   ├── AGENT.md
-    │   └── references/           ← 4 market research guides
-    ├── jtbd-analyst/
-    │   ├── AGENT.md
-    │   └── references/           ← 3 source-type analysis guides
-    ├── jtbd-scout/
-    │   ├── AGENT.md
-    │   └── references/           ← 4 competitor tier guides
-    ├── jtbd-copywriter/
-    │   ├── AGENT.md
-    │   └── references/           ← 7 section copy guides
-    └── jtbd-scriptwriter/
-        ├── AGENT.md
-        └── references/           ← 6 platform + creative guides
-```
-
-### Option D — Claude.ai
+### Option C — Claude.ai
 
 Upload `jtbd.skill` via **Settings → Customize → Skills → Upload**.
 

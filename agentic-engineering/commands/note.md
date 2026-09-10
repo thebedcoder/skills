@@ -2,4 +2,8 @@
 description: Capture a bug, idea, or improvement for later — quick investigation, saved to backlog
 argument-hint: <description>
 ---
-Read commands/note.md from the agentic-engineering skill, then follow those instructions for: $ARGUMENTS
+Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/note.md` — that file holds the real instructions; this wrapper holds none.
+
+Follow it, for: $ARGUMENTS
+
+It references policy sections of `SKILL.md` and blocks of `shared/preamble.md`, both under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/`. Read those when it points you there — the wrapper does not load them for you.

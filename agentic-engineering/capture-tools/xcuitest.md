@@ -4,8 +4,8 @@ description: Apple's first-party UI testing framework for iOS apps
 platforms: [ios]
 mechanism: test-runner
 detection:
-  - file: "*.xcodeproj"
-    contains: "XCUITest"
+  - file: "*.xcodeproj/project.pbxproj"
+    contains: "com.apple.product-type.bundle.ui-testing"
 output_dir: TestResults/
 ---
 
@@ -72,9 +72,9 @@ xcrun xcresulttool get --path TestResults.xcresult --format json > test-result.j
 xcrun xcresulttool export --type file --path TestResults.xcresult --output-path ./extracted/ --id <attachment-id>
 ```
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 runs the xcodebuild command.
+1. `/ship` Phase 3 runs the xcodebuild command.
 2. Implementer agent runs `xcrun xcresulttool` to extract attachments from `TestResults.xcresult/`.
 3. Matches attachment names (set via `attachment.name = "..."` in test code) against AC Coverage matrix Tests cells.
 4. Moves extracted PNGs into `docs/features/<feature-name>/artifacts/STORY-XXX/`.

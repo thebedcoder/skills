@@ -4,16 +4,16 @@
 
 ### Steps
 
-1. **ARCH** checks for existing `./docs/` + `./CLAUDE.md`. Found → asks reinitialize or update.
+1. **ARCH** checks for existing `./docs/` + `./CLAUDE.md`. Found → ⚠️ **Human checkpoint** `[ASK: single]`: *"This project already has docs. What should /init do?"* → **Update in place (Recommended)** · **Reinitialize from scratch** · **Stop**. Reinitialize overwrites `CONSTITUTION.md` and `INDEX.md` — say so in the message body before the widget.
 
-2. **PROD** asks project context if CLAUDE.md missing:
+2. **PROD** asks project context if CLAUDE.md missing — one ⚠️ **Human checkpoint** `[ASK: prose]` covering all of:
    - Project name + one-line description
    - Users + problem solved
    - Tech stack (languages, frameworks, DB, infra)
    - Code conventions + test framework
    - Design tool: **Figma** (paid MCP) / **Pencil.dev** (free, IDE-native, `.pen` files in repo — pencil.dev) / **None** (Markdown wireframe specs)
 
-2b. **ARCH** picks project mode. Mode sizes the docs scaffold + `/feature`'s planning depth. See "Project Mode" in SKILL.md.
+2b. **ARCH** picks project mode. Mode sizes the docs scaffold + `/feature`'s planning depth. See `shared/project-mode.md`.
 
 ARCH proposes from observable signals — no guessing, cite what it found:
 
@@ -29,7 +29,7 @@ Ambiguous → propose **lite**. User bumps up any time — re-running `/init` up
 
 ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: Print detected signals, then ask *"Which mode fits this project?"* → **Lite (Recommended)** · **Full**. Option descriptions:
 
-- Lite — "Stories, tests, and the 6-agent review. No PRD, no epics, no app-docs until needed."
+- Lite — "Stories, tests, and the 7-agent review. No PRD, no epics, no app-docs until needed."
 - Full — "Everything: research → PRD → epics → stories, plus end-user docs and cross-feature specs."
 
 Swap which one carries `(Recommended)` to match ARCH's proposal. Mode is written to `./docs/INDEX.md` frontmatter in step 3.
@@ -171,12 +171,21 @@ grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
 mkdir -p .claude
 ```
 
+First copy the script into the project so it survives plugin version bumps:
+```bash
+mkdir -p .claude
+cp "${CLAUDE_PLUGIN_ROOT}/agentic-statusline.sh" .claude/agentic-statusline.sh
+chmod +x .claude/agentic-statusline.sh
+```
+
+`${CLAUDE_PLUGIN_ROOT}` unset (skill loaded outside a plugin install) → skip the statusline step entirely and say so. Never write a `statusLine` pointing at a file that isn't there; every render fails silently.
+
 If `.claude/settings.local.json` does not exist → create it with:
 ```json
 {
   "statusLine": {
     "type": "command",
-    "command": "bash ~/.claude/agentic-statusline.sh"
+    "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/.claude/agentic-statusline.sh\""
   }
 }
 ```
@@ -223,7 +232,7 @@ Renumber the Article number to match your constitution's existing articles.
 
 ## Article N: Visual artifacts
 
-All UI-touching stories must capture visual artifacts (screenshots or screen recordings) and reference them in `PROGRESS.md`'s Visual Artifacts table. Stories that touch frontend files (`.tsx`/`.jsx`/`.vue`/`.svelte`/`.swiftui`/Compose `.kt`/etc.) without captured artifacts are not shipped.
+All UI-touching stories must capture visual artifacts (screenshots or screen recordings) and reference them in `PROGRESS.md`'s Visual Artifacts table. Stories that touch frontend files (`.tsx`/`.jsx`/`.vue`/`.svelte`/`.swift` under `Views/`/Compose `.kt`/etc.) without captured artifacts are not shipped.
 -->
 
 ## Governance
@@ -339,7 +348,7 @@ No frontmatter, INDEX.md exists anyway → two cases:
 
 5. ⚠️ **Human checkpoint** `[ASK: confirm]`: Show generated CLAUDE.md, then ask *"Save it?"* → **Save** · **Edit first**. Second option → follow up `[ASK: prose]`.
 
-6. **ARCH** reads `~/.claude/skills/agentic-engineering/rules-library/README.md`, presents rules grouped by type, pre-suggests matches from captured stack.
+6. **ARCH** reads `${CLAUDE_PLUGIN_ROOT}/rules-library/README.md`, presents rules grouped by type, pre-suggests matches from captured stack.
 
 Stack rules: `react-typescript` · `nextjs-app-router` · `react-native` · `python-fastapi` · `python-django` · `node-express` · `go` · `rust` · `flutter` · `swiftui` · `ios-native` · `android-native`
 
@@ -347,11 +356,11 @@ Cross-cutting: `testing-conventions` · `git-conventions` · `api-design` · `se
 
 ⚠️ **Human checkpoint** `[ASK: multi]`: *"Which convention rules should this project install?"* — one option per rule above, pre-check the stack matches ARCH detected plus `testing-conventions` and `git-conventions`; leave the rest unchecked. `minSelected: 0` — selecting nothing is a valid "skip rules entirely".
 
-Per selected rule, copy from `~/.claude/skills/agentic-engineering/rules-library/<name>.md` to `./.claude/rules/` (create dir if needed).
+Per selected rule, copy from `${CLAUDE_PLUGIN_ROOT}/rules-library/<name>.md` to `./.claude/rules/` (create dir if needed).
 
 **ARCH** confirms installed + notes: *"Edit any to match your project. Delete any that don't fit."*
 
-7. **ARCH** reads `~/.claude/skills/agentic-engineering/capture-tools/README.md` + each catalog entry's frontmatter.
+7. **ARCH** reads `${CLAUDE_PLUGIN_ROOT}/capture-tools/README.md` + each catalog entry's frontmatter.
 
 Filter catalog by detected stack:
 - Read CLAUDE.md (just generated above) + scan repo for files matching each entry's `detection:` rules
@@ -375,11 +384,11 @@ Matching capture tools:
 ⚠️ **Human checkpoint** `[ASK: single]`: *"Which visual-capture tool should this project use?"* — top stack matches first (best match suffixed `(Recommended)`), then `manual`. More than 3 matches → offer the top 3; the built-in "Other" covers the rest of the catalog. Skipping is a valid answer — treat "Other: none" as skip.
 
 On selection:
-1. Copy `~/.claude/skills/agentic-engineering/capture-tools/<name>.md` → `./.claude/visual-capture.md`
+1. Copy `${CLAUDE_PLUGIN_ROOT}/capture-tools/<name>.md` → `./.claude/visual-capture.md`
 2. ARCH announces: *"Capture tool configured at `.claude/visual-capture.md`. Edit to tune project-specific values (command, output dir, etc.). Committed to git so team uses same tool."*
 
 On 'none':
-3. ARCH announces: *"Skipping visual capture setup. UI stories will receive informational reminders during `/ship` Phase 4. Visual Artifacts table in PROGRESS.md can be filled manually."*
+3. ARCH announces: *"Skipping visual capture setup. UI stories will receive informational reminders during `/ship` Phase 3. Visual Artifacts table in PROGRESS.md can be filled manually."*
 
 (No `.claude/visual-capture.md` written when 'none' selected — Phase 1's manual flow applies by default.)
 

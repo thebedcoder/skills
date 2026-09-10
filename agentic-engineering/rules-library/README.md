@@ -7,25 +7,25 @@ Path-scoped rules that auto-load when Claude Code works with matching files in a
 | Rule file | When to pick | Paths |
 |---|---|---|
 | `react-typescript.md` | React + TypeScript frontends | `**/*.tsx`, `**/*.jsx`, `src/**/*.ts` |
-| `nextjs-app-router.md` | Next.js 13+ with app directory | `app/**/*.tsx`, `src/app/**/*.tsx` |
+| `nextjs-app-router.md` | Next.js 13+ with app directory | `app/**/*.tsx`, `app/**/*.ts`, `src/app/**/*.tsx`, `src/app/**/*.ts` |
 | `react-native.md` | React Native (Expo or bare) | `**/*.tsx`, `**/*.ts`, `**/*.jsx` |
-| `python-fastapi.md` | Python API with FastAPI | `**/*.py`, `app/**/*.py` |
-| `python-django.md` | Python web app with Django | `**/*.py`, `**/models.py`, `**/views.py` |
-| `node-express.md` | Node.js API with Express | `**/*.ts`, `**/*.js`, `src/**/*.ts` |
+| `python-fastapi.md` | Python API with FastAPI | `**/*.py`, `app/**/*.py`, `api/**/*.py` |
+| `python-django.md` | Python web app with Django | `**/*.py`, `**/models.py`, `**/views.py`, `**/serializers.py` |
+| `node-express.md` | Node.js API with Express | `**/*.ts`, `**/*.js`, `src/**/*.ts`, `routes/**/*.ts` |
 | `go.md` | Go projects | `**/*.go` |
 | `rust.md` | Rust projects | `**/*.rs`, `Cargo.toml` |
 | `flutter.md` | Flutter cross-platform apps | `**/*.dart`, `lib/**/*.dart` |
 | `swiftui.md` | iOS/macOS apps with SwiftUI | `**/*.swift` |
 | `ios-native.md` | iOS with UIKit or mixed | `**/*.swift`, `**/*.m`, `**/*.h` |
-| `android-native.md` | Android with Kotlin or Java | `**/*.kt`, `**/*.java` |
+| `android-native.md` | Android with Kotlin or Java | `**/*.kt`, `**/*.java`, `**/AndroidManifest.xml` |
 
 ## Cross-cutting rules
 
 | Rule file | Scope | Paths |
 |---|---|---|
-| `testing-conventions.md` | Test file standards | `**/*.test.*`, `**/*.spec.*`, `**/test_*.py`, `**/tests/**` |
+| `testing-conventions.md` | Test file standards | `**/*.test.*`, `**/*.spec.*`, `**/test_*.py`, `**/*_test.go`, `**/tests/**` |
 | `git-conventions.md` | Commit format, branch names, PR flow | unconditional |
-| `api-design.md` | REST API conventions | `**/api/**`, `**/routes/**`, `**/controllers/**` |
+| `api-design.md` | REST API conventions | `**/api/**`, `**/routes/**`, `**/controllers/**`, `**/handlers/**` |
 | `secrets-management.md` | Secret handling, env vars, rotation | unconditional |
 
 ## Notes

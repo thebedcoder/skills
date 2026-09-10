@@ -6,7 +6,7 @@ mechanism: test-runner
 detection:
   - file: "*.tape"
     contains: "Output"
-output_dir: declared per tape file
+output_dir: .captures/vhs/
 ---
 
 # VHS
@@ -64,9 +64,9 @@ Wherever the tape file's `Output` directive points. The convention is to keep ou
   error-state.mp4
 ```
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 reads all `.tape` files under `.vhs/` (or wherever `.claude/visual-capture.md` declares).
+1. `/ship` Phase 3 reads all `.tape` files under `.vhs/` (or wherever `.claude/visual-capture.md` declares).
 2. For each tape, runs `vhs <tape-file>`.
 3. Parses each tape's `Output` directive to find the produced file.
 4. Maps tape filename to AC — typically `login-flow.tape` → AC for "login flow", operator-confirmable.

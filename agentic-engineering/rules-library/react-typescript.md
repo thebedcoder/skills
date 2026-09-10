@@ -23,8 +23,8 @@ paths:
 ## State management
 - Local state: `useState` / `useReducer`
 - Shared state: context for theme/auth/small shared state
-- Server state: React Query / SWR — never store in global client state
-- Form state: React Hook Form (registered here) — avoid controlled inputs for every field
+- Server state: TanStack Query (formerly React Query) or SWR — never store in global client state
+- Form state: React Hook Form — `register` uncontrolled inputs rather than making every field controlled
 
 ## Styling
 - Follow the project's styling solution consistently (Tailwind, CSS Modules, styled-components — pick one)

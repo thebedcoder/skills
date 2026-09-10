@@ -8,11 +8,12 @@
 #   bash install.sh [--skill=<skill>] [--tool=<tool>] [--branch=main] [--scope=project|user]
 #
 # Available skills (--skill=, default: agentic-engineering):
-#   agentic-engineering  Full SDLC workflow — TDD, PRDs, stories, 5-agent review
+#   agentic-engineering  Full SDLC workflow — TDD, PRDs, stories, 6-agent review (Claude Code: marketplace plugin only)
 #   jtbd                 Jobs to Be Done — research, personas, landing copy, ad scripts
 #
 # Supported tools:
-#   claude-code     Full plugin install (slash commands + specialist agents)
+#   claude-code     Per-plugin installer, where the skill ships one
+#                   (agentic-engineering is marketplace-only — see below)
 #   cursor          .cursor/rules/*.mdc + AGENTS.md
 #   codex           AGENTS.md (Codex CLI reads this from project root)
 #   copilot         .github/copilot-instructions.md (GitHub Copilot in IDE)
@@ -59,11 +60,12 @@ Usage:
   bash install.sh [--skill=<skill>] [--tool=<tool>] [--branch=main] [--scope=project|user]
 
 Available skills (--skill=, default: agentic-engineering):
-  agentic-engineering  Full SDLC workflow — TDD, PRDs, stories, 5-agent review
+  agentic-engineering  Full SDLC workflow — TDD, PRDs, stories, 6-agent review (Claude Code: marketplace plugin only)
   jtbd                 Jobs to Be Done — research, personas, landing copy, ad scripts
 
 Supported tools:
-  claude-code     Full plugin install (slash commands + specialist agents)
+  claude-code     Per-plugin installer, where the skill ships one
+                  (agentic-engineering is marketplace-only — see below)
   cursor          .cursor/rules/*.mdc + AGENTS.md
   codex           AGENTS.md (Codex CLI reads this from project root)
   copilot         .github/copilot-instructions.md (GitHub Copilot in IDE)
@@ -98,7 +100,7 @@ SCRIPT_PATH="${BASH_SOURCE[0]:-}"
 SOURCE_DIR=""
 if [[ -n "$SCRIPT_PATH" && -f "$SCRIPT_PATH" ]]; then
   CANDIDATE="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
-  if [[ -d "$CANDIDATE/$SKILL" && -f "$CANDIDATE/$SKILL/install.sh" ]]; then
+  if [[ -d "$CANDIDATE/$SKILL" ]]; then
     SOURCE_DIR="$CANDIDATE"
   fi
 fi
@@ -304,11 +306,36 @@ detect_installed_tools() {
   printf '%s\n' "${detected[@]}"
 }
 
+# ---------- Claude Code plugin-only skills ----------
+# Some skills ship no per-plugin installer on purpose. Copying them into
+# ~/.claude by hand breaks ${CLAUDE_PLUGIN_ROOT}, which their commands and
+# agents use to reach rules-library/, capture-tools/ and agent references, and
+# it also loses the <plugin>:<agent> namespace their dispatch sites spell out.
+# The marketplace is the only supported Claude Code install for those.
+plugin_only_notice() {
+  cat <<EOF
+
+'$SKILL' installs into Claude Code through the plugin marketplace only.
+
+  /plugin marketplace add thebedcoder/skills
+  /plugin install $SKILL@thebedcoder
+
+A hand-copied install would place the files outside \${CLAUDE_PLUGIN_ROOT},
+which is how the skill reaches its reference files and specialist agents.
+Nothing was written.
+EOF
+}
+
 # ---------- Main dispatch ----------
 
 case "$TOOL" in
   claude-code)
-    bash "$SKILL_DIR/install.sh"
+    if [[ -f "$SKILL_DIR/install.sh" ]]; then
+      bash "$SKILL_DIR/install.sh"
+    else
+      plugin_only_notice
+      exit 0
+    fi
     ;;
 
   copilot-cli)
@@ -340,7 +367,11 @@ EOF
       for t in "${DETECTED[@]}"; do
         echo "─── Installing for $t ───"
         if [[ "$t" == "claude-code" ]]; then
-          bash "$SKILL_DIR/install.sh"
+          if [[ -f "$SKILL_DIR/install.sh" ]]; then
+            bash "$SKILL_DIR/install.sh"
+          else
+            plugin_only_notice
+          fi
         else
           install_agents_md_style "$t"
         fi

@@ -4,47 +4,48 @@
 
 Use after `/design` approved. Ships story end-to-end without manual triggers.
 
+**Inputs (read first):**
+- `./CLAUDE.md` — conventions
+- `./docs/INDEX.md` — current feature
+- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`. `/cleanup` writes these after every chain; a chain that never reads them is a write-only log
+
 ### Step 0a — Parse `--auto` flag
 
-Detect whether `$ARGUMENTS` contains the `--auto` token.
+Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/ship <STORY-ID> --auto`. **Propagate `AUTO=true` to internal phases** — every nested `/implement`, `/review`, `/frontend` inherits it.
 
-- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
-- Set internal flag `AUTO=true` for this run.
-- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
-- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
-  ```markdown
-  ## [now YYYY-MM-DD HH:MM] — /ship <STORY-ID> --auto
-  ```
-- **Propagate `AUTO=true` to internal phases** — every nested `/implement`, `/review`, `/frontend` step inside this `/ship` run respects the same auto mode.
+### Step 0b — Write the phase PLAN
 
-See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+**Nested inside `/ship-all`? Skip this step.** The parent owns the plan; this run advances the parent's story line instead of opening a second plan.
 
-### Step 0b — Open the phase task list
-
-Per "Progress Tracking" in SKILL.md, create one task per phase before any work starts:
+Otherwise write these seven lines to the `# PLAN` section of `.agentic/focus.md` (see `commands/focus.md`) before any work starts:
 
 1. `Implement STORY-XXX backend + tests`
-2. `Backend review — 6-agent batch`
+2. `Backend review — 7-agent batch`
 3. `Frontend from design handoff`
 4. `Frontend review — 6-agent + ae-ux fidelity`
 5. `End-user docs + changelogs`
 6. `PR description from git log`
 7. `Cleanup — decisions + memory`
 
-Mark #1 `in_progress` at Phase 1. Advance one at a time. Backend-only story → complete #3 and #4 with `skipped (no UI)`. Blocker pause → leave the current task `in_progress` until the fix lands and review re-runs clean.
+Mark #1 in progress at Phase 1. Advance one at a time. Backend-only story → close #3 and #4 with `skipped (no UI)`. Blocker pause → leave the current line open until the fix lands and review re-runs clean.
 
-Mirror the same list into the `# PLAN` section of `.agentic/focus.md` (see `commands/focus.md`) and tick each step there as its task completes. The harness task list dies with the session; PLAN survives it.
+Mirror into a harness task list **if this session exposes one**. It is a convenience view, not the record — PLAN survives compaction and session end.
+
+### Step 0c — Branch guard
+
+```bash
+git rev-parse --abbrev-ref HEAD
+```
+
+On `main` / `master` → ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"You're on `<branch>`. Ship this story where?"* → **New branch `feat/<story-slug>` (Recommended)** · **Stay on `<branch>`** · **Abort**
+
+Full mode reaches `/ship` from `/feature`, which already created `feat/<name>` — the guard is a no-op there. **Lite mode's path is `/note` → `/ship`, which has no branch step at all**, so without this guard every lite story lands directly on `main`. Matches the guards in `/fix` and `/improve`.
 
 ### Step 0 — Auto-write focus
 
 Before picking a story, update `.agentic/focus.md`:
 
-1. Ensure `.agentic/` exists + gitignored (idempotent):
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 2. Once PROD has picked the next story (see "Finding what to ship" below), set CURRENT (story-id-match heuristic):
    - Existing CURRENT.title already references this STORY-ID (e.g. set by parent `/ship-all`) → update `note:` to `phase: ship chain` and `set_by:` to `/ship`. Leave `title:` + `since:` alone.
@@ -95,7 +96,7 @@ Mark promoted in `BACKLOG.md`:
 **Phase 1 — Backend** (`/implement` flow)
 - ARCH generates plan
 - PROD validates vs acceptance criteria
-- ⚠️ **Single human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: Show both plans, then ask *"Start the full ship chain?"* → Go / Stop. Under `--auto`: SKIP — emit `SKIPPED: ship-chain approval [auto]` and proceed. Hard-override #4 still applies (missing test framework, missing design tool → HARD-PAUSE).
+- ⚠️ **Single human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: Show both plans, then ask *"Start the full ship chain?"* → Go / Stop. **This gate replaces `/implement`'s own start gate** — the parent's gate wins, and `/implement` running nested does not fire a second one. Under `--auto`: SKIP — emit `SKIPPED: ship-chain approval [auto]` and proceed. Hard-override #4 still applies (missing test framework, missing design tool → HARD-PAUSE).
 - On 'go': implement + tests. Update PROGRESS.md + STORIES.md
 - **GIT** commits:
 ```
@@ -105,7 +106,8 @@ test([feature-name]): STORY-XXX — add tests
 
 **Phase 2 — Backend Review** *(automatic)*
 Run full `/review` flow immediately.
-- RED, REQ, TEST, DOC, SEC, EDGE run parallel — same 6-agent batch as Phase 4
+- RED, REQ, TEST, DOC, SEC, EDGE, LEAN run parallel — seven agents
+- **LEAN runs here and only here.** Phase 4 re-reviews the same branch and passes `--frontend-pass` to drop it
 - Consolidated fix list
 
 **Blockers** → pause + surface (`[AUTO: always-ask]` `[ASK: single]` — also hard-override #1):
@@ -114,7 +116,9 @@ Run full `/review` flow immediately.
 
 [consolidated blocker list — top 5, then "+N more"]
 ```
-Then ask *"How do you want to handle these?"* → **Fix now** (agent fixes, chain resumes) · **I'll fix them** (pause for manual fix, then re-review) · **Abort chain**.
+Then ask *"How do you want to handle these?"* → **Fix now (Recommended)** (agent fixes, chain resumes) · **I'll fix them** (pause for manual fix, then re-review) · **Abort chain**.
+
+These are the options while nested in `/ship`. `/review`'s own three-option gate (Fix now / Show full report / Log and move on) applies only to a standalone `/review` — nested, `/review` reports and this gate decides.
 Blockers fixed → **GIT** amends or commits:
 ```
 fix([feature-name]): STORY-XXX — address review blockers
@@ -132,7 +136,7 @@ feat([feature-name]): STORY-XXX — frontend implementation
 ```
 - **Visual capture dispatch** *(automatic if `.claude/visual-capture.md` exists)*
 
-  1. Read `./.claude/visual-capture.md`. If absent → emit reminder (Phase 1 fallback) and proceed to Phase 4 review.
+  1. Read `./.claude/visual-capture.md`. If absent → emit reminder (manual-capture fallback) and proceed to Phase 4 review.
   2. Parse `mechanism:` field. Dispatch:
      - `test-runner` / `script` → run the declared `## Capture command` via Bash, capture exit code
      - `mcp` → use the declared MCP tools per AC, capture per-AC, write to artifacts dir directly
@@ -146,8 +150,10 @@ feat([feature-name]): STORY-XXX — frontend implementation
   4. On dispatch failure (non-zero exit, missing files): emit warning, do NOT block ship chain. Operator captures manually for this story.
   5. Proceed to Phase 4 review (the 6-agent batch).
 
-**Phase 4 — Frontend Review** *(automatic)* (`/review` + ae-ux fidelity)
-- 6-agent parallel pass
+  **Capture runs in Phase 3, not Phase 4.** It is the tail of the frontend pass; Phase 4 is the review that consumes what it produced. Docs elsewhere that say "Phase 4 dispatches capture" mean this step.
+
+**Phase 4 — Frontend Review** *(automatic)* (`/review --frontend-pass` + ae-ux fidelity)
+- 6-agent parallel pass — the Phase 2 seven minus LEAN, which already reviewed this branch
 - ae-ux checks fidelity vs design handoff
 - Blockers → pause + surface, same pattern as Phase 2
 - Blockers fixed → **GIT** commits:
@@ -159,7 +165,7 @@ fix([feature-name]): STORY-XXX — address frontend review blockers
 
 Keeps `./app-docs/` in sync with what user can do.
 
-Spawn **ae-scribe** subagent → updates `./app-docs/`. Writes product-style docs (overview, how-to, tutorial) for end users. See `ae-scribe.md` for template.
+Dispatch `agentic-engineering:ae-scribe` → updates `./app-docs/` pages only. Writes product-style docs (overview, how-to, tutorial) for end users. See `agents/ae-scribe.md` for template. **SCRIBE never touches either changelog** — the parent writes both, below, so the entry can name the shipped commit.
 
 No user-facing surface → SCRIBE returns `no user-facing change, app-docs unchanged.` Valid — don't force-generate.
 
@@ -257,7 +263,7 @@ After successful ship, SCRIBE:
 3. Structure: frontmatter → intro → **What you can do** → **How to use it** (numbered, real UI labels) → **Tips** → **FAQ** (only if real recurring) → **Related**.
 4. No file paths / function names / code blocks in app-docs.
 5. Update `./app-docs/index.md` if new user-facing feature added.
-6. Self-check per `ae-scribe.md`.
+6. Self-check per `agents/ae-scribe.md`.
 
 ### What still requires your input
 - Initial "go" (approves full plan)

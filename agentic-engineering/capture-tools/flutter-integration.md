@@ -86,9 +86,9 @@ integration_test/screenshots/
 
 Names come from `binding.takeScreenshot(<name>)` calls in test code.
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 runs the flutter drive command.
+1. `/ship` Phase 3 runs the flutter drive command.
 2. Implementer agent scans `integration_test/screenshots/`.
 3. Matches screenshot names against AC Coverage matrix Tests cells (or against AC text when test names align — e.g., `login-success.png` → AC-1).
 4. Moves files into `docs/features/<feature-name>/artifacts/STORY-XXX/`.

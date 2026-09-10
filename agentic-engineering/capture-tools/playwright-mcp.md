@@ -33,7 +33,7 @@ Verify the server is listed in Claude Code's MCP server view after restart.
 
 ## MCP usage (instead of a capture command)
 
-During `/ship` Phase 4, the implementer agent uses these MCP tools:
+During `/ship` Phase 3, the implementer agent uses these MCP tools:
 
 - `mcp__playwright__navigate(url)` — open the dev server URL
 - `mcp__playwright__fill(selector, value)` — fill form fields
@@ -47,9 +47,9 @@ The agent walks through each AC's user flow (derived from the AC text + the impl
 
 Written directly via the MCP to `docs/features/<feature-name>/artifacts/STORY-XXX/` with names matching AC numbers (e.g., `ac-1-happy-path.png`, `ac-2-error-state.png`).
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 detects `mechanism: mcp` in `.claude/visual-capture.md`.
+1. `/ship` Phase 3 detects `mechanism: mcp` in `.claude/visual-capture.md`.
 2. Implementer agent reads STORIES.md for the active story; extracts AC text.
 3. Per AC, agent uses MCP tools to navigate + interact + screenshot. Captures land directly in artifacts dir with predictable per-AC names.
 4. Agent populates Visual Artifacts table rows from the captured files.

@@ -4,7 +4,7 @@ description: Raw Android device captures via adb shell — for when Espresso is 
 platforms: [android]
 mechanism: script
 detection: []
-output_dir: project-specific
+output_dir: .captures/android/
 ---
 
 # adb-screencap
@@ -49,15 +49,15 @@ adb shell screencap -p > "$OUT_DIR/ac-1-happy-path.png"
 # More captures...
 ```
 
-`/ship` Phase 4 runs this script. The script's contract: produce files in `docs/features/<feature-name>/artifacts/STORY-XXX/`.
+`/ship` Phase 3 runs this script. The script's contract: produce files in `docs/features/<feature-name>/artifacts/STORY-XXX/`.
 
 ## Where captures land
 
 Wherever the script writes. The catalog entry's `output_dir: project-specific` signals to `/ship` that the script handles destination directly.
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 reads `.claude/visual-capture.md` → mechanism: script + command points at `scripts/capture-android.sh`.
+1. `/ship` Phase 3 reads `.claude/visual-capture.md` → mechanism: script + command points at `scripts/capture-android.sh`.
 2. `/ship` runs `bash scripts/capture-android.sh STORY-XXX`.
 3. Implementer agent scans `docs/features/<feature-name>/artifacts/STORY-XXX/` for new files post-run.
 4. Appends one row per new file. Notes: `(auto, backfill AC + scenario)`.

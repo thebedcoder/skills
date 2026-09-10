@@ -19,10 +19,23 @@ both plugins produces a broken jtbd package.
 | Archive | Zip root contains | Assembled from |
 |---|---|---|
 | `agentic-engineering.skill` | `SKILL.md`, `commands/` | `agentic-engineering/skills/agentic-engineering/` only |
-| `jtbd.skill` | `SKILL.md`, `commands/`, `agents/` | `jtbd/skills/jtbd/` **plus** `jtbd/agents/` staged in |
+| `jtbd.skill` | `SKILL.md`, `commands/`, `agents/`, `references/` | `jtbd/skills/jtbd/` **plus** `jtbd/agents/` and `jtbd/references/` staged in |
 
-jtbd bundles its 5 specialist agents (each with a `references/` subdir) inside
-the archive. agentic-engineering does not bundle agents at all.
+jtbd bundles its 5 specialist agents inside the archive. agentic-engineering does
+not bundle agents at all.
+
+**`jtbd/references/` is a separate stage since the 2.0.0 flattening.** The agents
+used to be `agents/<n>/AGENT.md` with their references in a sibling `references/`
+subdir, so one `cp -R jtbd/agents` carried both. It no longer does — miss the
+second copy and the archive ships 5 agents whose 24 reference files are absent,
+with nothing to signal it.
+
+**Known limitation, not a bug to "fix":** the staged agents address their
+references as `${CLAUDE_PLUGIN_ROOT}/references/<agent>/<file>.md`, and the
+claude.ai packager does not set that variable. Inside the archive those paths do
+not resolve. The plugin install is the supported path for jtbd's subagents; the
+archive carries the files as prose. Do not rewrite them to relative paths — that
+breaks the plugin, which is the path that actually dispatches agents.
 
 ## Run
 
@@ -41,6 +54,7 @@ cp -R "$REPO/agentic-engineering/skills/agentic-engineering" "$STAGE/ae/"
 mkdir -p "$STAGE/jt"
 cp -R "$REPO/jtbd/skills/jtbd" "$STAGE/jt/"
 cp -R "$REPO/jtbd/agents" "$STAGE/jt/jtbd/agents"
+cp -R "$REPO/jtbd/references" "$STAGE/jt/jtbd/references"
 ( cd "$STAGE/jt" && zip -r "$REPO/jtbd/jtbd.skill" \
     jtbd/ -x "*.DS_Store" >/dev/null )
 
@@ -61,10 +75,11 @@ Assert:
 
 1. No `.DS_Store` entries in either archive.
 2. Neither archive's `SKILL.md` contains `user-invocable` — the packager rejects
-   it. It belongs only in the installed copy, patched in by
-   `agentic-engineering/install.sh`.
-3. `jtbd.skill` lists `SKILL.md`, `agents`, `commands`; the agentic-engineering
-   archive lists `SKILL.md` and `commands` only.
+   it. Neither plugin ships an installer any more, so there is nowhere for that
+   field to live at all; source must simply stay clean.
+3. `jtbd.skill` lists `SKILL.md`, `agents`, `commands`, `references`; the
+   agentic-engineering archive lists `SKILL.md` and `commands` only.
+   `unzip -l jtbd/jtbd.skill | grep -c 'jtbd/references/.*\.md'` → `24`.
 4. Nothing under the source tree is newer than the archive you just wrote:
    `find agentic-engineering -name '*.md' -newer agentic-engineering/agentic-engineering.skill | wc -l` → `0`.
 

@@ -83,13 +83,17 @@ Always confirm before proceeding.
 
 ## Agent Roster
 
-| Agent | Role | Used in |
-|-------|------|---------|
-| 🔍 **RESEARCHER** | Web search: market data, competitors, App Store reviews | MODE 0 |
-| 🧪 **ANALYST** | Extracts JTBD signal from one qualitative source | MODE 1 |
-| 🕵️ **SCOUT** | Researches one competitor tier | MODE 2B |
-| ✍️ **COPYWRITER** | Writes one landing page section | MODE 3 |
-| 🎬 **SCRIPTWRITER** | Writes 3-angle scripts for one platform | MODE 4 |
+| Agent | Dispatch as | Role | Used in |
+|-------|-------------|------|---------|
+| 🔍 **RESEARCHER** | `jtbd:jtbd-researcher` | Web search: market data, competitors, App Store reviews | MODE 0 |
+| 🧪 **ANALYST** | `jtbd:jtbd-analyst` | Extracts JTBD signal from one qualitative source | MODE 1 |
+| 🕵️ **SCOUT** | `jtbd:jtbd-scout` | Researches one competitor tier | MODE 2B |
+| ✍️ **COPYWRITER** | `jtbd:jtbd-copywriter` | Writes one landing page section | MODE 3 |
+| 🎬 **SCRIPTWRITER** | `jtbd:jtbd-scriptwriter` | Writes 3-angle scripts for one platform | MODE 4 |
+
+Dispatch by the plugin-namespaced name in the middle column. A bare `jtbd-scout`
+does not resolve under a plugin install, and the failure is silent: no error, no
+subagent, just this conversation writing the report itself.
 
 ---
 
@@ -128,12 +132,12 @@ Reference files map work to a force → link to anchor below. Don't paraphrase d
 
 | Anchor | Use in |
 |--------|--------|
-| [`#forces`](../SKILL.md#forces) → Push force | Problem section · Pain hook · Pain angle · Tier 3/4 SCOUT findings |
-| [`#forces`](../SKILL.md#forces) → Pull force | Value Prop section · Outcome hook · Outcome angle · opportunity scoring |
-| [`#forces`](../SKILL.md#forces) → Habit force | How-It-Works section · Workarounds SCOUT · Do-Nothing SCOUT |
-| [`#forces`](../SKILL.md#forces) → Anxiety force | FAQ section · Social Proof testimonial C · switching-cost ANALYST signals |
-| [`#progress-equation`](../SKILL.md#progress-equation) | Final CTA · Hero CTA framing · every persona card |
-| [`#three-job-layers`](../SKILL.md#three-job-layers) | Persona definition · ad angle selection · hook formula choice |
+| `#forces` → Push force | Problem section · Pain hook · Pain angle · Tier 3/4 SCOUT findings |
+| `#forces` → Pull force | Value Prop section · Outcome hook · Outcome angle · opportunity scoring |
+| `#forces` → Habit force | How-It-Works section · Workarounds SCOUT · Do-Nothing SCOUT |
+| `#forces` → Anxiety force | FAQ section · Social Proof testimonial C · switching-cost ANALYST signals |
+| `#progress-equation` | Final CTA · Hero CTA framing · every persona card |
+| `#three-job-layers` | Persona definition · ad angle selection · hook formula choice |
 
 ### Vocabulary rules (prevent drift)
 

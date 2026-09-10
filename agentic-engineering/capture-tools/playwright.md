@@ -52,11 +52,11 @@ test-results/
 
 Test name sanitization: spaces → dashes, special chars stripped.
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 runs `npx playwright test` and waits for exit.
+1. `/ship` Phase 3 runs `npx playwright test` and waits for exit.
 2. Implementer agent scans `test-results/` for `<test-name>-<browser>/` directories.
-3. For each directory, matches the test name against the AC Coverage matrix's `Tests` cells (which use the format `tests/foo.spec.ts::test_name` per the QA Traceability convention).
+3. For each directory, matches the test name against the AC Coverage matrix's `Tests` cells. Playwright identifies a test as `file:line:col › title` and names its output directory after the sanitized title, so match on the title, not on a `::`-joined id — `::` is pytest's syntax, not Playwright's.
 4. Moves captured `.png` + `.webm` files into `docs/features/<feature-name>/artifacts/STORY-XXX/<test-name>.<ext>`.
 5. Appends a row to the Visual Artifacts table per file, with `Notes: (auto, backfill scenario)`.
 

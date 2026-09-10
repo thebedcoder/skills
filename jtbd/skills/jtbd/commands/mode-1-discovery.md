@@ -19,7 +19,7 @@
 
 Ask user to list their qualitative sources (transcripts, reviews, tickets, Reddit threads, surveys). Confirm the list before spawning.
 
-Spawn one **jtbd-analyst** per source simultaneously. Each receives: source content, source label, product name.
+Spawn one `jtbd:jtbd-analyst` per source simultaneously — one message, N Agent calls. Each receives: source content, source label, product name.
 
 When all return, synthesize:
 - Dominant struggling moment (most frequent across sources)

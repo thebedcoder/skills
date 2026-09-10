@@ -14,7 +14,7 @@ Three sections. All optional — absent section means empty.
 # CURRENT
 title: [task]
 since: [YYYY-MM-DD HH:MM]
-set_by: [manual | /ship | /fix | ...]
+set_by: [manual | /ship | /fix | /improve | ...]
 
 # PLAN
 - [x] [completed step]
@@ -24,7 +24,7 @@ set_by: [manual | /ship | /fix | ...]
 1. [queued task]
 ```
 
-`# PLAN` is the on-disk mirror of the harness task list. Chain commands (`/ship`, `/fix`, `/ship-all`) write it at start and tick steps as phases close — the harness list dies with the session, PLAN survives it. A one-step task needs no PLAN; absent is valid.
+`# PLAN` **is** the progress record; a harness task list, where the session exposes one, is a mirror of it. Chain commands (`/ship`, `/ship-all`, `/plan-all`, `/fix`, `/improve`, `/feature`, `/doc-all`) write PLAN at start and tick steps as phases close. A one-step task needs no PLAN; absent is valid.
 
 **Never hand-edit PLAN from `/focus <text>`** — setting a new CURRENT wipes PLAN, because a plan for the previous task is worse than none.
 
@@ -44,13 +44,7 @@ Inspect `$ARGUMENTS`:
 
 ### Phase 2 — Set CURRENT manually
 
-Ensure `.agentic/` exists + gitignored. Idempotent:
-
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 Overwrite CURRENT section of `.agentic/focus.md` (preserve NEXT section if present, **drop PLAN** — it belonged to the previous task). Fields:
 
@@ -125,13 +119,13 @@ CURRENT + PLAN + NEXT wiped.
 
 ### Auto-write protocol (for other commands)
 
-When another command (`/feature`, `/implement`, `/ship`, `/fix`, `/design`, `/review`, `/doc`, `/frontend`) starts, it runs this protocol before doing real work:
+When another command (`/feature`, `/implement`, `/ship`, `/ship-all`, `/fix`, `/improve`, `/design`, `/review`, `/doc`, `/frontend`) starts, it runs this protocol before doing real work:
 
 1. Ensure `.agentic/` exists + gitignored (same idempotent block as Phase 2).
 2. Read existing CURRENT.
 3. **Story-id match heuristic:** if new task references same STORY-ID (or same feature, when no story) as existing CURRENT, **only** update `note:` and `set_by:` — leave `title:`, `since:`, and PLAN alone. Prevents flicker when `/ship` includes `/implement` + `/review` inline.
 4. Otherwise overwrite CURRENT with new title/feature/set_by, fresh `since:`, and clear PLAN.
 5. Under `--auto`: append ` (auto)` suffix to `set_by:` value.
-6. Chain commands (`/ship`, `/fix`, `/ship-all`) then write their phase list into PLAN and tick it as phases close. Single-phase commands write no PLAN.
+6. Chain commands (`/ship`, `/ship-all`, `/plan-all`, `/fix`, `/improve`, `/feature`, `/doc-all`) then write their phase list into PLAN and tick it as phases close. Single-phase commands write no PLAN.
 
-`/implement` and `/ship` additionally call Phase 3 (`/focus done`) on success — except `/ship` suppresses this when it is mid-chain inside `/ship-all` (chain caller decides when to release focus). Under `--auto`, the caller passes `auto` as the `$ARGUMENTS` to `/focus done` so it auto-promotes silently.
+`/implement` and `/ship` additionally call Phase 3 (`/focus done`) on success — except `/ship` suppresses this when it is mid-chain inside `/ship-all` (chain caller decides when to release focus). Under `--auto` the caller does not re-invoke the slash command — it reads this file and applies the auto branch of `/focus done` inline: promote NEXT item #1 silently, no widget.

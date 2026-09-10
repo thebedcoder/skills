@@ -12,6 +12,12 @@ node_modules/
 .claude/settings.local.json
 **/.claude/settings.local.json
 
+# Per-plugin .claude/ dirs are developer tooling for working ON a plugin
+# (graphify hooks and the like). They shipped inside the installed plugin cache,
+# where they are inert for consumers but still confusing. Only the repo-root
+# .claude/ is tracked.
+*/.claude/
+
 # .skill zips are build output for the claude.ai packager — rebuild at release
 # time with /rebuild-artifacts. Committed copies drift silently: git reports the
 # repo clean while the archive falls months behind source.

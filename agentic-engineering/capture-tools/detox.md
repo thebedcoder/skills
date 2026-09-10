@@ -59,9 +59,9 @@ artifacts/
 
 `<configuration>` is `ios.sim.release` / `android.emu.debug` / etc. `<run-id>` is a timestamp.
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 runs the detox command.
+1. `/ship` Phase 3 runs the detox command.
 2. Implementer agent scans the latest `artifacts/<configuration>/<run-id>/` directory.
 3. For each `<test-name>/` subdirectory, matches the test name against AC Coverage matrix Tests cells.
 4. Moves the `.png` and `.mp4` into `docs/features/<feature-name>/artifacts/STORY-XXX/<test-name>.{png,mp4}`.

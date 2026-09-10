@@ -11,16 +11,9 @@ After bootstrap, run `/init` for docs scaffold, then `/feature` to start buildin
 
 ### Phase 1 — Project Type
 
-ARCH asks: *"What kind of project is this?"*
+⚠️ **Human checkpoint** `[ASK: single]`: *"What kind of project is this?"* → **Web app** (Next.js / React) · **API / Backend** (Node.js or Python) · **Fullstack monorepo** (frontend + backend + shared packages) · **Flutter** (mobile / cross-platform). CLI tool and the rest are reachable through the built-in "Other".
 
-Options:
-- **Web app** — Next.js / React
-- **API / Backend** — Node.js or Python
-- **CLI tool** — Node.js or Python
-- **Fullstack monorepo** — frontend + backend + shared packages
-- **Flutter** — mobile / cross-platform
-
-User picks. ARCH proceeds to stack selection for type.
+ARCH proceeds to stack selection for the chosen type.
 
 ---
 
@@ -28,7 +21,7 @@ User picks. ARCH proceeds to stack selection for type.
 
 ARCH presents options layer by layer. Each layer shows 2-3 options with recommended default + one-line reason. User confirms or overrides each before next.
 
-Format per layer: 2–3 options with recommended default, one-line why, best-for note. Ask for choice (A/B/C or enter for default).
+Format per layer: ⚠️ **Human checkpoint** `[ASK: single]`, 2–3 options, best first suffixed `(Recommended)`, one-line why in each option's description. **Never a typed A/B/C reply** — SKILL.md bans typed-reply gates; answers phrased differently get dropped.
 
 #### Web App layers
 1. **Framework** — Next.js (App Router) · Vite + React
@@ -127,19 +120,27 @@ On 'go', ARCH executes:
      ```bash
      mkdir -p .claude
      ```
+     Copy the script into the project first so it survives plugin version bumps:
+     ```bash
+     mkdir -p .claude
+     cp "${CLAUDE_PLUGIN_ROOT}/agentic-statusline.sh" .claude/agentic-statusline.sh
+     chmod +x .claude/agentic-statusline.sh
+     ```
+     `${CLAUDE_PLUGIN_ROOT}` unset → skip the statusline step and say so. Never point `statusLine` at a file that isn't there.
+
      If `.claude/settings.local.json` does not exist → create with:
      ```json
      {
        "statusLine": {
          "type": "command",
-         "command": "bash ~/.claude/agentic-statusline.sh"
+         "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/.claude/agentic-statusline.sh\""
        }
      }
      ```
      If exists but lacks `statusLine` → merge in. If already has `statusLine` → leave alone.
 7. **Visual capture tool setup**
 
-ARCH reads `~/.claude/skills/agentic-engineering/capture-tools/README.md` + each catalog entry's frontmatter.
+ARCH reads `${CLAUDE_PLUGIN_ROOT}/capture-tools/README.md` + each catalog entry's frontmatter.
 
 Filter catalog by detected stack:
 - Read detected stack from Phase 3 + scan repo for files matching each entry's `detection:` rules
@@ -163,11 +164,11 @@ Matching capture tools:
 ⚠️ **Human checkpoint** `[ASK: single]`: *"Which visual-capture tool should this project use?"* — top stack matches first (best match suffixed `(Recommended)`), then `manual`. More than 3 matches → offer the top 3; the built-in "Other" covers the rest of the catalog. Skipping is a valid answer — treat "Other: none" as skip.
 
 On selection:
-1. Copy `~/.claude/skills/agentic-engineering/capture-tools/<name>.md` → `./.claude/visual-capture.md`
+1. Copy `${CLAUDE_PLUGIN_ROOT}/capture-tools/<name>.md` → `./.claude/visual-capture.md`
 2. ARCH announces: *"Capture tool configured at `.claude/visual-capture.md`. Edit to tune project-specific values (command, output dir, etc.). Committed to git so the team uses the same tool."*
 
 On 'none':
-3. ARCH announces: *"Skipping visual capture setup. UI stories will receive informational reminders during `/ship` Phase 4; Visual Artifacts table in PROGRESS.md can be filled manually."*
+3. ARCH announces: *"Skipping visual capture setup. UI stories will receive informational reminders during `/ship` Phase 3; Visual Artifacts table in PROGRESS.md can be filled manually."*
 
 (No `.claude/visual-capture.md` written when 'none' selected — Phase 1's manual flow applies by default.)
 

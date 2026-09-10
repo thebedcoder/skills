@@ -4,56 +4,64 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Scope of this file
 
-The parent `../CLAUDE.md` covers the monorepo (per-plugin layout, the wrapper/real-command split, the two installers, the `<!-- agentic-engineering:start v1 -->` marker contract, commit conventions). **Read it first** — most authoring rules live there. This file only adds what's specific to the `agentic-engineering/` plugin's internal shape.
+The parent `../CLAUDE.md` covers the monorepo (per-plugin layout, the wrapper/real-command split, the top-level multi-tool installer, the `<!-- agentic-engineering:start v1 -->` marker contract, commit conventions). **Read it first** — most authoring rules live there. This file only adds what's specific to the `agentic-engineering/` plugin's internal shape.
+
+**This plugin is marketplace-only for Claude Code.** It ships no `install.sh`; there is no hand-copy path into `~/.claude`. Every path in shipped content resolves through `${CLAUDE_PLUGIN_ROOT}`, and a hand copy breaks all of them. The top-level `../install.sh` still serves the non-Claude tools from `adapters/AGENTS.md.template`.
 
 ## Architecture at a glance
 
-The plugin is the entire `/ship`, `/feature`, `/review`, `/fix` SDLC workflow — a router skill (`skills/agentic-engineering/SKILL.md`) that dispatches into one of 21 command files in `skills/agentic-engineering/commands/`, plus 8 named specialist agents under `agents/` that the commands invoke (often in parallel) as Claude Code subagents. The end-user `README.md` is the workflow-level overview; this file is for authoring inside the plugin.
+The plugin is the entire `/ship`, `/feature`, `/review`, `/fix` SDLC workflow — a router skill (`skills/agentic-engineering/SKILL.md`) that dispatches into one of 21 command files in `skills/agentic-engineering/commands/`, plus 9 named specialist agents under `agents/` that the commands invoke (often in parallel) as Claude Code subagents. The end-user `README.md` is the workflow-level overview; this file is for authoring inside the plugin.
 
 Three pieces of the architecture are non-obvious and load-bearing:
 
-1. **On-demand command loading.** `SKILL.md` is a thin router — it only holds the command → file table, the agent roster, the caveman rules, and the test-watch ban. The actual command body (the long instructions) lives in `skills/agentic-engineering/commands/<name>.md` and is read only when that command fires. This keeps the skill cheap to load. Do not inline command logic into `SKILL.md`.
-2. **6-agent parallel review.** `commands/review.md` dispatches `ae-red`, `ae-req`, `ae-test`, `ae-doc`, `ae-sec`, `ae-edge` as **simultaneous** Haiku subagents — single message with multiple `Agent` tool calls. Sequential dispatch defeats the design (cost, latency, context). The `ae-ux` agent runs separately after the frontend pass — it is **not** in the parallel batch.
+1. **Router plus policy layer.** `SKILL.md` is *not* a thin router, despite reading like one. It holds the command → file table and agent roster, and also the policy every command inherits: Project Mode, Memory Docs, Core Principles, the `[ASK:]` and `[AUTO:]` taxonomies, Human-Facing Output Rules, Progress Tracking, Context Management, the caveman rules and the test-watch ban. Command *bodies* live in `skills/agentic-engineering/commands/<name>.md` and load only when that command fires; blocks repeated across many commands live once in `skills/agentic-engineering/shared/preamble.md` (§A parse `--auto`, §B focus write, §C auto summary, §D memory inputs). Do not inline command logic into `SKILL.md`, and do not re-paste a preamble block into a command.
+2. **7-agent parallel review.** `commands/review.md` dispatches `agentic-engineering:ae-red`, `:ae-req`, `:ae-test`, `:ae-doc`, `:ae-sec`, `:ae-edge`, `:ae-lean` as **simultaneous** subagents — single message with multiple `Agent` tool calls. Sequential dispatch defeats the design (cost, latency, context). `ae-red`, `ae-sec`, `ae-edge` and `ae-lean` run on Sonnet — all four do multi-file reasoning with no ability to execute anything, and a cheaper tier fabricates reproductions there. `ae-req`, `ae-test` and `ae-doc` stay on Haiku: checklist and parsing work. **Dispatch names are plugin-namespaced**: a bare `ae-red` does not resolve under a plugin install, and the failure is silent — the main model role-plays the reviewers inline and emits a normal-looking report. `ae-lean` is dropped from the Phase 4 re-review via `/review --frontend-pass` — it already saw the branch in Phase 2. The `ae-ux` agent runs separately after the frontend pass and is **not** in the parallel batch at all.
+
+   Reviewers have **no Bash**. `/review` captures the diff once into `.agentic/review/<STORY-ID>.diff` and passes the path; `tools:` does not honour permission-rule syntax, so `Bash(git diff:*)` would hand an agent a general Bash tool, not a restricted one.
 3. **Forked vs. main context.** `/status` and `/analyze` run with `context: fork` so their tool calls don't pollute the main conversation. `/ship`, `/feature`, `/design` run in the main context because they have human checkpoints that need conversation continuity. If you add a new command, this choice is deliberate — pick based on whether it needs human handoff.
 
-## Agent file layout — single file vs. directory
+## Agent file layout — flat only
 
-Two shapes exist. Pick the right one and update `install.sh` to match. Either shape **must** declare `name:` in its frontmatter, matching the file stem or directory name — Claude Code drops a nameless agent silently, so `/review` still produces a report, just with the main model role-playing the six reviewers. `.claude/hooks/check-integrity.sh` check F enforces this.
+**Every agent is a single `agents/<name>.md` file. `agents/` contains nothing else.**
 
-| Shape | Used by | Why |
-|---|---|---|
-| Single `agents/<name>.md` | `ae-req`, `ae-doc`, `ae-scribe` | Small agents with no per-language or per-topic dispatch |
-| Directory `agents/<name>/AGENT.md` + `references/` + `languages/` | `ae-red`, `ae-test`, `ae-sec`; `ae-ux` + `ae-edge` (no `languages/`) | Agent loads only the references/language guides relevant to what's in the diff — keeps each review small |
+The directory form (`agents/<name>/AGENT.md`) works at project level but is broken under a plugin install, verified against 2.1.267:
 
-When adding language/topic depth to an existing single-file agent, **migrate it to a directory** (`agents/ae-foo/AGENT.md`) and update the `cp -r` line in `install.sh`. The single-file `cp` form will fail silently on the new shape.
+- `agents/ae-red/AGENT.md` registers as `agentic-engineering:ae-red:ae-red`, not `:ae-red`.
+- **Every `.md` under `agents/*/` registers as its own agent.** 59 reference and language files became dispatchable subagent types, sitting in the Agent tool description of every turn of every session.
 
-## User-facing vs. internal commands
+So reference material lives outside `agents/`:
 
-Twenty-one commands exist in `commands/`. `implement`, `review`, `frontend` are **internal by intent** — designed to be invoked by `ship` and `ship-all`, not driven by hand. But "internal" is enforced on exactly one of the two install paths, and that asymmetry is load-bearing:
+```
+agents/<name>.md                          the agent
+references/<name>/<topic>.md              its topic references
+references/<name>/languages/<lang>.md     its language guides
+```
 
-| Install path | What the user sees |
-|---|---|
-| Per-plugin `install.sh` (bash) | 18 commands. The `USER_COMMANDS` array is the gate — a new command file is **not** user-visible until you append its name there. |
-| Marketplace / `/plugin install` | **All 21.** Plugin auto-discovery registers every `.md` in `commands/`, so `/agentic-engineering:implement`, `:review`, and `:frontend` do appear in the palette. `USER_COMMANDS` has no effect here. |
+Agents reach them by absolute path — `${CLAUDE_PLUGIN_ROOT}/references/ae-red/null-safety.md`. A relative `references/x.md` resolves against the *project*, not the plugin, and silently finds nothing.
 
-This is deliberate, not a bug to paper over: standalone `/agentic-engineering:review` is genuinely useful (review without shipping), and the three wrappers are kept for it. What you must **not** do is assume the bash-installer filter hides them everywhere — it doesn't. If you ever need a command hidden on both paths, delete its root `commands/<name>.md` wrapper; the skill router still dispatches from `skills/agentic-engineering/commands/<name>.md`.
+Every agent file **must** declare `name:` in its frontmatter matching the file stem. Claude Code drops a nameless agent silently. `.claude/hooks/check-integrity.sh` check F enforces the name; check G enforces that `agents/` holds nothing but agent files.
 
-The skill's `commands/` table in `SKILL.md` lists all 21 because the router needs to dispatch them regardless of palette visibility.
+## All 21 commands are user-visible
 
-## Post-install SKILL.md patch (do not pre-add)
+Plugin auto-discovery registers every `.md` in `commands/` — there is no frontmatter key that hides one. `implement`, `review` and `frontend` are *internal by intent* (driven by `ship`, not by hand) but they still appear as `/agentic-engineering:implement`, `:review`, `:frontend`. That is fine: standalone `/agentic-engineering:review` is genuinely useful.
 
-`install.sh` runs a Python step that injects `user-invocable: false` into the installed `SKILL.md` frontmatter. This field is valid in the Claude Code CLI but **rejected by the claude.ai skill packager** when building `agentic-engineering.skill`. Therefore:
+The only way to hide a command is to delete its root `commands/<name>.md` wrapper; the skill router still dispatches from `skills/agentic-engineering/commands/<name>.md`.
 
-- The source `skills/agentic-engineering/SKILL.md` must **not** contain `user-invocable: false`. If a PR adds it to source, that's a bug — the `.skill` packager will fail.
-- The installer guards with `grep -q "user-invocable"` so re-runs are idempotent — leave the guard in place.
+**Wrappers carry no logic.** Each is a pointer to `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/<name>.md`. Write the absolute form — a bare `commands/<name>.md` under a plugin install resolves to the wrapper itself. Every wrapper passes `$ARGUMENTS`, even the ones whose command takes none; a wrapper that drops it silently discards `--auto` and every flag.
 
-If you ever need to ship the source with `user-invocable: false` (e.g. CLI-only release), also update the packager step and drop the install-time patch.
+## `user-invocable` must never appear in SKILL.md
+
+The field is valid in the Claude Code CLI but **rejected by the claude.ai skill packager** when building `agentic-engineering.skill`. The bash installer used to inject it post-copy; that installer is gone, so there is nowhere for it to live. Source stays clean. `.claude/hooks/check-integrity.sh` check C enforces this.
+
+## SKILL.md description is capped
+
+The `description` frontmatter must stay **≤ 1,024 characters** folded (the Agent Skills cap; Claude Code's own listing cap is 1,536 for description plus `when_to_use`). Over the cap the *tail* is silently truncated, so the disambiguation clauses — the "do NOT trigger on" list — are exactly what gets lost. Do not list slash-command names in it: the CLI dispatches slash commands before the model reads any description, and under the marketplace they are `/agentic-engineering:<n>` anyway. Check G in the integrity hook measures it.
 
 ## Caveman communication rules (authoring style)
 
 `SKILL.md` enforces caveman rules for **agent-to-agent internal output** — review reports, plans, status lines. The rules: drop articles (a/an/the), drop filler (just/really/basically), drop hedging, keep technical terms and file paths verbatim, fragments are fine. Apply this to:
 
-- Agent prompts and report templates in `agents/*/AGENT.md`
+- Agent prompts and report templates in `agents/*.md`
 - Command instructions in `skills/agentic-engineering/commands/*.md`
 - Anything the agents read or emit during a session
 
@@ -69,19 +77,27 @@ Documented in `SKILL.md` under "Test Execution Rules". Watch-mode test runners (
 
 ## Verifying changes locally
 
-There are no tests. Verify by running the installer and inspecting the result:
+There are no tests. Two things to run.
+
+**Load the plugin from the working tree** and check that the agents register under the names the commands dispatch:
 
 ```bash
-# Claude Code: this plugin only
-bash install.sh
-ls ~/.claude/skills/agentic-engineering/ ~/.claude/agents/ ~/.claude/commands/
-
-# Other coding agent (e.g. Cursor) via the parent multi-tool installer
-cd /tmp/scratch && bash /Users/getman/DevWorkspaces/bedcode/skills/install.sh --tool=cursor --skill=agentic-engineering
-ls .cursor/rules/ AGENTS.md
+cd "$(mktemp -d)" && git init -q
+claude -p --model haiku --plugin-dir "$REPO/agentic-engineering" \
+  "List the exact names of every agent type available to the Agent tool, one per line." </dev/null
 ```
 
-The per-plugin `install.sh` is idempotent — re-run after every edit to a skill, command, or agent file. Restart Claude Code to pick up changes.
+Expect exactly nine `agentic-engineering:ae-*` entries and nothing else. A `:ae-red:ae-red` or an `:ae-sec:references:xss` means the flat-agent rule was broken.
+
+**Exercise the non-Claude path** through the parent multi-tool installer, never against your real home:
+
+```bash
+SANDBOX="$(mktemp -d)"
+( cd "$SANDBOX" && HOME="$SANDBOX" bash "$REPO/install.sh" --tool=cursor --skill=agentic-engineering )
+ls "$SANDBOX/.cursor/rules/" "$SANDBOX/AGENTS.md"
+```
+
+`--tool=claude-code` prints the marketplace instructions and writes nothing — that is correct, not a failure. Restart Claude Code to pick up changes.
 
 ## graphify
 

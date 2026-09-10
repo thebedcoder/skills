@@ -8,6 +8,10 @@ detection:
     contains: "androidx.test.espresso"
   - file: app/build.gradle
     contains: "espresso"
+  - file: build.gradle.kts
+    contains: "androidx.test.espresso"
+  - file: app/build.gradle.kts
+    contains: "espresso"
 output_dir: app/build/outputs/connected_android_test_additional_output/
 ---
 
@@ -84,9 +88,9 @@ app/build/outputs/managed_device_android_test_additional_output/
 
 (Path varies slightly between AGP versions; the catalog entry's `output_dir:` is the most common.)
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 runs `./gradlew connectedAndroidTest`.
+1. `/ship` Phase 3 runs `./gradlew connectedAndroidTest`.
 2. Implementer agent scans the variant + device subdirectories.
 3. Matches screenshot names against AC Coverage matrix Tests cells.
 4. Moves PNGs into `docs/features/<feature-name>/artifacts/STORY-XXX/<device>-<name>.png`.

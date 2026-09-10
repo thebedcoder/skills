@@ -4,6 +4,51 @@ All notable changes to the `jtbd` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] — 2026-09-10
+
+Fixes a silent failure: under a plugin install, none of the five specialist
+agents were reachable. Every mode still ran and still emitted a normal-looking
+report — written by the main conversation, not by the agents.
+
+### Changed — BREAKING
+
+- **Agent files are flat.** `agents/<name>/AGENT.md` → `agents/<name>.md`.
+  Verified on Claude Code 2.1.267 with `--plugin-dir`: the directory form
+  registers as `jtbd:<name>:<name>`, so every dispatch by `<name>` resolved to
+  nothing, and **every `.md` beside it registered as its own agent type** — 24
+  phantom subagents named after reference docs, sitting in the Agent tool
+  description of every turn of every session where jtbd was enabled.
+- **Reference guides moved out of `agents/`** to `references/<agent>/<file>.md`,
+  and agents now address them absolutely as
+  `${CLAUDE_PLUGIN_ROOT}/references/<agent>/<file>.md`. A relative
+  `references/x.md` resolves against the *user's project*, not the plugin.
+- **Dispatch names are plugin-namespaced.** All five sites in
+  `skills/jtbd/commands/mode-*.md` now spell `jtbd:jtbd-researcher`,
+  `jtbd:jtbd-analyst`, `jtbd:jtbd-scout`, `jtbd:jtbd-copywriter`,
+  `jtbd:jtbd-scriptwriter`. A bare name does not resolve under a plugin install.
+- **`jtbd/install.sh` is removed. The plugin is marketplace-only for Claude
+  Code.** Both changes above depend on `${CLAUDE_PLUGIN_ROOT}` and on the `jtbd:`
+  namespace, neither of which exists in a hand copy under `~/.claude`.
+  `install.sh --tool=claude-code --skill=jtbd` now prints the marketplace
+  instructions and writes nothing; the non-Claude tools are unaffected and still
+  install from `adapters/AGENTS.md.template`.
+
+### Fixed
+
+- **`jtbd-researcher` and `jtbd-scout` could not read their own references.** Both
+  declared `tools: WebSearch, WebFetch` — no `Read` — while their prompts open
+  with "Load the relevant reference". Now `Read, WebSearch, WebFetch`.
+- **Reference files pointed at a SKILL.md that does not exist.** All 17 citations
+  of the Four Forces used `../../../skills/jtbd/SKILL.md#forces`, correct only
+  from the old nesting depth. Now `${CLAUDE_PLUGIN_ROOT}/skills/jtbd/SKILL.md#forces`.
+
+### Added
+
+- `SKILL.md`'s Agent Roster gained a **Dispatch as** column carrying the
+  namespaced name, plus the reason the bare form fails silently.
+- `.claude/hooks/check-integrity.sh` check G now covers `jtbd/agents/`, so the
+  nested layout cannot come back unnoticed.
+
 ## [1.0.0] — 2026-05-19
 
 First release as a Claude Code plugin, distributed via the `thebedcoder` marketplace and the multi-tool installer.

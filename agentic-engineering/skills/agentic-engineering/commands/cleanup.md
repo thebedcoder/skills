@@ -4,7 +4,7 @@
 
 Runs after work lands. Turns a finished task into two things worth keeping: **why** it was built that way (`./docs/DECISIONS.md`) and **what an agent must know next session** (`./docs/MEMORY.md`). Everything else is already in git.
 
-Called automatically as the last phase of `/ship` and `/fix`. Standalone use covers work done outside those chains.
+Called automatically as the last phase of `/ship`, `/fix` and `/improve`. Standalone use covers work done outside those chains.
 
 **Inputs (read first):** `./docs/INDEX.md` (for `mode:`), `.agentic/focus.md`, `./docs/DECISIONS.md`, `./docs/MEMORY.md`.
 
@@ -31,7 +31,7 @@ Sources missing (story never ran through `/ship`) → work from the git diff for
 
 ### Step 2 — Changelog entry (skip if present)
 
-`./docs/CHANGELOG.md` already carries an entry for this story → **skip**. `/ship` Phase 5 and `/fix` Phase 4 write it; a second write duplicates.
+`./docs/CHANGELOG.md` already carries an entry for this story → **skip**. `/ship` Phase 5, `/fix` Phase 4 and `/improve` Phase 4 each write it; a second write duplicates.
 
 No entry (standalone `/cleanup` on work done by hand) → prepend, newest first, same terse form:
 ```markdown
@@ -113,7 +113,7 @@ Next: /ship for STORY-XXX+1
 
 Then release focus — `/focus done` (or `/focus done auto` under `--auto`). Cleanup must run **before** this: `/focus done` clears PLAN, which Step 1 reads.
 
-Called inline from `/ship` or `/fix` → the parent already owns focus release. Skip it here; print the block without the `Next:` line and return.
+Called inline from `/ship`, `/fix` or `/improve` → the parent already owns focus release. Skip it here; print the block without the `Next:` line and return.
 
 ### Checkpoint tag reference (this file)
 

@@ -8,6 +8,10 @@ detection:
     contains: "cypress"
   - file: cypress.config.js
     contains: ""
+  - file: cypress.config.ts
+    contains: ""
+  - file: cypress.config.mjs
+    contains: ""
 output_dir: cypress/screenshots/
 ---
 
@@ -53,9 +57,9 @@ cypress/
     <spec-file>.cy.ts.mp4          # video per spec file
 ```
 
-## /ship Phase 4 integration
+## /ship Phase 3 integration
 
-1. `/ship` Phase 4 runs `npx cypress run` and waits for exit.
+1. `/ship` Phase 3 runs `npx cypress run` and waits for exit.
 2. Implementer agent scans `cypress/screenshots/` + `cypress/videos/` for files.
 3. Matches spec file + test name against the AC Coverage matrix's Tests cells. Cypress test references typically look like `cypress/e2e/auth.cy.ts > login > redirects to dashboard` — the agent splits on `>` and matches the test name.
 4. Moves screenshots into `docs/features/<feature-name>/artifacts/STORY-XXX/<test-name>.png` and videos into the same dir as `<spec-name>.mp4`.

@@ -55,23 +55,47 @@ Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
 
 Do these phases in order. Do not skip the review pass.
 
-1. **Plan.** Write the implementation plan. Show it. Wait for approval.
+1. **Plan.** Write the implementation plan. Show it. Wait for approval. The plan carries two sections that outlive it:
+
+   - **Contract claims** — every assumption about code you did not write ("this returns null on miss", "this call is idempotent"), each backed by a `file:line` citation or real probe output. An assertion is not a proof.
+   - **Failure states** — a table with one row per step that can fail, naming the state of each resource after that failure.
+
+   **Pre-review the plan before writing code.** Re-read each Contract claim against the file it cites: does the file say what the claim says, and is the claim's converse also consistent with it? Then name a failure point the table omits. Findings amend the plan; a disputed claim means stop and ask. A plan with neither section (a pure function over types you own) skips this.
+
+   **Persist both sections into `./docs/features/<name>/PROGRESS.md`** during the record step — the plan dies with the conversation, and "it was in the plan" is unverifiable afterwards.
 2. **Failing tests first.** Write tests that capture the acceptance criteria. Run them — they should fail. Show the failure.
 3. **Implement.** Minimum code to make the tests pass. No drive-by refactors.
-4. **Review across 6 areas.** Do each as a focused pass:
+4. **Review across 7 areas.** Do each as a focused pass:
    - **Bug hunt** — null safety, async/concurrency, logic errors, resource leaks, error handling
    - **Requirements + constitution** — does the code meet the acceptance criteria and the constitution?
    - **Test quality** — meaningful assertions, no useless mocks, no flaky patterns
    - **Conventions** — does the code match the surrounding codebase style?
    - **Security** — injection, auth, XSS, SSRF, secrets, data exposure — only HIGH confidence findings, no noise
    - **Edge-case probe** — adversarially probe the backend diff for missing edge cases (boundary values, null/empty inputs, race/concurrency, malformed input, resource limits, error paths). Emit failing test code + suggested fixes as part of the consolidated blocker list. Read-only — the downstream blocker-fix flow implements the changes. Frontend states (loading / empty / error UI, responsive, accessibility) stay with the fidelity check in step 5, not this probe. If the diff is frontend-only, the probe self-skips.
+
+   - **Reuse and simplification** — the only pass that looks at code which is *correct*. Before flagging anything, **search the repo** for an existing implementation of what the diff just added: grep for the operation, not the name the author chose, and check the dependency manifest before calling something a hand-rolled utility. Then look for conditionals that collapse, layers passed straight through, work repeated inside a loop on a path that runs often, and abstractions with one implementation. **Every finding names the replacement** — an existing `file:line`, a shorter shape, a cheaper call; "this feels complex" is not a finding. Scope to code this diff added or changed, since drive-by refactors are banned. **Findings are never blockers** except a verbatim duplicate of an existing function, where both locations are cited.
+
+   **Bugs vs. missing tests do not double-count.** The bug hunt owns "crashes on the current path"; the edge probe owns "no test proves the guard". One null dereference is one blocker plus, at most, one missing-test entry.
 5. **If UI:** also check fidelity — loading/empty/error states, form validation, accessibility (keyboard, contrast, focus), responsive behavior.
 6. **Update both changelogs** — engineering log always, product release notes only if user-visible.
 7. **Conventional commit** with a descriptive subject and a body explaining the why.
 
-**AC Coverage matrix.** Every shipped story records an AC Coverage matrix in `./docs/features/<name>/PROGRESS.md`. The matrix is a markdown table listing every Acceptance Criterion (AC-1, AC-2, ...) from `STORIES.md` and the specific tests that prove it, formatted `file:test_name`. When `ae-edge` probes find edge-case blockers, the implementer also appends an `Edge probes` table. During `/review`, the test-coverage reviewer (`ae-test`) validates that every AC has at least one test entry and every claimed test exists — missing AC or stale entries become review blockers. Matrix is read-only at review time; only `/implement` and Phase 2 blocker-fix mutate it. The matrix's `Level` column declares one of `unit`, `integration`, or `e2e` per row; `ae-test` computes a pyramid ratio per story and surfaces a soft "inverted pyramid" warning when over half the tests are e2e or zero unit tests exist (informational, never blockers).
+**AC Coverage matrix.** Every shipped story records an AC Coverage matrix in `./docs/features/<name>/PROGRESS.md`. The matrix is a markdown table listing every Acceptance Criterion (AC-1, AC-2, ...) from `STORIES.md` and the specific tests that prove it, formatted `file:test_name`. When the edge-case probe finds blockers, the implementer also appends an `Edge probes` table. During the review pass, the test-coverage reviewer validates that every AC has at least one test entry and every claimed test exists — missing AC or stale entries become review blockers. Matrix is read-only at review time; only the implementation step and the review-blocker fix pass mutate it. The matrix's `Level` column declares one of `unit`, `integration`, or `e2e` per row; the test-coverage reviewer computes a pyramid ratio per story and surfaces a soft "inverted pyramid" warning when over half the tests are e2e or zero unit tests exist (informational, never blockers).
 
-**Visual Artifacts table.** UI-touching stories additionally record a `### Visual Artifacts` table in `PROGRESS.md` — one row per captured screenshot or screen recording, mapped to the AC it proves. Files live in `docs/features/<name>/artifacts/STORY-XXX/`. The `File` cell accepts either a relative path or a URL (Loom, Notion, YouTube). `ae-ux` validates references during `/review` — missing or stale refs emit `should-fix` warnings (informational, never blockers in Phase 1). The section is omitted entirely for backend-only or CLI-only stories. Projects that opt in during `/init` pick a capture tool from the `capture-tools/` catalog (Playwright, Cypress, Maestro, Detox, XCUITest, Espresso, etc.); the selection writes to `.claude/visual-capture.md` and `/ship` Phase 4 dispatches the chosen mechanism (test-runner / mcp / script / manual / external-link) to auto-populate the table with `(auto)`-tagged rows for operator backfill. Projects that want to require captures can add a "Visual artifacts" article to `./docs/CONSTITUTION.md`; when present, `ae-ux` escalates all Visual Artifacts findings from `should-fix` to blocker for UI stories.
+**Visual Artifacts table.** UI-touching stories additionally record a `### Visual Artifacts` table in `PROGRESS.md` — one row per captured screenshot or screen recording, mapped to the AC it proves. Files live in `docs/features/<name>/artifacts/STORY-XXX/`. The `File` cell accepts either a relative path or a URL (Loom, Notion, YouTube). The fidelity pass validates the references — missing or stale refs are warnings, not blockers. The section is omitted entirely for backend-only or CLI-only stories. Projects that want to require captures can add a "Visual artifacts" article to `./docs/CONSTITUTION.md`; when present, missing artifacts on a UI story become blockers.
+
+---
+
+## When the user asks you to improve something (not a bug, not a whole feature)
+
+New keyboard shortcut, another supported file format, a faster query, splitting a 400-line module. Nothing is broken, and there is no PRD to write.
+
+1. **Plan.** Precedent (how does this codebase already do the nearest thing?), scope, and an explicit **`Done when:`** list — the acceptance criteria for a change that has none on file.
+2. **Apply**, with a test per `Done when:` condition.
+3. **Review**, scoped: bug hunt and test quality always; then exactly one of security / fidelity / edge probe, picked by what the diff touches. The requirements pass does not run — there are no persisted acceptance criteria — so the test-quality pass carries the `Done when:` check and reports per-condition pass/fail. Any uncovered condition is a blocker.
+4. **Both changelogs**, under `### Improved` — but only if a user can see the change. Pure refactors and perf work stay in the engineering log.
+
+On `main`/`master`, ask before starting; branch by default.
 
 ---
 
@@ -80,8 +104,11 @@ Do these phases in order. Do not skip the review pass.
 1. **Diagnose root cause.** Don't patch the symptom. Trace it back to where the contract was broken.
 2. **Write a failing test** that reproduces the bug. Run it — confirm it fails.
 3. **Surgical fix.** One bug, one fix. No tangential cleanup in the same change.
-4. **Run the focused review** (bugs / tests / conventions). Skip requirements + constitution unless the bug is a contract violation.
+4. **Run a focused bug-hunt review of the fix** — does it resolve the root cause, does it introduce new risk, would the test actually catch the regression, what is adjacent enough to need re-testing. This is one pass, not the full six.
 5. **Append to engineering changelog.** Append to product changelog only if users would have seen the bug.
+6. **Record what was learned** — a binding decision goes to `./docs/DECISIONS.md`, anything needed before touching this code again goes to `./docs/MEMORY.md`.
+
+On `main`/`master`, ask before starting; a bug fix is usually fine to land there, but it is the user's call.
 
 ---
 
@@ -99,7 +126,7 @@ This applies to every test invocation, including "quick checks."
 
 ---
 
-## Human checkpoints — never auto-proceed
+## Human checkpoints
 
 Stop and wait for the user before continuing past any of these points:
 
@@ -108,6 +135,8 @@ Stop and wait for the user before continuing past any of these points:
 - Constitution violations (must be resolved or explicitly waived)
 - Implementation plan (before writing any code)
 - Design approval (mobile-first, then desktop, separately)
+
+**Under `--auto` the plan and PRD gates are skipped** — they are approval ceremony, and auto mode exists to skip ceremony. Three exceptions re-arm them regardless: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the always-pause list under "Auto Mode" below. Constitution violations and destructive operations are never skipped.
 
 ---
 
@@ -118,9 +147,10 @@ All of the following must be true before marking a story complete:
 - All acceptance criteria met (binary check)
 - Tests pass in non-watch mode
 - No constitution violations
-- Review across 6 areas produced no blockers
+- Review across 7 areas produced no blockers
+- Decisions and project memory recorded
 - Both changelogs updated
-- Conventional commit pushed
+- Conventional commit created (**not** pushed — pushing is always the user's call)
 - (If UI) fidelity check passes
 
 If any of these fail, the story is not done.
@@ -131,20 +161,22 @@ If any of these fail, the story is not done.
 
 `.agentic/focus.md` is a per-worktree pointer to the current task. Section `# CURRENT` holds the active task (`title:`, `feature:`, `since:`, `set_by:`, `note:`). Section `# NEXT` is an ordered list of queued items. The file lives in `.agentic/` which is gitignored — each worktree has its own state, no cross-worktree stomping.
 
-- `/focus <task>` overwrites CURRENT manually.
-- `/focus done` clears CURRENT and (if NEXT non-empty) prompts to promote item #1 to CURRENT (`y`), clear only (`n`), or move to BACKLOG (`b`).
-- `/focus clear` wipes both sections.
-- `/next <task>` appends to NEXT. `/next drop <N>` removes item N.
+Operations on it — the user may name them as slash commands if they come from Claude Code, but they are plain file edits:
 
-Long-running commands (`/feature`, `/implement`, `/ship`, `/fix`, `/improve`, `/design`, `/review`, `/doc`, `/frontend`) auto-write CURRENT at their start using a story-id-match heuristic that prevents flicker when one command is nested in another (e.g. `/ship` calls `/implement` and `/review` inline; the inner phases only update `note:`). `/implement` and `/ship` also call `/focus done` on success (suppressed mid-chain inside `/ship-all`).
+- **set focus** — overwrite CURRENT with the named task.
+- **finish focus** — clear CURRENT and, if NEXT is non-empty, ask which of three to do: promote item #1 to CURRENT, clear only, or move it to the backlog. Ask it as a choice, not as a typed `y`/`n`/`b` reply.
+- **clear focus** — wipe both sections.
+- **queue** — append to NEXT; drop item N to remove one.
 
-Claude Code statusline integration is set up automatically by `/init` and `/bootstrap` via `./.claude/settings.local.json` (per-developer, untracked). Other tools can render the focus title themselves by reading `.agentic/focus.md`.
+Write CURRENT at the start of any long-running operation, using a story-id-match heuristic that prevents flicker when one operation is nested in another: if the new task references the same story or feature as the existing CURRENT, update only `note:` and `set_by:` and leave `title:`, `since:` and `# PLAN` alone. Multi-phase work also writes one `# PLAN` line per phase and ticks them off as phases close — PLAN is the progress record, and it survives a context compaction.
+
+Any tool can surface the current task by reading the `title:` field of `# CURRENT` in `.agentic/focus.md`. (Claude Code wires this into its statusline during project setup; nothing else in this workflow depends on that.)
 
 ---
 
 ## Auto Mode (`--auto`)
 
-Long-running commands accept a `--auto` flag: `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`. Under `--auto`, the agent skips ceremonial checkpoints and applies defaults from `./docs/CONSTITUTION.md` (especially a `## Default Decisions` section, if present). Every auto-decision is announced inline (`DECISION: <choice> — reason: <why> [auto]`) and appended to `.agentic/auto-log.md` (gitignored, alongside `.agentic/focus.md`).
+Long-running operations accept a `--auto` flag: feature research, fix, improve, ship, ship-all, implement, design, doc. Under `--auto`, the agent skips ceremonial checkpoints and applies defaults from `./docs/CONSTITUTION.md` (especially a `## Default Decisions` section, if present). Every auto-decision is announced inline (`DECISION: <choice> — reason: <why> [auto]`) and appended to `.agentic/auto-log.md` (gitignored, alongside `.agentic/focus.md`).
 
 The agent always pauses regardless of `--auto` for:
 - Review blockers (high-severity bugs, requirements miss, constitution violation)
@@ -152,5 +184,5 @@ The agent always pauses regardless of `--auto` for:
 - Constitution conflicts
 - Missing required project state (no test framework, no design tool, no feature directory)
 
-End of command prints a one-line summary referring to the log file: `🤖 Auto mode: N decisions, M hard-pauses. See .agentic/auto-log.md`.
+End of command prints a one-line summary referring to the log file: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`.
 <!-- agentic-engineering:end v1 -->

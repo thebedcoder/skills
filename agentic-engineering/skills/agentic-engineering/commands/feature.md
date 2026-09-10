@@ -2,32 +2,19 @@
 
 **Agents:** PROD (lead), ARCH (validator), REQ (constitution check)
 
-Read `./CLAUDE.md`, `./docs/INDEX.md`, `./docs/CONSTITUTION.md` before starting.
+**Inputs (read first):**
+- `./CLAUDE.md`, `./docs/INDEX.md`
+- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`. `/cleanup` writes these after every chain; a chain that never reads them is a write-only log
 
 ### Step 0a — Parse `--auto` flag
 
-Detect whether `$ARGUMENTS` contains the `--auto` token (not a substring inside a name).
-
-- Strip `--auto` from `$ARGUMENTS` before passing the rest to downstream agents.
-- Set internal flag `AUTO=true` for this run.
-- If `AUTO`: Step 0 (below) appends ` (auto)` suffix to `set_by:` when writing CURRENT.
-- If `AUTO`: ensure `.agentic/auto-log.md` exists and append a dated header:
-  ```markdown
-  ## [now YYYY-MM-DD HH:MM] — /feature <name> --auto
-  ```
-
-See "Auto Mode" in SKILL.md for the tag taxonomy, hard-override list, and ambiguity heuristic. Apply checkpoint tags from the table at the bottom of this file.
+Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/feature <name> --auto`.
 
 ### Step 0 — Auto-write focus
 
 Before doing anything else, update `.agentic/focus.md`:
 
-1. Ensure `.agentic/` exists + gitignored (idempotent):
-```bash
-mkdir -p .agentic
-if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
-grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
-```
+1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
 
 2. Read existing CURRENT. Apply story-id-match heuristic:
    - Existing CURRENT.title already references the same feature name → update `note:` to `phase: researching feature <name>` and `set_by:` to `/feature`. Leave `title:` + `since:` alone.
@@ -39,7 +26,7 @@ Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by
 
 ### Step 0c — Read project mode
 
-Read `mode:` from `./docs/INDEX.md` frontmatter. See "Project Mode" in SKILL.md.
+Read `mode:` from `./docs/INDEX.md` frontmatter. See `shared/project-mode.md`.
 
 No `./docs/INDEX.md` → print `Run /init first — no docs scaffold in this project.` and exit.
 No `mode:` key → treat as `full`.

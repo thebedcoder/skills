@@ -4,9 +4,11 @@ description: Maestro declarative mobile UI flows, iOS + Android
 platforms: [mobile]
 mechanism: test-runner
 detection:
-  - file: .maestro/
-    contains: ".yaml"
-output_dir: maestro-output/
+  - file: .maestro/flows/*.yaml
+    contains: ""
+  - file: .maestro/config.yaml
+    contains: ""
+output_dir: .maestro/captures/
 ---
 
 # Maestro
@@ -20,9 +22,12 @@ Reference: https://maestro.mobile.dev/
 Install Maestro:
 
 ```bash
-brew install maestro
+brew tap mobile-dev-inc/tap && brew install maestro
 # or: curl -Ls "https://get.maestro.mobile.dev" | bash
 ```
+
+Maestro is not in homebrew-core — without the tap, `brew install maestro`
+installs something else or fails.
 
 Create flow files under `.maestro/flows/`:
 
@@ -40,30 +45,36 @@ appId: com.example.app
 - takeScreenshot: login-success
 ```
 
-The `takeScreenshot` step is optional — Maestro also captures screenshots at every step automatically when `--debug-output` is enabled.
+**Use explicit `takeScreenshot` steps.** `--debug-output` writes a debug bundle (logs, and screenshots on failure); it is not a documented per-step screenshot feature, and its layout is not a stable contract. Name each screenshot after the AC it proves.
 
 ## Capture command
 
 ```bash
-maestro test --debug-output maestro-output .maestro/flows/
+maestro test .maestro/flows/
 ```
+
+Point each flow's `takeScreenshot` at `.maestro/captures/<name>` so output lands
+in the declared `output_dir:`. Add `--debug-output maestro-debug` when you want
+the failure bundle as well; that directory is for debugging, not for artifacts.
 
 ## Where captures land
 
 ```
 maestro-output/
   <flow-name>/
-    screenshot-step-N.png      # auto-captured at each step
-    screenshot-named.png       # from explicit takeScreenshot
-    recording.mp4              # if --record-video flag passed
+    <name>.png                 # one per takeScreenshot step
 ```
 
-## /ship Phase 4 integration
+For video, Maestro has a separate command — `maestro record .maestro/flows/<flow>.yaml`
+— or a `startRecording:` / `stopRecording:` pair inside the flow. There is no
+`--record-video` flag on `maestro test`.
 
-1. `/ship` Phase 4 runs `maestro test --debug-output maestro-output .maestro/flows/`.
-2. Implementer agent scans `maestro-output/<flow-name>/` directories.
+## /ship Phase 3 integration
+
+1. `/ship` Phase 3 runs `maestro test .maestro/flows/`.
+2. Implementer agent scans `.maestro/captures/` for new files.
 3. Matches flow file names against the AC Coverage matrix's Tests cells (which reference `.maestro/flows/<flow>.yaml` per project's testing convention).
-4. Moves screenshots into `docs/features/<feature-name>/artifacts/STORY-XXX/<flow-name>-step-N.png`.
+4. Moves screenshots into `docs/features/<feature-name>/artifacts/STORY-XXX/<name>.png`.
 5. Appends rows with `Notes: (auto, backfill scenario)`.
 
 On flow failure: Maestro still produces partial captures up to the failure point. Keep them; mark with `(auto, from failed flow)`.

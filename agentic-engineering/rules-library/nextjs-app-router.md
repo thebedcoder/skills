@@ -22,7 +22,8 @@ paths:
 - Parallel routes `@slot` and intercepting routes `(.)path` — only when intentional
 
 ## Data fetching
-- Use `fetch` with Next.js caching options explicitly: `cache: 'force-cache'` or `cache: 'no-store'`
+- **`params`, `searchParams`, `cookies()`, `headers()` and `draftMode()` are async as of Next 15** — `await` them. A synchronous read still works with a deprecation warning in 15 and is removed after; this is the single most common App Router migration break
+- Use `fetch` with caching options explicitly: `cache: 'force-cache'` or `cache: 'no-store'`. **The default is `no-store` since Next 15** (it was `force-cache` in 13–14), so a route that relied on the old implicit caching now hits the network on every request
 - Set `revalidate` for ISR pages
 - Server actions for mutations — not API routes for internal data
 - Never fetch in client components that could fetch server-side instead
@@ -30,7 +31,7 @@ paths:
 ## Metadata and SEO
 - Export `metadata` or `generateMetadata` from every page
 - Dynamic OG images via `opengraph-image.tsx`
-- `robots.txt` and `sitemap.ts` at app root
+- `robots.ts` and `sitemap.ts` at app root — the generated `.ts` forms, not a static `robots.txt`, unless the file is genuinely static
 
 ## Performance
 - `next/image` for all images — never `<img>`

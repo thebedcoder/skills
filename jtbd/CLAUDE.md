@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > Read the parent `../CLAUDE.md` first — it covers monorepo conventions (plugin layout, wrapper/real-command split, two-installer system, commit conventions). This file only adds jtbd-specific knowledge.
 
+**This plugin is marketplace-only for Claude Code.** It ships no `install.sh`; there is no hand-copy path into `~/.claude`. Its agents resolve their references through `${CLAUDE_PLUGIN_ROOT}`, and a hand copy leaves every one of those paths pointing at nothing. The top-level `../install.sh` still serves the non-Claude tools from `adapters/AGENTS.md.template`.
+
 ## What jtbd is
 
 A Claude Code plugin that runs a Jobs-to-Be-Done pipeline as five chainable modes (MODE 0–4), each dispatching one or more specialist agents. Output is markdown — research reports, persona cards, competitive matrices, landing-page copy, and ad scripts — exported to the user's working directory.
@@ -11,15 +13,17 @@ A Claude Code plugin that runs a Jobs-to-Be-Done pipeline as five chainable mode
 The pipeline:
 
 ```
-MODE 0  Synthetic research      → 1× jtbd-researcher (web search, parallel with main thread)
-MODE 1  Real-data discovery     → N× jtbd-analyst    (1 per qualitative source, parallel)
+MODE 0  Synthetic research      → 1×   jtbd:jtbd-researcher   (web search, parallel with main thread)
+MODE 1  Real-data discovery     → N×   jtbd:jtbd-analyst      (1 per qualitative source, parallel)
 MODE 2  Persona definition      → main thread only
-MODE 2B Competitor analysis     → 4× jtbd-scout      (1 per tier: direct/adjacent/workarounds/do-nothing)
-MODE 3  Landing page copy       → 7× jtbd-copywriter (1 per section: hero/problem/value/social/how/faq/cta)
-MODE 4  Ad scripts              → 1–4× jtbd-scriptwriter (1 per platform: tiktok/reel/shorts/threads)
+MODE 2B Competitor analysis     → 4×   jtbd:jtbd-scout        (1 per tier: direct/adjacent/workarounds/do-nothing)
+MODE 3  Landing page copy       → 7×   jtbd:jtbd-copywriter   (1 per section: hero/problem/value/social/how/faq/cta)
+MODE 4  Ad scripts              → 1–4× jtbd:jtbd-scriptwriter (1 per platform: tiktok/reel/shorts/threads)
 ```
 
 The agent counts above are load-bearing — the parallel-dispatch design is the reason mode runtimes stay flat as scope grows. Don't change a mode to call its agent serially without understanding why.
+
+**Dispatch names are plugin-namespaced.** A bare `jtbd-scout` does not resolve under a plugin install, and the failure is silent: no error, no subagent, the main model writes the report inline and it looks exactly like a real one. Every dispatch site in `skills/jtbd/commands/mode-*.md` must spell the `jtbd:` prefix.
 
 ## Surface area: one slash command
 
@@ -40,14 +44,14 @@ These behaviors are encoded across multiple mode files. Changing one without upd
 
 Each specialist agent has the same shape:
 
-1. `AGENT.md` — short system prompt (under 30 lines) that defines role, lists the reference table, and dictates output format.
-2. `references/*.md` — one file per assignment variant (per section, per platform, per tier, per source type). The agent loads **only the one** for its assignment.
-3. **`tools:` is intentionally minimal** — copywriter/scriptwriter/analyst/scout have `tools: Read` only. researcher has `WebSearch, WebFetch, Write, Edit, Read`. Don't widen the toolset without a reason; these are sandboxed by design.
+1. `agents/<name>.md` — short system prompt (under 30 lines) that defines role, lists the reference table, and dictates output format. **A flat file, never a directory.** `agents/<name>/AGENT.md` registers as `jtbd:<name>:<name>` under a plugin install, and every `.md` beside it becomes its own phantom agent type — 24 of them, in the Agent tool description of every turn of every session.
+2. `references/<name>/*.md` — one file per assignment variant (per section, per platform, per tier, per source type). The agent loads **only the one** for its assignment. These live at the plugin root, *outside* `agents/`, and agents address them absolutely: `${CLAUDE_PLUGIN_ROOT}/references/<name>/<variant>.md`. A relative `references/x.md` resolves against the user's project, not the plugin, and silently finds nothing.
+3. **`tools:` is intentionally minimal** — copywriter/scriptwriter/analyst have `tools: Read`; researcher and scout have `Read, WebSearch, WebFetch`. Every agent needs `Read`, because every agent is told to load a reference file first. Don't widen beyond that without a reason; these are sandboxed by design.
 4. **Output format is rigid** — every agent emits a `━━━ [SECTION] ━━━` header followed by the artifact. No explanation, no preamble. The main thread relies on this for assembly.
 
 When adding a new variant (e.g. a new landing-page section, a new ad platform, a new competitor tier), the pattern is:
-- Add `references/<variant>.md` with the variant's rules, anti-patterns, and templates.
-- Add a row to the agent's reference table in `AGENT.md`.
+- Add `references/<agent>/<variant>.md` with the variant's rules, anti-patterns, and templates.
+- Add a row to the agent's reference table in `agents/<agent>.md`, spelled `${CLAUDE_PLUGIN_ROOT}/references/<agent>/<variant>.md`.
 - Update the spawning mode file to dispatch one more parallel agent for the new variant.
 - Mirror the change in `adapters/AGENTS.md.template` (for non-Claude tools).
 
@@ -59,7 +63,7 @@ When adding a new variant (e.g. a new landing-page section, a new ad platform, a
 - `allowed-tools` — narrowly scoped (`Bash(date *)`, `Bash(ls jtbd-*.md)`, etc.) for the inline `!` shell expansions at the top of the file. Adding a tool here widens the skill's permissions globally; only add what's used by an inline expansion.
 - `hooks: PostToolUse` — appends usage to `~/.claude/jtbd-usage.log`. Best-effort; failure is swallowed.
 
-Unlike `agentic-engineering`, `install.sh` does **not** patch in `user-invocable: false` post-install. jtbd's only command (`/jtbd`) shares its exact name with the skill (`name: jtbd`), and Claude Code resolves same-name skill/command collisions in favor of the skill — hiding the skill would shadow the command itself, breaking `/jtbd` entirely. Never add `user-invocable: false` here, in source or post-install.
+`user-invocable: false` must never appear here. jtbd's only command (`/jtbd`) shares its exact name with the skill (`name: jtbd`), and Claude Code resolves same-name skill/command collisions in favor of the skill — hiding the skill would shadow the command itself, breaking `/jtbd` entirely. The plugin also ships no installer to patch the field in post-copy, and the claude.ai packager rejects it outright. There is nowhere for it to live.
 
 ## jtbd.skill is a build artifact
 
@@ -77,19 +81,28 @@ Anti-patterns to avoid when editing agent prompts and references:
 
 ## Testing changes locally
 
-There is no test suite. Verify by running the installer against your live `~/.claude` and then exercising `/jtbd` end-to-end, or by running the multi-tool installer against a scratch directory:
+There is no test suite, and **there is no installer to run** — never copy this plugin into your real `~/.claude`. Two things to check.
+
+**Load the plugin from the working tree** and confirm the agents register under the names the modes dispatch:
 
 ```bash
-# Claude Code path
-bash install.sh
-
-# Multi-tool path (writes to current working dir's tool config)
-cd /tmp/scratch && bash /Users/getman/DevWorkspaces/bedcode/skills/install.sh --skill=jtbd --tool=cursor
+cd "$(mktemp -d)" && git init -q
+claude -p --model haiku --plugin-dir "$REPO/jtbd" \
+  "List the exact names of every agent type available to the Agent tool, one per line." </dev/null
 ```
 
-Then sanity-check that:
+Expect exactly five `jtbd:jtbd-*` entries and nothing else. A `jtbd:jtbd-scout:jtbd-scout`, or any `:references:` entry, means the flat-agent rule was broken.
+
+**Exercise the non-Claude path** through the parent multi-tool installer, never against your real home:
+
+```bash
+SANDBOX="$(mktemp -d)"
+( cd "$SANDBOX" && HOME="$SANDBOX" bash "$REPO/install.sh" --tool=cursor --skill=jtbd )
+ls "$SANDBOX/AGENTS.md"
+```
+
+`--tool=claude-code` prints the marketplace instructions and writes nothing — that is correct, not a failure. Then sanity-check that:
 - `/jtbd` actually invokes (not blocked with a "can only be invoked by Claude" error).
-- All 5 agent directories landed in `~/.claude/agents/` with their `references/` subtrees intact.
 - The `<!-- jtbd:start v1 -->` … `<!-- jtbd:end -->` markers in any tool's AGENTS.md are exactly one matched pair (idempotency check).
 
 ## graphify

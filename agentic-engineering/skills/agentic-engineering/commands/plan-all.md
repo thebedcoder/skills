@@ -34,15 +34,17 @@ Total to plan: X epics
 
 ### Phase 2 — Planning Loop
 
-Per "Progress Tracking" in SKILL.md, open one task per **selected** epic before the loop starts — subject `Plan epic: [name]`. Epics the user unchecked at the selection gate get no task.
+Per "Progress Tracking" in SKILL.md, write one PLAN line per **selected** epic into `.agentic/focus.md` before the loop starts — subject `Plan epic: [name]`. Epics the user unchecked at the selection gate get no line. Mirror into a harness task list if this session exposes one.
 
 Per selected epic, run full `/feature` flow:
 
-**Between epics — compact:**
+**Between epics — ask the human to compact** (the model cannot invoke `/compact`):
 ```
 /compact Focus on: epics planned so far, next epic to plan, INDEX.md state.
 Discard: full PRD contents, story details from previous epics.
 ```
+
+⚠️ **Human checkpoint** `[ASK: confirm]`: *"Run the compact command above, then choose Continue."* → **Continue (Recommended)** · **Stop here**
 
 **Per epic:**
 
@@ -75,7 +77,7 @@ Ready to build. Run /ship-all to implement all planned stories.
 
 ### Gotchas
 
-- **Compact between features, not just stories.** Each feature's planning output substantial. Context fills fast without compaction.
+- **Compaction is the human's action.** `/compact` is a user command; surface the gate between epics, don't claim the loop compacted itself. Each epic's planning output is substantial and context fills fast.
 - **No cookie-cutter approaches.** A/B/C differ by architecture, not library swap. Different user context → different option sets.
 - **No silently merging overlapping features.** Surface: "these could be one or need clearer scope." Don't decide unilaterally.
 - **Plan-all generates docs, not decisions.** User approves all PRDs without engagement → PRDs vague. Clarification pass must surface real ambiguities.
