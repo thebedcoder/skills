@@ -8,6 +8,61 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
 
 ### Added
 
+- **`/converge` — a spec ↔ code convergence audit, closing the one loop the
+  workflow never closed.** `/review` is diff-scoped and story-scoped: seven
+  reviewers read one story's changes and go home. Nothing ever compared
+  `PRD.md` against the repository, and `/status` counts checkboxes written by
+  the same process that claimed completion — so a feature could report 9/9
+  shipped while a requirement sat half-built. `/converge` builds an inventory
+  from the `FR-` ids, resolves each to the code the artifacts say should exist,
+  and classifies findings as `missing`, `partial`, `contradicts` or
+  `unrequested`.
+
+  The discipline that makes it useful is distinguishing **unbuilt from
+  undelivered**: an FR claimed only by unchecked stories is reported as
+  *pending*, never as a gap, so a feature two stories into a ten-story plan
+  converges clean. An FR claimed by a **checked** story with no matching code
+  is a blocker — a false completion claim, and the signal the command exists
+  for. `unrequested` code is reported for awareness and never generates a
+  story, because the fix may be deletion and that is not converge's call.
+
+  Findings with remaining work are appended to `STORIES.md` under a
+  `## Convergence` heading behind an approval gate, each marked
+  `Source: converge`. It runs in the parent (it needs Bash and a human answer,
+  which subagents have neither of), never edits `PRD.md`, never touches code,
+  and never fixes anything — repairs go back through `/ship` or `/fix` with a
+  full review behind them. Severity uses the same three buckets as `/review`.
+
+- **`FR-` requirement ids, and the `Implements:` line that traces them to
+  stories.** PRD acceptance criteria are now numbered `FR-1…FR-n`,
+  feature-scoped and stable for the life of the feature; each story declares
+  the ids it delivers. There was previously no link at all between a PRD
+  requirement and the work that closes it — "is FR-4 shipped?" could only be
+  answered by reading the whole feature. Story-level `AC-N` is unchanged and
+  remains per-story; the two are different layers and never merge.
+
+  `/feature` Stage 3 now treats FR coverage as a hard gate rather than a review
+  note: an FR claimed by no story, or a story citing an FR the PRD does not
+  define, stops the breakdown. `/converge` is built on this inventory.
+
+- **Stage 3b spec audit — `ae-req` Mode B, run before any code exists.** The
+  spec set was previously checked only against the constitution (Stage 2c), one
+  of six things worth checking. Mode B runs ambiguity, underspecification,
+  duplication, coverage, constitution-alignment and inconsistency passes over
+  the PRD, epics, stories and data model, and reports by id. It is the same
+  move as the plan pre-review in `/implement`, one level up: the reviewer that
+  would find these defects later, moved to where a fix costs an edit. Runs in
+  lite mode too, scoped to stories and the constitution — lite's whole risk is
+  thin stories written from a one-line description.
+
+- **`Priority:` on every story — `P1`, `P2` or `P3`, where the P1 set alone
+  must be deployable.** Stories carried `[P]` for parallelism and dependency
+  notes, but nothing said what ships first, so `ship-all` worked in file order.
+  The hard rule is the MVP one: a P1 set that needs a P2 story to function is
+  mis-labelled, and an all-P1 breakdown is a rejected breakdown — it means no
+  slice was found. Priority is a labelled line, never `[P1]` in the title
+  bracket, which would read as a malformed parallel marker.
+
 - **`ae-lean` — a seventh reviewer, owning reuse, simplification, efficiency and
   altitude.** The roster had no quality lens at all: grep the eight agent prompts
   for duplication, reuse, simplification or efficiency and the only hits are in
@@ -31,6 +86,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
   being introduced rather than a preference. Working code does not stop a ship.
 
 ### Changed
+
+- **`ae-req` has two modes.** Mode A is the existing implementation audit that
+  `/review` dispatches; Mode B is the new spec audit. The dispatch prompt names
+  the mode, and an unnamed dispatch is Mode A, so every existing call site is
+  unaffected. Mode B never opens implementation files — there are none yet, and
+  reaching for them means auditing the wrong thing.
+- **`/ship-all` orders by priority, dependency second.** Never a `P2` while a
+  `P1` is unchecked; `[P]` reorders within a level, never across one. The
+  session-start gate gained a **Ship the P1 set only** option, which ends at the
+  normal session-complete block with the remainder listed — a clean finish, not
+  an early stop. Features whose stories predate `Priority:` ship in file order
+  with the grouping dropped entirely; nothing is retro-labelled.
+- **`/status` reports the MVP slice and recommends next by priority.** A
+  `MVP: A / B P1 stories shipped` line per in-progress feature, omitted for
+  features that predate the field so it never renders `0 / 0`. `UP NEXT` now
+  picks the lowest open priority level instead of file order.
 
 - **`/review` takes `--frontend-pass`**, which drops `ae-lean` and runs the other
   six. `/ship` Phase 4 passes it: `ae-lean` reviewed the same branch in Phase 2,

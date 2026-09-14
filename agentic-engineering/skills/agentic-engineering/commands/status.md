@@ -35,6 +35,7 @@ Features: X total
 
 [Feature Name] — in-progress
   Completed: X / Y stories
+  MVP: A / B P1 stories shipped
   Tests: M/N AC mapped across K shipped stories (P% · G gaps)
   Pyramid: unit U · integration I · e2e E (balanced) [⚠️ if inverted at feature scope]
   DONE ✅   STORY-001: [title]
@@ -67,6 +68,8 @@ Rendering rules:
 - Stale → append `⚠️ stale (Nd old) — still working on this?`
 - CURRENT.`set_by` may contain ` (auto)` or ` (auto-promoted)` suffix from auto mode — render as-is
 - **Archived features:** excluded from Tests/Pyramid rollups — their `PROGRESS.md` is gone; frozen rollup lives in their `SUMMARY.md`. Story count for the archived line comes from `SUMMARY.md`.
+- **MVP line:** `B` = unchecked-or-checked stories carrying `**Priority:** P1`, `A` = the checked subset. Omit when no story carries `Priority:` — the feature predates the field, and `0 / 0` reads as a failure. `A == B` with stories still open → append ` — MVP complete, remainder is P2/P3`.
+- **UP NEXT respects priority.** Recommended next is the lowest-numbered priority level with an unchecked, unblocked story — never a P2 while a P1 is open. Tie inside a level → file order. Unprioritised feature → file order.
 - **Tests rollup:** Iterate each feature's shipped stories. For each story with `### AC Coverage` in PROGRESS.md, parse the table. M = count of rows where the Tests cell is non-empty. N = count of AC rows. K = count of stories with a matrix. P = `M / N * 100` rounded to integer. G = count of AC rows with empty Tests cell. Pre-matrix stories (no `### AC Coverage` heading) are excluded from M, N, K, G. Omit the entire "Tests:" line if no shipped story has a matrix yet (avoids `0/0`).
 - **Pyramid rollup:** Aggregate `unit_count`, `integration_count`, `e2e_count` across all shipped stories with a 4-column `### AC Coverage` matrix. Skip pre-pyramid (3-column) stories and non-canonical-level rows. Compute `total = unit + integration + e2e`. If `total == 0` (no 4-column stories yet, or all rows non-canonical) → omit the entire `Pyramid:` line. Otherwise render `Pyramid: unit U · integration I · e2e E (balanced)`. If `e2e_count / total > 0.5` OR `unit_count == 0` → append `(inverted — X% e2e, consider extracting unit tests) ⚠️` instead of `(balanced)`.
 

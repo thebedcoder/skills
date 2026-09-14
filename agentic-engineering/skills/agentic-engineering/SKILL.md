@@ -1,20 +1,21 @@
 ---
 name: agentic-engineering
 description: >
-  Full SDLC workflow (research → PRD → stories → implement → 7-agent review →
-  end-user docs) with named specialist agents. Fires only in a project that
-  already has ./docs/INDEX.md; elsewhere feature, bug and refactor requests are
-  ordinary implementation work. In a scaffolded project use for: new feature,
-  ship/implement a story, fix a bug, improve an existing feature (new format,
-  shortcut, faster path, module split), document a feature, plan all epics,
-  "what's next" / "let's start coding" (route to /status). Also "bootstrap a
-  greenfield project", "scaffold agentic docs", "set up docs and constitution" —
-  NOT bare /init or "initialize CLAUDE.md" (built-in /init). Do NOT trigger on:
-  "review my diff/PR" (built-in /code-review); "simplify this", "clean up the
-  diff" (built-in /simplify); bare /design with no current story (built-in
-  /design); "set up this project for Claude" (smart-setup); "update deps" or
-  "fix vulnerabilities" from an advisory (update-dependencies); UI motion in a
-  Flutter project (flutter-motion).
+  Full SDLC workflow (research → PRD → stories → implement → review →
+  converge → docs) with named specialist agents. Fires only in a project
+  that already has ./docs/INDEX.md; elsewhere feature/bug/refactor requests
+  are ordinary work. In a scaffolded project use for: new feature,
+  ship/implement a story, fix a bug, improve an existing feature (new
+  format, shortcut, module split), document a feature, plan all epics, audit
+  shipped code against the PRD, "what's next" / "let's start coding" (route
+  to /status). Also "bootstrap a greenfield project", "scaffold agentic
+  docs", "set up docs and constitution" — NOT bare /init or "initialize
+  CLAUDE.md" (built-in /init). Do NOT trigger on: "review my diff/PR"
+  (built-in /code-review); "simplify this", "clean up the diff" (built-in
+  /simplify); bare /design with no story (built-in /design); "set up this
+  project for Claude" (smart-setup); "update deps" or "fix vulnerabilities"
+  from an advisory (update-dependencies); UI motion in a Flutter project
+  (flutter-motion).
 ---
 
 # Agentic Engineering
@@ -47,6 +48,8 @@ Both live under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/`.
 | `/fix [description]` | `commands/fix.md` | Diagnose → fix → review |
 | `/improve [description]` | `commands/improve.md` | Non-bug change — plan → apply → review. Bare call → picks improvement from `BACKLOG.md`. Wants it done now; "we should improve X someday" → `/note` |
 | `/plan-all` | `commands/plan-all.md` | Plan all unplanned epics from INDEX.md |
+| `/converge [feature]` | `commands/converge.md` | Audit shipped code against the feature's PRD — appends real gaps as stories |
+
 | `/doc [feature]` | `commands/doc.md` | Document one feature with Q&A |
 | `/doc-all` | `commands/doc-all.md` | Document many features. `--full` = new project (+ guides + index) |
 | `/status` | `commands/status.md` | Progress overview |
@@ -153,7 +156,8 @@ Caveman rules above govern **agent-internal** output. These govern what the **hu
 
 ## Auto Mode (`--auto`)
 
-Long-running commands accept `--auto`: `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`, `/doc`. Per-invocation only — no persistent toggle.
+Long-running commands accept `--auto`: `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`, `/doc`, `/converge`. Per-invocation only — no persistent toggle.
+
 
 Under `--auto`, every checkpoint is consulted by its tag:
 
@@ -202,7 +206,8 @@ When CURRENT is written by an `--auto` command, `set_by:` gets ` (auto)` suffix.
 
 A harness task tool (`TaskCreate` / `TaskUpdate` / `TodoWrite`) is a *mirror* of PLAN when the session exposes one — it is not available in every session and is env-gated on newer models. Open it if it is there; skip it silently if it isn't. **Never block, warn, or narrate its absence, and never treat it as the record of what happened.**
 
-Chain commands write PLAN. Single-phase commands (`/note`, `/focus`, `/status`, `/analyze`, `/archive`) don't — a plan for one step is noise.
+Chain commands write PLAN. Single-phase commands (`/note`, `/focus`, `/status`, `/analyze`, `/archive`, `/converge`) don't — a plan for one step is noise.
+
 
 | Command | One PLAN line per |
 |---|---|

@@ -12,7 +12,7 @@ Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/ship-al
 
 ### Step 0b — Write the story PLAN
 
-Per "Progress Tracking" in SKILL.md, write one PLAN line per unchecked story into `.agentic/focus.md` before the session starts — subject `STORY-XXX: [title]`, in the recommended order. This is the chain's progress bar; the per-story `/ship` does **not** write a nested plan, it advances this one.
+Per "Progress Tracking" in SKILL.md, write one PLAN line per unchecked story into `.agentic/focus.md` before the session starts — subject `STORY-XXX: [title]`, in the recommended order (priority first, dependency second). This is the chain's progress bar; the per-story `/ship` does **not** write a nested plan, it advances this one.
 
 - Mark each story in progress at its plan gate, closed after its ship chain closes.
 - User picks **Skip this story** → close the line with `skipped` noted; story stays unchecked in `STORIES.md`.
@@ -42,22 +42,32 @@ PROD shows session overview, grouping `[P]` parallel stories:
 ```
 PROD — Ship-All Session: [Feature Name]
 
-Stories to ship: X
+Stories to ship: X   (MVP: N are P1)
 
-Can run in parallel [P]:
-  - STORY-XXX: [title]
-  - STORY-XXX: [title]
-  (note: these have no dependencies — you could open multiple Claude Code sessions)
-
-Sequential (depend on others):
+P1 — the MVP slice:
+  - STORY-XXX: [title] [P]
   - STORY-XXX: [title] — needs STORY-XXX first
+
+P2 — completes the feature:
+  - STORY-XXX: [title] [P]
+
+P3 — cuttable:
   - STORY-XXX: [title]
 
 Recommended order: [suggested sequence]
+Parallel [P] within a level have no dependencies — you could open multiple
+Claude Code sessions for those instead of shipping them here.
+
 You'll approve each implementation plan before it runs.
 ```
 
-⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: *"Start the ship-all session?"* → Start / Cancel. Under `--auto`: SKIP and proceed.
+**Order is priority first, dependency second.** Never start a P2 story while a P1 story is unchecked. Within a level, dependencies decide the sequence and `[P]` stories can go in any order.
+
+**Backward compatibility.** No story in the feature carries a `Priority:` line → the feature predates the field. Drop priority grouping, list stories in file order, print `(unprioritised — feature predates Priority:)` under the count. Never retro-label. Mixed — some labelled, some not → unlabelled ship last, grouped as `Unprioritised`.
+
+⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"Start the ship-all session?"* → **Ship everything (Recommended)** · **Ship the P1 set only** · **Cancel**. Under `--auto`: SKIP and ship everything.
+
+**Ship the P1 set only** → chain covers P1 stories, then ends at the normal Session-complete block; P2/P3 listed under `REMAINING 🔜`. That is a clean finish, not an early stop. Unprioritised feature → drop that option; there is no P1 set to offer.
 
 ---
 
@@ -160,7 +170,7 @@ If `AUTO=false`: skip.
 
 | Checkpoint | Tag |
 |---|---|
-| Chain start ('go' to begin session) | `[AUTO: skip]` |
+| Chain start (ship everything / P1 only / cancel) | `[AUTO: skip]` — ships everything |
 | Per-story 'go' prompt | `[AUTO: skip]` |
 | Constitution conflict surfaced by a story | `[AUTO: always-ask]` (hard-override #3) |
 | Recurring blocker class across multiple stories | `[AUTO: always-ask]` — stop + ask whether to update constitution |
@@ -178,6 +188,8 @@ If `AUTO=false`: skip.
 - **Compaction is the human's action, not yours.** `/compact` is a user command; no tool invokes it. After 3-4 stories context fills and quality drops, so always surface the gate — but never claim the chain compacted by itself, and never stall waiting for it.
 - **One story = its own commit(s).** No batching. User must revert story without touching others.
 - **`[P]` markers are user-facing suggestions, not self-instructions.** Ship-all runs sequential. No interleaving.
+- **Priority order is not a suggestion.** A P2 shipped before an open P1 wastes the MVP slice — what the field protects. `[P]` reorders within a level, never across one.
+- **Don't re-prioritise mid-chain.** A story that turns out harder than priced stays at its level. Re-cutting priorities is `/feature`'s job, and doing it here silently rewrites the plan the user approved.
 - **Recurring blockers → stop + fix pattern.** Same blocker class 3 stories in row → update constitution/conventions, not more fixes.
 - **PR description = commits, not PRD.** Show log. Users can read.
 - **Test runners non-watch mode.** Ship-all multiplies ship's test invocations by every story. Leaked worker from STORY-001 still chews CPU at STORY-008. `vitest run`, `go test ./...`. See SKILL.md "Test Execution Rules."

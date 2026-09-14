@@ -10,7 +10,7 @@ The parent `../CLAUDE.md` covers the monorepo (per-plugin layout, the wrapper/re
 
 ## Architecture at a glance
 
-The plugin is the entire `/ship`, `/feature`, `/review`, `/fix` SDLC workflow — a router skill (`skills/agentic-engineering/SKILL.md`) that dispatches into one of 21 command files in `skills/agentic-engineering/commands/`, plus 9 named specialist agents under `agents/` that the commands invoke (often in parallel) as Claude Code subagents. The end-user `README.md` is the workflow-level overview; this file is for authoring inside the plugin.
+The plugin is the entire `/ship`, `/feature`, `/review`, `/fix` SDLC workflow — a router skill (`skills/agentic-engineering/SKILL.md`) that dispatches into one of 22 command files in `skills/agentic-engineering/commands/`, plus 9 named specialist agents under `agents/` that the commands invoke (often in parallel) as Claude Code subagents. The end-user `README.md` is the workflow-level overview; this file is for authoring inside the plugin.
 
 Three pieces of the architecture are non-obvious and load-bearing:
 
@@ -41,7 +41,7 @@ Agents reach them by absolute path — `${CLAUDE_PLUGIN_ROOT}/references/ae-red/
 
 Every agent file **must** declare `name:` in its frontmatter matching the file stem. Claude Code drops a nameless agent silently. `.claude/hooks/check-integrity.sh` check F enforces the name; check G enforces that `agents/` holds nothing but agent files.
 
-## All 21 commands are user-visible
+## All 22 commands are user-visible
 
 Plugin auto-discovery registers every `.md` in `commands/` — there is no frontmatter key that hides one. `implement`, `review` and `frontend` are *internal by intent* (driven by `ship`, not by hand) but they still appear as `/agentic-engineering:implement`, `:review`, `:frontend`. That is fine: standalone `/agentic-engineering:review` is genuinely useful.
 
