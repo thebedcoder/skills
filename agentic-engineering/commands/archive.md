@@ -1,6 +1,6 @@
 ---
-description: Compact a shipped feature's docs into SUMMARY.md — originals deleted, git history preserves them. --all archives every eligible feature behind one combined gate
-argument-hint: [feature-name | --all]
+description: Extract a shipped feature's durable decisions and open obligations into DECISIONS.md and BACKLOG.md, then compact its working docs to SUMMARY.md and delete the originals. --all stages every eligible feature; --apply commits the staged extract
+argument-hint: [feature-name | --all | --apply]
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/archive.md` — that file holds the real instructions; this wrapper holds none.
 

@@ -4,7 +4,118 @@ All notable changes to the `agentic-engineering` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.1.0] — 2026-09-14
+
+### Changed
+
+- **`/archive` is now an extraction command; deletion is the side effect.** It
+  used to compact files. The thing worth keeping was never a file — it was a
+  handful of constraints scattered inside them, and the old command deleted
+  them. Run against a repo with 108 feature directories and two years of
+  history, `--all` discarded 97.3% of 2,543 KB and what survived was a list of
+  story titles that `CHANGELOG.md` and `git log` already carried.
+
+  Content now routes by destination, chosen by what actually gets read:
+
+  | Content | Goes to |
+  |---|---|
+  | Constraint that still binds code | `docs/DECISIONS.md` — `DEC-NNN`, `source: archive` |
+  | Open obligation — unmet gate, override, deferred measurement | `docs/BACKLOG.md` — `NOTE-NNN` |
+  | Story list, frozen test rollup, pointers | `SUMMARY.md` |
+  | Narrative, review transcripts, epics | deleted — git has it |
+
+  `SUMMARY.md` is explicitly demoted to an **index**. Nothing reads it
+  automatically: `/status` takes the story count and rollup, `/analyze` opens it
+  only when already investigating that feature, `/plan-all` uses it as a skip
+  marker. Writing durable knowledge there moves it from *deleted* to *present
+  but unread*. Its `## Decisions` and `## Open at completion` sections are
+  pointer lines — ids and a link, never restated content — so the file gets
+  smaller, not richer. `MEMORY.md` is never written: it is line-capped and
+  `/cleanup` rewrites it wholesale.
+
+- **Extraction is proposed, reviewed, then applied — `/archive` now has two
+  phases.** Reconstructing a decision from docs written two years ago, with no
+  author to check against, produces some entries that are wrong, stale, or a
+  restatement of what the code plainly says; `/cleanup` already names the cost
+  ("an invented `DEC-` entry is worse than none, because it trains the next
+  agent to ignore the file"). Phase 1 (`/archive <feature>` or `--all`) writes
+  `SUMMARY.md` files plus `.agentic/archive-extract.md` and
+  `.agentic/archive-plan.md`, and deletes nothing. The human edits the extract
+  file in an editor — **delete a block and it is never written** — then
+  `/archive --apply` commits it. A hundred proposed entries cannot be reviewed
+  in a chat widget, which is the only reason the second phase exists; a feature
+  that proposes nothing skips it and applies behind a single gate.
+
+  Backfilled entries carry `source: archive · confidence: reconstructed` and
+  the feature's **ship date**, never today's, and append under a trailing
+  `## Backfilled from archive` heading so the live section stays newest-first
+  and reconstructions never masquerade as recent decisions. Titles must stand
+  alone, because `DECISIONS.md` is read titles-only at session start and that
+  one line is the entire anti-re-litigation payload.
+
+### Fixed
+
+- **`/archive` verified none of its own premises, and `--all` was unsafe to run
+  on a project with real history.** Six defects, all found by the run described
+  above.
+
+  - **`PROGRESS.md` is now the status source; `STORIES.md` checkboxes are
+    fallback only.** The old guard required every checkbox ticked. Checkboxes
+    are written during `/implement` and routinely never ticked back, so the
+    guard was wrong in both directions at once — it refused ~70 genuinely
+    shipped features (one was `complete ✅ 8/8` in `INDEX.md` with 53 unticked
+    boxes) while approving a feature whose `PROGRESS.md` said "PR open" and
+    whose branch was 41 commits ahead. Story-id matching no longer assumes the
+    `STORY-NNN` shape, the heading dialect (`## STORY-093 —`) is no longer read
+    as an unchecked box, and `- [~]` partial markers — invisible to a
+    checked/unchecked count — refuse the feature. A feature whose branch is
+    unmerged is refused outright: an open PR means reviewers are still reading
+    the files about to be deleted.
+
+  - **The `DECISIONS.md` premise is now verified per feature instead of
+    assumed.** `## Decisions` linked rather than restated on the grounds that
+    `/cleanup` had already written every decision to `docs/DECISIONS.md`. That
+    held for 7 of 94 features — `DECISIONS.md` was younger than most of the
+    project, and 9 of 10 sampled older features appeared in it zero times. For
+    ~85 features the archive was not compacting a duplicate, it was deleting
+    the only copy of the reasoning. `/archive` now checks, per feature, whether
+    `DECISIONS.md` holds entries attributable to it by `story:` field, feature
+    slug or issue number, and extracts what nothing covers.
+
+  - **Open obligations are routed to `BACKLOG.md`.** Overridden quality gates
+    were recorded in exactly one place — the shipping feature's `PROGRESS.md` —
+    and the old template had no slot for them at all, so archiving deleted the
+    record of what a program still owed itself. They are debt, not history:
+    they go to the backlog at `Priority: high`, not into a summary nothing
+    reads.
+
+  - **Inbound citations into the delete set are found before anything is
+    deleted.** Nothing looked. Seven live citations pointed into the delete
+    set, including shipped source citing a `PRD.md` for the rule it implements.
+    A pre-gate grep now buckets hits — source code and live docs block,
+    `CHANGELOG.md` and settings globs are informational — shows them at the
+    gate, and repoints them in the same commit as the deletion. A repoint is
+    only offered when the cited claim survived extraction.
+
+  - **A PRD-only feature is no longer eligible.** No `STORIES.md` and no
+    `PROGRESS.md` means there is nothing to compact; archiving trades a full
+    PRD for a thinner summary at zero benefit.
+
+  - **Recency is reported at the gate.** A feature completing long ago does not
+    mean its docs are finished with — one had its PRD amended with a real
+    finding and cited from shipped source, and 20 of 94 candidates had working
+    docs edited within six weeks. `/archive` now reports each feature's last
+    doc edit and flags anything inside 90 days as *recently amended — still in
+    use*. Flagged, never auto-excluded; the human decides.
+
+- **The `--all` gate is renderable.** Bulk mode showed a deletion list plus a
+  rendered `SUMMARY.md` per feature in one combined gate — thousands of lines
+  of chat at 94 features, against SKILL.md's cap of 5 surfaced items. The gate
+  now shows file counts, the aggregate byte compression ratio, the extraction
+  totals, the coverage / citation / recency warnings, 2–3 rendered samples, and
+  the on-disk paths; the full per-feature table goes to
+  `.agentic/archive-plan.md`. Cancelling leaves the written summaries
+  untracked, which the gate now says, with the `git clean` line to undo them.
 
 ### Added
 
@@ -436,7 +547,8 @@ First version of the agentic-engineering skill — installed by manual clone bef
 - **Parallel-story markers** `[P]` — stories tagged `[P]` have no dependencies and can be shipped in separate Claude Code sessions concurrently.
 - **Mandatory `/compact` between stories** in `/ship-all` and `/plan-all` to keep context lean across long sessions.
 
-[Unreleased]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v2.0.0...HEAD
+[Unreleased]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v2.1.0...HEAD
+[2.1.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v2.0.0...agentic-engineering-v2.1.0
 [2.0.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v1.4.0...agentic-engineering-v2.0.0
 [1.4.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v1.3.0...agentic-engineering-v1.4.0
 [1.3.0]: https://github.com/thebedcoder/skills/compare/agentic-engineering-v1.2.0...agentic-engineering-v1.3.0
