@@ -64,7 +64,16 @@ date: [YYYY-MM-DD] · story: [STORY-XXX] · status: active
 **Rules out:** [what this forecloses]
 ```
 
-Contradicts an existing entry → do not delete the old one. Set its `status:` to `superseded by DEC-NNN` and say so in the summary. The reason a rejected approach was rejected is the value of the file.
+Contradicts an existing entry → do not delete the old one. Make **two** edits to it: set its `status:` to `superseded by DEC-NNN`, **and prefix its title with `[superseded]`**:
+
+```markdown
+## DEC-042 — [superseded] Canonical intermediate format is XLIFF
+date: 2026-03-14 · story: STORY-041 · status: superseded by DEC-118
+```
+
+Say so in the summary. The reason a rejected approach was rejected is the value of the file.
+
+**The title prefix is not cosmetic.** `DECISIONS.md` is read **titles only** at session start (`shared/preamble.md` §D), and `status:` sits on the line *below* the heading — outside that read. An unmarked superseded title tells every session the opposite of what is currently true, which is worse than noise: it is a wrong fact in the read path. The prefix also makes §D's skip a one-line grep.
 
 ### Step 4 — Rewrite `./docs/MEMORY.md`
 

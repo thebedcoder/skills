@@ -248,7 +248,7 @@ The human may choose Continue without compacting. That is their call — proceed
 
 Other rules:
 
-- **Read INDEX.md, MEMORY.md, CONSTITUTION.md in full at session start**; read the newest 20 entries of CHANGELOG.md and the *titles only* of DECISIONS.md — both are unbounded append-only files and reading them whole grows with project age
+- **Read INDEX.md, MEMORY.md, CONSTITUTION.md in full at session start**; read the newest 20 entries of CHANGELOG.md and the *titles only* of DECISIONS.md, skipping titles marked `[superseded]` — both are unbounded append-only files and reading them whole grows with project age. A superseded title read without its `status:` line states the opposite of current truth; `shared/preamble.md` §D has the grep
 - **Read only files relevant to current story** — not whole project
 - **Never re-read** files already in context
 

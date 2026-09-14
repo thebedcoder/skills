@@ -69,10 +69,23 @@ Every command that changes code or docs reads these first, in this order:
 | File | How much |
 |---|---|
 | `./docs/MEMORY.md` | in full — it is line-capped for exactly this reason |
-| `./docs/DECISIONS.md` | **titles only** (`## DEC-NNN — …` lines). Read a full entry only when the current change touches its subject |
+| `./docs/DECISIONS.md` | **titles only** (`## DEC-NNN — …` lines), **skipping any marked `[superseded]`**. Read a full entry only when the current change touches its subject |
 | `./docs/CONSTITUTION.md` | in full |
 
 Missing file → skip it silently; a project may predate the doc.
+
+```bash
+grep '^## DEC-' docs/DECISIONS.md | grep -v '\[superseded\]'
+```
+
+**Why superseded titles are skipped.** `DECISIONS.md` never deletes — `/cleanup`
+marks a contradicted entry and keeps it. Its `status:` line sits below the
+heading, so a titles-only scan never sees it, and the bare title then asserts
+the opposite of current truth. Skipping is a correctness fix first; that the
+file stops growing without bound in the session-start read is the second
+benefit. A superseded entry is still read in full when the current change
+touches its subject — knowing an approach was tried and dropped is the point of
+keeping it.
 
 These exist to be read. `/cleanup` rewrites `MEMORY.md` and appends to
 `DECISIONS.md` after every `/ship`, `/fix` and `/improve`; a command that

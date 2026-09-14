@@ -53,6 +53,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
   alone, because `DECISIONS.md` is read titles-only at session start and that
   one line is the entire anti-re-litigation payload.
 
+- **Superseded decisions no longer lie to the session-start read.** `/cleanup`
+  marks a contradicted `DEC-` entry and never deletes it — correct, because the
+  reason an approach was dropped is the value of the file. But the marker lived
+  only on the `status:` line, one line *below* the heading, and `DECISIONS.md`
+  is read **titles only** at session start. So every session read
+  `## DEC-042 — Canonical intermediate format is XLIFF` with nothing saying it
+  had been superseded two years earlier: a wrong fact in the read path, not
+  merely stale noise. `/cleanup` now also prefixes the superseded entry's title
+  with `[superseded]`, and `shared/preamble.md` §D skips those titles in the
+  session-start scan — one grep, no two-line parsing. A superseded entry is
+  still read in full when the current change touches its subject. `/init` seeds
+  the convention into new projects' `DECISIONS.md` header. This gets more
+  load-bearing as archive backfill grows the file.
+
 ### Fixed
 
 - **`/archive` verified none of its own premises, and `--all` was unsafe to run

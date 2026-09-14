@@ -120,7 +120,8 @@ description: Product updates and changes — what you can now do in the app
 # Decisions
 <!-- Binding decisions only — choices that constrain future work: API contracts, chosen
      libraries, rejected approaches, data-model shape. Not implementation detail.
-     Appended by /cleanup, newest first. Superseded entries are marked, never deleted. -->
+     Appended by /cleanup, newest first. Superseded entries are never deleted: they keep a
+     status: line AND a [superseded] title prefix, so the titles-only session read skips them. -->
 
 <!-- Entry format:
 
