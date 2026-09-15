@@ -14,10 +14,12 @@ Route by what the content *is*, never by which file it sat in. Destination is de
 |---|---|---|
 | Constraint that still binds code | `./docs/DECISIONS.md` — `DEC-NNN`, `source: archive` | read every session (titles), on demand in full |
 | Open obligation — unmet gate, override, deferred measurement | `./docs/BACKLOG.md` — `NOTE-NNN` | it is undone work, not history |
-| Story list · frozen test rollup · pointers to what survived | `SUMMARY.md` | `/status` reads it for archived features |
+| What the feature was · story list · frozen test rollup · pointers to what survived | `SUMMARY.md` | `/status` and `/analyze` read it for archived features |
 | Narrative, review transcripts, AC text, epics | deleted | git has it, nothing reads it |
 
-**`SUMMARY.md` is an index, not a store.** Nothing reads it automatically — `/status` takes the story count and rollup, `/analyze` opens it only when already investigating that feature, `/plan-all` uses it as a skip marker. Writing durable knowledge into it moves that knowledge from *deleted* to *present but unread*. Keep it small; every section is a pointer or a frozen number.
+**`SUMMARY.md` is an index, not a store — and an index entry has to identify the thing it indexes.** It is read. `/status` takes the story count and the frozen rollup, `/plan-all` uses it as a skip marker, and `analyze.md` Step 2 instructs agents outright: *"Archived features carry `SUMMARY.md` only — read it."* For a feature whose docs are gone this file is the entire record, so it must say what the feature **was**.
+
+Not a store, though. Durable knowledge written here instead of `DECISIONS.md` or `BACKLOG.md` moves from *deleted* to *present but unread* — `SUMMARY.md` is opened for one feature at a time, by someone already looking at it. Keep it small: identify, point, freeze numbers. Never restate.
 
 **Never write `./docs/MEMORY.md`.** It has a hard line cap and `/cleanup` rewrites it wholesale — an archive append would blow the cap or be clobbered next cleanup.
 
@@ -158,8 +160,17 @@ Read `PRD.md`, `STORIES.md`, `PROGRESS.md`, `reviews/`. Write `./docs/features/[
 
 X stories shipped.
 
+## What it was
+[PRD `## Problem`, trimmed to ≤ 3 lines]
+
+**Approach:** [approach — including the option it beat, where the PRD names one]
+
 ## Stories
 - STORY-001: [title] — [one-line AC digest]
+
+## Where it lives
+- src/theme/
+- src/components/settings/
 
 ## Decisions
 - DEC-004, DEC-118 — see ../../DECISIONS.md
@@ -176,14 +187,56 @@ Tests: M/N AC mapped across K stories (P%). Pyramid: unit U · integration I · 
 - Full history: `git log --follow -- docs/features/[feature-name]/`
 ```
 
+##### `## What it was` — conditional
+
+Without it the file names a feature, counts its stories and lists its parts, and never says what the feature *was* or why it existed. Once `PRD.md` is deleted nobody can recover that from the summary.
+
+Two things. Both bounded, both prose lifted from `PRD.md`, neither invented:
+
+- **The problem.** `## Problem`, else `## Context`, else the PRD's opening paragraph. Trim to **≤ 3 lines**. Never `## Goals` — goals restate the story list one abstraction up.
+- **The `**Approach:**` line**, *including the option it beat* where the PRD names one. PRDs commonly open `**Approach:** Option B — <what>`. That sentence is the cheapest answer to "why is it built this way", and unlike a non-goal it cannot go stale: the choice was made, and the road not taken stays not taken.
+
+No problem statement anywhere in the PRD → omit the whole section. `**Approach:**` absent → omit that line, keep the problem.
+
+**Never copy `## Non-Goals`.** Not trimmed, not summarised, not "for context". A non-goal describes the world **at plan time**; a `SUMMARY.md` is read as describing the world **now**. `multi-format` shipped carrying:
+
+```
+- Android `<plurals>` XML tags (deferred — mapped to base string for MVP)
+- `.stringsdict` iOS plurals files (deferred)
+- Nested i18next JSON keys (flat only for MVP)
+```
+
+All three shipped in later features. Freeze that block into a permanent `SUMMARY.md` and you install three false statements about the product, in the one file `/analyze` is told to trust for an archived feature. **A non-goal that still binds code is a decision** — route it to `DECISIONS.md` through Step 2B, which exists for exactly this.
+
+##### `## Stories` — the AC digest is required
+
+`- STORY-001: [title] — [one-line AC digest]`. **The digest is not optional.** It is the easiest part of the line to drop and carries most of the line's information. `DM-002: ThemeProvider + Tailwind config` says nothing the id and title did not. `DM-002: ThemeProvider + Tailwind config — dark class on <html>, tokens resolve from CSS vars` says what shipped.
+
+Digest source, in order: the story's `AC-N` lines in `STORIES.md`, collapsed to one clause; else its `### AC Coverage` rows in `PROGRESS.md`; else the story's own description line. **Story with no AC and no description → title alone, no trailing `—`.** Never invent a digest to fill the slot.
+
+##### `## Where it lives` — conditional, and verified
+
+The one thing a reader cannot cheaply reconstruct is which directories the feature touched. Every other section points at something that still exists; this one has to be rebuilt before `PROGRESS.md` goes.
+
+Derive from path-shaped tokens in `PROGRESS.md` — the `Files changed:` label where present, prose elsewhere. Collapse files to their directories, dedupe, cap ~6 lines.
+
+**Every emitted path must be verified to exist on disk at archive time. Drop the rest.**
+
+```bash
+while read -r p; do [ -e "$p" ] && echo "$p"; done
+```
+
+Measured on a 102-feature repo, only **7** `PROGRESS.md` files carry a literal `Files changed:` label. Most extraction is therefore from prose, and prose extraction picks up junk — `characterization`, `render` and `src` all surfaced as bare relative fragments indistinguishable from real paths. Existence-filtering removes them, and makes the section self-validating the day it is written. Nothing survives the filter → omit the section.
+
 Rules:
 
-- **Every section is a pointer or a frozen number.** `## Decisions` and `## Open at completion` list ids and link out — they never restate the content. Two copies of one decision drift; the id is stable and the store is the store.
+- **Every section is a pointer, a frozen number, or prose lifted from the PRD.** `## Decisions` and `## Open at completion` list ids and link out — they never restate the content. Two copies of one decision drift; the id is stable and the store is the store.
 - Ids not known until Phase 2 allocates them → write the section with a `(pending --apply)` placeholder and fill it during Step 3.
-- Section with nothing to point at → omit it.
+- **Section with nothing to point at → omit it.** No empty headings, no `_none_` placeholders. Applies to every section, the two new ones included.
 - Rollup numbers: same parse as `/status` (AC Coverage matrices in `PROGRESS.md`). No matrices → omit section.
 - Pointer lines only for files that exist.
-- Summary ≤ ~40 lines, `## Stories` excepted — a 53-story feature needs 53 lines and the cap was never meetable for it. Narrative history lives in git.
+- **`X stories shipped.` and `## Test rollup (frozen at archive)` are parsing contracts — byte-identical, always.** `/status` reads the archived story count and the frozen rollup out of them; `/plan-all` skips on the file's presence. Reword either and both commands go quiet without erroring.
+- Summary ≤ ~55 lines, `## Stories` excepted — a 53-story feature needs 53 lines and the cap was never meetable for it. Narrative history lives in git.
 
 #### 2B — `.agentic/archive-extract.md`, the review file
 
@@ -265,6 +318,9 @@ Extracted for review:
 ⚠️  7 inbound citations point into the delete set (4 blocking, 3 informational)
 ⚠️  20 features amended within 90 days — still in use
 
+⚠️  Archiving ends /converge for these features permanently — PRD and stories
+    are the inventory it audits against. Run /converge first if you ever will.
+
 Blocking citations:
   packages/core/src/types/arb.ts:574   → validation-engine/PRD.md
   apps/cli/src/write-transaction.ts:22 → stringlane-run-write-safety/PROGRESS.md
@@ -309,6 +365,8 @@ chore([feature-name]): archive feature docs to SUMMARY.md
 
 **Separate commit per feature** — single revert un-archives a single feature. Never one batch commit.
 
+**Rolling back a partial `--apply`: `git reset --hard <sha>`, and nothing wider.** It already removes staged-but-uncommitted new files, which is the only thing `git clean` would add here. **Never widen a `git clean` to a directory.** A directory-scoped clean during rollback of a real `--apply` destroyed untracked working docs belonging to a feature the run had *refused* — they were in no branch, no stash and no snapshot. The Cancel path's `git clean -f -- 'docs/features/*/SUMMARY.md'` is safe only because it is pinned to that one filename.
+
 Batch complete → delete `.agentic/archive-extract.md` and `.agentic/archive-plan.md`. Stale staging files are how a second run re-applies the first run's extract.
 
 ### Bulk mode (`--all`)
@@ -323,8 +381,9 @@ Batch complete → delete `.agentic/archive-extract.md` and `.agentic/archive-pl
 
 - **Checkboxes lie in both directions.** A finished feature with 53 unticked boxes and an in-flight feature with zero unticked boxes are both routine. `PROGRESS.md` is the source; see Step 0.
 - **Verify the `DECISIONS.md` premise per feature, never once per project.** The file existing does not mean it covers the feature in front of you. Most of a long-lived project predates it.
-- **Destination is decided by what reads it, not by what the content is about.** A decision in a `SUMMARY.md` is as gone as a decision in git. That is the whole reason this command routes.
+- **Destination is decided by what reads it, not by what the content is about.** `SUMMARY.md` is read for one feature, by someone already looking at that feature. `DECISIONS.md` is read titles-first every session, by everyone. A constraint filed in the first is invisible to the agent about to break it. That is the whole reason this command routes.
 - **`confidence: reconstructed` is never dropped to make an entry look better.** The marker is what keeps the other entries trustworthy.
+- **A non-goal states the world at plan time, not now.** `multi-format` deferred Android `<plurals>`, `.stringsdict` and nested i18next keys; all three shipped in later features. Copy that block into a permanent `SUMMARY.md` and it becomes three false claims in the file `/analyze` is told to trust. Non-goal that still binds code → `DECISIONS.md` via Step 2B. Never `SUMMARY.md`.
 - **Won't-fix findings already live in `./docs/improvements.md`.** Never copy review findings into `SUMMARY.md` or `BACKLOG.md` — one source of truth.
 - **app-docs untouched.** End-user docs are product surface, not working docs.
 - **Un-archive = git revert**, not regeneration. User wants originals back → `git log --follow` the feature dir.

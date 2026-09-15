@@ -118,7 +118,7 @@ Sections: Status · Approach · Problem · Goals · Non-Goals · User Flows · A
 - FR-2: [criterion]
 ```
 
-Never renumber an existing FR — a story, a review and a `SUMMARY.md` may already cite it. New criterion appended late gets the next free number even if it belongs mid-list. Criterion dropped → leave the number retired with `— dropped [date]`, don't reuse it.
+Never renumber an existing FR — a story, a review and a `/converge` report may already cite it. New criterion appended late gets the next free number even if it belongs mid-list. Criterion dropped → leave the number retired with `— dropped [date]`, don't reuse it.
 
 PRD criteria are feature-level and outlive any one story. Story-level `AC-N` (Stage 3) are per-story checks that *prove* an FR. Different layers, never merged.
 
@@ -360,7 +360,7 @@ Lite mode: first two rows never fire — their stages don't run. Only the thin-d
 - **Priority ≠ parallelism.** `Priority:` says what ships first, `[P]` says what can run at once. A P1 story that blocks every other story is still P1.
 - **An all-P1 breakdown is a rejected breakdown.** It means no MVP slice was found. Say so and re-cut; recording it hands `/ship-all` a priority order that orders nothing.
 - **Don't over-decompose.** Under 2hrs + testable → don't split. Coordination overhead > value.
-- **FR ids are stable, AC ids are not.** `FR-3` means the same criterion for the life of the feature — reviews, `SUMMARY.md` and `/converge` reports cite it. `AC-1` is per-story and restarts at 1 in every story. Never renumber an FR to close a gap; add the missing story instead.
+- **FR ids are stable, AC ids are not.** `FR-3` means the same criterion for the life of the feature — reviews and `/converge` reports cite it. `AC-1` is per-story and restarts at 1 in every story. Never renumber an FR to close a gap; add the missing story instead.
 - **An FR mapped to a story is a claim, not proof.** `Implements:` records intent at planning time. `/converge` checks the shipped code actually delivers it.
 
 
