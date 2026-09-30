@@ -42,7 +42,7 @@ claude -p --plugin-dir <this plugin> --output-format stream-json --verbose \
 
 | Scenario | Asserts |
 |---|---|
-| `01-route-fix` | "fix this failing test" enters `/fix` (Skill `agentic-engineering:fix` or a read of its body) |
+| `01-route-fix` | "fix this failing test" enters `/fix` (Skill `agentic-engineering:fix` or a read of its body), runs the tests before diagnosing, and shows the reproduction output and a tested hypothesis |
 | `02-ship-parallel-review` | `/ship` Phase 2 dispatches all seven reviewers in **one** assistant message (grouped by `message.id`) |
 | `03-ship-auto-migration-pause` | `/ship --auto` logs a `HARD-PAUSE` for a table-creating migration and writes no migration before the human answers |
 | `04-converge-false-completion` | `/converge` reports a checked story with no matching code as a Blocker, the delivered FR as converged, and touches no code |

@@ -53,13 +53,31 @@ Off `main` → proceeds silently, no gate.
 
 **Phase 1 — Diagnosis**
 
-FIXER investigates:
+FIXER investigates, in this order — each step feeds the next, and no fix is proposed before the hypothesis holds:
+
+1. **Reproduce — run it.** Failing test, script or command, executed now; paste the real output. Can't reproduce → gather data (logs, inputs, environment diff) or ask `[ASK: prose]`; never diagnose a bug nobody has seen fail.
+2. **Recent changes** — *regressions only* (it used to work). `git log --oneline -15 -- <path>`, `git log -S'<symbol>'`; known-good commit + scriptable repro → `git bisect run <repro>`. Never-worked → `n/a`.
+3. **Trace to the origin.** Error surfaces deep → walk the bad value backwards, caller by caller, to where it is first produced. Crosses components (API → service → DB, CI → build → deploy) → one instrumentation pass: log what enters and leaves each boundary, run once, read where good turns bad. Temporary — removed before commit.
+4. **Working sibling.** Similar code in this repo that works (another handler, the other format, the previous version) → list every difference. Nothing similar → say so.
+5. **One hypothesis, tested.** "X causes Y because Z." Smallest probe that could refute it — one variable, no fix attached. Refuted → new hypothesis from what the probe showed; never stack guesses.
 
 ```
 FIXER — Diagnosis: [bug description]
 
-Reproduction path:
-  [How does bug occur? What triggers it?]
+Reproduced:
+  [command] → [actual failing output, ≤5 lines]   (or: cannot reproduce — [what was tried])
+
+Recent changes:
+  [commit / bisect result that introduced it]      (or: n/a — never worked)
+
+Trace:
+  [symptom file:line] ← [caller file:line] ← … ← [origin file:line]
+
+Working sibling:
+  [file:line that works — the difference that matters]   (or: none found)
+
+Hypothesis:
+  [X causes Y because Z] — probe: [check] → [confirmed | refuted, then next hypothesis]
 
 Root cause:
   [Exact file(s) + line(s) where problem originates]
@@ -72,11 +90,14 @@ Fix plan:
   [Exactly what will change — file, function, line-level detail]
   [What will NOT change — explicit scope boundaries]
 
+Guards (defense in depth — optional):
+  [layer on THIS bug's data path → check that makes it impossible, each with a test]   (or: none)
+
 Risk:
   [Could fix break anything else?]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: single]`: Show diagnosis, then ask *"Does this match what you're seeing?"* → **Yes, fix it (Recommended)** · **Close but not quite** · **Wrong root cause**. Either non-first option → follow up `[ASK: prose]` and re-diagnose; never proceed to Phase 2 on a corrected diagnosis without re-running FIXER. Under `--auto`: SKIP if FIXER identifies exactly one plausible root cause with high confidence (single file/line, no alternative hypotheses); otherwise ASK.
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: single]`: Show diagnosis, then ask *"Does this match what you're seeing?"* → **Yes, fix it (Recommended)** · **Close but not quite** · **Wrong root cause**. Either non-first option → follow up `[ASK: prose]` and re-diagnose; never proceed to Phase 2 on a corrected diagnosis without re-running FIXER. Under `--auto`: SKIP only if the bug was reproduced, the hypothesis was confirmed by its probe, and exactly one root cause remains (single file/line, no alternative); otherwise ASK.
 
 **Phase 2 — Fix** *(automatic after 'go')*
 
@@ -85,6 +106,10 @@ FIXER applies minimal surgical fix. Rules:
 - No refactoring unrelated code
 - No "while I'm here" improvements
 - Add/update test that would have caught this bug
+- Guards from the plan only — same data path, each with its own test. A check on some other path is another fix → `improvements.md`
+- Instrumentation from diagnosis step 3 removed before commit
+
+**Failed attempt** — regression test still red, or evidence red → back to Phase 1 with what the attempt taught; never a second patch on top of the first. Count attempts in the PLAN line note (`attempt 2 of 3`). **Third failed attempt → stop.** Each fix revealing a new problem somewhere else is a design signal, not bad luck. ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"Three fixes failed, each exposing something new. This looks like a design problem, not one bug. How do you want to proceed?"* → **Rethink the approach (Recommended)** · **Try once more** · **Stop and log to BACKLOG**. First option → `/improve` or `/feature` scale, not `/fix`.
 
 **Evidence — fix is not done until the suite says so, on this code.** After the last edit, full suite from repo root:
 
@@ -197,6 +222,8 @@ If `AUTO=false`: skip.
 | Branch warning when on `main` | `[AUTO: always-ask]` — never proceed silently on `main` |
 | Show diagnosis, ask 'go' | `[AUTO: ask-if-ambiguous]` — skip when single high-confidence root cause |
 | Review post-fix `FIX PAUSED — RED has concerns` | `[AUTO: always-ask]` (also hard-override #1) |
+| Third failed fix attempt | `[AUTO: always-ask]` — design question, never retried silently |
+| Can't reproduce | `[ASK: prose]` — untagged → `always-ask` |
 
 ### Gotchas
 
@@ -204,7 +231,10 @@ If `AUTO=false`: skip.
 - **Fix root cause, not symptom.** Wrong total from upstream calc → fix calc, not display. Root cause in different module → still fix there.
 - **Claimed green without running.** "Fixed" means an `evidence.sh` row from after the last edit shows exit 0. The failing run from diagnosis, a single-test run, or "should pass now" is not that row.
 - **Regression test must fail before fix.** Test → watch fail → fix → watch pass. After-the-fact proves nothing.
-- **Reproduce before confirming.** Can't reproduce → ask user, don't invent hypothesis.
+- **Reproduce before confirming.** Can't reproduce → ask user, don't invent hypothesis. "Reproduction path" written from reading code is a guess; the pasted failing output is the reproduction.
+- **Hypothesis before patch.** "Let me try changing X" is a probe only when it changes nothing else and its result is read before the next step. Two edits at once → cannot tell which one mattered.
+- **Fix at the origin, guard on the path.** Trace ends where the bad value is born; fix there. Guards on the same path are defense in depth; validation added elsewhere "while here" is scope creep.
+- **Three failed fixes = stop.** Fix #4 without the design conversation is how a bug becomes a rewrite nobody planned.
 - **No `/fix` on `main`.** Override GIT check → no PR, no review, no trail.
 
 ---

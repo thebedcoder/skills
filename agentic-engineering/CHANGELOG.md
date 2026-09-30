@@ -104,6 +104,24 @@ audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md
   the existing pass still surfaces it. Lite mode keeps its own one-round ask at story
   breakdown.
 
+### Changed
+
+- **`/fix` diagnosis is executed, not read off the code**, both modes. Compared with
+  superpowers' systematic debugging, `/fix` already had root cause at `file:line`,
+  blast radius, a fail-first regression test and "one bug, one fix"; it lacked the
+  steps that make the root cause *proven*. Phase 1 now runs, in order: reproduce by
+  running the failing thing and pasting its output; check recent changes (`git log`,
+  `git log -S`, `git bisect run`) for regressions; trace the bad value back to its
+  origin, with one boundary-instrumentation pass for multi-component paths (removed
+  before commit); compare with a working sibling; state one hypothesis and test it
+  with the smallest probe. The diagnosis template gains `Reproduced`, `Recent
+  changes`, `Trace`, `Working sibling`, `Hypothesis` and optional `Guards`
+  (defense in depth, only on this bug's own data path, each with a test — "one bug,
+  one fix" holds). A failed attempt goes back to diagnosis instead of stacking a
+  second patch, and the **third failed attempt stops** at an `[AUTO: always-ask]`
+  gate: it is a design question, not a bug. The `--auto` diagnosis skip now also
+  requires a reproduction and a confirmed probe.
+
 ### Fixed
 
 - **`argument-hint` values that YAML reads as lists, or cannot read at all.**
