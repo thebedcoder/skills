@@ -22,14 +22,14 @@ review, the `docs/` tree, every `--auto` gate and the hard-override list.
 
 | Item | Classification | Mode affected | Status |
 |---|---|---|---|
-| P1-a SessionStart router hook | missing | both | planned |
-| P1-b Test harness | partial | both | planned |
-| P2-a Worktree lifecycle for `[P]` stories | missing | both | planned |
-| P2-b Evidence gate before completion | partial | both | planned |
-| P2-c `/diagnose` | missing | both | planned |
-| P3-a Clarifying pass for vague `/feature` input | partial | full only | planned |
-| P3-b Debugging depth in `/fix` | partial | both | planned |
-| P3-c Context diet | partial | both | planned |
+| P1-a SessionStart router hook | missing | both | shipped (`022602b`) |
+| P1-b Test harness | partial | both | shipped (`953b001`, fixes `4ae6538` `b00d0de` `654de0c` `6983cca`) |
+| P2-a Worktree lifecycle for `[P]` stories | missing | both | shipped (`47ff1d3`) |
+| P2-b Evidence gate before completion | partial | both | shipped (`5e77004`) |
+| P2-c `/diagnose` | missing | both | shipped (`09a1aad`) |
+| P3-a Clarifying pass for vague `/feature` input | partial | full only | shipped (`e3fdf55`) |
+| P3-b Debugging depth in `/fix` | partial | both | shipped (`f3924e5`) |
+| P3-c Context diet | partial | both | shipped (`dbe3948`, register `9527984`) |
 
 **Dropped as already covered: none.** Every item has at least one real gap. Where
 part of an item already exists, the plan below reuses it rather than rebuilding it,
@@ -467,5 +467,56 @@ Done when:
 
 ## Blockers
 
-None known at planning time. Headless `claude -p` works in this environment
-(verified), so behavioral scenarios can run. Recorded here if one appears.
+None. Headless `claude -p` worked in the build environment, so every behavioral
+scenario ran for real. Nothing was skipped.
+
+---
+
+## Results (2.2.0)
+
+### Tests before and after
+
+| Tree | Static (files · assertions) | Behavioral scenarios |
+|---|---|---|
+| 2.1.1 (`9f7d970`) + this harness | 4 of 7 files pass · 14 frontmatter failures (bracketed `argument-hint` values YAML reads as lists or cannot parse), no hooks, CHANGELOG top entry 2.1.0 vs manifest 2.1.1 | 4 of 5 — `05-session-focus` fails every hook assertion: a fresh session does not name the focus task |
+| Pre-diet (`f3924e5`) | 10 of 10 files | 8 of 8 |
+| 2.2.0 | 10 of 10 files · 172 assertions · green in GitHub Actions | 8 of 8 (fixtures isolated outside the repo) |
+
+GitHub Actions ran the static job on every push: green on the harness commit, red on
+`5e77004` and `09a1aad` (runners have no git identity, so `worktree.sh merge` could
+not commit — fixed in `b00d0de`), green from then on. The behavioral job is manual
+(`workflow_dispatch`) and needs the `ANTHROPIC_API_KEY` secret.
+
+### P3-c — context diet
+
+Static load estimate, main context (`tests/token-report.py static`, tokens ≈ bytes/4):
+
+| Command | pre-diet | 2.2.0 | change | original 2.1.1 |
+|---|---|---|---|---|
+| `/ship` | 21,080 | 16,844 | −20.1% | 19,998 |
+| `/feature` (full mode) | 10,623 | 8,368 | −21.2% | 9,926 |
+| `/ship --auto` | 21,080 | 17,484 | −17.1% | 19,998 |
+| `/feature --auto` | 10,623 | 9,008 | −15.2% | 9,926 |
+
+2.2.0 loads less than 2.1.1 did, even with the evidence gate, worktree mode, intent
+check and debugging depth added in between.
+
+Real runs (same isolated harness, pre-diet vs 2.2.0, peak main-context tokens):
+`/ship` Phase 2 −9.6%, `/ship --auto` migration pause −4.7%, `/feature` vague −3.8%,
+`/feature` complete +0.5% (8 turns instead of 5). Those scenarios exercise part of a
+chain on top of a ~25k-token system baseline, so they understate the per-command
+figure; turn count dominates summed input.
+
+### Deviations from the plan
+
+- **P2-a:** `PROGRESS.md` conflicts are resolved by keeping ours and appending what
+  their side added past the merge base, not by `git merge-file --union` — the test
+  showed union interleaving two stories' entries.
+- **P2-b:** `/fix` and `/improve` carry their evidence row in the completion block and
+  a commit trailer, and in `PROGRESS.md` only when the change targets a story —
+  `/improve` writes no planning docs by design.
+- **P3-c:** the `story-flow.md` prose moved from `implement.md` keeps its original
+  register; the independent register review flagged it as pre-existing drift.
+- **Harness:** fixture projects moved outside the repo after the first post-diet run
+  showed this repo's `CLAUDE.md` files leaking into every scenario.
+

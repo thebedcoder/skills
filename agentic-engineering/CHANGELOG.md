@@ -4,7 +4,7 @@ All notable changes to the `agentic-engineering` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.2.0] — 2026-09-30
 
 Gaps closed from a comparison with [obra/superpowers](https://github.com/obra/superpowers);
 audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md).
@@ -170,6 +170,25 @@ audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md
   re-judged. `/status`, `/archive` and `ae-test` key on `### AC Coverage` and ignore
   the new heading. Tooling of your own that parses `PROGRESS.md` sections should expect
   one more `###` block per new story.
+
+## [2.1.1] — 2026-09-15
+
+Entry added retroactively in 2.2.0; the version shipped without one.
+
+### Fixed
+
+- **Superseded decisions no longer read as current in the session-start scan.**
+  `DECISIONS.md` is read titles-only, and a superseded entry's marker lived only on its
+  `status:` line below the heading, so every session read a reversed decision as
+  current. `/cleanup` now also prefixes the title with `[superseded]`, and
+  `shared/preamble.md` §D skips those titles (a superseded entry is still read in full
+  when a change touches its subject).
+- **`/archive`'s `SUMMARY.md` says what the feature was.** New conditional `## What it
+  was` (the PRD's problem statement, ≤3 lines, plus the `**Approach:**` line and the
+  option it beat) and `## Where it lives` (directories touched, existence-checked).
+  The story line's AC digest is now required. `## Non-Goals` is never copied: it
+  describes the world at plan time, and frozen into a summary it becomes false
+  statements about the product.
 
 ## [2.1.0] — 2026-09-14
 
