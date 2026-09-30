@@ -4,6 +4,26 @@ All notable changes to the `agentic-engineering` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Gaps closed from a comparison with [obra/superpowers](https://github.com/obra/superpowers);
+audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md).
+
+### Added
+
+- **SessionStart router hook** (`hooks/hooks.json`, `hooks/session-start.sh`), both
+  modes. Fires on `startup|clear|compact` and injects a router of at most 40 lines:
+  bug → `/fix`, idea → `/note`, small change → `/improve`, new feature → `/feature`,
+  "what's left" → `/status`. In a project with `docs/INDEX.md` it names the memory
+  docs to read before touching code; with an active CURRENT in `.agentic/focus.md` it
+  inlines the task title and PLAN progress, so a fresh session — or the first turn
+  after `/compact` — names the task unprompted. Before this, everything hung on the
+  user remembering the right command, and `/compact` dropped the workflow framing.
+  Outside a scaffolded project it emits the router only, marked "not set up here".
+  Pure bash, emits only `hookSpecificOutput.additionalContext` (a second shape would
+  be injected twice), exits 0 always. An explicit slash command or system prompt wins
+  over the router; `AGENTIC_SESSION_HOOK=0` disables it for headless drivers.
+
 ## [2.1.0] — 2026-09-14
 
 ### Changed

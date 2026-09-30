@@ -291,6 +291,16 @@ Long sessions stay lean through three mechanisms:
 - **A compact checkpoint** between stories in `ship-all` and between epics in `plan-all`. `/compact` is a user command — the workflow prints the command and asks you to run it; it cannot run it for you
 - **On-demand loading** — only the command file for the current command is loaded into context, not the full skill
 
+### Session hook
+
+The plugin registers one hook. It keeps the workflow framing alive across new sessions, `/clear` and `/compact`, so you don't have to remember which command fits.
+
+| Hook | Event (matcher) | What it injects |
+|---|---|---|
+| `hooks/session-start.sh` | `SessionStart` (`startup\|clear\|compact`) | A short router — bug → `/fix`, idea → `/note`, small change → `/improve`, new feature → `/feature`, "what's left" → `/status`. In a project with `docs/INDEX.md` it adds which memory docs to read before touching code, and if `.agentic/focus.md` has an active task, its title and PLAN progress, so the first reply picks up where you left off. |
+
+Outside a scaffolded project (no `docs/INDEX.md`) it injects only the router, marked as not set up, so ordinary requests stay ordinary. The text is capped at 40 lines, an explicit slash command or system prompt always wins over it, and `AGENTIC_SESSION_HOOK=0` turns it off for a session — useful for headless `claude -p` drivers that want a bare context.
+
 ### Context forking
 
 `/status` and `/analyze` use `context: fork` — they run in an isolated subagent context. The main conversation only sees the final result, not the intermediate tool calls and file reads. This keeps the main context lean on long sessions where you might check status or run analysis queries repeatedly.
