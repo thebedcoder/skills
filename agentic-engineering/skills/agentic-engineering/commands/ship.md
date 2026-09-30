@@ -41,6 +41,10 @@ On `main` / `master` → ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK:
 
 Full mode reaches `/ship` from `/feature`, which already created `feat/<name>` — the guard is a no-op there. **Lite mode's path is `/note` → `/ship`, which has no branch step at all**, so without this guard every lite story lands directly on `main`. Matches the guards in `/fix` and `/improve`.
 
+### Step 0d — Worktree mode
+
+CURRENT carries `worktree_of:` (seeded by `/ship-all`'s parallel path) → read **§W3** of `shared/worktree.md`: Phases 5 and 7 defer to the merge. No such line → skip, never read the file.
+
 ### Step 0 — Auto-write focus
 
 Before picking a story, update `.agentic/focus.md`:

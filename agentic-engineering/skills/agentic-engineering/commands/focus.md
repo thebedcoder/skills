@@ -24,6 +24,8 @@ set_by: [manual | /ship | /fix | /improve | ...]
 1. [queued task]
 ```
 
+CURRENT may also carry `feature:` and `note:` (chain commands), and `worktree_of:` + `worktree_base:` — written only by `/ship-all`'s parallel path into a story worktree (`shared/worktree.md`). `/ship` reads `worktree_of:` to defer its shared-doc phases to the merge.
+
 `# PLAN` **is** the progress record; a harness task list, where the session exposes one, is a mirror of it. Chain commands (`/ship`, `/ship-all`, `/plan-all`, `/fix`, `/improve`, `/feature`, `/doc-all`) write PLAN at start and tick steps as phases close. A one-step task needs no PLAN; absent is valid.
 
 **Never hand-edit PLAN from `/focus <text>`** — setting a new CURRENT wipes PLAN, because a plan for the previous task is worse than none.

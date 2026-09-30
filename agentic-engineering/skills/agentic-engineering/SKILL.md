@@ -44,7 +44,7 @@ Both live under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/`.
 | `/implement` | `commands/implement.md` | Next unchecked story + tests |
 | `/review` | `commands/review.md` | 7-agent parallel review (`--frontend-pass` drops LEAN) |
 | `/ship` | `commands/ship.md` | Full chain: implement→review→frontend→review→docs |
-| `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories |
+| `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories. Opt-in worktree per `[P]` story (`shared/worktree.md`) |
 | `/fix [description]` | `commands/fix.md` | Diagnose → fix → review |
 | `/improve [description]` | `commands/improve.md` | Non-bug change — plan → apply → review. Bare call → picks improvement from `BACKLOG.md`. Wants it done now; "we should improve X someday" → `/note` |
 | `/plan-all` | `commands/plan-all.md` | Plan all unplanned epics from INDEX.md |

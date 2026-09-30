@@ -42,6 +42,27 @@ audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md
     cost, turns, per-model and per-subagent tokens from stream-json, plus a static
     per-command load estimate driven by `tests/load-manifest.json`.
 
+- **Worktree lifecycle for `[P]` stories** (`/ship-all`, `shared/worktree.md`,
+  `scripts/worktree.sh`), both modes. When the next priority level holds two or more
+  `[P]` stories, `/ship-all` offers one worktree per story (`[AUTO: skip]` — `--auto`
+  keeps shipping them sequentially). Opting in creates `.worktrees/<story>` on
+  `feat/<feature>-story-xxx` (ignoring `.worktrees/` first), runs the test command
+  there as a baseline (red → ask), and seeds that worktree's `.agentic/focus.md`. A
+  `/ship` inside a seeded worktree runs Phases 1–4 and 6 and defers Phase 5
+  (changelogs, app-docs) and Phase 7 (cleanup) to the merge, because two branches
+  writing `CHANGELOG.md`, `DECISIONS.md` and `MEMORY.md` in parallel conflict and
+  collide on `DEC-NNN` numbers. The next `/ship-all` finishes each shipped worktree:
+  merge / PR / keep / discard, always asked. Merge joins both stories'
+  `PROGRESS.md` entries, re-runs the tests on the merged result, then runs the deferred
+  phases once in the main tree. Removal refuses a dirty worktree or an unmerged branch;
+  discard shows what it destroys and asks again.
+  - `PROGRESS.md` is **not** merged with `git merge-file --union`: git aligns the lines
+    two entries share (`### AC Coverage`, the table header) and union splices one
+    story's rows into the other's entry. The script keeps our file and appends exactly
+    what their side added past the merge base, and aborts when their side edited
+    rather than appended. `tests/static/test_worktree.sh` ships two `[P]` stories in
+    two worktrees and checks both entries survive intact.
+
 ### Fixed
 
 - **`argument-hint` values that YAML reads as lists, or cannot read at all.**

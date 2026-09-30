@@ -33,6 +33,10 @@ Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by
 
 Between stories: update `note:` to `phase: shipping STORY-X (k of N)`. Do **not** overwrite `title:` per story — it represents the whole chain.
 
+### Step 0c — Finish parallel worktrees
+
+`.worktrees/` holds story worktrees from an earlier run → run **§W2** of `shared/worktree.md` before anything else: merge, PR, keep or discard each shipped one. Merged stories count as shipped for the order below. No `.worktrees/` → skip silently, never read the file.
+
 ---
 
 ### On start
@@ -68,6 +72,8 @@ You'll approve each implementation plan before it runs.
 ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"Start the ship-all session?"* → **Ship everything (Recommended)** · **Ship the P1 set only** · **Cancel**. Under `--auto`: SKIP and ship everything.
 
 **Ship the P1 set only** → chain covers P1 stories, then ends at the normal Session-complete block; P2/P3 listed under `REMAINING 🔜`. That is a clean finish, not an early stop. Unprioritised feature → drop that option; there is no P1 set to offer.
+
+**Parallel group.** Lowest open level has ≥2 `[P]` stories with no unchecked dependency → ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"STORY-003 and STORY-004 can run in parallel. How should they ship?"* → **Here, one after another (Recommended)** · **One worktree per story** · **Skip the group**. Under `--auto`: SKIP — ship them here, sequentially, as always; worktrees are opt-in only. Second option → run **§W1** of `shared/worktree.md`, which ends this session with the worktrees ready.
 
 ---
 
@@ -174,6 +180,10 @@ If `AUTO=false`: skip.
 | Per-story 'go' prompt | `[AUTO: skip]` |
 | Constitution conflict surfaced by a story | `[AUTO: always-ask]` (hard-override #3) |
 | Recurring blocker class across multiple stories | `[AUTO: always-ask]` — stop + ask whether to update constitution |
+| Parallel group — here / worktrees / skip | `[AUTO: skip]` — ships the group here, sequentially |
+| Worktree baseline red | `[AUTO: always-ask]` (`shared/worktree.md` §W1) |
+| Finish a shipped worktree — merge / PR / keep / discard | `[AUTO: always-ask]` — removal and branch deletion are destructive |
+| Discard confirmation | `[AUTO: always-ask]` |
 
 ### Guardrails
 
@@ -187,7 +197,8 @@ If `AUTO=false`: skip.
 
 - **Compaction is the human's action, not yours.** `/compact` is a user command; no tool invokes it. After 3-4 stories context fills and quality drops, so always surface the gate — but never claim the chain compacted by itself, and never stall waiting for it.
 - **One story = its own commit(s).** No batching. User must revert story without touching others.
-- **`[P]` markers are user-facing suggestions, not self-instructions.** Ship-all runs sequential. No interleaving.
+- **`[P]` markers are user-facing suggestions, not self-instructions.** Ship-all runs sequential in this session — no interleaving. Parallelism happens only through the opt-in worktree path, in other sessions, one story each.
+- **Worktree cleanup is never automatic.** Merge, PR, keep, discard: the human picks, `--auto` or not. Removing a worktree or deleting its branch without that answer destroys work that exists nowhere else.
 - **Priority order is not a suggestion.** A P2 shipped before an open P1 wastes the MVP slice — what the field protects. `[P]` reorders within a level, never across one.
 - **Don't re-prioritise mid-chain.** A story that turns out harder than priced stays at its level. Re-cutting priorities is `/feature`'s job, and doing it here silently rewrites the plan the user approved.
 - **Recurring blockers → stop + fix pattern.** Same blocker class 3 stories in row → update constitution/conventions, not more fixes.

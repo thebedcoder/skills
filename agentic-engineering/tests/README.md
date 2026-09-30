@@ -21,6 +21,7 @@ built-in parser, which CI also runs). No network, no API key.
 | `test_home_paths.py` | `~/.claude` (or bare `$HOME/.claude`) literals in shipped content |
 | `test_command_tables.py` | README command table, SKILL.md Command → File Map and `commands/` drifting apart; stale command counts in CLAUDE.md |
 | `test_hooks.py` | invalid `hooks/hooks.json`; SessionStart output that is not exactly one valid JSON object with `hookSpecificOutput` under every project shape (plain repo, scaffolded, active focus, compact source, hostile focus titles, bad UTF-8, empty/garbage stdin, opt-out) |
+| `test_worktree.sh` | `scripts/worktree.sh` end to end: two `[P]` stories shipped in two worktrees and merged back with both `PROGRESS.md` entries intact; a code conflict or an edited (not appended) `PROGRESS.md` aborts with the tree unchanged; nothing is removed before it is asked for; a dirty worktree or unmerged branch refuses removal |
 | `test_transcript_lib.py` | the harness's own assertions: `batch` passes on a seven-in-one-message fixture and **fails** on the one-per-message fixture, subagent-thread lines never count as main-thread dispatches, `routed-to` fails without evidence |
 | `test_manifest.py` | invalid `plugin.json`, non-semver version, missing marketplace entry, CHANGELOG top entry out of step, `load-manifest.json` naming missing files |
 

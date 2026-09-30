@@ -213,8 +213,10 @@ Change:
 - Finish: the next `/ship-all` run in the main tree reconciles worktrees under
   `.worktrees/` first, and for each offers `[ASK: single]` **Merge into <base>
   (Recommended)** · **Push and open a PR** · **Keep the worktree** · **Discard it**.
-  Tag `[AUTO: always-ask]`. Merge runs `scripts/worktree.sh merge`, which unions
-  append-only `PROGRESS.md` conflicts and stops on anything else, then runs the
+  Tag `[AUTO: always-ask]`. Merge runs `scripts/worktree.sh merge`, which resolves an
+  append-only `PROGRESS.md` conflict by keeping ours and appending exactly what their
+  side added (plain `--union` interleaves entries — found by the test) and stops on
+  anything else, then runs the
   test command on the merged result, then runs the deferred Phase 5 + 7 in the main
   tree. Worktree removal and branch deletion happen only after the chosen action
   succeeds; Discard shows the commits and files it would destroy first and asks again.
@@ -226,8 +228,9 @@ few lines), `shared/worktree.md` (new), `scripts/worktree.sh` (new),
 `CHANGELOG.md`.
 
 Risk:
-- A merge that silently mangles `PROGRESS.md`. Mitigated by union resolution limited
-  to the known append-only file, a static test that merges two real worktree branches
+- A merge that silently mangles `PROGRESS.md`. Mitigated by append-by-construction
+  limited to the known append-only file (abort when their side edited rather than
+  appended), a static test that merges two real worktree branches
   and checks both entries survive intact, and stopping on any other conflict.
 - Destructive cleanup under `--auto`. Mitigated: removal/deletion gates are
   `[AUTO: always-ask]` and never listed as skippable; `worktree.sh remove` refuses a
