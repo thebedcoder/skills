@@ -12,6 +12,9 @@ pass() { PASSES=$((PASSES + 1)); echo "  [PASS] $1"; }
 fail() { FAILS=$((FAILS + 1)); echo "  [FAIL] $1"; [ -n "${2:-}" ] && printf '%s\n' "$2" | sed 's/^/         /'; }
 check() { local d="$1"; shift; if out="$("$@" 2>&1)"; then pass "$d"; else fail "$d" "$out"; fi; }
 g() { git -c user.name=t -c user.email=t@example.invalid "$@"; }
+# The scripts under test commit too (worktree.sh merge). CI runners have no git
+# identity; give every git call in this test one, never touching global config.
+export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.invalid GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.invalid
 
 echo "--- evidence gate"
 T="$(mktemp -d)"

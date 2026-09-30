@@ -139,12 +139,19 @@ cmd_merge() {
   is_clean "$root" || die "main tree has uncommitted changes — commit or stash them first"
   local branch; branch="$(git -C "$path" rev-parse --abbrev-ref HEAD)"
   local into; into="$(git rev-parse --abbrev-ref HEAD)"
-  if git merge --no-ff --no-edit -q "$branch" >/dev/null 2>&1; then
+  local merge_out
+  if merge_out="$(git merge --no-ff --no-edit -q "$branch" 2>&1)"; then
     echo "MERGED $branch into $into $(git rev-parse --short HEAD)"
     return 0
   fi
   local conflicted; conflicted="$(git diff --name-only --diff-filter=U)"
-  [ -n "$conflicted" ] || { git merge --abort 2>/dev/null; echo "git merge failed" >&2; exit 1; }
+  if [ -z "$conflicted" ]; then
+    # Not a conflict: no identity, hook refusal, unrelated histories … say which.
+    git merge --abort 2>/dev/null
+    echo "git merge failed, tree unchanged:" >&2
+    printf '%s\n' "$merge_out" | sed 's/^/  /' >&2
+    exit 1
+  fi
   local f other="" tmp; tmp="$(mktemp -d)"
   while IFS= read -r f; do
     appendable "$f" || { other="$other $f"; continue; }
@@ -174,7 +181,8 @@ cmd_merge() {
     echo "APPENDED $f (their new entries after ours)"
   done <<< "$conflicted"
   rm -rf "$tmp"
-  git commit -q --no-edit || { echo "merge commit failed" >&2; exit 1; }
+  local commit_out
+  commit_out="$(git commit -q --no-edit 2>&1)" || { echo "merge commit failed:" >&2; printf '%s\n' "$commit_out" | sed 's/^/  /' >&2; exit 1; }
   echo "MERGED $branch into $into $(git rev-parse --short HEAD)"
 }
 
