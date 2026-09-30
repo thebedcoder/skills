@@ -78,7 +78,18 @@ Documented in `SKILL.md` under "Test Execution Rules". Watch-mode test runners (
 
 ## Verifying changes locally
 
-There are no tests. Two things to run.
+**Run the test suite first** — `tests/run-tests.sh` (details in `tests/README.md`):
+
+```bash
+agentic-engineering/tests/run-tests.sh --static      # seconds, no API key — also runs in CI
+agentic-engineering/tests/run-tests.sh --behavioral  # real claude -p sessions, a few dollars
+```
+
+Static tests check frontmatter, every `${CLAUDE_PLUGIN_ROOT}` path and dispatch name, `~/.claude` literals, the README/SKILL.md command tables, and the SessionStart hook's JSON under hostile inputs. Behavioral scenarios run headless sessions in throwaway fixture projects and assert on the transcript — `/ship` batching all seven reviewers into one message, `/ship --auto` hard-pausing on a migration, `/converge` flagging a checked story with no code, `/fix` routing, the hook naming the focus task. They skip cleanly without credentials. **Add a scenario when you add a gate or a dispatch rule** — prose rules with no transcript check are exactly what regressed before.
+
+Adding a command also means a README table row and a SKILL.md map row (`test_command_tables.py` fails otherwise) and, if it loads nested bodies, an entry in `tests/load-manifest.json` so `tests/token-report.py static` counts it honestly.
+
+Two manual checks remain.
 
 **Load the plugin from the working tree** and check that the agents register under the names the commands dispatch:
 

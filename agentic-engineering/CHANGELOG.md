@@ -23,6 +23,31 @@ audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md
   Pure bash, emits only `hookSpecificOutput.additionalContext` (a second shape would
   be injected twice), exits 0 always. An explicit slash command or system prompt wins
   over the router; `AGENTIC_SESSION_HOOK=0` disables it for headless drivers.
+- **Test harness** (`tests/`), both modes. `tests/run-tests.sh` is the one entry point.
+  - *Static* (`--static`, no API key, runs in the new
+    `.github/workflows/agentic-engineering-tests.yml` on every push): frontmatter of
+    every wrapper, agent and SKILL.md; every `${CLAUDE_PLUGIN_ROOT}` path,
+    `agentic-engineering:<name>` dispatch name and `commands/`/`shared/`/`agents/`
+    reference resolves; no `~/.claude` literal; README command table, SKILL.md map and
+    `commands/` agree; `hooks.json` is valid and the SessionStart script emits exactly
+    one valid JSON object under eleven project shapes, hostile focus titles included.
+  - *Behavioral* (`--behavioral`): headless `claude -p --output-format stream-json` runs
+    in throwaway fixture projects, asserting on the transcript — "fix this failing test"
+    routes to `/fix`; `/ship` Phase 2 dispatches all seven reviewers in one assistant
+    message; `/ship --auto` logs a `HARD-PAUSE` and writes no migration when a story
+    needs a new table; `/converge` reports a checked story with no code as a Blocker;
+    the hook makes a fresh session, and the first turn after `/compact`, name the
+    active focus task. Skipped with exit 0 when no credentials are present.
+  - `tests/token-report.py`, modeled on superpowers' `analyze-token-usage.py`: per-run
+    cost, turns, per-model and per-subagent tokens from stream-json, plus a static
+    per-command load estimate driven by `tests/load-manifest.json`.
+
+### Fixed
+
+- **`argument-hint` values that YAML reads as lists, or cannot read at all.**
+  `converge`'s `[feature-name] [--auto]` was invalid YAML, and thirteen other wrappers'
+  `[--auto]`-style hints parsed as one-element lists rather than strings. All bracketed
+  hints are now quoted. Found by the new frontmatter test.
 
 ## [2.1.0] — 2026-09-14
 

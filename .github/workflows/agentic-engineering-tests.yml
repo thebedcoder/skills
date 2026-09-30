@@ -1,0 +1,67 @@
+name: agentic-engineering tests
+
+on:
+  push:
+    paths:
+      - "agentic-engineering/**"
+      - ".claude-plugin/marketplace.json"
+      - ".github/workflows/agentic-engineering-tests.yml"
+  pull_request:
+    paths:
+      - "agentic-engineering/**"
+      - ".claude-plugin/marketplace.json"
+      - ".github/workflows/agentic-engineering-tests.yml"
+  workflow_dispatch:
+    inputs:
+      behavioral:
+        description: "Also run behavioral scenarios (real claude -p sessions; needs the ANTHROPIC_API_KEY secret, costs money)"
+        type: boolean
+        default: false
+      model:
+        description: "Model for behavioral scenarios"
+        type: string
+        default: "sonnet"
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: static infra tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyYAML (strict frontmatter parsing)
+        run: python -m pip install --quiet pyyaml
+      - name: Static tests
+        run: agentic-engineering/tests/run-tests.sh --static
+      - name: Frontmatter again without PyYAML (stdlib subset parser)
+        run: AE_TESTS_NO_YAML=1 python3 agentic-engineering/tests/static/test_frontmatter.py
+
+  behavioral:
+    name: behavioral scenarios
+    needs: static
+    if: github.event_name == 'workflow_dispatch' && inputs.behavioral
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Behavioral scenarios (skip cleanly without the secret)
+        run: agentic-engineering/tests/run-tests.sh --behavioral --model "${{ inputs.model }}"
+      - name: Upload transcripts and token report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: behavioral-transcripts
+          path: agentic-engineering/tests/behavioral/out/
+          if-no-files-found: ignore

@@ -79,7 +79,7 @@ Conventional Commits with a scope: `feat(agentic-engineering):`, `chore(jtbd):`,
 
 ## Testing changes locally
 
-There is no test suite. Run `/verify-install` — it executes every per-plugin installer with `HOME` pointed at a throwaway dir and asserts the results, then checks the plugin-only invariants for agentic-engineering and jtbd separately.
+`agentic-engineering/` has its own suite — `agentic-engineering/tests/run-tests.sh` (static checks in CI; behavioral `claude -p` scenarios on demand, see its `tests/README.md`). The rest of the repo has none. Run `/verify-install` — it executes every per-plugin installer with `HOME` pointed at a throwaway dir and asserts the results, then checks the plugin-only invariants for agentic-engineering and jtbd separately.
 
 **Never run an installer directly.** Every installer writes to `~/.claude`; there is no `--prefix` flag, so running one clobbers your real config. `HOME` is the only seam:
 

@@ -307,6 +307,10 @@ Outside a scaffolded project (no `docs/INDEX.md`) it injects only the router, ma
 
 Other commands (`/ship`, `/feature`, `/design`) stay in the main context because they have human checkpoints that require conversation continuity.
 
+### Tests
+
+`tests/run-tests.sh --static` checks the plugin's structure without an API key — frontmatter, every `${CLAUDE_PLUGIN_ROOT}` path and agent name, the command tables, and the SessionStart hook's JSON — and runs in GitHub Actions on every push. `tests/run-tests.sh --behavioral` drives real headless `claude -p` sessions in throwaway fixture projects and checks the transcript: `/ship` dispatching all seven reviewers in one message, `/ship --auto` still pausing on a table-creating migration, `/converge` flagging a checked story whose code is missing, "fix this failing test" landing in `/fix`, and the hook naming your active task after `/compact`. It prints a per-scenario token report and skips cleanly when no credentials are present. See [`tests/README.md`](tests/README.md).
+
 ### Built-in gotchas
 
 Each command file documents the specific failure modes Claude tends toward when executing it — things like dispatching review subagents sequentially instead of batched, scope-creeping during bug fixes, or writing tests after the implementation and calling it TDD. These aren't generic warnings; they're patterns observed in practice and written directly into the skill so Claude course-corrects before hitting them.

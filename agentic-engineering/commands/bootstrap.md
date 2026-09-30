@@ -1,6 +1,6 @@
 ---
 description: Scaffold a new project — pick your stack, install deps, create base structure and epic roadmap
-argument-hint: [project-name]
+argument-hint: "[project-name]"
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/bootstrap.md` — that file holds the real instructions; this wrapper holds none.
 

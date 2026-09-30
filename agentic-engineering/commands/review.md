@@ -1,6 +1,6 @@
 ---
 description: Run 6-agent parallel code review — bugs, requirements, test coverage, conventions, security, edge cases
-argument-hint: [STORY-ID]
+argument-hint: "[STORY-ID]"
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/review.md` — that file holds the real instructions; this wrapper holds none.
 

@@ -1,6 +1,6 @@
 ---
 description: Document multiple features. Add --full on a new project to also generate guides, index, and architecture docs
-argument-hint: [--full]
+argument-hint: "[--full]"
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/doc-all.md` — that file holds the real instructions; this wrapper holds none.
 
