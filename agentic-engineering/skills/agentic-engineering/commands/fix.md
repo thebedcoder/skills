@@ -86,6 +86,14 @@ FIXER applies minimal surgical fix. Rules:
 - No "while I'm here" improvements
 - Add/update test that would have caught this bug
 
+**Evidence — fix is not done until the suite says so, on this code.** After the last edit, full suite from repo root:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase fix -- <project test command>
+```
+
+Red → not fixed; back to diagnosis, new row after the next attempt. Green row goes to three places: RED's review prompt, the `━━━ FIX COMPLETE` block, and an `Evidence:` trailer on the `fix(` commit. Bug belongs to a story with a `PROGRESS.md` entry (a review blocker, a regression in a shipped story) → also append the row to that story's `### Evidence` table. `/fix` has no story entry of its own; never invent one.
+
 **Phase 3 — Review** *(automatic)*
 
 RED runs focused review on changed code only:
@@ -94,6 +102,7 @@ RED runs focused review on changed code only:
 RED — Fix Review:
 
 Does fix actually resolve root cause? [yes/no — explanation]
+Evidence row fresh and green? [yes/no — the row]
 Does fix introduce new risks? [yes/no — detail]
 Is test sufficient to prevent regression? [yes/no — detail]
 Blast radius check: [anything adjacent to re-test?]
@@ -138,6 +147,8 @@ test([scope]): add regression test for [bug description]
 docs([scope]): update edge case notes    ← only if docs changed
 ```
 
+The `fix(` commit body ends with the trailer `Evidence: [command] → exit 0 · [runner summary] · tree [id]`.
+
 **GIT** outputs note for existing PR (not new PR description):
 ```markdown
 ### Fix applied to this PR
@@ -163,6 +174,7 @@ Bug:        [description]
 Root cause: [one line]
 Changed:    [files]
 Test:       ✅ added / updated
+Evidence:   ✅ [command] → [runner summary] · tree [id]
 Docs:       ✅ updated / not needed
 Changelog:  ✅ both updated
 Git:        ✅ committed on [branch name]
@@ -190,6 +202,7 @@ If `AUTO=false`: skip.
 
 - **One bug, one fix, one commit.** Notice other things during investigation? → `improvements.md`. Resist scope creep.
 - **Fix root cause, not symptom.** Wrong total from upstream calc → fix calc, not display. Root cause in different module → still fix there.
+- **Claimed green without running.** "Fixed" means an `evidence.sh` row from after the last edit shows exit 0. The failing run from diagnosis, a single-test run, or "should pass now" is not that row.
 - **Regression test must fail before fix.** Test → watch fail → fix → watch pass. After-the-fact proves nothing.
 - **Reproduce before confirming.** Can't reproduce → ask user, don't invent hypothesis.
 - **No `/fix` on `main`.** Override GIT check → no PR, no review, no trail.

@@ -247,6 +247,12 @@ All APIs must follow JSON:API specification.
 
 Constitution violations found in review are always blockers.
 
+### Evidence before completion
+
+A checkbox is a claim; the test run is the evidence. Every phase that changes code — implementation, review fixes, frontend, `/fix`, `/improve` — ends by running the project's test command through `scripts/evidence.sh`, which prints a row for the story's `### Evidence` table in `PROGRESS.md`: phase, command, exit code, the runner's own pass/fail summary, time, and a **tree id** — a fingerprint of the code the tests ran against, with docs excluded. The story box is ticked only after a green row is recorded.
+
+`/review` re-checks that fingerprint against the current code and hands the verdict to REQ. A story ticked in the diff under review whose newest row is **stale** (code changed after the run), **failing**, or **missing** is a blocker. Stories ticked before this existed are unaffected. `/fix` and `/improve` carry their row in the completion summary and as an `Evidence:` trailer on the commit.
+
 ### Contract claims, failure states, and plan pre-review
 
 Two required sections in ARCH's implementation plan, both of which outlive it.

@@ -63,12 +63,37 @@ audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md
     rather than appended. `tests/static/test_worktree.sh` ships two `[P]` stories in
     two worktrees and checks both entries survive intact.
 
+- **Evidence gate before completion** (`scripts/evidence.sh`, `/implement`, `/ship`,
+  `/review`, `/fix`, `/improve`, `ae-req`), both modes. Checkboxes were ticked by the
+  same process that claimed success, and nothing required a test run to back the
+  claim; `/converge` only caught it late, and only for missing code. Now every phase
+  that changes code ends with `evidence.sh run --phase <p> -- <test command>`, which
+  prints a row — exit code, the runner's own summary, and a **tree id**: `git
+  write-tree` of the working tree through a throwaway index, docs excluded, identical
+  before and after a commit, changed by any code edit. The row goes into the story's
+  new `### Evidence` table before the box is ticked. `/review` runs `evidence.sh check`
+  and passes the verdict to `ae-req`, whose new Mode A Part 3 blocks a story ticked in
+  the diff under review when the newest row is stale, failing or missing. `/fix` and
+  `/improve` have no story entry by design; their row goes in the completion block and
+  an `Evidence:` commit trailer, plus the story's table when the change targets one.
+  New gotcha everywhere: **claimed green without running**.
+
 ### Fixed
 
 - **`argument-hint` values that YAML reads as lists, or cannot read at all.**
   `converge`'s `[feature-name] [--auto]` was invalid YAML, and thirteen other wrappers'
   `[--auto]`-style hints parsed as one-element lists rather than strings. All bracketed
   hints are now quoted. Found by the new frontmatter test.
+
+### Migration
+
+- **`PROGRESS.md` story entries gain an optional `### Evidence` subsection**
+  (between `### AC Coverage` and `### Edge probes`). Nothing to do for existing
+  features: entries without it stay valid, and `ae-req` gates only a story whose box
+  is ticked *in the diff under review* — stories ticked before this release are never
+  re-judged. `/status`, `/archive` and `ae-test` key on `### AC Coverage` and ignore
+  the new heading. Tooling of your own that parses `PROGRESS.md` sections should expect
+  one more `###` block per new story.
 
 ## [2.1.0] — 2026-09-14
 

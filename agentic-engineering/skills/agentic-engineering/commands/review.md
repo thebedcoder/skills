@@ -53,6 +53,15 @@ fi
 
 `<STORY-ID>` → current story id, else branch name.
 
+Story under review → also capture the evidence verdict for REQ (no Bash on its side):
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh check docs/features/<feature>/PROGRESS.md <STORY-ID> \
+  --diff .agentic/review/<STORY-ID>.diff > .agentic/review/<STORY-ID>.evidence
+```
+
+Non-zero exit is the verdict, not an error — write the file either way. Branch-only review, no story → skip.
+
 **`BASE` resolving to HEAD is a failure, not a clean review.** Say so and stop; do not report "clean". A base that equals HEAD produces an empty diff, six reviewers that find nothing, and a green report on unreviewed code — which is worse than an error, because nobody looks twice at a pass. Same for a genuinely empty diff on a branch that has commits.
 
 An empty diff on a branch with *no* commits of its own is the only legitimate clean-and-skip case.
@@ -75,7 +84,7 @@ An empty diff on a branch with *no* commits of its own is the only legitimate cl
 | `subagent_type` | Receives | Looks for |
 |---|---|---|
 | `agentic-engineering:ae-red` | diff path + changed impl files | runtime errors, null safety, async bugs, logic, resource leaks |
-| `agentic-engineering:ae-req` | STORIES.md + CONSTITUTION.md + changed files | acceptance criteria met, constitution violations |
+| `agentic-engineering:ae-req` | STORIES.md + CONSTITUTION.md + changed files + PROGRESS.md + `.agentic/review/<STORY-ID>.evidence` | acceptance criteria met, constitution violations, story ticked without fresh evidence |
 | `agentic-engineering:ae-test` | diff path + changed files + test files + STORIES.md + PROGRESS.md + feature name | coverage gaps, AC Coverage matrix validity, tests that wouldn't catch regressions |
 | `agentic-engineering:ae-doc` | CLAUDE.md + changed files + related app-docs | convention drift, docs needing update |
 | `agentic-engineering:ae-sec` | diff path + changed impl files | high-confidence exploitable vulnerabilities |
@@ -104,7 +113,7 @@ Won't-fix (logged to improvements.md):
 
 Clean areas:
 - RED: [scope checked and clear]
-- REQ: X/Y criteria met. Constitution: N compliant, M violations.
+- REQ: X/Y criteria met. Constitution: N compliant, M violations. Evidence: [fresh / stale / failing / missing / n/a]
 - TEST: [verdict]
 - DOC: [aligned / drifts noted]
 - SEC: [Clean / X findings — Critical: N, High: N, Medium: N]
@@ -118,7 +127,7 @@ Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`
 
 | Reviewer says | Bucket |
 |---|---|
-| RED `CRITICAL`, SEC `Critical` / `High`, EDGE `Blocker`, REQ constitution violation, LEAN verbatim-duplication `Blocker` | Blocker |
+| RED `CRITICAL`, SEC `Critical` / `High`, EDGE `Blocker`, REQ constitution violation, REQ `EVIDENCE: ❌`, LEAN verbatim-duplication `Blocker` | Blocker |
 | RED `WARNING`, SEC `Medium`, EDGE / TEST `should-cover`, DOC drift, **all LEAN `should-fix`** | Should-fix |
 | anything the agent itself marked won't-fix, or matching a prior `improvements.md` entry | Won't-fix |
 
@@ -141,6 +150,7 @@ Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`
 - **No 8th reviewer ad-hoc.** Roster is exactly the seven above. New dimension missing → skill change, not improvisation. Flag it.
 - **LEAN findings never block a ship except on verbatim duplication.** Working code that could be simpler is `should-fix`, always. An operator who has to argue about a ternary at a blocker gate stops reading review reports — and then misses the RED finding underneath.
 - **A LEAN report with no `Reuse:` line means it skipped the repo search.** That is the half of its job the diff cannot supply. Treat the report as incomplete and say so rather than consolidating it.
+- **Unverified completion = blocker.** Story ticked in this diff with evidence `stale`, `failing` or `missing` → REQ blocks. Fix is a fresh `evidence.sh run`, never an edited row — a row's tree id is only reproducible by running the tests on that code.
 - **Constitution violations = always blockers.** Never downgrade to "should-fix." Fix cost irrelevant.
 - **ae-edge is read-only.** Despite emitting failing test code, ae-edge does NOT write files. Test code lives in the report as inert text; blocker-fix flow downstream copies it into project test files. If ae-edge writes a file, that's a bug.
 - **ae-edge defers frontend.** If diff is frontend-only, ae-edge emits "out of scope" and exits. Don't expect findings on `.tsx`/`.vue`/`.jsx` changes or `.swift` under `Views/` — that's `ae-ux`'s beat.

@@ -106,7 +106,7 @@ Apply to every command. Not command-specific.
 1. **Never skip a gate by improvisation.** Gates are skipped only by their own `[AUTO:]` tag under `--auto`, never because the answer looks obvious. A gate tagged `[AUTO: skip]` is ceremony by design; every other tag stands.
 2. **Agents challenge each other.** PROD vs ARCH. RED assumes failure. Tension is the point.
 3. **One story at a time.** No batching.
-4. **Tests not optional.** Done = implemented + tested.
+4. **Tests not optional.** Done = implemented + tested + a fresh green `scripts/evidence.sh` row for the code being claimed. Output from an earlier phase proves nothing about code changed since.
 5. **Docs stay in sync.** PROGRESS.md, STORIES.md, reviews reflect reality.
 6. **Plan before code.** ARCH plans. PROD validates. Then build.
 

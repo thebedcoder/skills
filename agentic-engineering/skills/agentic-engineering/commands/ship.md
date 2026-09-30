@@ -101,7 +101,7 @@ Mark promoted in `BACKLOG.md`:
 - ARCH generates plan
 - PROD validates vs acceptance criteria
 - ⚠️ **Single human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: Show both plans, then ask *"Start the full ship chain?"* → Go / Stop. **This gate replaces `/implement`'s own start gate** — the parent's gate wins, and `/implement` running nested does not fire a second one. Under `--auto`: SKIP — emit `SKIPPED: ship-chain approval [auto]` and proceed. Hard-override #4 still applies (missing test framework, missing design tool → HARD-PAUSE).
-- On 'go': implement + tests. Update PROGRESS.md + STORIES.md
+- On 'go': implement + tests. Update PROGRESS.md + STORIES.md — Record step's `### Evidence` row first, checkbox last
 - **GIT** commits:
 ```
 feat([feature-name]): STORY-XXX — [story title]
@@ -123,7 +123,7 @@ Run full `/review` flow immediately.
 Then ask *"How do you want to handle these?"* → **Fix now (Recommended)** (agent fixes, chain resumes) · **I'll fix them** (pause for manual fix, then re-review) · **Abort chain**.
 
 These are the options while nested in `/ship`. `/review`'s own three-option gate (Fix now / Show full report / Log and move on) applies only to a standalone `/review` — nested, `/review` reports and this gate decides.
-Blockers fixed → **GIT** amends or commits:
+Blockers fixed → fresh evidence before the commit: `evidence.sh run --phase review-fix -- <test command>`, append the row to the story's `### Evidence` table. Phase 1's row is stale the moment a fix touches code. Then **GIT** amends or commits:
 ```
 fix([feature-name]): STORY-XXX — address review blockers
 ```
@@ -134,6 +134,7 @@ No blockers → continue.
 - ARCH plans components
 - PROD validates flow
 - Implement pixel-faithful to designs
+- Evidence row `--phase frontend` appended before the commit — same script, same table
 - **GIT** commits:
 ```
 feat([feature-name]): STORY-XXX — frontend implementation
@@ -160,7 +161,7 @@ feat([feature-name]): STORY-XXX — frontend implementation
 - 6-agent parallel pass — the Phase 2 seven minus LEAN, which already reviewed this branch
 - ae-ux checks fidelity vs design handoff
 - Blockers → pause + surface, same pattern as Phase 2
-- Blockers fixed → **GIT** commits:
+- Blockers fixed → evidence row `--phase frontend-fix`, then **GIT** commits:
 ```
 fix([feature-name]): STORY-XXX — address frontend review blockers
 ```
@@ -212,6 +213,7 @@ Chain ended in an unresolved blocker pause → **skip Phase 7 entirely**. Unfini
 ```
 ━━━ STORY-XXX SHIPPED ━━━
 Backend:  ✅ implemented + reviewed
+Evidence: ✅ [latest row's result] — tree [id], fresh
 Frontend: ✅ implemented + reviewed
 Docs:     ✅ updated
 Git:      ✅ committed (see log above)
@@ -278,7 +280,8 @@ After successful ship, SCRIBE:
 
 - **One story, one commit chain.** Related bug found → BACKLOG.md, never fix "while there."
 - **No skipping Phase 2.** RED + SEC find what authors miss.
-- **"Fixed" ≠ self-attested.** User replies "fixed" → re-run review.
+- **"Fixed" ≠ self-attested.** User replies "fixed" → fresh evidence row, then re-run review.
+- **Claimed green without running.** Every phase that changes code ends with its own `evidence.sh` row. Output from Phase 1 does not vouch for code Phase 2 fixed. REQ reads the verdict in `/review` and blocks a checked story whose newest row is stale, red or missing.
 - **No early commit.** Implementation commits at end of Phase 1. Phase 2 blockers → separate commits.
 - **PR description from `git log`, not imagination.** Read actual commits. Never generate from plan.
 - **No UI story → skip Phase 3.** Backend-only → Phase 2 → Phase 5.

@@ -135,6 +135,8 @@ Test obligation keyed to `Change type`:
 
 Test execution is non-watch mode only — see "Test Execution Rules" in SKILL.md.
 
+**Evidence before review.** After the last edit, full suite through the script — `bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase improve -- <project test command>`. Red → not done. Green row goes into the review block, the completion block and an `Evidence:` trailer on the `feat(`/`perf(`/`refactor(` commit. Review blockers fixed → new row; the old one is stale. `/improve` writes no planning docs, so no `PROGRESS.md` entry — unless the change lands on a story that has one, then append the row there too.
+
 **Phase 3 — Review** *(automatic)*
 
 Dispatch reviewers in **single tool-call batch**, not sequentially. Each gets paths, not full file content.
@@ -163,6 +165,8 @@ Done when:
   ✅ [condition] — [test that proves it]
   ❌ [condition] — not covered
 
+Evidence: [command] → exit 0 · [runner summary] · tree [id]   ← missing or red = blocker
+
 Blockers:
 1. [issue] — [source agent] — [fix plan]
 
@@ -173,7 +177,7 @@ Won't-fix (logged to improvements.md):
 1. [issue] — [reason]
 ```
 
-Blocker raised, or any `Done when:` condition uncovered → pause. Print `⚠️ IMPROVEMENT PAUSED — review found blockers` + findings, then ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to proceed?"* → **Revise the change (Recommended)** · **Accept it anyway** · **Revert the change**.
+Blocker raised, any `Done when:` condition uncovered, or no fresh green evidence row → pause. Print `⚠️ IMPROVEMENT PAUSED — review found blockers` + findings, then ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to proceed?"* → **Revise the change (Recommended)** · **Accept it anyway** · **Revert the change**.
 
 Clean → continue.
 
@@ -241,6 +245,7 @@ Type:       feat | perf | refactor
 Changed:    [files]
 Done when:  ✅ all [N] conditions covered
 Tests:      ✅ added / updated — [count]
+Evidence:   ✅ [command] → [runner summary] · tree [id]
 Measured:   [before → after]  ← perf only
 Docs:       ✅ app-docs updated / not user-facing
 Changelog:  ✅ both updated / docs only
@@ -275,6 +280,7 @@ If `AUTO=false`: skip.
 - **`Change type` is decided in Phase 1, not at commit time.** Deciding the prefix after the diff exists is how `feat` work lands as `refactor` and skips a version bump.
 - **`Done when:` never persists.** No `STORIES.md`, no `PRD.md`, no `docs/specs/` entry. Persisting it turns `/improve` into a second, worse `/feature`.
 - **Read the precedent before adding to it.** Third format handler that ignores how the first two work is technical debt shipped as an improvement.
+- **Claimed green without running.** Review and completion cite an `evidence.sh` row from after the last edit. Earlier output does not count; a `refactor` whose "tests still pass" was never re-run after the refactor is the exact failure.
 - **Untested code gets a characterization test before refactoring, not after.** After-the-fact test proves the new behavior, not that behavior is unchanged.
 - **No `/improve` on `main`.** Override GIT check → no PR, no review, no trail.
 

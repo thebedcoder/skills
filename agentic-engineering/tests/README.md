@@ -22,6 +22,7 @@ built-in parser, which CI also runs). No network, no API key.
 | `test_command_tables.py` | README command table, SKILL.md Command → File Map and `commands/` drifting apart; stale command counts in CLAUDE.md |
 | `test_hooks.py` | invalid `hooks/hooks.json`; SessionStart output that is not exactly one valid JSON object with `hookSpecificOutput` under every project shape (plain repo, scaffolded, active focus, compact source, hostile focus titles, bad UTF-8, empty/garbage stdin, opt-out) |
 | `test_worktree.sh` | `scripts/worktree.sh` end to end: two `[P]` stories shipped in two worktrees and merged back with both `PROGRESS.md` entries intact; a code conflict or an edited (not appended) `PROGRESS.md` aborts with the tree unchanged; nothing is removed before it is asked for; a dirty worktree or unmerged branch refuses removal |
+| `test_evidence.sh` | `scripts/evidence.sh`: tree id changes on any code edit (tracked or new), never on `docs/`, `app-docs/`, `.agentic/` or ignored build output, and is identical before and after a commit; `run` prints the row and keeps the command's exit code; `check` returns fresh / stale / failing / missing and detects a story ticked in the diff |
 | `test_transcript_lib.py` | the harness's own assertions: `batch` passes on a seven-in-one-message fixture and **fails** on the one-per-message fixture, subagent-thread lines never count as main-thread dispatches, `routed-to` fails without evidence |
 | `test_manifest.py` | invalid `plugin.json`, non-semver version, missing marketplace entry, CHANGELOG top entry out of step, `load-manifest.json` naming missing files |
 
@@ -44,6 +45,7 @@ claude -p --plugin-dir <this plugin> --output-format stream-json --verbose \
 | `02-ship-parallel-review` | `/ship` Phase 2 dispatches all seven reviewers in **one** assistant message (grouped by `message.id`) |
 | `03-ship-auto-migration-pause` | `/ship --auto` logs a `HARD-PAUSE` for a table-creating migration and writes no migration before the human answers |
 | `04-converge-false-completion` | `/converge` reports a checked story with no matching code as a Blocker, the delivered FR as converged, and touches no code |
+| `06-req-evidence-gate` | `ae-req` (dispatched directly with the inputs `/review` hands it) blocks a story ticked in the diff whose evidence row is stale, and clears it after a real run on the current code |
 | `05-session-focus` | the SessionStart hook makes a fresh session — and the first turn after `/compact` — name the active focus task; a plain repo gets the router only |
 
 Assertions target mechanism — dispatch grouping, files on disk, logged lines —

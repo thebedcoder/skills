@@ -15,7 +15,7 @@
 - No code while a Contract claim is unproven — assertion is not proof
 - Tests drive implementation (red → green) — never written after
 - No files outside ARCH's explicit plan — scope creep forbidden
-- Story marked complete only when all acceptance criteria verified
+- Story marked complete only when all acceptance criteria verified **and** a fresh green evidence row is in `PROGRESS.md` — test command run in this phase, on this code
 
 ### Step 0a — Parse `--auto` flag
 
@@ -140,7 +140,15 @@ Where a Contract claim is load-bearing, the test that covers it must exercise th
 cases where the claim holds proves nothing. Pick the fixture that would expose the
 claim being backwards.
 
-**Verify.** PROD checks each acceptance criterion:
+**Verify.** Full suite first, through the evidence script, from the repo root — non-watch (SKILL.md "Test Execution Rules"):
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase implement -- <project test command>
+```
+
+Last line = `EVIDENCE-ROW: | implement | … | exit N · <runner summary> | <time> | <tree> |`. Exit ≠ 0 → not done: fix, re-run, new row. Keep the green row for Record. Tree id = fingerprint of the code it ran on (docs excluded) — any later code edit makes the row stale, and `/review` checks.
+
+Then PROD checks each acceptance criterion:
 
 ```
 PROD — Acceptance Check:
@@ -148,9 +156,8 @@ PROD — Acceptance Check:
 - [ ] Criterion 2: met / not met — [evidence]
 ```
 
-**Record.** Update docs:
-- Mark story `- [x]` in `STORIES.md`
-- Append to `PROGRESS.md`:
+**Record.** Update docs — evidence first, checkbox last:
+- Append to `PROGRESS.md` (the `### Evidence` row pasted verbatim from the script, `EVIDENCE-ROW: ` prefix dropped):
 
 ```markdown
 ## STORY-XXX: [Title] — [date]
@@ -161,6 +168,11 @@ PROD — Acceptance Check:
 | AC-1 | [from STORIES.md] | [file:test_name<br>file:test_name] | [unit|integration|e2e] |
 | AC-2 | [from STORIES.md] | [file:test_name] | [unit|integration|e2e] |
 | AC-N | [from STORIES.md] | [file:test_name] | [unit|integration|e2e] |
+
+### Evidence
+| Phase | Command | Result | Run at | Tree |
+|-------|---------|--------|--------|------|
+| implement | `npm test` | exit 0 · pass 14 · fail 0 | 2026-09-30 14:02 | 1a2b3c4d5e6f |
 
 ### Edge probes (from ae-edge)
 | Category | Test |
@@ -182,12 +194,15 @@ PROD — Acceptance Check:
 [anything notable — narrative continues here]
 ```
 
+- Only then mark story `- [x]` in `STORIES.md`. No fresh green row → box stays empty.
+
 **Filling the matrix:**
 - One row per AC in `STORIES.md`. Match AC text exactly.
 - Tests column lists tests that prove this AC, formatted as `file:test_name` — format test runner emits (`tests/foo.py::test_bar` for pytest, similar for jest/go-test/etc.). Multiple tests per AC → join with `<br>`.
 - Wrote test that doesn't map to specific AC (helper, smoke, framework boilerplate)? Don't include it. Orphans surface as `ae-test` informational findings, not blockers.
 - `### Edge probes` section starts EMPTY. Populated during the `/ship` Phase 2 blocker-fix when `ae-edge` raises findings. Omit section entirely if `ae-edge` returned no findings for this story.
 - Existing `Files changed` + `Notes` unchanged from prior format.
+- `### Evidence` — one row per evidence run, newest last, each pasted from `evidence.sh run` output. **Never hand-write a row, never copy one from an earlier phase or story.** Every later phase that changes code (review fixes, frontend) appends its own row; the newest row must match the code under review. Entries written before this section existed stay valid — REQ only gates stories checked in the diff it reviews.
 
 **Level column:** Each matrix row declares one Level: `unit`, `integration`, or `e2e`.
 - `unit` — single function/class, no I/O, no network, no DB, no FS, no real time. Mocks for collaborators OK.
@@ -244,6 +259,7 @@ If `AUTO=false`: skip.
 - **No plan skip for small stories.** File list + test plan required. Skip → pattern-match → wrong arch.
 - **No test-after-implementation.** Test → watch fail → implement → watch pass. Test after proves nothing.
 - **No files outside ARCH's plan.** Need new file? Update plan first. Never silently widen scope.
+- **Claimed green without running.** "Tests pass" with no `evidence.sh` row from this phase is a claim, not evidence — output scrolled past in an earlier phase, a subset run, or "should pass now" all count as not run. REQ blocks a story checked without a fresh row.
 - **Complete ≠ implementation done.** Code works + tests pass + criteria verified + PROGRESS.md updated. Early mark = review on stale state.
 - **Criteria are checks, not goals.** Satisfies all but feels wrong → PRD incomplete. Flag it, don't ship on technicality.
 - **No pseudo-tests.** `assert result is not None` proves nothing. Every test must fail when logic broken.
