@@ -15,6 +15,8 @@ The plugin is the entire `/ship`, `/feature`, `/review`, `/fix` SDLC workflow �
 Four pieces of the architecture are non-obvious and load-bearing:
 
 1. **Router plus policy layer.** `SKILL.md` is *not* a thin router, despite reading like one. It holds the command → file table and agent roster, and also the policy every command inherits: Project Mode, Memory Docs, Core Principles, the `[ASK:]` and `[AUTO:]` taxonomies, Human-Facing Output Rules, Progress Tracking, Context Management, the caveman rules and the test-watch ban. Command *bodies* live in `skills/agentic-engineering/commands/<name>.md` and load only when that command fires; blocks repeated across many commands live once in `skills/agentic-engineering/shared/preamble.md` (§A parse `--auto`, §B focus write, §C auto summary, §D memory inputs). Do not inline command logic into `SKILL.md`, and do not re-paste a preamble block into a command.
+
+   **On-demand shared files load only on their branch** — that is the context diet, keep it that way: `shared/auto-mode.md` (tag behavior, Hard-Override List, ambiguity heuristic — §A reads it only when `--auto` is present), `shared/story-flow.md` (plan → implement → verify → record, run by `/implement` and `/ship` Phase 1), `shared/focus-release.md` (`/focus done`, run by chains on success instead of loading all of `commands/focus.md`), `shared/worktree.md` (parallel `[P]` path only), `shared/visual-capture.md` (only when `.claude/visual-capture.md` exists). Measure a change with `tests/token-report.py static <command>` and keep `tests/load-manifest.json` honest about what each command reads.
 2. **7-agent parallel review.** `commands/review.md` dispatches `agentic-engineering:ae-red`, `:ae-req`, `:ae-test`, `:ae-doc`, `:ae-sec`, `:ae-edge`, `:ae-lean` as **simultaneous** subagents — single message with multiple `Agent` tool calls. Sequential dispatch defeats the design (cost, latency, context). `ae-red`, `ae-sec`, `ae-edge` and `ae-lean` run on Sonnet — all four do multi-file reasoning with no ability to execute anything, and a cheaper tier fabricates reproductions there. `ae-req`, `ae-test` and `ae-doc` stay on Haiku: checklist and parsing work. **Dispatch names are plugin-namespaced**: a bare `ae-red` does not resolve under a plugin install, and the failure is silent — the main model role-plays the reviewers inline and emits a normal-looking report. `ae-lean` is dropped from the Phase 4 re-review via `/review --frontend-pass` — it already saw the branch in Phase 2. The `ae-ux` agent runs separately after the frontend pass and is **not** in the parallel batch at all.
 
    Reviewers have **no Bash**. `/review` captures the diff once into `.agentic/review/<STORY-ID>.diff` and passes the path; `tools:` does not honour permission-rule syntax, so `Bash(git diff:*)` would hand an agent a general Bash tool, not a restricted one.
@@ -57,6 +59,10 @@ The field is valid in the Claude Code CLI but **rejected by the claude.ai skill 
 ## SKILL.md description is capped
 
 The `description` frontmatter must stay **≤ 1,024 characters** folded (the Agent Skills cap; Claude Code's own listing cap is 1,536 for description plus `when_to_use`). Over the cap the *tail* is silently truncated, so the disambiguation clauses — the "do NOT trigger on" list — are exactly what gets lost. Do not list slash-command names in it: the CLI dispatches slash commands before the model reads any description, and under the marketplace they are `/agentic-engineering:<n>` anyway. Check G in the integrity hook measures it.
+
+## Untagged `[AUTO:]` gates are deliberate
+
+Gates in `/note`, `/plan-all`, `/bootstrap`, `/focus`, `/init` and `/doc-all` carry an `[ASK:]` tag but no `[AUTO:]` tag. They take the untagged default, `always-ask` (`shared/auto-mode.md`). That is a decision, not an omission — do not add tags to them on sight.
 
 ## Caveman communication rules (authoring style)
 

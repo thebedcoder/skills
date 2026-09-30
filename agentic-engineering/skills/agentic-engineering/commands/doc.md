@@ -10,17 +10,7 @@ Use to document existing feature with Q&A for what code alone can't infer. ARCH 
 
 ### Step 0 — Auto-write focus
 
-Before documenting, update `.agentic/focus.md`:
-
-1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
-
-2. Read existing CURRENT. Apply story-id-match heuristic:
-   - Existing CURRENT references the same feature → update `note:` to `phase: documenting` and `set_by:` to `/doc`. Leave `title:` + `since:` alone.
-   - Otherwise → overwrite CURRENT: `title: documenting <feature>`, `feature: <feature>`, `since: [now]`, `set_by: /doc`.
-
-Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
-
-3. Continue with the command's real work below.
+Before documenting, run **§B** of `shared/preamble.md` — `title: documenting <feature>`, `feature: <feature>`, `set_by: /doc`. CURRENT already names this feature → only `note: phase: documenting` + `set_by:` change.
 
 ---
 

@@ -10,17 +10,7 @@ Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/design 
 
 ### Step 0 — Auto-write focus
 
-Before designing, update `.agentic/focus.md`:
-
-1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
-
-2. Read existing CURRENT. Apply story-id-match heuristic:
-   - Existing CURRENT references the same feature → update `note:` to `phase: designing UI` and `set_by:` to `/design`. Leave `title:` + `since:` alone.
-   - Otherwise → overwrite CURRENT: `title: designing UI for <feature>`, `feature: <feature>`, `since: [now]`, `set_by: /design`.
-
-Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
-
-3. Continue with the command's real work below.
+Before designing, run **§B** of `shared/preamble.md` — `title: designing UI for <feature>`, `feature: <feature>`, `set_by: /design`. CURRENT already names this feature → only `note: phase: designing UI` + `set_by:` change.
 
 ---
 

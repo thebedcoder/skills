@@ -122,6 +122,38 @@ audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md
   gate: it is a design question, not a bug. The `--auto` diagnosis skip now also
   requires a reproduction and a confirmed probe.
 
+- **Context diet** — every command, both modes. Measured with `tests/token-report.py
+  static` (main-context load, tokens ≈ bytes/4), no behavior change:
+
+  | Command | before | after | change |
+  |---|---|---|---|
+  | `/ship` | 21,080 | 16,844 | −20.1% |
+  | `/feature` (full mode) | 10,623 | 8,380 | −21.1% |
+  | `/ship --auto` | 21,080 | 17,484 | −17.1% |
+  | `/feature --auto` | 10,623 | 9,020 | −15.1% |
+
+  - The `--auto` policy (tag behavior, Hard-Override List, ambiguity heuristic,
+    auto-log visibility) moved verbatim from SKILL.md to `shared/auto-mode.md`; §A
+    loads it only when the flag is present. Without the flag every gate asks, so the
+    text was dead weight in every interactive run.
+  - `/ship` no longer loads all of `commands/implement.md` and `commands/focus.md`.
+    The story flow (constraints → plan → pre-review → implement → verify → record)
+    is `shared/story-flow.md`, shared by `/implement` and `/ship` Phase 1; release on
+    success is `shared/focus-release.md`, shared by `/focus done` and every chain.
+  - Visual capture dispatch and its auto-row markers moved to `shared/visual-capture.md`,
+    read only when `.claude/visual-capture.md` exists.
+  - Restated preamble blocks became one-line references: the focus write (§B) in nine
+    commands, the auto-mode summary (§C, which now also states what to count) in five,
+    the PLAN-mirror sentence in four.
+  - Duplicates dropped where a loaded file already states the rule: `ship.md`'s SCRIBE
+    rules (`ae-scribe.md` carries them; the parent's app-docs tree creation stays in
+    Phase 5), SKILL.md's compact-gate template (`/ship-all` and `/plan-all` own theirs),
+    `/feature` gotchas that repeated its stage text, story-flow gotchas that repeated its
+    constraints. `/feature` no longer reads `shared/project-mode.md` — its Step 0c
+    table is complete.
+  - The "untagged `[AUTO:]` is deliberate" note is authoring guidance, not runtime
+    policy; it moved to `CLAUDE.md`.
+
 ### Fixed
 
 - **`argument-hint` values that YAML reads as lists, or cannot read at all.**

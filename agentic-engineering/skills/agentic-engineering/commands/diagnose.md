@@ -30,15 +30,15 @@ Need more than the digest for a finding → one line at a time, bounded: `sed -n
 
 ### Step 3 — Compare with the contract
 
-Read the invoked command's body — `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/<command>.md` — and whatever it names (`review.md` for dispatch, SKILL.md "Auto Mode" for `--auto`). Contract = what that text requires. Then per dimension:
+Read the invoked command's body — `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/<command>.md` — and whatever it names (`review.md` for dispatch, `shared/story-flow.md` for `/ship` Phase 1, `shared/auto-mode.md` for `--auto`). Contract = what that text requires. Then per dimension:
 
 | Dimension | Contract source | Deviation looks like |
 |---|---|---|
 | Phases | the command's PLAN list (Step 0b) | phase with no matching activity; phases out of order; PLAN line ticked with nothing run behind it |
 | Dispatch | `review.md` Constraints, SKILL.md Agent Roster | reviewers across more than one message; bare `ae-*` names; a reviewer missing from its round; reviewer names in text with no Agent call (inline role-play) |
 | Gates | the command's checkpoint tag table | `--auto`: `always-ask` gate or hard-override with no question and no `HARD-PAUSE`; not `--auto`: gate passed with no question asked |
-| Auto log | SKILL.md "Auto Mode" → Visibility | decision announced inline but not logged, or logged but never announced; final `🤖` counts ≠ log lines |
-| Evidence | `implement.md` Verify + Record | story ticked with no `evidence.sh run` after the last code edit |
+| Auto log | `shared/auto-mode.md` → Visibility | decision announced inline but not logged, or logged but never announced; final `🤖` counts ≠ log lines |
+| Evidence | `shared/story-flow.md` Verify + Record | story ticked with no `evidence.sh run` after the last code edit |
 | Compaction | SKILL.md "Context Management" | behavior changes right after a `compact_boundary` line — name the boundary and the first divergent action |
 
 `DEVIATION` lines from Step 2 are findings already — confirm each against its cited lines, then keep it. Add what the checks cannot see.

@@ -10,7 +10,7 @@ Not `/fix` — nothing is broken. Not `/feature` — no research, no PRD, no epi
 **Inputs (read first):**
 - `./CLAUDE.md` — conventions
 - relevant feature docs in `./app-docs/features/`
-- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`. `/cleanup` writes these after every chain; a chain that never reads them is a write-only log
+- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`
 
 ### Step 0a — Parse `--auto` flag
 
@@ -31,7 +31,7 @@ Mark the chosen item in `BACKLOG.md`: `**Status:** in-progress`. Set to `done` i
 
 Target resolved, so write PLAN now — never before Step 0b, which can stop the command with nothing to do.
 
-Per "Progress Tracking" in SKILL.md, one PLAN line per phase in `.agentic/focus.md`. Mirror into a harness task list **if this session exposes one** — it is a convenience view, not the record. PLAN survives compaction and session end.
+Written to the `# PLAN` section of `.agentic/focus.md` (SKILL.md "Progress Tracking").
 
 
 
@@ -43,23 +43,10 @@ Per "Progress Tracking" in SKILL.md, one PLAN line per phase in `.agentic/focus.
 
 Mark #1 `in_progress` at Phase 1. Advance one at a time. `Behavior change: none` → complete #4 with `changelogs only (not user-facing)`. Review blockers unresolved → leave the current task `in_progress`; do not complete #5, Phase 5 is skipped.
 
-Step 0 below mirrors the same list into the `# PLAN` section of `.agentic/focus.md`. The harness task list dies with the session; PLAN survives it.
 
 ### Step 0 — Auto-write focus
 
-Before planning, update `.agentic/focus.md`:
-
-1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
-
-2. Read existing CURRENT. Apply story-id-match heuristic:
-   - Existing CURRENT.title already references the same improvement → update `note:` to `phase: improving` and `set_by:` to `/improve`. Leave `title:` + `since:` alone.
-   - Otherwise → overwrite CURRENT: `title: improving: <improvement summary>`, `since: [now]`, `set_by: /improve`.
-
-Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
-
-3. Write the chain into the `# PLAN` section of `.agentic/focus.md` (see `commands/focus.md`) — `plan`, `apply + tests`, `review`, `docs + changelogs`, `cleanup`. Tick each as its phase closes.
-
-4. Continue with the command's real work below.
+Before planning, run **§B** of `shared/preamble.md` — `title: improving: <improvement summary>`, `set_by: /improve`. CURRENT already names this improvement → only `note: phase: improving` + `set_by:` change. Then write the Step 0c PLAN lines.
 
 ---
 
@@ -257,12 +244,7 @@ Next: /improve for the next BACKLOG item, or /status to review the board.
 
 ### Step N — Auto-mode summary
 
-If `AUTO=true`:
-
-1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
-2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
-
-If `AUTO=false`: skip.
+Run **§C** of `shared/preamble.md`.
 
 ### Checkpoint tag reference (this file)
 

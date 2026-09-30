@@ -11,17 +11,7 @@
 
 ### Step 0 — Auto-write focus
 
-Before reviewing, update `.agentic/focus.md`:
-
-1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
-
-2. Read existing CURRENT. Apply story-id-match heuristic:
-   - Existing CURRENT.title already references the same STORY-ID / branch → update `note:` to `phase: reviewing` and `set_by:` to `/review`. Leave `title:` + `since:` alone. **Common case when `/review` is invoked inside `/ship`.**
-   - Otherwise → overwrite CURRENT: `title: reviewing <STORY-ID or branch>`, `since: [now]`, `set_by: /review`.
-
-Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
-
-3. Continue with review below.
+Before reviewing, run **§B** of `shared/preamble.md` — `title: reviewing <STORY-ID or branch>`, `set_by: /review`. CURRENT already names this story or branch (the common case inside `/ship`) → only `note: phase: reviewing` + `set_by:` change.
 
 ### Step 0c — Capture the diff once
 
@@ -62,13 +52,11 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh check docs/features/<feature>/PRO
 
 Non-zero exit is the verdict, not an error — write the file either way. Branch-only review, no story → skip.
 
-**`BASE` resolving to HEAD is a failure, not a clean review.** Say so and stop; do not report "clean". A base that equals HEAD produces an empty diff, six reviewers that find nothing, and a green report on unreviewed code — which is worse than an error, because nobody looks twice at a pass. Same for a genuinely empty diff on a branch that has commits.
+**`BASE` resolving to HEAD is a failure, not a clean review** — say so and stop. Empty diff → reviewers find nothing → green report on unreviewed code, and nobody looks twice at a pass. Same for an empty diff on a branch with commits; only a branch with *no* commits of its own may clean-skip.
 
-An empty diff on a branch with *no* commits of its own is the only legitimate clean-and-skip case.
+**Use `git symbolic-ref`, never `git rev-parse --abbrev-ref origin/HEAD`** — on failure the latter echoes `origin/HEAD`, `sed` turns it into `HEAD`, and `merge-base HEAD HEAD` is HEAD: the empty-diff green report, silently.
 
-**Use `git symbolic-ref`, never `git rev-parse --abbrev-ref origin/HEAD`.** `rev-parse --abbrev-ref` echoes the string `origin/HEAD` back on failure with exit 128, which a `sed 's|origin/||'` then turns into the literal `HEAD` — and `git merge-base HEAD HEAD` is HEAD. That is the empty-diff green report above, arrived at silently. `symbolic-ref --quiet` fails cleanly instead.
-
-**Never let a reviewer compute its own base.** Each one guessed differently; one fell back to `HEAD~1` and reviewed a single commit of a multi-commit branch while its peers reviewed the whole branch.
+**Never let a reviewer compute its own base** — they guess differently; one reviewed `HEAD~1` while its peers reviewed the branch.
 
 **Constraints:**
 - All subagents dispatched **in single tool-call batch** — not sequentially. Seven normally, six under `--frontend-pass`
@@ -141,9 +129,9 @@ Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`
 
 ### Gotchas
 
-- **Sequential dispatch = failure.** Six subagents in one batched tool call. Never spawn-wait-spawn. 6 separate calls → re-batch.
+- **Sequential dispatch = failure.** Never spawn-wait-spawn; separate calls → re-batch.
 - **No story summary before dispatch.** Reviewers read files themselves. Paraphrase → token waste + meaning drift.
-- **Reviewers must not write to the repo.** A reviewer with Bash will reach for `console.log` or a scratch repro to confirm a finding, and two agents doing that concurrently corrupt the thing under review. Observed: one agent's edit clobbered a test another had just written, and a second left debug lines in a COMMITTED file. State the ban in every dispatch prompt; a finding an agent cannot reach without editing is reported as reasoning with stated confidence, not proven by mutation.
+- **Reviewers must not write to the repo** (Constraints). Concurrent agents editing corrupt the thing under review. A finding an agent cannot reach without editing is reported as reasoning with stated confidence, not proven by mutation.
 - **A reviewer's reproduction can be wrong.** One agent reported a delimiter collision and "reproduced" it with a debug line that joined differently than the code did — it measured its own string. Confirm a claimed repro against the actual source before acting; agreeing and refusing are both wrong when the evidence is the agent's own artifact.
 - **LEAN and RED do not co-report.** If code is both redundant and broken, RED owns it — a bug in duplicated code is still a bug. LEAN's entry survives only if the redundancy stands independently of the defect.
 - **Don't merge findings early — but the overlap is carved.** ae-red + ae-sec on one line → keep both voices; correctness and exploitability are different lenses. ae-red + ae-edge on one line are NOT both kept: **ae-red owns "crashes on the current path", ae-edge owns "no test proves the guard"**. Same null deref reported by both → one Blocker from ae-red, and ae-edge's entry only survives if it names a missing test.

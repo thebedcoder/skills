@@ -18,24 +18,10 @@ Per "Progress Tracking" in SKILL.md, write one PLAN line per unchecked story int
 - User picks **Skip this story** → close the line with `skipped` noted; story stays unchecked in `STORIES.md`.
 - User picks **End session** → leave remaining lines open; they show as unfinished, which is accurate.
 
-Mirror into a harness task list **if this session exposes one** — it is a convenience view, not the record. PLAN survives compaction and session end.
-
 
 ### Step 0 — Auto-write focus
 
-At the start of the chain, update `.agentic/focus.md`:
-
-1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
-
-2. Overwrite CURRENT to represent the whole chain: `title: ship-all: <feature> (N stories)`, `since: [now]`, `set_by: /ship-all`, `note: starting`.
-
-Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value. Propagate `--auto` to every internal `/ship` invocation in the chain.
-
-Between stories: update `note:` to `phase: shipping STORY-X (k of N)`. Do **not** overwrite `title:` per story — it represents the whole chain.
-
-### Step 0c — Finish parallel worktrees
-
-`.worktrees/` holds story worktrees from an earlier run → run **§W2** of `shared/worktree.md` before anything else: merge, PR, keep or discard each shipped one. Merged stories count as shipped for the order below. No `.worktrees/` → skip silently, never read the file.
+Run **§B** of `shared/preamble.md`, always overwriting: `title: ship-all: <feature> (N stories)`, `set_by: /ship-all`, `note: starting`. Between stories update only `note:` → `phase: shipping STORY-X (k of N)`; `title:` stays — it names the whole chain. `--auto` propagates to every story's `/ship`.
 
 ---
 
@@ -154,23 +140,13 @@ PR desc: ✅ updated to cover all shipped stories
 
 ### Step N — Release focus
 
-After the final story completes successfully (chain end):
-
-- If invoked with `--auto` → run `/focus done auto` (auto-promotes NEXT silently per `commands/focus.md` Phase 3).
-- Else → run `/focus done` (interactive prompt y/n/b).
-
-Mid-chain story completions do NOT call `/focus done` — only the final story triggers release.
+After the final story only: run `shared/focus-release.md` (`auto` under `--auto`). Mid-chain stories never release.
 
 ---
 
 ### Step N — Auto-mode summary
 
-If `AUTO=true`:
-
-1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` across all stories in this chain.
-2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses across <Y> stories. See .agentic/auto-log.md`
-
-If `AUTO=false`: skip.
+Run **§C** of `shared/preamble.md`, counting across every story in the chain: `…hard-pauses across <Y> stories. See .agentic/auto-log.md`.
 
 ### Checkpoint tag reference (this file)
 

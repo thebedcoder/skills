@@ -4,7 +4,7 @@
 
 **Inputs (read first):**
 - `./CLAUDE.md`, `./docs/INDEX.md`
-- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`. `/cleanup` writes these after every chain; a chain that never reads them is a write-only log
+- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`
 
 ### Step 0a — Parse `--auto` flag
 
@@ -12,21 +12,11 @@ Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/feature
 
 ### Step 0 — Auto-write focus
 
-Before doing anything else, update `.agentic/focus.md`:
-
-1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
-
-2. Read existing CURRENT. Apply story-id-match heuristic:
-   - Existing CURRENT.title already references the same feature name → update `note:` to `phase: researching feature <name>` and `set_by:` to `/feature`. Leave `title:` + `since:` alone.
-   - Otherwise → overwrite CURRENT: `title: researching feature: <name>`, `feature: <name>`, `since: [now]`, `set_by: /feature`.
-
-Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
-
-3. Continue with the command's real work below.
+Before anything else, run **§B** of `shared/preamble.md` — `title: researching feature: <name>`, `feature: <name>`, `set_by: /feature`. CURRENT already names this feature → only `note: phase: researching feature <name>` + `set_by:` change.
 
 ### Step 0c — Read project mode
 
-Read `mode:` from `./docs/INDEX.md` frontmatter. See `shared/project-mode.md`.
+Read `mode:` from `./docs/INDEX.md` frontmatter — the table below is all `/feature` needs from it (`shared/project-mode.md` has the full scaffold matrix).
 
 No `./docs/INDEX.md` → print `Run /init first — no docs scaffold in this project.` and exit.
 No `mode:` key → treat as `full`.
@@ -37,7 +27,7 @@ No `mode:` key → treat as `full`.
 | `lite` | 2d (only if DB touched) → 3 → 3b |
 
 
-Lite skips the intent check (Stage 0), research/options (Stage 1), PRD (Stage 2), clarification pass (Stage 2b), and the standalone constitution check (Stage 2c) — REQ still checks every story against CONSTITUTION.md during `/review`. Lite writes no `PRD.md` and no `EPICS.md`, ever.
+Lite: REQ still checks every story against CONSTITUTION.md in `/review`; no `PRD.md` or `EPICS.md`, ever.
 
 ---
 
@@ -68,13 +58,11 @@ git checkout -b feat/[feature-name]
 
 ### Stage 0: Intent check *(full mode, not under `--auto`)*
 
-Three approaches for an idea nobody has pinned down = three answers to a question never asked. Before ARCH analyzes anything, **PROD** reads `$ARGUMENTS`, `INDEX.md` and the code area the request names, and checks three slots:
+Before ARCH analyzes anything, **PROD** reads `$ARGUMENTS`, `INDEX.md` and the code area the request names, and checks three slots:
 
-| Slot | Filled when the input says | Empty example |
-|---|---|---|
-| **User** | who acts or benefits — role, segment, calling system | "add export" — for whom? |
-| **Outcome** | what changes for them, how success shows | "improve onboarding" — to what end? |
-| **Constraint** | a limit the design must respect — platform, scale, deadline, compliance, must-not-break | nothing stated |
+- **User** — who acts or benefits: role, segment, calling system. ("add export" — for whom?)
+- **Outcome** — what changes for them, how success shows. ("improve onboarding" — to what end?)
+- **Constraint** — a limit the design must respect: platform, scale, deadline, compliance, must-not-break.
 
 All three filled → ask nothing, print the note below, go to Stage 1.
 
@@ -126,7 +114,7 @@ Any option simpler but creates user confusion?]
 
 ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: Ask user to pick approach before continuing. (Architectural choice — never skipped under `--auto`.)
 
-Options = the three approaches, ARCH's pick first suffixed `(Recommended)`. Each option's description carries the one-line Pros/Complexity digest, not the full block — the full A/B/C analysis is already printed above the widget.
+Options = the three approaches, ARCH's pick first `(Recommended)`, each described by its one-line Pros/Complexity digest — the full analysis is printed above the widget.
 
 ---
 
@@ -136,7 +124,7 @@ Options = the three approaches, ARCH's pick first suffixed `(Recommended)`. Each
 
 Sections: Status · Approach · Problem · Goals · Non-Goals · User Flows · Acceptance Criteria · Technical Notes. Mark unclear items `[NEEDS CLARIFICATION]` inline — surfaced together in Stage 2b.
 
-**Number every acceptance criterion `FR-1`, `FR-2`, … in PRD.md.** Feature-scoped, 1-based, sequential, stable for the life of the feature. These are the requirement IDs Stage 3 stories claim and `/converge` audits the codebase against.
+**Number every acceptance criterion `FR-1`, `FR-2`, … in PRD.md** — feature-scoped, 1-based, sequential, stable for the feature's life. Stage 3 stories claim them; `/converge` audits against them.
 
 ```markdown
 ## Acceptance Criteria
@@ -248,18 +236,16 @@ Every story carries a `Priority:`. Tag a story `[P]` if runnable parallel (no de
 | `P2` | completes the feature as specified |
 | `P3` | wanted, survives being cut |
 
-**The P1 set alone must be deployable.** Only hard rule here. A P1 set that needs a P2 story to function is mis-labelled — either promote the P2 or demote the P1. "Everything is P1" means the slice was never found; push back rather than record it.
+**The P1 set alone must be deployable** — the only hard rule here. A P1 set that needs a P2 story is mis-labelled: promote the P2 or demote the P1. "Everything is P1" = no slice found; push back and re-cut, never record it.
 
-Priority orders work. `[P]` says two stories can run at once. Different questions; both appear on a story. `Priority: P1` with no `[P]` is the common case — first and alone.
+**Never write priority inside the title bracket** — `[P]` there is the parallel marker; `[P1]` reads as a malformed one.
 
-**Never write priority inside the title bracket.** `[P]` is the parallel marker; `[P1]` in that slot reads as a malformed one. The field is a labelled line, nothing else.
-
-**`Implements:` is the PRD → story link.** Lists the `FR-N` ids from `PRD.md` this story delivers, comma-separated. One FR may span several stories; one story may deliver several FRs. No line → "is FR-4 shipped?" needs a full-feature read, and `/converge` has no inventory.
+**`Implements:` is the PRD → story link** — the `FR-N` ids this story delivers, comma-separated. One FR may span several stories and vice versa. It is `/converge`'s inventory.
 
 **Lite mode omits the line entirely** — there is no `PRD.md`, so there are no FR ids to cite. Never invent them.
 
 
-**AC labeling:** Number AC explicitly `AC-1:`, `AC-2:`, ... per story. 1-based. Sequential per-story (not per-feature, not global). Stories with 1 AC still use `AC-1:`. Updating existing STORIES.md? Don't retro-label old AC — new stories get labels, old stories stay as-is for backward compat.
+**AC labeling:** `AC-1:`, `AC-2:`, … per story, 1-based, restarting in every story — even a single AC is `AC-1:`. Existing unlabelled AC stay as they are; never retro-label.
 
 **ARCH** validates story independence + parallel markers:
 ```
@@ -269,12 +255,10 @@ Any story too large (>2hrs)?
 Any missing story the breakdown overlooks?
 Parallel markers correct? Any [P] with hidden deps?
 Is the P1 set deployable on its own, or does it need a P2 story to work?
-Any story priced P1 that the feature would survive without?
-FR coverage: every FR in PRD.md claimed by at least one story?
-Any story citing an FR that PRD.md does not define?]
+Any story priced P1 that the feature would survive without?]
 ```
 
-**Full mode — FR coverage is a hard gate, not a review note.** Build the map both ways before continuing:
+**Full mode — FR coverage is a hard gate, not a review question.** ARCH builds the map both ways before continuing:
 
 - FR with zero stories → the breakdown is incomplete. Write the missing story or record in `PRD.md` why the FR is out of scope. Never proceed on an unmapped FR.
 - Story citing an undefined FR → typo or a requirement PROD never wrote down. Fix the id or add the FR.
@@ -295,7 +279,7 @@ Stories must be: independent where possible, small (≤2hrs), testable.
 
 ### Stage 3b: Spec Audit
 
-Spec set is complete and nothing is built. Cheapest moment in the workflow to find out it is wrong.
+Spec complete, nothing built — cheapest moment to find it wrong.
 
 Dispatch **one** subagent: `agentic-engineering:ae-req`. Say **"Mode B"** in the prompt so it audits the spec instead of hunting for code that does not exist yet.
 
@@ -313,17 +297,15 @@ Prompt it with:
 > the artifacts at the paths below and report by id. Do not open implementation
 > files. "Nothing found" is a valid result for any pass.
 
-Dispatch by the full plugin-namespaced name. Bare `ae-req` does not resolve under a plugin install — dispatch fails silently and the main model role-plays the audit inline with no error.
+**Not a repeat of Stage 3's FR check** — ARCH audits its own breakdown; `ae-req` reads it cold, with no stake in it.
 
-**ARCH already checked FR coverage in Stage 3 — this is not duplication.** ARCH audits its own breakdown; `ae-req` reads it cold with no stake in it. Same relationship as PROD validating ARCH's plan and then `ae-red` + `ae-sec` pre-reviewing it in `/implement`. Neither check is redundant, and the Stage 3 gate stops the breakdown while this one reports.
-
-**Blockers get fixed here, before the commit.** Unmapped FR, constitution conflict or ambiguous security attribute costs one edit now and a re-plan later.
+**Blockers get fixed here, before the commit** — one edit now instead of a re-plan later.
 
 ⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: single]`: *"Spec audit found N blockers. How do you want to handle them?"* → **Fix the spec now (Recommended)** · **Show the full report** · **Proceed anyway**. No blockers → no gate; print clean summary and continue.
 
-Under `--auto`: audit always runs, never pauses on its own — same shape as the plan pre-review in `/implement`. A **blocker** escalates to `[AUTO: always-ask]`; a constitution conflict is hard-override #3 regardless. Should-fix applies silently only when the fix is unambiguous — threshold CONSTITUTION.md already sets, exact duplicate merged. Log as `DECISION:`. Anything else → record open in PRD.md and report.
+Under `--auto`: audit always runs, never pauses on its own. A **blocker** escalates to `[AUTO: always-ask]`; a constitution conflict is hard-override #3 regardless. Should-fix applies silently only when the fix is unambiguous — threshold CONSTITUTION.md already sets, exact duplicate merged. Log as `DECISION:`. Anything else → record open in PRD.md and report.
 
-**Lite mode runs this too**, scoped to `STORIES.md` + `CONSTITUTION.md`. Lite's whole risk is thin stories written from a one-line description — the audit is worth more there, not less.
+**Lite mode runs this too**, scoped to `STORIES.md` + `CONSTITUTION.md` — thin one-line stories need it most.
 
 Fixes land in `PRD.md` / `STORIES.md`. Re-run the audit only if a fix added or removed an FR. Rewording → no second pass.
 
@@ -336,7 +318,7 @@ MVP (P1): 3 of 9 stories — STORY-001, STORY-002, STORY-004
           covers FR-1, FR-2, FR-5. Deployable without the other six.
 ```
 
-MVP line is not decoration — it answers "smallest shippable thing". Reader who misses it here will not dig for it in `STORIES.md`.
+MVP line is required — it answers "smallest shippable thing".
 
 Feature has UI screens → end: *"Run `/design` to prepare mockups before building."*
 Purely backend/API/CLI, no UI → end: *"Run `/ship` to start implementing."*
@@ -356,12 +338,7 @@ Lite → `chore([feature-name]): add stories`.
 
 ### Step N — Auto-mode summary
 
-If `AUTO=true`:
-
-1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
-2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
-
-If `AUTO=false`: skip.
+Run **§C** of `shared/preamble.md`.
 
 ### Checkpoint tag reference (this file)
 
@@ -372,7 +349,7 @@ If `AUTO=false`: skip.
 | PRD review | Approve PRD draft | `[AUTO: ask-if-ambiguous]` — skip if no open clarification markers + no constitution conflict |
 | Story breakdown | (implicit — generated from PRD) | `[AUTO: skip]` — proceed silently when PRD is approved |
 | FR coverage gate | unmapped FR or undefined FR cited | not a checkpoint — a hard stop; fix the breakdown |
-| Spec audit itself (`ae-req` Mode B) | not a checkpoint — always runs, never pauses |
+| Spec audit itself (`ae-req` Mode B) | — | not a checkpoint — always runs, never pauses |
 | Spec audit reports a blocker | `[AUTO: always-ask]` |
 
 
@@ -381,15 +358,12 @@ Lite mode: first three rows never fire — their stages don't run. Only the thin
 ### Gotchas
 
 - **Three approaches ≠ three variations.** A/B/C = genuinely different architectural bets, not library swaps or naming.
-- **Intent check asks, it doesn't interview.** One question per message, stop when the three slots are filled, never past 5. A complete request asks nothing. Questions about implementation belong to ARCH in Stage 1, not here.
 - **No jargon in `[NEEDS CLARIFICATION]`.** Stakeholder-readable: "idempotent?" → "charge twice on double submit?"
 - **Constitution check not ceremonial.** Conflict → approach changes. Adjusting constitution to fit approach = red flag.
 - **Stories = deployable slices, not split requirements.** "Set up DB schema" not a story. Infra-only stories = smell.
 - **`[P]` requires real file-path independence.** Same file modified by both → not parallel, even if logically independent.
 - **Priority ≠ parallelism.** `Priority:` says what ships first, `[P]` says what can run at once. A P1 story that blocks every other story is still P1.
-- **An all-P1 breakdown is a rejected breakdown.** It means no MVP slice was found. Say so and re-cut; recording it hands `/ship-all` a priority order that orders nothing.
 - **Don't over-decompose.** Under 2hrs + testable → don't split. Coordination overhead > value.
-- **FR ids are stable, AC ids are not.** `FR-3` means the same criterion for the life of the feature — reviews and `/converge` reports cite it. `AC-1` is per-story and restarts at 1 in every story. Never renumber an FR to close a gap; add the missing story instead.
 - **An FR mapped to a story is a claim, not proof.** `Implements:` records intent at planning time. `/converge` checks the shipped code actually delivers it.
 
 

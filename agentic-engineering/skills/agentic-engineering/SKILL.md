@@ -24,14 +24,7 @@ Phase-gated SDLC workflow. Named specialist agents. On-demand command loading.
 
 ## How to use
 
-Command invoked → read the matching file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/`. That file holds the full instructions; this one holds the policy every command inherits.
-
-Command bodies reference two other things by name:
-
-- **`shared/preamble.md`** — §A parse `--auto`, §B write focus, §C auto-mode summary, §D project-memory inputs. Blocks that used to be pasted into a dozen files.
-- **Sections of this file** — Auto Mode, Progress Tracking, Human Checkpoint Interaction, Context Management, Test Execution Rules.
-
-Both live under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/`.
+Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/` — full instructions there; this file holds the policy every command inherits. Bodies also point at `shared/` blocks (same base dir): `preamble.md` §A–§D, and on-demand files loaded only on their branch — `auto-mode.md` (`--auto`), `story-flow.md` (story work), `focus-release.md`, `worktree.md`, `visual-capture.md`.
 
 ## Command → File Map
 
@@ -49,7 +42,6 @@ Both live under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/`.
 | `/improve [description]` | `commands/improve.md` | Non-bug change — plan → apply → review. Bare call → picks improvement from `BACKLOG.md`. Wants it done now; "we should improve X someday" → `/note` |
 | `/plan-all` | `commands/plan-all.md` | Plan all unplanned epics from INDEX.md |
 | `/converge [feature]` | `commands/converge.md` | Audit shipped code against the feature's PRD — appends real gaps as stories |
-
 | `/doc [feature]` | `commands/doc.md` | Document one feature with Q&A |
 | `/doc-all` | `commands/doc-all.md` | Document many features. `--full` = new project (+ guides + index) |
 | `/status` | `commands/status.md` | Progress overview |
@@ -66,7 +58,7 @@ Both live under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/`.
 
 Agent speaks → prefix output with name. Internal output = caveman rules.
 
-**Nine are real subagents.** Dispatch by the full plugin-namespaced `subagent_type`. A bare name (`ae-red`) does not resolve under a plugin install: the Agent tool errors, the model falls back to role-playing the reviewer inline, and the report looks normal. Always dispatch the left column verbatim.
+**Nine are real subagents.** Dispatch the left column verbatim. A bare name (`ae-red`) does not resolve under a plugin install — the model then role-plays the reviewer inline and the report looks normal.
 
 | `subagent_type` | Speaks as | Role | Bias |
 |---|---|---|---|
@@ -96,9 +88,10 @@ Subagents have no Bash and cannot call `AskUserQuestion`. Anything needing a com
 Read `shared/project-mode.md` for the `mode: lite | full` marker and the three
 memory documents (`CHANGELOG.md`, `DECISIONS.md`, `MEMORY.md`).
 
-**Only `/init`, `/feature`, `/status` and `/cleanup` need it.** Every other
-command is mode-blind — they consume `STORIES.md` + `PROGRESS.md`, which both
-modes produce. Adding a mode branch anywhere else is a design break.
+**Only `/init`, `/status` and `/cleanup` read it; `/feature` and `/converge` read
+just the `mode:` marker, each with its own table.** Every other command is
+mode-blind — they consume `STORIES.md` + `PROGRESS.md`, which both modes produce.
+Adding a mode branch anywhere else is a design break.
 
 ## Core Principles
 
@@ -115,7 +108,7 @@ Apply to every command. Not command-specific.
 
 Apply to agent-internal output — reports, reviews, agent-to-agent handoffs. NOT to human checkpoints, code, commits, app-docs pages.
 
-**A plan shown at an approval gate is human-facing.** ARCH's implementation plan, the PRD summary, the `Done when:` list: the human reads and approves those, so they follow the Human-Facing Output Rules below, not caveman. Caveman applies to the plan only while agents are passing it between themselves.
+**A plan shown at an approval gate is human-facing** — ARCH's plan, the PRD summary, a `Done when:` list follow the Human-Facing Output Rules below. Caveman only while agents pass it between themselves.
 
 - **Drop:** articles (a/an/the), filler (just/really/basically), pleasantries, hedging
 - **Keep:** technical terms exact, code blocks unchanged, file paths verbatim
@@ -127,7 +120,7 @@ Apply to agent-internal output — reports, reviews, agent-to-agent handoffs. NO
 
 Every `⚠️ Human checkpoint` carries an `[ASK: ...]` tag, which picks the input mechanism. Most also carry an `[AUTO: ...]` tag, which decides whether the gate fires at all under `--auto`.
 
-**An untagged `[AUTO:]` is deliberate, not an omission.** Gates in `/note`, `/plan-all`, `/bootstrap`, `/focus`, `/init` and `/doc-all` ship without one and take the untagged default below (`always-ask`). Do not add tags to them on sight.
+Untagged `[AUTO:]` = `always-ask`, by design.
 
 | Tag | Mechanism | Use for |
 |---|---|---|
@@ -153,75 +146,19 @@ Caveman rules above govern **agent-internal** output. These govern what the **hu
 2. **End with one concrete next action.** Every command's last line is a runnable thing: `Next: /ship for STORY-004`. Not "let me know how you'd like to proceed." A command that ends on a checkpoint still prints its `Next:` line after the answer.
 3. **Cap surfaced lists at 5.** Blocker lists, epic inventories, gap reports. Six blockers → show 5 + `+1 more in reviews/STORY-XXX-review.md`. Ranked-and-truncated beats complete-and-unreadable.
 4. **Errors are matter-of-fact.** State cause and fix. `Test fails at auth.spec.ts:42 — expected 200, got 401. Cause: missing auth header.` No "Uh oh", no "There seems to be a problem".
-5. **No caveman shorthand in human-facing text.** No arrows for causality, no dropped articles, no invented abbreviations, no stacked compounds. Ultra mode (in the caveman rules above) applies to agent reports during `ship-all` / `plan-all` — it never reaches a checkpoint prompt or a `━━━` block. A user reading only the first and last line of your output should know what happened and what to do next.
+5. **No caveman shorthand in human-facing text** — no causality arrows, dropped articles, invented abbreviations, stacked compounds. Ultra mode never reaches a checkpoint prompt or `━━━` block. First and last line alone must say what happened and what to do next.
 
 ## Auto Mode (`--auto`)
 
-Long-running commands accept `--auto`: `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`, `/doc`, `/converge`. Per-invocation only — no persistent toggle.
-
-
-Under `--auto`, every checkpoint is consulted by its tag:
-
-| Tag | Behavior under `--auto` |
-|---|---|
-| `[AUTO: skip]` | Always skipped. For pure ceremony — a gate whose only options are "start" and "don't start". |
-| `[AUTO: ask-if-ambiguous]` | Skip if answer is obvious from CONSTITUTION.md or context. Ask otherwise. |
-| `[AUTO: always-ask]` | Never skipped. For architectural / destructive / unrecoverable choices. |
-| (untagged) | Defaults to `always-ask` (safe failure). |
-
-### Hard-Override List
-
-Regardless of tag, auto mode pauses + asks when **any** of these:
-
-1. `/review` reports a blocker — high-severity bug, requirements miss, constitution violation.
-2. Operation touches: CI configs (`.github/workflows/*`, `.gitlab-ci.yml`, etc.), secrets (`.env*`, `*secret*`, `*credential*`, `*.pem`, `*.key`), force-push, DB migrations creating/dropping tables, mass file deletion (>10 files).
-3. `CONSTITUTION.md` explicitly contradicts the recommended action.
-4. Required project state missing — no test framework, no design tool chosen, no feature directory.
-
-### Ambiguity Heuristic (for `[AUTO: ask-if-ambiguous]`)
-
-- Multiple viable options, no constitution directive → ambiguous → ask.
-- One option matches a constitution directive → not ambiguous → proceed + cite.
-- Single viable option only → not ambiguous → proceed.
-- Decision has cascading effects (>3 files, public-interface change, data-model change, new dependency) → treat as ambiguous regardless.
-
-### Visibility
-
-Every auto-decision is announced inline + appended to `.agentic/auto-log.md` (gitignored, alongside `.agentic/focus.md`):
-
-```
-DECISION: <choice>
-  reason: <why, citing CONSTITUTION.md when applicable>
-  [auto]
-```
-
-`SKIPPED:` for ceremonial skips. `HARD-PAUSE:` for forced pauses. Command ends with the one-line summary in `shared/preamble.md` §C: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`.
-
-### Composition with /focus
-
-When CURRENT is written by an `--auto` command, `set_by:` gets ` (auto)` suffix. Auto-mode behaviour of `/focus done` is defined in `commands/focus.md` — that file is the single source of truth; don't restate its rules here.
+Accepted by `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`, `/doc`, `/converge`. Per-invocation only — no persistent toggle. Flag present → §A of `shared/preamble.md` loads `shared/auto-mode.md`: tag behavior, Hard-Override List, ambiguity heuristic, auto-log visibility. No flag → every gate asks and that file is never read.
 
 ## Progress Tracking
 
 **`# PLAN` in `.agentic/focus.md` is the tracker.** It is durable, survives a compaction, and is always available. Write it at the start of a multi-phase command and tick lines off as phases close.
 
-A harness task tool (`TaskCreate` / `TaskUpdate` / `TodoWrite`) is a *mirror* of PLAN when the session exposes one — it is not available in every session and is env-gated on newer models. Open it if it is there; skip it silently if it isn't. **Never block, warn, or narrate its absence, and never treat it as the record of what happened.**
+A harness task tool (`TaskCreate` / `TaskUpdate` / `TodoWrite`) *mirrors* PLAN when the session has one. Absent → skip silently: never block, warn or narrate it, never treat it as the record.
 
-Chain commands write PLAN. Single-phase commands (`/note`, `/focus`, `/status`, `/analyze`, `/archive`, `/converge`) don't — a plan for one step is noise.
-
-
-| Command | One PLAN line per |
-|---|---|
-| `/ship` | phase (implement · review · frontend · review · docs · PR desc · cleanup) |
-| `/ship-all` | story |
-| `/plan-all` | epic |
-| `/fix` | phase (diagnose · fix · review · docs · cleanup) |
-| `/improve` | phase (plan · apply · review · docs · cleanup) |
-| `/feature` | phase (research · PRD · epics · stories) |
-| `/doc-all` | feature |
-| `/implement`, `/review`, `/frontend` standalone | phase |
-
-Multi-phase → PLAN. One phase → no PLAN. `/init`, `/design` and `/bootstrap` are multi-phase but interview-shaped: their phases are the human's answers, so they narrate instead.
+Chain commands write PLAN — each lists its own lines. Single-phase commands (`/note`, `/focus`, `/status`, `/analyze`, `/archive`, `/converge`, `/diagnose`) don't — a plan for one step is noise. `/init`, `/design` and `/bootstrap` are multi-phase but interview-shaped: their phases are the human's answers, so they narrate instead.
 
 Rules:
 
@@ -235,22 +172,12 @@ Rules:
 
 **`/compact` is a user command. The model cannot invoke it.** Any instruction that says "compact now" is really a checkpoint asking the human to do it.
 
-Between stories in `ship-all` and between epics in `plan-all`:
-
-⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: confirm]`: *"Context is full for this story. Run the compact command below, then choose Continue."* → **Continue** · **Stop here**
-
-Show this block above the widget so it can be copy-pasted:
-
-```
-/compact Focus on: current feature, last story done, next story, branch, blockers, last changelog entry, constitution key points. Discard: file contents, review reports, diffs.
-```
-
-The human may choose Continue without compacting. That is their call — proceed, don't re-ask.
+Between stories (`/ship-all`) and between epics (`/plan-all`) those commands carry their own compact gate and the copy-paste `/compact Focus on: …` block. Human may choose Continue without compacting — their call; proceed, never re-ask.
 
 Other rules:
 
 - **SessionStart hook** (`hooks/session-start.sh`) re-injects intent router + active focus on startup, `/clear`, `/compact`. Its focus line = CURRENT + PLAN from `.agentic/focus.md`; trust PLAN over memory of pre-compact turns
-- **Read INDEX.md, MEMORY.md, CONSTITUTION.md in full at session start**; read the newest 20 entries of CHANGELOG.md and the *titles only* of DECISIONS.md, skipping titles marked `[superseded]` — both are unbounded append-only files and reading them whole grows with project age. A superseded title read without its `status:` line states the opposite of current truth; `shared/preamble.md` §D has the grep
+- **Session start:** `INDEX.md`, `MEMORY.md`, `CONSTITUTION.md` in full; newest 20 `CHANGELOG.md` entries; `DECISIONS.md` titles only, skipping `[superseded]` (`shared/preamble.md` §D has the grep)
 - **Read only files relevant to current story** — not whole project
 - **Never re-read** files already in context
 

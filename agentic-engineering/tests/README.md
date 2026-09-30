@@ -77,12 +77,13 @@ Environment gotchas the harness already handles:
 
 ```bash
 python3 tests/token-report.py static ship feature        # what a command loads
+python3 tests/token-report.py static --auto ship         # … plus shared/auto-mode.md
 python3 tests/token-report.py transcript out/…/*.jsonl    # what a run spent
 ```
 
 `static` estimates (bytes/4) what each command pulls into the main conversation:
 wrapper + SKILL.md + body + shared blocks + nested command bodies, per
-`load-manifest.json`. Keep that file in step with what the command text tells the
+`load-manifest.json`. Branch-only files (`auto-mode.md`, `worktree.md`, `visual-capture.md`) are left out of the default load; `--auto` adds `auto-mode.md`. Keep that file in step with what the command text tells the
 model to read — context-diet numbers are only as honest as it is. `transcript`
 reports cost, turns, per-model tokens and per-subagent usage from stream-json.
 

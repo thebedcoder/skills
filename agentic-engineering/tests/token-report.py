@@ -4,11 +4,12 @@ tests/claude-code/analyze-token-usage.py.
 
 Two views:
 
-  token-report.py static [--json] [COMMAND ...]
+  token-report.py static [--json] [--auto] [COMMAND ...]
       Estimated context each command loads into the MAIN conversation: wrapper +
       SKILL.md + command body + shared blocks + nested command bodies it runs, per
       tests/load-manifest.json. Subagent files are listed separately — they load
       into the subagent's own context, not the caller's. Estimate = bytes / 4.
+      --auto adds shared/auto-mode.md, which §A loads only when the flag is present.
 
   token-report.py transcript FILE.jsonl [FILE.jsonl ...]
       Real usage from `claude -p --output-format stream-json --verbose` output:
@@ -17,7 +18,10 @@ Two views:
 """
 import json
 import os
+import signal
 import sys
+
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)  # `| head` is a normal way to read this
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PLUGIN_ROOT = os.path.dirname(HERE)
@@ -57,6 +61,7 @@ def command_load(name, manifest):
 
 def static(argv):
     as_json = "--json" in argv
+    with_auto = "--auto" in argv
     names = [a for a in argv if not a.startswith("--")]
     manifest = load_manifest()
     if not names:
@@ -64,6 +69,8 @@ def static(argv):
     rows = []
     for n in names:
         main, subs = command_load(n, manifest)
+        if with_auto:
+            main = main + ["skills/agentic-engineering/shared/auto-mode.md"]
         stats = [file_stats(f) for f in main]
         sub_stats = [file_stats(f) for f in subs]
         rows.append({
@@ -78,7 +85,7 @@ def static(argv):
     if as_json:
         print(json.dumps(rows, indent=1))
         return 0
-    print("STATIC LOAD ESTIMATE (main context; tokens ≈ bytes/4)")
+    print("STATIC LOAD ESTIMATE (main context; tokens ≈ bytes/4)" + (" — with --auto" if with_auto else ""))
     print("-" * 78)
     print(f"{'command':<12} {'files':>5} {'lines':>7} {'bytes':>9} {'~tokens':>9}   {'subagents ~tok':>14}")
     print("-" * 78)

@@ -11,17 +11,7 @@ Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/fronten
 
 ### Step 0 — Auto-write focus
 
-`/frontend` is almost always nested inside `/ship`. Update `.agentic/focus.md` accordingly:
-
-1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
-
-2. Read existing CURRENT. Apply story-id-match heuristic:
-   - Existing CURRENT.title already references this STORY-ID (set by parent `/ship`) → only update `note:` to `phase: frontend pass` and `set_by:` to `/frontend`. Leave `title:` + `since:` alone. **Expected path when nested.**
-   - Otherwise (rare — `/frontend` invoked standalone) → overwrite CURRENT: `title: frontend for <STORY-ID>`, `since: [now]`, `set_by: /frontend`.
-
-Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
-
-3. Continue with the command's real work below.
+Run **§B** of `shared/preamble.md` — `title: frontend for <STORY-ID>`, `set_by: /frontend`. Almost always nested in `/ship`: CURRENT already names the story → only `note: phase: frontend pass` + `set_by:` change.
 
 ### Steps
 
