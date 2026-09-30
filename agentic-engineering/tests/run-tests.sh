@@ -6,7 +6,7 @@
 #   tests/run-tests.sh --behavioral       behavioral scenarios only
 #   tests/run-tests.sh --scenario NAME    one scenario (file stem or prefix, e.g. 02)
 #   tests/run-tests.sh --model haiku      model for behavioral runs (default: sonnet)
-#   tests/run-tests.sh --keep             keep fixture projects under the output dir
+#   tests/run-tests.sh --keep             keep fixture projects (temp dir outside the repo)
 #
 # Behavioral output (transcripts, token reports) lands in tests/behavioral/out/<stamp>/.
 set -uo pipefail
@@ -72,12 +72,17 @@ if [ "$RUN_BEHAVIORAL" = 1 ]; then
       if [ -n "$SCENARIO" ] && [[ "$name" != "$SCENARIO"* ]]; then continue; fi
       echo "--- $name"
       export AE_OUT="$OUT_ROOT/$name"
-      mkdir -p "$AE_OUT"
+      # Fixture projects live OUTSIDE this repo: Claude Code loads every CLAUDE.md
+      # from the cwd up, and a fixture under tests/ would inherit this repo's
+      # developer notes about the plugin — contaminating behavior and token counts.
+      export AE_WORK
+      AE_WORK="$(mktemp -d "${TMPDIR:-/tmp}/ae-scenario.XXXXXX")/$name"
+      mkdir -p "$AE_OUT" "$AE_WORK"
       start=$(date +%s)
       if bash "$s"; then passed=$((passed + 1)); else failed=$((failed + 1)); fi
       echo "  (${name}: $(( $(date +%s) - start ))s)"
       for j in "$AE_OUT"/*.jsonl; do [ -e "$j" ] && reports+=("$j"); done
-      [ "$KEEP" = 1 ] || rm -rf "$AE_OUT/project" "$AE_OUT/plain"
+      if [ "$KEEP" = 1 ]; then echo "  fixtures kept: $AE_WORK"; else rm -rf "$(dirname "$AE_WORK")"; fi
     done
     if [ ${#reports[@]} -gt 0 ]; then
       python3 "$HERE/token-report.py" transcript "${reports[@]}" | tee "$OUT_ROOT/token-report.txt"

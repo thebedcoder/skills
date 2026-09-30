@@ -7,7 +7,7 @@ set -uo pipefail
 . "$(dirname "$0")/../../lib/claude.sh"
 . "$(dirname "$0")/../../lib/fixtures.sh"
 
-P="$AE_OUT/project"
+P="$AE_WORK/project"
 fixture_base "$P" lite
 # Break add(): the existing test now fails.
 sed -i.bak 's/return a + b;/return a - b;/' "$P/src/math.js" && rm -f "$P/src/math.js.bak"

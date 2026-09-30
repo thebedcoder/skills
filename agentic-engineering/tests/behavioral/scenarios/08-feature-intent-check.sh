@@ -41,13 +41,13 @@ else:
 sys.exit(0 if ok else 1)
 PY
 
-V="$AE_OUT/vague"; build "$V"
+V="$AE_WORK/vague"; build "$V"
 ae_run_claude "$V" "$AE_OUT/vague.jsonl" "/agentic-engineering:feature export" 2
 ae_check "vague: asks one intent question, proposes no approaches yet" \
   python3 "$AE_OUT/assert.py" "$AE_PLUGIN_ROOT/tests/lib/transcript.py" "$AE_OUT/vague.jsonl" vague
 ae_check "vague: no PRD written before intent is known" bash -c "! ls '$V'/docs/features/*/PRD.md >/dev/null 2>&1"
 
-C="$AE_OUT/complete"; build "$C"
+C="$AE_WORK/complete"; build "$C"
 ae_run_claude "$C" "$AE_OUT/complete.jsonl" "/agentic-engineering:feature csv-export — Admins need to download every note as a CSV file so they can audit note history offline in a spreadsheet. Constraint: must handle 10,000 notes without building the whole file in memory, and add no new dependencies." 3
 ae_check "complete: no intent questions, intent note printed, approaches proposed" \
   python3 "$AE_OUT/assert.py" "$AE_PLUGIN_ROOT/tests/lib/transcript.py" "$AE_OUT/complete.jsonl" complete

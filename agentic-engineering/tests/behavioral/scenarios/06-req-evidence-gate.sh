@@ -8,7 +8,7 @@ set -uo pipefail
 . "$(dirname "$0")/../../lib/fixtures.sh"
 
 EV="$AE_PLUGIN_ROOT/scripts/evidence.sh"
-P="$AE_OUT/project"
+P="$AE_WORK/project"
 fixture_base "$P" lite
 fixture_branch "$P" feat/multiply
 mkdir -p "$P/docs/features/main/reviews" "$P/.agentic/review"

@@ -70,6 +70,10 @@ Environment gotchas the harness already handles:
   on stdin.
 - A nested `claude` inherits `CLAUDECODE` / `CLAUDE_CODE_SESSION_ID` from a parent
   Claude Code session and writes into the parent's transcript; the harness unsets them.
+- Claude Code loads every `CLAUDE.md` from the working directory upward. Fixture
+  projects therefore live in a temp dir outside the repo (`$AE_WORK`), never under
+  `tests/` — otherwise this repo's developer notes leak into the session under test.
+  `ae_run_claude` refuses a fixture with a `CLAUDE.md` above it.
 - `AskUserQuestion` does not exist in `-p` mode. Gates print their question and end
   the turn, which is where most scenarios stop.
 
@@ -90,7 +94,7 @@ reports cost, turns, per-model tokens and per-subagent usage from stream-json.
 ## Adding a scenario
 
 1. `behavioral/scenarios/NN-name.sh`, sourcing `lib/claude.sh` and `lib/fixtures.sh`.
-2. Build the fixture under `$AE_OUT/project`, call `ae_run_claude DIR OUT PROMPT BUDGET [APPEND]`.
+2. Build the fixture under `$AE_WORK/project` (temp dir, outside the repo); transcripts go to `$AE_OUT`, call `ae_run_claude DIR OUT PROMPT BUDGET [APPEND]`.
 3. Assert with `ae_check "description" command…`; query the transcript with
    `lib/transcript.py` (`routed-to`, `batch`, `dispatches`, `text`, `hook-events`).
 4. End with `ae_done`. Add a row to the table above.

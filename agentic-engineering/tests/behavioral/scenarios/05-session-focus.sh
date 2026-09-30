@@ -5,7 +5,7 @@ set -uo pipefail
 . "$(dirname "$0")/../../lib/claude.sh"
 . "$(dirname "$0")/../../lib/fixtures.sh"
 
-P="$AE_OUT/project"
+P="$AE_WORK/project"
 fixture_base "$P" lite
 fixture_focus "$P" "STORY-007 — Export notes as CSV" main "/ship" \
   "Implement STORY-007 backend + tests" -- "Backend review — 7-agent batch" "Frontend from design handoff"
@@ -26,7 +26,7 @@ ae_check "after /compact: reply names STORY-007" \
   bash -c "python3 '$AE_PLUGIN_ROOT/tests/lib/transcript.py' text '$AE_OUT/after-compact.jsonl' | grep -q 'STORY-007'"
 
 # Router only outside a scaffolded project: no task, no memory-doc read list.
-Q="$AE_OUT/plain"
+Q="$AE_WORK/plain"
 mkdir -p "$Q" && ( cd "$Q" && git init -q )
 ae_run_claude "$Q" "$AE_OUT/plain.jsonl" "hi" 0.5
 ae_check "plain repo: hook injected the router marked 'not set up'" \

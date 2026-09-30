@@ -6,7 +6,7 @@ set -uo pipefail
 . "$(dirname "$0")/../../lib/claude.sh"
 . "$(dirname "$0")/../../lib/fixtures.sh"
 
-P="$AE_OUT/project"
+P="$AE_WORK/project"
 fixture_base "$P" lite
 mkdir -p "$P/migrations" "$P/docs/features/main/reviews"
 cat > "$P/migrations/001_create_notes.sql" <<'SQL'

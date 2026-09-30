@@ -5,7 +5,7 @@ set -uo pipefail
 . "$(dirname "$0")/../../lib/claude.sh"
 . "$(dirname "$0")/../../lib/fixtures.sh"
 
-P="$AE_OUT/project"
+P="$AE_WORK/project"
 fixture_base "$P" lite
 mkdir -p "$AE_OUT/input" && cp "$AE_PLUGIN_ROOT/tests/fixtures/transcripts/review-sequential.jsonl" "$AE_OUT/input/session.jsonl"
 

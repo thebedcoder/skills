@@ -32,6 +32,16 @@ ae_uuid() {
   python3 -c 'import uuid; print(uuid.uuid4())'
 }
 
+# Guard: a fixture inside a git work tree that has its own CLAUDE.md files above
+# it would load them. run-tests.sh puts fixtures in a temp dir; refuse otherwise.
+ae_assert_isolated() {
+  local d; d="$(cd "$1" && pwd -P)"
+  while [ "$d" != "/" ]; do
+    d="$(dirname "$d")"
+    if [ -f "$d/CLAUDE.md" ]; then echo "fixture $1 sits under $d/CLAUDE.md — would leak into the session" >&2; return 1; fi
+  done
+}
+
 # ae_run_claude DIR OUT_JSONL PROMPT [BUDGET_USD] [EXTRA_APPEND] [-- extra claude flags...]
 # Runs one headless session in DIR with the working-tree plugin loaded, prompt on
 # stdin (--allowedTools is variadic and would swallow a trailing prompt argument).
@@ -40,6 +50,7 @@ ae_run_claude() {
   local dir="$1" out="$2" prompt="$3" budget="${4:-2}" append="${5:-}"
   shift 5 2>/dev/null || shift $#
   [ "${1:-}" = "--" ] && shift
+  ae_assert_isolated "$dir" || { echo 99 > "$out.rc"; : > "$out"; return 0; }
   local sid
   sid="$(ae_uuid)"
   echo "$sid" > "$out.sid"
