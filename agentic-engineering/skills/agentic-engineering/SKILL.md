@@ -57,6 +57,7 @@ Both live under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/`.
 | `/focus [task\|done\|clear]` | `commands/focus.md` | Set, clear, or advance current task pointer for this worktree |
 | `/next [task\|drop N]` | `commands/next.md` | Queue a task to be picked up after current finishes |
 | `/analyze` | `commands/analyze.md` | Answer project question — searches docs + code |
+| `/diagnose [session\|path] [--bundle]` | `commands/diagnose.md` | Transcript vs command contract — deviations with line evidence. Forked, read-only |
 | `/archive [feature\|--all\|--apply]` | `commands/archive.md` | Extract decisions + obligations to DECISIONS.md/BACKLOG.md, compact rest → SUMMARY.md |
 | `/cleanup [story\|feature]` | `commands/cleanup.md` | Record binding decisions + rewrite MEMORY.md after a task |
 | `/frontend` | `commands/frontend.md` | Frontend from design handoff |

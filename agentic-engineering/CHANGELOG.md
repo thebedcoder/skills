@@ -78,6 +78,21 @@ audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md
   an `Evidence:` commit trailer, plus the story's table when the change targets one.
   New gotcha everywhere: **claimed green without running**.
 
+- **`/diagnose [session-id | path] [--bundle]`** (`commands/diagnose.md`,
+  `scripts/transcript-digest.py`), both modes, forked context. When a run misbehaves —
+  a phase skipped, reviewers dispatched one by one, a gate that should have paused
+  under `--auto` — there was no structured way to find out why. `/diagnose` locates
+  the session transcript (by id, path, or newest in this project), builds a
+  line-cited digest (commands, plugin files read, Agent dispatches grouped by
+  assistant message, gates, PLAN and auto-log writes, test runs, commits,
+  compactions, subagent transcripts) that never prints tool-result bodies, then
+  compares it with the invoked command's own contract and reports each deviation
+  with the contract line and the transcript lines. The digest's `--check` flags what a
+  transcript proves on its own: reviewers of one round spread across messages, bare
+  `ae-*` dispatch names, a chain command with no PLAN write. `--bundle` writes a
+  scrubbed report, digest, excerpts and issue body under `.agentic/diagnose/<id>/`
+  and never posts anything.
+
 ### Fixed
 
 - **`argument-hint` values that YAML reads as lists, or cannot read at all.**

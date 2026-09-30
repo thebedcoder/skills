@@ -137,6 +137,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/doc-all [--full]` | Document multiple features (`--full` adds guides + index) |
 | `/status` | Progress overview across all features + backlog (runs in forked context) |
 | `/analyze [question]` | Answer any question — searches docs and codebase (runs in forked context) |
+| `/diagnose [session-id\|path] [--bundle]` | When a run misbehaved — a phase skipped, reviewers dispatched one at a time, a gate that should have paused under `--auto` — read that session's transcript and compare it with the command's contract. Reports each deviation with the contract line and the transcript lines that show it. `--bundle` writes a scrubbed report, digest and issue body to `.agentic/diagnose/<id>/` for a GitHub issue; it never posts anything. Runs in a forked context, read-only |
 | `/archive [feature\|--all]` | Compact a shipped feature's docs (PRD, stories, progress, reviews, artifacts) into a single `SUMMARY.md` with story digests, links to the feature's `DEC-` entries, and a frozen test rollup. Originals are deleted — git history preserves them; `data-model.md` stays. `/status` and `/ship-all` skip archived features, keeping their scans fast as shipped features accumulate. `--all` archives every fully-shipped feature behind one combined confirmation, with a separate commit per feature so each can be reverted individually. |
 | `/cleanup [story\|feature]` | Promote finished work into durable docs: binding decisions appended to `docs/DECISIONS.md` as `DEC-NNN` entries, and `docs/MEMORY.md` rewritten within a hard line cap. Runs automatically as the last phase of every `/ship`, `/fix`, and `/improve`; use it standalone for work done outside those chains. |
 
@@ -316,7 +317,7 @@ Outside a scaffolded project (no `docs/INDEX.md`) it injects only the router, ma
 
 ### Context forking
 
-`/status` and `/analyze` use `context: fork` — they run in an isolated subagent context. The main conversation only sees the final result, not the intermediate tool calls and file reads. This keeps the main context lean on long sessions where you might check status or run analysis queries repeatedly.
+`/status`, `/analyze` and `/diagnose` use `context: fork` — they run in an isolated subagent context. The main conversation only sees the final result, not the intermediate tool calls and file reads. This keeps the main context lean on long sessions where you might check status or run analysis queries repeatedly.
 
 Other commands (`/ship`, `/feature`, `/design`) stay in the main context because they have human checkpoints that require conversation continuity.
 
