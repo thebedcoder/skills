@@ -48,6 +48,7 @@ claude -p --plugin-dir <this plugin> --output-format stream-json --verbose \
 | `04-converge-false-completion` | `/converge` reports a checked story with no matching code as a Blocker, the delivered FR as converged, and touches no code |
 | `06-req-evidence-gate` | `ae-req` (dispatched directly with the inputs `/review` hands it) blocks a story ticked in the diff whose evidence row is stale, and clears it after a real run on the current code |
 | `07-diagnose-sequential` | `/diagnose` on the one-reviewer-per-message transcript names the sequential dispatch, quotes the transcript lines, and writes nothing without `--bundle` |
+| `08-feature-intent-check` | full-mode `/feature` with a vague request asks one intent question and proposes no approaches or PRD yet; with user, outcome and constraint all stated it asks nothing and goes straight to the approach options |
 | `05-session-focus` | the SessionStart hook makes a fresh session — and the first turn after `/compact` — name the active focus task; a plain repo gets the router only |
 
 Assertions target mechanism — dispatch grouping, files on disk, logged lines —

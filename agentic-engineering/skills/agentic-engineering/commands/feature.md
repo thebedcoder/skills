@@ -33,11 +33,11 @@ No `mode:` key → treat as `full`.
 
 | Mode | Stages run |
 |---|---|
-| `full` | 1 → 2 → 2b → 2c → 2d → 3 → 3b |
+| `full` | 0 → 1 → 2 → 2b → 2c → 2d → 3 → 3b |
 | `lite` | 2d (only if DB touched) → 3 → 3b |
 
 
-Lite skips research/options (Stage 1), PRD (Stage 2), clarification pass (Stage 2b), and the standalone constitution check (Stage 2c) — REQ still checks every story against CONSTITUTION.md during `/review`. Lite writes no `PRD.md` and no `EPICS.md`, ever.
+Lite skips the intent check (Stage 0), research/options (Stage 1), PRD (Stage 2), clarification pass (Stage 2b), and the standalone constitution check (Stage 2c) — REQ still checks every story against CONSTITUTION.md during `/review`. Lite writes no `PRD.md` and no `EPICS.md`, ever.
 
 ---
 
@@ -63,6 +63,33 @@ git checkout -b feat/[feature-name]
   PROGRESS.md
   /reviews/
 ```
+
+---
+
+### Stage 0: Intent check *(full mode, not under `--auto`)*
+
+Three approaches for an idea nobody has pinned down = three answers to a question never asked. Before ARCH analyzes anything, **PROD** reads `$ARGUMENTS`, `INDEX.md` and the code area the request names, and checks three slots:
+
+| Slot | Filled when the input says | Empty example |
+|---|---|---|
+| **User** | who acts or benefits — role, segment, calling system | "add export" — for whom? |
+| **Outcome** | what changes for them, how success shows | "improve onboarding" — to what end? |
+| **Constraint** | a limit the design must respect — platform, scale, deadline, compliance, must-not-break | nothing stated |
+
+All three filled → ask nothing, print the note below, go to Stage 1.
+
+Any empty → ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: prose]`: **one question per message**, emptiest load-bearing slot first (user → outcome → constraint). Stop the moment all three are filled. **At most 5 questions in total**; a slot still empty after that → `[NEEDS CLARIFICATION]` marker in the PRD, continue. Stakeholder language, no jargon (Gotchas). Codebase suggests an answer → offer it: *"Only `admin/` has exports today — is this for admins?"*
+
+```
+PROD — Intent:
+User:       [who]
+Outcome:    [what changes, how success shows]
+Constraint: [limit — or "none stated; assumed: X"]
+```
+
+Note feeds Stage 1 (every option must serve it) and Stage 2's Problem + Goals. **Stage 2b never re-asks a slot answered here** — 2b is for what the PRD draft itself left open.
+
+Under `--auto`: SKIP, emit `SKIPPED: intent check [auto]`. Each empty slot becomes a `[NEEDS CLARIFICATION]` marker in the PRD, so Stage 2b still surfaces it — and the PRD gate, which skips only when no marker is open, asks.
 
 ---
 
@@ -340,6 +367,7 @@ If `AUTO=false`: skip.
 
 | Line | Checkpoint | Tag |
 |---|---|---|
+| Intent check | ≤5 questions, one per message, when user / outcome / constraint missing | `[AUTO: skip]` — empty slots become `[NEEDS CLARIFICATION]` markers |
 | Approach pick | Choose A/B/C architectural option | `[AUTO: always-ask]` |
 | PRD review | Approve PRD draft | `[AUTO: ask-if-ambiguous]` — skip if no open clarification markers + no constitution conflict |
 | Story breakdown | (implicit — generated from PRD) | `[AUTO: skip]` — proceed silently when PRD is approved |
@@ -348,11 +376,12 @@ If `AUTO=false`: skip.
 | Spec audit reports a blocker | `[AUTO: always-ask]` |
 
 
-Lite mode: first two rows never fire — their stages don't run. Only the thin-description `[ASK: prose]` in Stage 3 can pause a lite `/feature`.
+Lite mode: first three rows never fire — their stages don't run. Only the thin-description `[ASK: prose]` in Stage 3 can pause a lite `/feature`.
 
 ### Gotchas
 
 - **Three approaches ≠ three variations.** A/B/C = genuinely different architectural bets, not library swaps or naming.
+- **Intent check asks, it doesn't interview.** One question per message, stop when the three slots are filled, never past 5. A complete request asks nothing. Questions about implementation belong to ARCH in Stage 1, not here.
 - **No jargon in `[NEEDS CLARIFICATION]`.** Stakeholder-readable: "idempotent?" → "charge twice on double submit?"
 - **Constitution check not ceremonial.** Conflict → approach changes. Adjusting constitution to fit approach = red flag.
 - **Stories = deployable slices, not split requirements.** "Set up DB schema" not a story. Infra-only stories = smell.

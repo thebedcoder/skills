@@ -93,6 +93,17 @@ audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md
   scrubbed report, digest, excerpts and issue body under `.agentic/diagnose/<id>/`
   and never posts anything.
 
+- **Intent check before approaches in `/feature`** (Stage 0), full mode only. ARCH
+  used to propose three approaches straight from `$ARGUMENTS`, so a one-word idea got
+  three architectures before anyone knew who it was for. PROD now checks the request
+  for a **user**, an **outcome** and a **constraint**; a complete request asks
+  nothing, an incomplete one gets at most five questions, one per message, stopping
+  as soon as all three are known. The answers become a three-line intent note that
+  Stage 1 and the PRD build on; Stage 2b never re-asks them. Skipped under `--auto`
+  (`[AUTO: skip]`), where each empty slot becomes a `[NEEDS CLARIFICATION]` marker so
+  the existing pass still surfaces it. Lite mode keeps its own one-round ask at story
+  breakdown.
+
 ### Fixed
 
 - **`argument-hint` values that YAML reads as lists, or cannot read at all.**
