@@ -18,7 +18,7 @@ Read only when `./.claude/visual-capture.md` exists (written by `/init` from `${
 4. On dispatch failure (non-zero exit, missing files): emit warning, do NOT block ship chain. Operator captures manually for this story.
 5. Proceed to Phase 4 review (the 6-agent batch).
 
-**Capture runs in Phase 3, not Phase 4.** It is the tail of the frontend pass; Phase 4 is the review that consumes what it produced. Docs elsewhere that say "Phase 4 dispatches capture" mean this step.
+**Capture = Phase 3, not Phase 4.** Docs saying "Phase 4 dispatches capture" mean this step.
 
 ## Auto-appended rows
 

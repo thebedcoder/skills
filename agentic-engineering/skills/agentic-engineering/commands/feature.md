@@ -77,7 +77,7 @@ Constraint: [limit — or "none stated; assumed: X"]
 
 Note feeds Stage 1 (every option must serve it) and Stage 2's Problem + Goals. **Stage 2b never re-asks a slot answered here** — 2b is for what the PRD draft itself left open.
 
-Under `--auto`: SKIP, emit `SKIPPED: intent check [auto]`. Each empty slot becomes a `[NEEDS CLARIFICATION]` marker in the PRD, so Stage 2b still surfaces it — and the PRD gate, which skips only when no marker is open, asks.
+Under `--auto`: SKIP, emit `SKIPPED: intent check [auto]`. Empty slot → `[NEEDS CLARIFICATION]` in PRD → Stage 2b surfaces it; PRD gate (skips only with no open marker) asks.
 
 ---
 

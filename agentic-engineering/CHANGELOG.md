@@ -128,9 +128,9 @@ audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md
   | Command | before | after | change |
   |---|---|---|---|
   | `/ship` | 21,080 | 16,844 | −20.1% |
-  | `/feature` (full mode) | 10,623 | 8,380 | −21.1% |
+  | `/feature` (full mode) | 10,623 | 8,368 | −21.2% |
   | `/ship --auto` | 21,080 | 17,484 | −17.1% |
-  | `/feature --auto` | 10,623 | 9,020 | −15.1% |
+  | `/feature --auto` | 10,623 | 9,008 | −15.2% |
 
   - The `--auto` policy (tag behavior, Hard-Override List, ambiguity heuristic,
     auto-log visibility) moved verbatim from SKILL.md to `shared/auto-mode.md`; §A

@@ -84,7 +84,7 @@ Risk:
   [Could fix break anything else?]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: single]`: Show diagnosis, then ask *"Does this match what you're seeing?"* → **Yes, fix it (Recommended)** · **Close but not quite** · **Wrong root cause**. Either non-first option → follow up `[ASK: prose]` and re-diagnose; never proceed to Phase 2 on a corrected diagnosis without re-running FIXER. Under `--auto`: SKIP only if the bug was reproduced, the hypothesis was confirmed by its probe, and exactly one root cause remains (single file/line, no alternative); otherwise ASK.
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: single]`: Show diagnosis, then ask *"Does this match what you're seeing?"* → **Yes, fix it (Recommended)** · **Close but not quite** · **Wrong root cause**. Either non-first option → follow up `[ASK: prose]` and re-diagnose; never proceed to Phase 2 on a corrected diagnosis without re-running FIXER. Under `--auto`: SKIP only if reproduced + hypothesis confirmed by probe + exactly one root cause (single file/line, no alternative); else ASK.
 
 **Phase 2 — Fix** *(automatic after 'go')*
 
@@ -104,7 +104,7 @@ FIXER applies minimal surgical fix. Rules:
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase fix -- <project test command>
 ```
 
-Red → not fixed; back to diagnosis, new row after the next attempt. Green row goes to three places: RED's review prompt, the `━━━ FIX COMPLETE` block, and an `Evidence:` trailer on the `fix(` commit. Bug belongs to a story with a `PROGRESS.md` entry (a review blocker, a regression in a shipped story) → also append the row to that story's `### Evidence` table. `/fix` has no story entry of its own; never invent one.
+Red → not fixed; back to diagnosis, new row after the next attempt. Green row → RED's review prompt, `━━━ FIX COMPLETE` block, `Evidence:` trailer on `fix(` commit. Bug in a story with a `PROGRESS.md` entry (review blocker, shipped-story regression) → also append row to that story's `### Evidence` table. `/fix` has no story entry of its own; never invent one.
 
 **Phase 3 — Review** *(automatic)*
 
