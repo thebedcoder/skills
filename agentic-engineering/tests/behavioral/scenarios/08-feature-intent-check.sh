@@ -29,10 +29,11 @@ text = subprocess.run([sys.executable, sys.argv[1], "text", sys.argv[2]], captur
 mode = sys.argv[3]
 options = len(set(re.findall(r"Option ([ABC])\b", text)))
 intent_note = bool(re.search(r"PROD\W+Intent", text))
-questions = [l for l in text.splitlines() if l.strip().endswith("?")]
-print(f"options={options} intent_note={intent_note} question_lines={len(questions)}")
+# Distinct question sentences, wherever they sit on a line ("**Who is it for?** For example:").
+questions = sorted({q.strip("* ") for q in re.findall(r"[A-Z][^?\n]{3,200}\?", text)})
+print(f"options={options} intent_note={intent_note} questions={len(questions)}")
 for q in questions[:4]:
-    print("  ?", q.strip()[:140])
+    print("  ?", q[:140])
 if mode == "vague":
     ok = options < 2 and 1 <= len(questions) <= 2
 else:
