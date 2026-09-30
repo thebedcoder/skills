@@ -75,8 +75,20 @@ review_inputs
 ae_check "fixture: evidence check reports stale, ticked in this diff" \
   grep -q '^EVIDENCE: stale story=STORY-001 checked_in_diff=yes' "$P/.agentic/review/STORY-001.evidence"
 AE_TEST_MODEL=haiku ae_run_claude "$P" "$AE_OUT/stale.jsonl" "$PROMPT" 1 "" -- --agent agentic-engineering:ae-req
-ae_check "stale evidence on a story ticked in the diff → REQ reports an EVIDENCE blocker" bash -c "
-  python3 '$AE_PLUGIN_ROOT/tests/lib/transcript.py' text '$AE_OUT/stale.jsonl' | grep -E 'EVIDENCE' | grep -qiE '❌|BLOCKER'"
+# Verdict = the text right after each "EVIDENCE" mention, whatever the layout
+# (one line, or a bold header with the verdict underneath).
+cat > "$AE_OUT/verdict.py" <<'PY'
+import re, subprocess, sys
+text = subprocess.run([sys.executable, sys.argv[1], "text", sys.argv[2]], capture_output=True, text=True).stdout
+wins = [text[m.start():m.start() + 220] for m in re.finditer(r"EVIDENCE", text, re.I)]
+blocked = any(re.search(r"❌|\bBLOCKER\b(?!s)", w) and not re.search(r"\bno blockers?\b", w, re.I) or "❌" in w for w in wins)
+fresh = any(re.search(r"✅|\bfresh\b", w, re.I) for w in wins)
+print("windows:", *[" ".join(w.split())[:160] for w in wins[:4]], sep="\n  ")
+want = sys.argv[3]
+sys.exit(0 if (want == "blocked" and blocked) or (want == "fresh" and fresh and not blocked) else 1)
+PY
+ae_check "stale evidence on a story ticked in the diff → REQ reports an EVIDENCE blocker" \
+  python3 "$AE_OUT/verdict.py" "$AE_PLUGIN_ROOT/tests/lib/transcript.py" "$AE_OUT/stale.jsonl" blocked
 
 # Now the honest path: run the suite on this code and record the row it prints.
 row="$(cd "$P" && bash "$EV" run --phase implement -- npm test 2>/dev/null | sed -n 's/^EVIDENCE-ROW: //p')"
@@ -86,8 +98,7 @@ fixture_commit "$P" "docs(main): STORY-001 — evidence"
 review_inputs
 ae_check "fixture: evidence check now fresh" grep -q '^EVIDENCE: fresh' "$P/.agentic/review/STORY-001.evidence"
 AE_TEST_MODEL=haiku ae_run_claude "$P" "$AE_OUT/fresh.jsonl" "$PROMPT" 1 "" -- --agent agentic-engineering:ae-req
-ae_check "fresh evidence → REQ reports EVIDENCE ✅, no evidence blocker" bash -c "
-  t=\$(python3 '$AE_PLUGIN_ROOT/tests/lib/transcript.py' text '$AE_OUT/fresh.jsonl');
-  echo \"\$t\" | grep -E 'EVIDENCE' | grep -q '✅' && ! echo \"\$t\" | grep -E 'EVIDENCE' | grep -qiE '❌|BLOCKER'"
+ae_check "fresh evidence → REQ reports EVIDENCE ✅, no evidence blocker" \
+  python3 "$AE_OUT/verdict.py" "$AE_PLUGIN_ROOT/tests/lib/transcript.py" "$AE_OUT/fresh.jsonl" fresh
 ae_check "REQ wrote nothing to the repo" bash -c "cd '$P' && [ -z \"\$(git status --porcelain)\" ]"
 ae_done
