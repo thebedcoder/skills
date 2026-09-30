@@ -10,7 +10,7 @@ Seven plugins live here:
 
 | Plugin | Role | Marketplace |
 |---|---|---|
-| `agentic-engineering/` | Full SDLC workflow — named specialist agents, 6-agent parallel review, end-user docs | listed in `.claude-plugin/marketplace.json`; **marketplace-only for Claude Code — ships no `install.sh`.** Its content resolves every path through `${CLAUDE_PLUGIN_ROOT}`, so a hand copy into `~/.claude` breaks the rules library, capture tools and agent references. Still serves non-Claude tools through the top-level installer and `adapters/` |
+| `agentic-engineering/` | Full SDLC workflow — named specialist agents, 7-agent parallel review, end-user docs, SessionStart router hook, `/diagnose` | listed in `.claude-plugin/marketplace.json`; **marketplace-only for Claude Code — ships no `install.sh`.** Its content resolves every path through `${CLAUDE_PLUGIN_ROOT}`, so a hand copy into `~/.claude` breaks the rules library, capture tools and agent references. Still serves non-Claude tools through the top-level installer and `adapters/` |
 | `flutter-motion/` | `/flutter-motion` — audits a Flutter project's motion (token consistency, reduce-motion, animation hygiene, missing transitions) and applies fixes in approval-gated waves, each verified against a captured `flutter analyze` + `flutter test` baseline. Single skill, exposed as `/flutter-motion` via a same-name command wrapper | listed in `.claude-plugin/marketplace.json`; Claude-Code-only (no `adapters/`); simple per-plugin installer (one skill + one command, no `rules-library`) |
 | `jtbd/` | Jobs-to-Be-Done megaskill (MODE 0–4) — research → personas → competitors → landing copy → ad scripts, via 5 parallel specialist agents | listed in `.claude-plugin/marketplace.json`; **marketplace-only for Claude Code — ships no `install.sh`.** Its agents dispatch as `jtbd:jtbd-<name>` and read `references/<agent>/` through `${CLAUDE_PLUGIN_ROOT}`; neither survives a hand copy. Still serves non-Claude tools through the top-level installer and `adapters/` |
 | `premortem-skill/` | `/premortem` command + investigator agent | **not yet** in the marketplace |
@@ -39,6 +39,9 @@ Every plugin follows the same shape:
   rules-library/                     ← (agentic-engineering only) per-stack conventions
   references/<agent>/                ← (agentic-engineering only) agent reference + language docs
   skills/<plugin>/shared/            ← (agentic-engineering only) blocks shared by many command bodies
+  hooks/hooks.json + session-start.sh ← (agentic-engineering only) SessionStart router hook
+  scripts/                           ← (agentic-engineering only) deterministic helpers commands call via ${CLAUDE_PLUGIN_ROOT}
+  tests/                             ← (agentic-engineering only) static + behavioral suite, run-tests.sh
 ```
 
 **The wrapper/real-command split is the most common gotcha.** `commands/<name>.md` at the plugin root is a shim pointing at the real body. The actual command body lives at `skills/<plugin>/commands/<name>.md`. When editing command behavior, edit the real one — the wrapper rarely changes. The split lets the same command be invoked as either a top-level slash command or through the `Skill` tool.
