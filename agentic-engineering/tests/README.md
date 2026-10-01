@@ -16,7 +16,7 @@ built-in parser, which CI also runs). No network, no API key.
 
 | Test | Catches |
 |---|---|
-| `test_frontmatter.py` | wrapper/agent/SKILL.md frontmatter that does not parse or lacks required keys; wrappers that don't point at their body or drop `$ARGUMENTS`; agent `name:` ≠ file stem; reviewers holding Bash or a write tool; SKILL.md description over 1,024 chars |
+| `test_frontmatter.py` | wrapper/agent/SKILL.md frontmatter that does not parse or lacks required keys; wrappers that don't point at their body or drop `$ARGUMENTS`; agent `name:` ≠ file stem; agent `model:` pinned to an id instead of a tier alias; reviewers holding Bash or a write tool; SKILL.md description over 1,024 chars |
 | `test_references.py` | `${CLAUDE_PLUGIN_ROOT}/…` paths, `agentic-engineering:<name>` dispatch/skill names, and `commands/` · `shared/` · `agents/` references that resolve to nothing; a `§` section of a `shared/` file that nothing calls |
 | `test_home_paths.py` | `~/.claude` (or bare `$HOME/.claude`) literals in shipped content |
 | `test_command_tables.py` | README command table, SKILL.md Command → File Map and `commands/` drifting apart; stale command counts in CLAUDE.md |

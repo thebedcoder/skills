@@ -56,7 +56,7 @@ Any shortcut diverging from approved design?]
 5. **ae-ux** runs structured fidelity review.
 
 **This is the only place `ae-ux` is dispatched in the `/ship` chain.** It is not in
-`/review`'s six-agent batch — that batch is fixed. `/improve` dispatches it separately
+`/review`'s reviewer batch (seven agents, six in this frontend pass) — that batch is fixed. `/improve` dispatches it separately
 for UI-touching diffs, in no-spec mode.
 
 Dispatch `agentic-engineering:ae-ux`. Pass all four:

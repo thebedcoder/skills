@@ -2,6 +2,8 @@
 
 Output → `./app-docs/` = **end-user product documentation**. Not internal reference.
 
+**Agents:** PROD (feature list), ARCH (reads code), SCRIBE (Q&A + writing — inline hat, template from `agents/ae-scribe.md`)
+
 Modes:
 - **Default** — select from existing features to document/update
 - **`--full`** — no app-docs yet. Reconnaissance, builds landing + user guides, documents all user-facing features. Replaces `/init-docs`.

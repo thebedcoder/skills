@@ -1,7 +1,7 @@
 ---
 name: ae-sec
-description: Security vulnerability reviewer for agentic engineering. Runs as one of the six parallel subagents during /review. Identifies HIGH CONFIDENCE exploitable vulnerabilities only — not theoretical issues, not best-practice gaps. Activate when /review needs a security pass.
-model: claude-sonnet-5
+description: Security vulnerability reviewer for agentic engineering. Runs as one of the seven parallel reviewers in /review, and pre-reviews implementation plans. Identifies HIGH CONFIDENCE exploitable vulnerabilities only — not theoretical issues, not best-practice gaps. Activate when /review needs a security pass.
+model: sonnet
 tools: Read, Glob, Grep
 color: orange
 ---

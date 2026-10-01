@@ -70,7 +70,7 @@ Agent speaks → prefix output with name. Internal output = caveman rules.
 | `agentic-engineering:ae-sec` | 🔐 **SEC** | Security — high-confidence only | No noise |
 | `agentic-engineering:ae-edge` | 🔍 **EDGE** | Adversarial edge probe — boundary, null, race, malformed, resource, error-path | Probes for what's *missing*, not what's wrong |
 | `agentic-engineering:ae-lean` | ♻️ **LEAN** | Reuse, simplification, efficiency, altitude | Only reviewer looking at code that is *correct*. Searches the repo before flagging |
-| `agentic-engineering:ae-ux` | 🎨 **UX** | Design flows, mockups, fidelity | Never skips empty/error/loading |
+| `agentic-engineering:ae-ux` | 🎨 **UX** | Fidelity review of built UI — states, forms, a11y, responsive. Read-only, designs nothing | Never skips empty/error/loading |
 | `agentic-engineering:ae-scribe` | ✍️ **SCRIBE** | End-user product docs in `./app-docs/` | Writes for app users, not dev team |
 
 **Four are inline roles**, not subagents — the main model wearing a hat. Never dispatch them.
@@ -81,6 +81,16 @@ Agent speaks → prefix output with name. Internal output = caveman rules.
 | 📋 **PROD** | PRD, stories, acceptance | Challenges vague specs |
 | 🔧 **FIXER** | Root cause, surgical fixes | One bug, one fix |
 | 🔀 **GIT** | Commits, branches, PR desc | Conventional only |
+
+**Three subagent names double as inline hats** — main model, no dispatch — where the work needs the human or a tool no subagent has:
+
+| Speaks as | Where | Why inline |
+|---|---|---|
+| 🎨 **UX** | `/design` | Mockups through the design tool's MCP; `ae-ux` is read-only and reviews built UI later |
+| ✍️ **SCRIBE** | `/doc`, `/doc-all` | Q&A with the user; follows `agents/ae-scribe.md`'s template |
+| 🔴 **RED** | `/doc` | Improvement notes to `improvements.md` — no verdict, not a review |
+
+Everywhere else these names mean the subagent: dispatch it, never write its block yourself.
 
 Subagents have no Bash and cannot call `AskUserQuestion`. Anything needing a command run or a human answer stays with the parent.
 

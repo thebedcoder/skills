@@ -1,6 +1,6 @@
 ## `/doc [feature]` — Interactive Feature Documentation
 
-**Agents:** SCRIBE (lead), ARCH (analysis), RED (improvement spotter)
+**Agents:** SCRIBE (lead — inline hat for the Q&A, template from `agents/ae-scribe.md`), ARCH (analysis), RED (improvement notes — inline hat, not an `ae-red` review)
 
 `./app-docs/` = **end-user product documentation**. Reader = app user. Not dev team. Not AI context.
 

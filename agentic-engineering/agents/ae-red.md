@@ -1,7 +1,7 @@
 ---
 name: ae-red
-description: Bug hunter for agentic engineering reviews. Finds runtime errors, logic bugs, async issues, null safety violations, and concurrency problems. Runs as parallel subagent during /review. Reports only HIGH CONFIDENCE bugs — clear failure paths, not theoretical risks.
-model: claude-sonnet-5
+description: Bug hunter for agentic engineering reviews. Finds runtime errors, logic bugs, async issues, null safety violations, and concurrency problems. Runs as one of the seven parallel reviewers in /review; also pre-reviews implementation plans and reviews /fix changes. Reports only HIGH CONFIDENCE bugs — clear failure paths, not theoretical risks.
+model: sonnet
 tools: Read, Glob, Grep
 color: red
 ---

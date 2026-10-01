@@ -49,6 +49,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
 
 ### Fixed
 
+- **Reviewers run on the current Sonnet.** `ae-red`, `ae-sec`, `ae-edge` and
+  `ae-lean` declared `model: claude-sonnet-5`, which pins Sonnet 5: run logs billed
+  them as `claude-sonnet-5` while the session ran `claude-sonnet-5-5`, with half
+  its output ceiling. All nine agents now name the tier — `model: sonnet` /
+  `model: haiku` — which tracks the current model and resolves on Bedrock and
+  Vertex. Verified: `ae-red` dispatched from a Haiku session runs on
+  `claude-sonnet-5-5`. `test_frontmatter.py` now rejects pinned ids.
+- **Roster says what each name is.** `ae-ux` was listed as doing "design flows,
+  mockups", but it is a read-only reviewer of built UI; `/design`'s mockups are made
+  by the main model speaking as UX. SKILL.md now lists the three subagent names that
+  double as inline hats — UX in `/design`, SCRIBE in `/doc` and `/doc-all`, RED's
+  improvement notes in `/doc` — and says that everywhere else those names mean a
+  dispatch. The command headers say the same. `ae-sec` and `ae-edge` descriptions no
+  longer say "six parallel subagents"; `ae-red`, `ae-test`, `ae-lean` and `ae-ux`
+  descriptions name every command that dispatches them. README's workflow diagram
+  drops a "CLEAN" speaker that existed nowhere else.
+
 - **A focus file missing its `# CURRENT` heading still names the task.** A real
   `/fix` run wrote the CURRENT fields bare, so the new worktree got no task, the
   main folder kept it, and the session hook and status line showed none. Fields

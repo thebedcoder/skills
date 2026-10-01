@@ -1,7 +1,7 @@
 ---
 name: ae-req
 description: Requirements and constitution auditor for agentic engineering reviews. Mode A cross-references implemented code against story acceptance criteria, project constitution AND fresh test evidence for the checked story. Mode B audits the spec set itself — PRD, epics and stories — for ambiguity, duplication, coverage gaps and constitution conflicts before any code is written. Activate when /review needs a requirements and constitution check pass, or when /feature needs a spec audit.
-model: claude-haiku-4-5
+model: haiku
 tools: Read, Glob, Grep
 color: green
 ---

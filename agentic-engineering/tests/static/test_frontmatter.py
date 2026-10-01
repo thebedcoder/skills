@@ -18,6 +18,10 @@ WRAPPER_KEYS = {"description", "argument-hint", "context", "allowed-tools", "mod
 AGENT_KEYS = {"name", "description", "model", "tools", "color"}
 READ_ONLY_AGENTS = {"ae-red", "ae-req", "ae-test", "ae-doc", "ae-sec", "ae-edge", "ae-lean", "ae-ux"}
 MODEL_RE = re.compile(r"^(inherit|sonnet|opus|haiku|fable|claude-[a-z0-9.-]+)$")
+# Agents name a tier, never a pinned id. A pinned id freezes the agent on that model
+# after the tier moves on (claude-sonnet-5 kept the reviewers off Sonnet 5.5), and a
+# first-party id may not resolve on Bedrock or Vertex; the alias resolves per provider.
+AGENT_MODEL_RE = re.compile(r"^(inherit|sonnet|opus|haiku|fable)$")
 
 # --- wrappers -----------------------------------------------------------------
 for path in sorted(glob.glob(os.path.join(PLUGIN_ROOT, "commands", "*.md"))):
@@ -66,8 +70,8 @@ for path in agent_files:
     for k in data:
         if k not in AGENT_KEYS:
             problems.append(f"unknown key {k!r}")
-    if data.get("model") and not MODEL_RE.match(str(data["model"])):
-        problems.append(f"model {data['model']!r} is not an alias or claude-* id")
+    if data.get("model") and not AGENT_MODEL_RE.match(str(data["model"])):
+        problems.append(f"model {data['model']!r} is pinned — use a tier alias (sonnet, haiku, opus, inherit)")
     tools = [t.strip() for t in str(data.get("tools", "")).split(",")]
     if stem in READ_ONLY_AGENTS and any(t.startswith("Bash") for t in tools):
         problems.append("reviewer declares Bash — Bash(...) patterns are not honoured as a restriction")

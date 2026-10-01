@@ -1,6 +1,6 @@
 ## `/design` — UI/UX Design
 
-**Agents:** UX (lead), PROD (flow validator)
+**Agents:** UX (lead — inline hat, not `ae-ux`: mockups need the design tool and the human), PROD (flow validator)
 
 Read `./CLAUDE.md` + `./docs/features/[feature-name]/PRD.md` before starting. PRD must be approved before running.
 

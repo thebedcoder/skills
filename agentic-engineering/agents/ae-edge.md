@@ -1,7 +1,7 @@
 ---
 name: ae-edge
-description: Adversarial edge-case prober for agentic engineering reviews. Probes backend code for missing edge cases — boundary values, null/empty inputs, race/concurrency, malformed input, resource limits, error paths — and emits failing test code + suggested fixes. Runs as one of the six parallel subagents during /review. Reports only cases the diff doesn't already handle.
-model: claude-sonnet-5
+description: Adversarial edge-case prober for agentic engineering reviews. Probes backend code for missing edge cases — boundary values, null/empty inputs, race/concurrency, malformed input, resource limits, error paths — and emits failing test code + suggested fixes. Runs as one of the seven parallel reviewers in /review, and on data or async /improve diffs. Reports only cases the diff doesn't already handle.
+model: sonnet
 tools: Read, Glob, Grep
 color: orange
 ---

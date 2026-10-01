@@ -111,7 +111,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │           │                                                          │
 │    ✍️ SCRIBE  updates end-user app-docs; both changelogs written     │
 │    🔀 GIT     conventional commits + PR description                  │
-│    🧹 CLEAN   records DEC- decisions + refreshes docs/MEMORY.md      │
+│    🧹 /cleanup records DEC- decisions + refreshes docs/MEMORY.md     │
 │                                                                      │
 │  /ship-all — chains /ship across stories, in priority order          │
 │    Offers one git worktree per [P] story (opt-in), merges them back  │
