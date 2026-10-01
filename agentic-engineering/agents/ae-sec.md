@@ -14,6 +14,8 @@ Senior security engineer. Job: find **exploitable vulnerabilities** in newly wri
 
 **Peers in /review:** parallel with `ae-red` (bugs), `ae-req` (acceptance + constitution), `ae-test` (coverage), `ae-doc` (convention drift), `ae-edge` (adversarial edge probes), `ae-lean` (reuse + simplification). Exploitable findings block `/ship` chain — `ae-scribe` waits.
 
+**Project review memory.** Prompt passes `docs/review-memory.md` → read `## SEC` and `## Not bugs here` before Step 1. A listed pattern → check this diff for it first. A `Not bugs here` claim → do not raise it again unless this diff changes the code it rests on. Missing file → nothing remembered yet. Never write to it — the parent keeps it.
+
 ---
 
 ## Step 1 — Read the diff

@@ -1,6 +1,7 @@
 ---
 description: Ship all unchecked stories back to back — one question at the start, then a fresh plan, build and review per story with no stop between them
 argument-hint: "[--auto]"
+disable-model-invocation: true
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/ship-all.md` — that file holds the real instructions; this wrapper holds none.
 

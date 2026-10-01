@@ -55,6 +55,8 @@ Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-en
 | `/cleanup [story\|feature]` | `commands/cleanup.md` | Record binding decisions + rewrite MEMORY.md after a task |
 | `/frontend` | `commands/frontend.md` | Frontend from design handoff |
 
+**Human-started:** `/archive`, `/worktree`, `/bootstrap`, `/init`, `/ship-all`, `/plan-all`, `/doc-all`, `/cleanup`, `/implement`, `/frontend`, `/review` carry `disable-model-invocation: true`. Never start one from a plain-language request — name the slash command instead. A chain reading their bodies (Build gate → `ship-all.md`; `/ship` → `review.md`, `frontend.md`, `cleanup.md`) is not starting them.
+
 ## Agent Roster
 
 Agent speaks → prefix output with name. Internal output = caveman rules.

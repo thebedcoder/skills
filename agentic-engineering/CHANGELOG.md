@@ -86,6 +86,32 @@ stopping. Plan and rationale: `docs/upgrade-plan-3.0.md`.
   `Test isolation`; `ae-impl` pins, sets up and runs a baseline before a parallel
   build. `/review` takes `range: A..B` for a story's own merge. `/diagnose` flags
   `DEVIATION base` — an isolated `ae-impl` with no `pin:`.
+- **Unattended runs** — `scripts/ship-loop.sh`: one fresh headless
+  `/agentic-engineering:ship --auto` session per story, each under its own
+  `--session-id` with the launching session's variables (local and cloud) stripped,
+  stopping with the session to resume on any hard pause (exit 3) or a run that shipped
+  nothing (exit 4); `--max`, `--dry-run`, a log in `.agentic/ship-loop.log`.
+  `STORIES.md` is its state.
+- **Measured cost per story** — `scripts/story-cost.py` reads the session's own
+  subagent transcripts and `/ship` Phase 5 writes a `### Cost` table (tokens per agent
+  and model) into the story's `PROGRESS.md` entry — each message counted once at its
+  final usage, the transcript under this project's dir preferred when an id appears in
+  several. Unavailable → nothing written.
+- **Lite review** for a Haiku-tier story or a docs-only change: RED, REQ, TEST (+SEC on
+  auth, input parsing, crypto, file or network I/O). Everything else keeps all seven.
+- **Review memory** — `docs/review-memory.md`, kept by `/review` and read by RED, SEC
+  and LEAN: patterns found in a second story, and claims that turned out not to hold.
+  Claude Code's agent `memory:` is ignored for plugin agents and would give the
+  reviewers write tools, so the orchestrator owns the file.
+- **Human-started commands** — `archive`, `worktree`, `bootstrap`, `init`, `ship-all`,
+  `plan-all`, `doc-all`, `cleanup`, `implement`, `frontend`, `review` carry
+  `disable-model-invocation: true`: out of every session's skill listing, never
+  started by the model from a plain-language request. Chains are unaffected.
+- **Effort** — `ae-arch` runs at `high`, `ae-impl` at `medium`, whatever the session's
+  level. Not on the Haiku agents: Haiku has no effort levels.
+- **Pressure test in CI** — `tests/pressure.sh <base>`: every scenario a pull request
+  adds must fail on the base and pass on the branch; every changed one must pass. New
+  `pressure-test` job, skipped without the API key secret.
 - Behavioral scenarios `13-ship-subagent-build`, `14-ship-all-runs-on` and
   `15-ship-all-parallel-build`; `03` also asserts the implementer is never dispatched
   before a hard pause is answered.

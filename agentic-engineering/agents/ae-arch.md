@@ -2,6 +2,7 @@
 name: ae-arch
 description: Story planner for agentic engineering. Reads one story, its acceptance criteria, the code it touches and the design handoff, then returns the implementation plan — Contract claims with proof, Failure states, files, test plan, frontend plan, escalations and the implementer tier — on the session's own model, in a context of its own. Dispatched once per story by /ship, /ship-all, /implement and /frontend before any code is written. Never edits the repository.
 model: inherit
+effort: high
 tools: Read, Glob, Grep, Bash
 color: blue
 ---

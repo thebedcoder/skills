@@ -110,3 +110,43 @@ jobs:
           name: behavioral-smoke-transcripts
           path: agentic-engineering/tests/behavioral/out/
           if-no-files-found: ignore
+
+  pressure-test:
+    name: pressure test (new scenarios must fail on the base branch)
+    needs: static
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - name: Check for the API key
+        id: gate
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::ANTHROPIC_API_KEY is not available to this run (unset, or a fork PR) - pressure test skipped"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: "22"
+      - name: Install Claude Code
+        if: steps.gate.outputs.run == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Added scenarios fail on the base branch and pass here; changed ones pass here
+        if: steps.gate.outputs.run == 'true'
+        run: agentic-engineering/tests/pressure.sh --model sonnet "origin/${{ github.base_ref }}"
+      - name: Upload transcripts
+        if: always() && steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pressure-test-transcripts
+          path: agentic-engineering/tests/behavioral/out/
+          if-no-files-found: ignore

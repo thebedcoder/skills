@@ -1,5 +1,6 @@
 ---
 description: Create docs scaffold and CLAUDE.md for the current project
+disable-model-invocation: true
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/init.md` — that file holds the real instructions; this wrapper holds none.
 

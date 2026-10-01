@@ -25,6 +25,9 @@ built-in parser, which CI also runs). No network, no API key.
 | `test_worktree.sh` | `scripts/worktree.sh` end to end: in-session parallel builds — `pin` moves a Claude-Code-style worktree made from `main` onto the feature commit under the story branch (and refuses the main tree, a dirty worktree, or a branch with commits found nowhere else), `adopt` records it as a story worktree and ignores the worktree directory (and refuses a branch never pinned, or a base that no longer holds the pin), two adopted stories merge back with both `PROGRESS.md` entries, and `adopt`/`merge` work from a task worktree holding the base branch but not from an unrelated one; two `[P]` stories shipped in two worktrees and merged back with both `PROGRESS.md` entries intact; a code conflict or an edited (not appended) `PROGRESS.md` aborts with the tree unchanged; nothing is removed before it is asked for; a dirty worktree or unmerged branch refuses removal. Task kind: `pref` (default, explicit, invalid), `where` in main / task / hand-made worktree, `.claude/worktrees/` ignored via `.git/info/exclude` with `.gitignore` untouched, CURRENT + PLAN carried and NEXT left, `.agentic/` ignored in a worktree whose `.gitignore` lacks it, ignored `.env` listed not copied, `list` skips worktrees it did not make, `remove` carries the auto-log back |
 | `test_evidence.sh` | `scripts/evidence.sh`: tree id changes on any code edit (tracked or new), never on `docs/`, `app-docs/`, `.agentic/` or ignored build output, and is identical before and after a commit; `run` prints the row, keeps the command's exit code and appends the run to the ledger in the git common dir (invisible to `git status`); `--expect-fail` exits 0 on the expected red run and 1 with `UNEXPECTED PASS` when the new tests already pass; `check` returns fresh / stale / failing / unverified / missing, detects a story ticked in the diff and reports `red=present` only for a real failing `red` row; a typed row with the current tree and `exit 0` reads `unverified`, a re-padded real row still verifies; `check-row` gives the same verdict for a single row |
 | `test_diagnose.py` | `scripts/transcript-digest.py`: the one-reviewer-per-message fixture yields a `DEVIATION` citing L14…L26, batched fixtures yield none; bare `ae-*` names flagged; sidechain lines ignored; tool-result bodies never printed; a 2 MB line stays bounded; a `/fix` that commits with no `ae-red` dispatch is flagged, one that dispatched or stopped before its commit is not; a `/ship` that writes `src/` or `test/` in the main thread with no `ae-impl` dispatch is flagged (`DEVIATION build`), docs and brief writes and `/fix`'s own fix are not; an `ae-impl` dispatched with `isolation: worktree` and no `pin:` is flagged (`DEVIATION base`), a pinned one is not; `--find`/`--locate` honour `CLAUDE_CONFIG_DIR`; `--scrub-file` removes emails, home paths, keys, IPs and remotes but keeps ids and line refs |
+| `test_story_cost.py` | `scripts/story-cost.py` over a synthetic config dir: finds the session from `CLAUDE_CODE_SESSION_ID`, `--session` id or path; keeps the runs whose prompt leads with the story (a planner naming its peers counts only for its own story, `STORY-0021` is not `STORY-002`); counts a message split over several lines once, at its final output count, and sums a run's messages; with one id under two project dirs, prefers the cwd's slug, then the one with subagent runs; prints `COST: unavailable` and exits 0 with no session, an unknown one, or no run for the story |
+| `test_ship_loop.sh` | `scripts/ship-loop.sh` against a fake `claude` on `PATH`: one session per story with `/agentic-engineering:ship --auto` on stdin and the headless flags; `DONE` (0), `MAX` (0), a hard pause → `PAUSED` with the session to resume (3), a run that ships nothing → `STALLED` (4), claude failing before a session (1); `--dry-run` runs nothing; refuses `main`; a fresh `--session-id` per run, named in the log and the resume hint; cost to the cent; never passes a parent or cloud session's variables to the child, while other variables pass through; keeps its own state out of git |
+| `test_pressure.sh` | `tests/pressure.sh --dry-run`: a named scenario is held to "fails on the base, passes here"; nothing changed → nothing to prove; an unknown base or none → exit 2 |
 | `test_review_diff.sh` | `scripts/review-diff.sh`: tracked, staged and new files in the diff; ignored files, `.agentic/` and nested worktrees out; the user's index untouched; nothing committed; empty change exits 3; works from a subdirectory and inside a linked worktree |
 | `test_transcript_lib.py` | the harness's own assertions: `batch` passes on a seven-in-one-message fixture and **fails** on the one-per-message fixture, subagent-thread lines never count as main-thread dispatches, `routed-to` fails without evidence |
 | `test_manifest.py` | invalid `plugin.json`, non-semver version, missing marketplace entry, CHANGELOG top entry out of step, `load-manifest.json` naming missing files |
@@ -88,7 +91,7 @@ Environment gotchas the harness already handles:
 - `AskUserQuestion` does not exist in `-p` mode. Gates print their question and end
   the turn, which is where most scenarios stop.
 
-## Pressure test — `--against <ref>`
+## Pressure test — `--against <ref>` and `pressure.sh`
 
 A scenario proves a rule only if it fails without it. `--against <ref>` runs the
 selected scenarios with the plugin **as it was at `<ref>`** — extracted with
@@ -97,6 +100,12 @@ untouched — while the harness, fixtures and assertions stay current. Workflow 
 a new gate or dispatch rule: write the scenario, run it `--against HEAD` (the
 parent of your uncommitted change) and watch it fail, then run it on the working
 tree and watch it pass. A scenario that passes both ways tests nothing.
+
+`tests/pressure.sh <base-ref>` does that for every scenario the branch added since
+`<base-ref>` (must fail there, pass here — `PROVES` or `TESTS-NOTHING`) and checks
+every scenario it changed still passes here. CI runs it on each pull request when the
+`ANTHROPIC_API_KEY` secret is available. Without credentials it skips — a skipped base
+run would otherwise read as a failure, which proves nothing.
 
 ## Token report — `token-report.py`
 

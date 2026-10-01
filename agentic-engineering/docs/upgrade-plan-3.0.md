@@ -39,7 +39,7 @@ discarded on a human answer".
 | I5 A hand-written evidence row reads as fresh | issue | bug | fixed — run ledger |
 | I6 The red run of TDD leaves no evidence | issue | missing | fixed — `--phase red --expect-fail` |
 | X5 Parallel `[P]` builds in one session | ask 5 | missing | **built** on the owner's go — pinned to the feature branch |
-| X1, X2–X4, X6–X8 | ask 5 | proposals | listed at the end — **not built**; X1 analysed, waiting for a go |
+| X1–X4, X6–X8 | ask 5 | proposals | **built** on the owner's go — X6 and X7 adapted to platform limits (below) |
 
 Version: **3.0.0**. The default gate behaviour changes (U4) and two agents are added
 (U2/U3), so existing users see a different flow without passing a new flag.
@@ -341,7 +341,31 @@ Change:
 
 ---
 
-## Proposals — not built, need your OK (ask 5)
+## Proposals (ask 5) — all built
+
+Each was proposed here, then built on the owner's go. What shipped, where it differs
+from the proposal and why:
+
+- **X1** — as analysed: the eleven commands carry `disable-model-invocation: true`,
+  SKILL.md's **Human-started** line names them, `test_command_tables.py` pins both and
+  keeps the router's five model-invocable.
+- **X2** — `scripts/ship-loop.sh`, exit codes 0 / 3 (paused) / 4 (stalled) / 1;
+  `test_ship_loop.sh` drives it with a fake `claude`.
+- **X3** — `scripts/story-cost.py`, tokens per agent and model, written by `/ship`
+  Phase 5 under `### Cost`. Tokens, not dollars.
+- **X4** — the lite roster in `/review`, without waiting for X3's numbers: the rule is
+  conservative (REQ and TEST in every roster, SEC added on sensitive paths, never for a
+  standalone `/review`), and X3 now measures what it saves.
+- **X6 — adapted.** `effort: high` on `ae-arch`, `medium` on `ae-impl`. Not on the
+  Haiku agents: Claude Code lists no effort levels for Haiku, so the setting would do
+  nothing; `test_frontmatter.py` now rejects it there.
+- **X7 — adapted.** Claude Code ignores `memory:` on plugin agents, and on any agent it
+  adds Read, Write and Edit — a reviewer that can write breaks the read-only review. So
+  `/review` keeps `docs/review-memory.md` itself (recurring patterns, disproven claims,
+  ≤ 60 lines) and RED, SEC and LEAN read it.
+- **X8** — `tests/pressure.sh` and a `pressure-test` CI job on pull requests.
+
+The proposals as first written:
 
 - **X1 Trim the always-on listing — analysed, not built.** `disable-model-invocation: true`
   on the commands only a human should start.

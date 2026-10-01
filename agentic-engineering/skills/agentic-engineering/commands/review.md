@@ -4,6 +4,13 @@
 
 **`--frontend-pass`** drops `ae-lean` and runs the other six. `/ship` Phase 4 passes it — `ae-lean` already reviewed this branch in Phase 2, and component-level duplication is `ae-ux`'s beat. Everything else about the two passes is identical. A standalone `/review` runs all seven.
 
+**Roster — full or lite.** Full (seven; six under `--frontend-pass`) is the default and always the answer for a standalone `/review`. Inside a chain, **lite** — `ae-red`, `ae-req`, `ae-test`, still one message — when either holds:
+
+- the story's brief says `implementer tier: haiku` — a copy of a cited precedent, ≤3 files, no Contract claims, no Failure states;
+- every changed path is documentation: under `docs/` or `app-docs/`, or a `.md` file.
+
+Lite adds `ae-sec` when the diff touches auth, input parsing, crypto, or file or network I/O. Never lite when `CONSTITUTION.md` asks for full review. Print the roster on the first line of the report: `Roster: lite (haiku-tier story) — RED, REQ, TEST`. REQ and TEST are in every roster: evidence, acceptance criteria and coverage are never skipped.
+
 **Inputs (read first):**
 - `./CLAUDE.md`, `./docs/INDEX.md`, `./docs/CONSTITUTION.md` — orient on current feature
 - `./docs/features/[feature-name]/PROGRESS.md` — files changed in last story
@@ -61,7 +68,7 @@ Non-zero exit is the verdict, not an error — write the file either way. Branch
 **Never let a reviewer compute its own base** — they guess differently; one reviewed `HEAD~1` while its peers reviewed the branch.
 
 **Constraints:**
-- All subagents dispatched **in single tool-call batch** — not sequentially. Seven normally, six under `--frontend-pass`
+- All subagents dispatched **in single tool-call batch** — not sequentially. Seven normally, six under `--frontend-pass`, three or four under the lite roster
 - Dispatch by full plugin-namespaced name: `agentic-engineering:ae-red`, `:ae-req`, `:ae-test`, `:ae-doc`, `:ae-sec`, `:ae-edge`, `:ae-lean`. Bare `ae-red` does not resolve under a plugin install — the dispatch fails silently and the main model role-plays the reviewers inline with no error
 - Every dispatch prompt states: **do NOT write, edit, or create any file in the repository** — no debug statements, no scratch or repro test files, no temporary edits, not even ones the agent intends to delete
 - Every dispatch prompt passes the diff path `.agentic/review/<STORY-ID>.diff` and the plugin root `${CLAUDE_PLUGIN_ROOT}`, so the agent can reach its own reference files
@@ -73,13 +80,13 @@ Non-zero exit is the verdict, not an error — write the file either way. Branch
 
 | `subagent_type` | Receives | Looks for |
 |---|---|---|
-| `agentic-engineering:ae-red` | diff path + changed impl files | runtime errors, null safety, async bugs, logic, resource leaks |
+| `agentic-engineering:ae-red` | diff path + changed impl files + `docs/review-memory.md` | runtime errors, null safety, async bugs, logic, resource leaks |
 | `agentic-engineering:ae-req` | STORIES.md + CONSTITUTION.md + changed files + PROGRESS.md + `.agentic/review/<STORY-ID>.evidence` | acceptance criteria met, constitution violations, story ticked without fresh evidence |
 | `agentic-engineering:ae-test` | diff path + changed files + test files + STORIES.md + PROGRESS.md + feature name | coverage gaps, AC Coverage matrix validity, tests that wouldn't catch regressions |
 | `agentic-engineering:ae-doc` | CLAUDE.md + changed files + related app-docs + the story's brief `.agentic/briefs/<STORY-ID>.md` when it exists (the plan — for its persisted-artifacts check) | convention drift, docs needing update |
-| `agentic-engineering:ae-sec` | diff path + changed impl files | high-confidence exploitable vulnerabilities |
+| `agentic-engineering:ae-sec` | diff path + changed impl files + `docs/review-memory.md` | high-confidence exploitable vulnerabilities |
 | `agentic-engineering:ae-edge` | diff path + changed impl files + tests + AC + CONSTITUTION | adversarial backend edge cases the diff doesn't handle (boundary, null, race, malformed, resource, error-path) |
-| `agentic-engineering:ae-lean` | diff path + changed impl files + `CLAUDE.md` + the project's dependency manifest | code that works but shouldn't exist — duplicates of what the repo already has, indirection earning nothing, needless work in hot paths. **Skipped under `--frontend-pass`** |
+| `agentic-engineering:ae-lean` | diff path + changed impl files + `CLAUDE.md` + the project's dependency manifest + `docs/review-memory.md` | code that works but shouldn't exist — duplicates of what the repo already has, indirection earning nothing, needless work in hot paths. **Skipped under `--frontend-pass`** |
 
 **`ae-lean` is the only reviewer looking at correct code.** The other six find defects; it finds redundancy. Its dispatch prompt must say **search the repo before flagging reuse** — its defining finding ("this already exists at `utils/x.ts:40`") is unreachable from a diff, and a reviewer that reads only the diff returns style opinions. Pass the dependency manifest (`package.json`, `pyproject.toml`, `go.mod`, …) so it doesn't recommend a library the project deliberately does without.
 
@@ -113,6 +120,13 @@ Clean areas:
 
 Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`.
 
+**Review memory** — `./docs/review-memory.md`, committed, kept by this step, never by a reviewer (they have no write tool; Claude Code's own agent `memory:` is not available to plugin agents and would hand them Write and Edit). `ae-red`, `ae-sec` and `ae-lean` read it on every review. After consolidating, add an entry only when:
+
+- a finding's pattern recurs — the same reviewer, the same root cause, in a second story → `## RED` / `## SEC` / `## LEAN`: `- [pattern] — [file:line example] — STORY-XXX, STORY-YYY`;
+- a finding was disproven — withdrawn in a fix-loop re-review, or logged "not a bug" with a reason → `## Not bugs here`: `- [claim] — [why it does not hold here, file:line]`.
+
+Missing file → create it with those four headings under `# Review memory` and one line saying what it is. Keep it ≤ 60 lines: past that, merge similar entries and drop the ones whose code is gone. It commits with the review.
+
 **Severity mapping.** Reviewers speak their own dialect; the consolidator translates into exactly three buckets.
 
 | Reviewer says | Bucket |
@@ -137,7 +151,8 @@ Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`
 - **A reviewer's reproduction can be wrong.** One agent reported a delimiter collision and "reproduced" it with a debug line that joined differently than the code did — it measured its own string. Confirm a claimed repro against the actual source before acting; agreeing and refusing are both wrong when the evidence is the agent's own artifact.
 - **LEAN and RED do not co-report.** If code is both redundant and broken, RED owns it — a bug in duplicated code is still a bug. LEAN's entry survives only if the redundancy stands independently of the defect.
 - **Don't merge findings early — but the overlap is carved.** ae-red + ae-sec on one line → keep both voices; correctness and exploitability are different lenses. ae-red + ae-edge on one line are NOT both kept: **ae-red owns "crashes on the current path", ae-edge owns "no test proves the guard"**. Same null deref reported by both → one Blocker from ae-red, and ae-edge's entry only survives if it names a missing test.
-- **No 8th reviewer ad-hoc.** Roster is exactly the seven above. New dimension missing → skill change, not improvisation. Flag it.
+- **No 8th reviewer ad-hoc, no subset of your own.** Roster is the seven above, or the lite set by its rule — nothing in between. New dimension missing → skill change, not improvisation. Flag it.
+- **Review memory is a short list, not a log.** One entry per recurring pattern or disproven claim. A finding seen once belongs in the review file, not there.
 - **LEAN findings never block a ship except on verbatim duplication.** Working code that could be simpler is `should-fix`, always. An operator who has to argue about a ternary at a blocker gate stops reading review reports — and then misses the RED finding underneath.
 - **A LEAN report with no `Reuse:` line means it skipped the repo search.** That is the half of its job the diff cannot supply. Treat the report as incomplete and say so rather than consolidating it.
 - **Unverified completion = blocker.** Story ticked in this diff with evidence `stale`, `failing`, `unverified` or `missing` → REQ blocks. Fix is a fresh `evidence.sh run`, never an edited row — a row's tree id is only reproducible by running the tests on that code, and `check` looks every row up in the run ledger, so a typed one reads `unverified`.

@@ -41,7 +41,7 @@ Commands are handled by a cast of named specialist agents. Each has a distinct r
 └───────────┴────────────────────────────────┴────────────────────────┘
 ```
 
-**Who runs where.** Your session is the orchestrator: it plans features with you, makes the calls, consolidates reviews and commits. For each story, **ARCH** (`ae-arch`) writes the implementation plan on your session's own model, and **IMPL** (`ae-impl`) builds it test-first on Sonnet — Haiku when the story only copies an existing pattern, your session's model when a review blocker resists two fix rounds. Both start with a clean context for every story and leave behind a plan, a short status and the evidence, so a long `/ship-all` no longer fills your session with file reads and test logs. Your session never takes their word: it re-checks the test evidence, the files touched and every acceptance criterion itself before ticking the story.
+**Who runs where.** Your session is the orchestrator: it plans features with you, makes the calls, consolidates reviews and commits. For each story, **ARCH** (`ae-arch`) writes the implementation plan on your session's own model, and **IMPL** (`ae-impl`) builds it test-first on Sonnet — Haiku when the story only copies an existing pattern, your session's model when a review blocker resists two fix rounds. ARCH thinks at high effort and IMPL at medium, whatever your session's own effort level, so planning gets the depth and building stays cheap. Both start with a clean context for every story and leave behind a plan, a short status and the evidence, so a long `/ship-all` no longer fills your session with file reads and test logs. Your session never takes their word: it re-checks the test evidence, the files touched and every acceptance criterion itself before ticking the story.
 
 Seven review agents (RED, REQ, TEST, DOC, SEC, EDGE, LEAN) run as **parallel subagents** after every story — DOC on Haiku, the other six on Sonnet — dispatched in one batch, results back together, main context stays clean. EDGE adversarially probes backend code for missing edge cases (boundary, null, race, malformed, resource, error-path) and hands back failing test code; LEAN is the only reviewer looking at code that already works, hunting duplicates of what the repo already has.
 
@@ -156,7 +156,7 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/init` | Pick project mode (lite or full), then create the docs scaffold, CLAUDE.md, and CONSTITUTION.md. Also asks once whether work started on `main` should get its own git worktree (see "Worktrees") |
 | `/feature [name]` | Intent check → research → PRD → clarifications → constitution check → stories → spec audit. In full mode it first checks the request for a user, an outcome and a constraint; if any is missing it asks — one question at a time, five at most — before proposing approaches (skipped under `--auto`, where the gaps become `[NEEDS CLARIFICATION]` markers). PRD acceptance criteria are numbered `FR-1…FR-n` and each story declares which it delivers (`Implements: FR-2, FR-5`), so every requirement is traceable to the work that closes it — an unmapped FR stops the breakdown. Each story also carries a `Priority:` of `P1`/`P2`/`P3`, where the P1 set alone must be deployable. The final stage dispatches `ae-req` in spec-audit mode over the PRD, epics and stories, checking ambiguity, duplication, underspecification, FR coverage, constitution conflicts and terminology drift before a line of code exists. In lite mode: stories only, no PRD or epics — the spec audit still runs, scoped to stories and the constitution |
 | `/design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown, then desktop, then a handoff spec in `docs/specs/`. Works from the approved PRD, or from the stories' acceptance criteria in lite projects, which have no PRD |
-| `/ship` | Full story, seven phases, no approval stop: plan (`ae-arch`) + build (`ae-impl`) → 7-agent review → frontend (+ visual capture) → 6-agent review + UX fidelity → end-user docs & changelogs → PR description → cleanup. Each phase that changes code ends with a recorded test run, and the story is ticked only after a green one (see "Evidence before completion"). Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates the references during the frontend pass — stale or missing references become should-fix warnings. Projects opt into automated capture during `/init` by picking a tool from the 15-entry catalog (`agentic-engineering/capture-tools/`); `/ship` Phase 3 then dispatches per mechanism and auto-populates the table. To require captures, add a "Visual artifacts" article to CONSTITUTION.md — `ae-ux` then escalates missing-artifact findings to blockers. |
+| `/ship` | Full story, seven phases, no approval stop: plan (`ae-arch`) + build (`ae-impl`) → 7-agent review (three reviewers for a story that only copies an existing pattern) → frontend (+ visual capture) → 6-agent review + UX fidelity → end-user docs & changelogs → PR description → cleanup. Each phase that changes code ends with a recorded test run, and the story is ticked only after a green one (see "Evidence before completion"). Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates the references during the frontend pass — stale or missing references become should-fix warnings. Projects opt into automated capture during `/init` by picking a tool from the 15-entry catalog (`agentic-engineering/capture-tools/`); `/ship` Phase 3 then dispatches per mechanism and auto-populates the table. To require captures, add a "Visual artifacts" article to CONSTITUTION.md — `ae-ux` then escalates missing-artifact findings to blockers. |
 | `/ship-all` | Loop `/ship` across all unchecked stories, in priority order — never a `P2` while a `P1` is open — with no stop between stories and no `/compact` prompt: each story's plan, build and fix rounds run in fresh subagents. The one start question (skipped when you came from a planning command's "Start building?") offers shipping the P1 set only, which finishes cleanly with the rest listed as remaining. Features whose stories predate the `Priority:` field ship in file order, unchanged. Two or more `[P]` stories at the next level are built **at once, in this session**: one implementer per story, each in its own worktree pinned to the feature branch, merged back when they finish — or, if you prefer, a worktree per story for you to drive in separate sessions (see "Parallel stories" below) |
 | `/worktree [name]` | List the worktrees the workflow created — one per task, or one per parallel `[P]` story — with each one's branch, state and commits ahead, then finish them: merge (tests run on the merged result before anything is removed), push and open a PR, keep, or discard. Run it from the main folder. Worktrees you made yourself with `claude -w` are not listed. See "Worktrees" below |
 | `/plan-all` | Plan every unplanned epic from INDEX.md: you pick which, then it runs `/feature` for each in turn, asking you to `/compact` between epics, and ends with "Start building?". With `--auto`, each `/feature` runs in auto mode; choosing approaches still asks you |
@@ -191,6 +191,7 @@ your-project/
 │   ├── CONSTITUTION.md          ← non-negotiable project principles
 │   ├── BACKLOG.md               ← captured bugs and ideas
 │   ├── improvements.md          ← suggestions + won't-fix log (read at /review consolidation)
+│   ├── review-memory.md         ← patterns RED/SEC/LEAN keep finding, claims that don't hold here
 │   ├── specs/                   ← design handoff specs
 │   └── features/
 │       └── [name]/
@@ -378,6 +379,32 @@ Nothing unmerged is removed until you pick an option, and removing a worktree or
 
 **Tests need ignored files?** A worktree has no `.env` or other ignored local files. List the ones your tests need in a `.worktreeinclude` file (`.gitignore` syntax) and Claude Code copies them into each implementer's worktree; until then, `[P]` groups are built one after another.
 
+### Unattended runs
+
+`scripts/ship-loop.sh` ships your open stories with nobody watching: each story runs `/agentic-engineering:ship --auto` in its **own fresh headless session**, so nothing carries over from one story to the next and no session ever compacts. Run it from your project, on the feature branch:
+
+```bash
+bash "<plugin dir>/scripts/ship-loop.sh"             # until no unchecked story is left
+bash "<plugin dir>/scripts/ship-loop.sh" --max 3     # at most three stories this run
+bash "<plugin dir>/scripts/ship-loop.sh" --dry-run   # what it would ship, runs nothing
+```
+
+It stops — and prints `claude --resume <session>` so you can answer by hand — the moment a story hard-pauses (a migration, a secrets change, a blocker the fix loop could not clear) or a run ships nothing. `STORIES.md` is its state, so running it again picks up where it stopped. Each line goes to `.agentic/ship-loop.log` with the story, cost, time and session. Every run gets a session id of its own, so a loop started from inside a Claude Code session — local or on the web — never writes into that session. Unattended means the sessions run commands, edit files and commit without asking; every hard pause in the workflow still stops the loop. `[P]` groups are built one story at a time here — the parallel build needs `/ship-all` in one session.
+
+### Cost per story
+
+At the end of every `/ship`, `scripts/story-cost.py` reads your session's own transcripts and writes a `### Cost` table into the story's `PROGRESS.md` entry: tokens per agent and model for every subagent the story used — planner, pre-reviewers, implementer and its fix rounds, reviewers, UX, SCRIBE. Tokens, not dollars, since prices change and differ by provider. Where the transcripts aren't available, nothing is written rather than an estimate.
+
+### Review roster and memory
+
+A story whose plan only copies an existing pattern — the ones ARCH routes to Haiku — and a docs-only change get a **lite review**: RED, REQ and TEST, plus SEC when the change touches auth, input parsing, crypto or file and network I/O. Everything else gets all seven. Evidence, acceptance criteria and test coverage are checked in every review.
+
+Reviewers don't remember previous sessions, so the review keeps a short `docs/review-memory.md` for them: patterns RED, SEC and LEAN found in more than one story, and claims they raised that turned out not to hold in your codebase. They read it on every review; the session updates it, never the reviewers, and keeps it under 60 lines. (Claude Code's own agent memory isn't available to plugin agents, and would hand the reviewers write access.)
+
+### Commands only you start
+
+`/archive`, `/worktree`, `/bootstrap`, `/init`, `/ship-all`, `/plan-all`, `/doc-all`, `/cleanup`, `/implement`, `/frontend` and `/review` are hidden from the model: it never starts one of them from something you said in passing — a long autonomous run, a destructive cleanup, or a command that competes with Claude Code's own `/init` and `/code-review` — and their descriptions no longer sit in every session's context. Type them as slash commands as before. The workflow itself still runs them as steps of a chain; `/fix`, `/note`, `/improve`, `/feature`, `/status` and the rest still start from plain language.
+
 ### Two changelogs
 
 Both maintained automatically — never skip this step:
@@ -432,7 +459,7 @@ The plugin tests itself in two layers. See [`tests/README.md`](tests/README.md) 
 - `/worktree` changes nothing until you answer, then merges a finished worktree and leaves an unfinished one alone
 - `/archive` deletes nothing in its first pass, then moves a feature's decisions and open obligations into the durable docs before removing the originals
 
-Each run prints a per-scenario token report. `--against <git-ref>` runs scenarios with the plugin as it was at that commit — a new rule's scenario should fail there and pass on the change. Runs skip cleanly when no credentials are present. With an `ANTHROPIC_API_KEY` repository secret, CI also runs three cheap scenarios on every pull request; the full set runs on manual dispatch.
+Each run prints a per-scenario token report. `--against <git-ref>` runs scenarios with the plugin as it was at that commit — a new rule's scenario should fail there and pass on the change. On pull requests, CI does that for you: `tests/pressure.sh` runs every scenario the branch added against the base branch (it must fail there) and on the branch (it must pass), and every changed scenario on the branch. Runs skip cleanly when no credentials are present. With an `ANTHROPIC_API_KEY` repository secret, CI also runs three cheap scenarios on every pull request; the full set runs on manual dispatch.
 
 ### Built-in gotchas
 
@@ -585,6 +612,7 @@ agentic-engineering/
 │       ├── auto-mode.md          ← loaded only under --auto
 │       ├── story-flow.md         ← plan (ae-arch) → build (ae-impl) → verify → record
 │       ├── fix-loop.md           ← review blockers fixed in rounds, loaded only on blockers
+│       ├── parallel-build.md     ← a [P] group planned and built at once
 │       ├── focus-release.md      ← marks the focus task done
 │       ├── worktree.md           ← loaded only on the parallel [P] path
 │       └── visual-capture.md     ← loaded only when capture is configured
@@ -607,6 +635,8 @@ agentic-engineering/
 │   ├── worktree.sh               ← create / merge / remove task and [P] story worktrees
 │   ├── evidence.sh               ← record a test run in the ledger, check it is still fresh
 │   ├── review-diff.sh            ← uncommitted change → diff file for /fix and /improve reviewers
+│   ├── story-cost.py             ← a story's subagent tokens per agent and model, from the session
+│   ├── ship-loop.sh              ← unattended: one fresh headless session per story
 │   └── transcript-digest.py      ← /diagnose's transcript reader
 ├── tests/                        ← static + behavioral suite, run-tests.sh
 ├── rules-library/                ← 16 rule templates for /init to offer

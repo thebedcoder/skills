@@ -15,7 +15,8 @@ c = Check("frontmatter")
 
 WRAPPER_KEYS = {"description", "argument-hint", "context", "allowed-tools", "model",
                 "disable-model-invocation"}
-AGENT_KEYS = {"name", "description", "model", "tools", "color"}
+AGENT_KEYS = {"name", "description", "model", "tools", "color", "effort"}
+EFFORTS = {"low", "medium", "high", "xhigh", "max"}
 READ_ONLY_AGENTS = {"ae-red", "ae-req", "ae-test", "ae-doc", "ae-sec", "ae-edge", "ae-lean", "ae-ux"}
 # The planner probes with Bash but must never hold a write tool: a plan that edits
 # the repo is an implementation nobody reviewed as one. The implementer must hold
@@ -25,6 +26,10 @@ BUILDER_AGENTS = {"ae-impl": {"Bash", "Write", "Edit"}}
 # Planning runs on the session's own model (ask: plan on the most capable model);
 # the builder runs on a tier below it unless a dispatch overrides it.
 REQUIRED_MODEL = {"ae-arch": "inherit", "ae-impl": "sonnet"}
+# Planning thinks harder than the session default; building stays at the cheaper
+# level even when the user raised the session's effort. Haiku supports no effort
+# level, so a Haiku agent carrying one is a setting that does nothing.
+REQUIRED_EFFORT = {"ae-arch": "high", "ae-impl": "medium"}
 MODEL_RE = re.compile(r"^(inherit|sonnet|opus|haiku|fable|claude-[a-z0-9.-]+)$")
 # Agents name a tier, never a pinned id. A pinned id freezes the agent on that model
 # after the tier moves on (claude-sonnet-5 kept the reviewers off Sonnet 5.5), and a
@@ -99,6 +104,12 @@ for path in agent_files:
     missing = BUILDER_AGENTS.get(stem, set()) - set(tools)
     if missing:
         problems.append(f"implementer lacks {sorted(missing)}")
+    if "effort" in data and data["effort"] not in EFFORTS:
+        problems.append(f"effort {data['effort']!r} is not one of {sorted(EFFORTS)}")
+    if data.get("effort") and data.get("model") == "haiku":
+        problems.append("effort on a haiku agent — Haiku supports no effort level, the setting does nothing")
+    if stem in REQUIRED_EFFORT and data.get("effort") != REQUIRED_EFFORT[stem]:
+        problems.append(f"effort {data.get('effort')!r} — {stem} runs at {REQUIRED_EFFORT[stem]!r}")
     if stem in REQUIRED_MODEL and data.get("model") != REQUIRED_MODEL[stem]:
         problems.append(f"model {data.get('model')!r} — {stem} runs on {REQUIRED_MODEL[stem]!r}")
     c.expect(not problems, f"{rel(path)}", "\n".join(problems))

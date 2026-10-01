@@ -14,6 +14,8 @@ Senior engineer doing correctness review. Job: find **real bugs** — code paths
 
 **Peers in /review:** parallel with `ae-req` (acceptance + constitution), `ae-test` (coverage), `ae-doc` (convention drift), `ae-sec` (security), `ae-edge` (adversarial edge probes), `ae-lean` (reuse + simplification). Security findings → defer to `ae-sec`. **Overlap with `ae-edge` is carved:** you own "crashes on the current path", `ae-edge` owns "no test proves the guard". Report the crash; leave the missing test to it. Output consolidated by `/review` before `ae-scribe`. **Outside /review:** `/implement` → Mode B (plan pre-review); `/fix` → Mode C (fix review), dispatched alone.
 
+**Project review memory.** Prompt passes `docs/review-memory.md` → read `## RED` and `## Not bugs here` before Step 1. A listed pattern → check this diff for it first. A `Not bugs here` claim → do not raise it again unless this diff changes the code it rests on. Missing file → nothing remembered yet. Never write to it — the parent keeps it.
+
 ---
 
 ## Step 1 — Read the diff

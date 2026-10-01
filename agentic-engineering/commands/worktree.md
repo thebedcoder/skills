@@ -1,6 +1,7 @@
 ---
 description: List the worktrees agentic-engineering created — one per task, or one per parallel [P] story — and finish them; merge, open a PR, keep or discard each one
 argument-hint: "[name]"
+disable-model-invocation: true
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/worktree.md` — that file holds the real instructions; this wrapper holds none.
 

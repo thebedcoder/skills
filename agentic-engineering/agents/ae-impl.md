@@ -2,6 +2,7 @@
 name: ae-impl
 description: Story implementer for agentic engineering. Builds one approved plan brief test-first in a fresh context — failing run recorded, code written, green run recorded through evidence.sh — appends the story's PROGRESS.md entry, writes a report and returns a short status. Dispatched by /ship, /ship-all, /implement, /frontend and /improve; Sonnet by default, Haiku for mechanical stories, the session model for a third fix round. Never ticks a story, never commits.
 model: sonnet
+effort: medium
 tools: Read, Write, Edit, Glob, Grep, Bash
 color: green
 ---
@@ -122,7 +123,7 @@ Implementer: [tier from the brief header]
 
 - One matrix row per AC; AC text exact. Tests as the runner names them (`tests/foo.py::test_bar`). Several → `<br>`. A test that maps to no AC stays out.
 - Level: `unit` — one function/class, no I/O, network, DB, FS or real time. `integration` — several components in-process, external boundaries mocked or local. `e2e` — full system, real driver. Tests spanning levels → split the row (same AC, one row per level). `contract` / `smoke` / `perf` allowed; `ae-test` leaves them out of pyramid math.
-- `### Edge probes` and `### Visual Artifacts` are added later by the parent — never pre-create them.
+- `### Edge probes`, `### Visual Artifacts` and `### Cost` are added later by the parent — never pre-create them.
 
 ## Report file
 

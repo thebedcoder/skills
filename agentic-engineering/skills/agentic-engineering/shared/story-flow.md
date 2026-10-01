@@ -122,7 +122,7 @@ Not met → back to the implementer as a fix round (`shared/fix-loop.md` with PR
 
 ## 4 · Record
 
-- `PROGRESS.md` entry: written by the implementer. The orchestrator adds only `### Visual Artifacts` rows (capture, below) and `### Edge probes` rows (Phase 2 fixes).
+- `PROGRESS.md` entry: written by the implementer. The orchestrator adds only `### Visual Artifacts` rows (capture, below), `### Edge probes` rows (Phase 2 fixes) and `### Cost` (`/ship` Phase 5).
 - **Only then** tick the story `- [x]` in `STORIES.md` — the orchestrator, last. No `fresh` verdict → box stays empty.
 
 **Visual Artifacts.** UI story → screenshots or recordings per AC in `docs/features/<feature-name>/artifacts/STORY-XXX/`, one row per capture:

@@ -104,10 +104,10 @@ test([feature-name]): STORY-XXX — add tests
 ```
 
 **Phase 2 — Backend Review** *(automatic)*
-Run full `/review` flow immediately. Story built in a parallel group (`shared/parallel-build.md` §P6 — Phase 1 already done there, chain starts here) → pass `range: <merge>^1..<merge>` so the review sees this story's change, not the whole branch.
-- RED, REQ, TEST, DOC, SEC, EDGE, LEAN run parallel — seven agents
+Run full `/review` flow immediately — roster full, or lite for a Haiku-tier story (`review.md` "Roster"). Story built in a parallel group (`shared/parallel-build.md` §P6 — Phase 1 already done there, chain starts here) → pass `range: <merge>^1..<merge>` so the review sees this story's change, not the whole branch.
+- RED, REQ, TEST, DOC, SEC, EDGE, LEAN run parallel — seven agents (lite roster: RED, REQ, TEST, + SEC when the diff touches auth, input, crypto or I/O)
 - **LEAN runs here and only here.** Phase 4 re-reviews the same branch and passes `--frontend-pass` to drop it
-- Consolidated fix list
+- Consolidated fix list, saved to `reviews/STORY-XXX-review.md` even when clean — fix loop reads its overflow; it rides the story's next commit
 
 **Blockers** → `shared/fix-loop.md` (read it only now): triage fix vs decision, up to three implementer rounds each re-reviewed by the reviewers that raised them, then — only if blockers survive or need a decision — the one gate (`[AUTO: always-ask]`, hard-override #1). Each round records `evidence.sh run --phase review-fix`; Phase 1's row is stale the moment a fix touches code. Loop clean → **GIT** commits:
 ```
@@ -126,7 +126,7 @@ feat([feature-name]): STORY-XXX — frontend implementation
 - **Visual capture** — `./.claude/visual-capture.md` exists → run `shared/visual-capture.md` (dispatch per `mechanism:`, auto-append Visual Artifacts rows; a failed capture warns, never blocks). Absent → remind the operator to capture manually, continue.
 
 **Phase 4 — Frontend Review** *(automatic)* (`/review --frontend-pass` + ae-ux fidelity)
-- 6-agent parallel pass — the Phase 2 seven minus LEAN, which already reviewed this branch
+- 6-agent parallel pass — the Phase 2 seven minus LEAN, which already reviewed this branch (lite roster: the same three or four as Phase 2)
 - ae-ux checks fidelity vs design handoff
 - Blockers (six-agent pass or ae-ux) → `shared/fix-loop.md`, same as Phase 2; rounds record `--phase frontend-fix`
 - Loop clean → **GIT** commits:
@@ -162,6 +162,8 @@ After SCRIBE returns, prepend to both changelogs (newest first):
 
 SCRIBE returned "no user-facing change" → skip `### Added` entry + skip `app-docs/CHANGELOG.md` commit. Still prepend terse entry to `docs/CHANGELOG.md`.
 
+**Cost.** `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/story-cost.py <STORY-ID>` → its table, under `### Cost`, at the end of the story's `PROGRESS.md` entry: tokens per agent and model for every subagent run this story caused, measured from this session's transcripts. `COST: unavailable` → write nothing; never estimate.
+
 - **GIT** commits:
 ```
 docs([feature-name]): STORY-XXX — update app docs and changelogs
@@ -185,6 +187,7 @@ Backend:  ✅ built by ae-impl ([tier]) + reviewed · [K] fix rounds
 Evidence: ✅ [latest row's result] — tree [id], fresh
 Frontend: ✅ implemented + reviewed
 Docs:     ✅ updated
+Cost:     [N] subagent runs · [tokens] tokens (PROGRESS.md ### Cost)
 Git:      ✅ committed (see log above)
 PR desc:  ✅ ready to copy
 Stories:  [x] marked complete
