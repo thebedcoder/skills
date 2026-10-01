@@ -71,6 +71,8 @@ BACKLOG 📋 — X items
   (run /ship to pick one up and implement it)
 
 ARCH NOTE: [any cross-feature technical concerns?]
+
+Next: [one runnable line — the UP NEXT story → /ship STORY-XXX · a finished worktree → /worktree · nothing open → /feature or /note]
 ```
 
 Rendering rules:

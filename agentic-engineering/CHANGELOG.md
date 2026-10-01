@@ -59,6 +59,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
 
 ### Fixed
 
+- **Final sweep.**
+  - The portable rules non-Claude tools install (`adapters/AGENTS.md.template`)
+    were 2.1-era. They now carry evidence before "done", the reproduce → diagnose
+    → one-hypothesis fix flow with its three-failed-fixes stop, the intent check,
+    `FR-` traceability, priorities and the spec audit, the uncommitted-change review
+    with a reuse pass in improvements, a feature audit, the two-phase archive, and
+    optional worktrees. Their `--auto` list no longer names `doc`. Checked through
+    `install.sh --tool=cursor` twice: one block, replaced in place.
+  - SKILL.md's `--auto` list named `/doc` (no such flag) and missed `/frontend`
+    and `/plan-all`. `test_command_tables.py` now pins SKILL.md's and README's lists
+    to the commands whose hint offers `--auto`.
+  - Hard-override #2 (secrets always pause) contradicted the worktree step that
+    copies an ignored `.env` under `--auto`. The rule now says what it guards —
+    creating, editing, staging or sending a secret — and carves out that local
+    copy; scenario 09 runs `/fix --auto` with a real ignored `.env`.
+  - `/fix`, `/ship-all`, `/doc` and `/status` end with the `Next:` line SKILL.md
+    requires of every command.
+  - `/init`'s `CLAUDE.md` template asks for `MEMORY.md` at session start and a
+    recorded green run before a story is complete; its closing prompt fits the
+    chosen mode. The session hook names the newest 20 `CHANGELOG.md` entries, as
+    SKILL.md's session-start rule always said. README's SEC count is 16.
+  - CI: a `behavioral-smoke` job runs scenarios 05, 06 and 11 on pull requests
+    (about $0.35) when the `ANTHROPIC_API_KEY` secret is available, and skips
+    with a notice otherwise.
+
 - **Command audit.** A read of all 24 commands against each other, the README and
   the agents:
   - `/review`'s severity table had no row for REQ's unmet criteria or TEST's

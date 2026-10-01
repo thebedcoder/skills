@@ -399,7 +399,7 @@ The plugin tests itself in two layers. See [`tests/README.md`](tests/README.md) 
 - `/worktree` changes nothing until you answer, then merges a finished worktree and leaves an unfinished one alone
 - `/archive` deletes nothing in its first pass, then moves a feature's decisions and open obligations into the durable docs before removing the originals
 
-Each run prints a per-scenario token report. Runs skip cleanly when no credentials are present.
+Each run prints a per-scenario token report. Runs skip cleanly when no credentials are present. With an `ANTHROPIC_API_KEY` repository secret, CI also runs three cheap scenarios on every pull request; the full set runs on manual dispatch.
 
 ### Built-in gotchas
 
@@ -449,7 +449,7 @@ You can add your own rules any time by dropping a markdown file with YAML frontm
 
 Each review agent loads reference files on demand based on what's in the diff. No generic checklists, no pattern-matching noise — each reference defines what "vulnerable", "broken", or "missing" looks like in that specific context with real code examples.
 
-RED carries 7 bug-category references and 7 language guides; TEST 4 references and 7 framework guides; SEC 17 topic references and 8 language guides; EDGE 4 probe categories; UX 6 fidelity dimensions. The full file listing is in [`docs/review-agent-references.md`](docs/review-agent-references.md).
+RED carries 7 bug-category references and 7 language guides; TEST 4 references and 7 framework guides; SEC 16 topic references and 8 language guides; EDGE 4 probe categories; UX 6 fidelity dimensions. The full file listing is in [`docs/review-agent-references.md`](docs/review-agent-references.md).
 
 ---
 

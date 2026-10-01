@@ -67,6 +67,25 @@ else:
     dupes = sorted({n for n in readme_names if readme_names.count(n) > 1})
     c.expect(not dupes, "README command table has no duplicate rows", str(dupes))
 
+# The --auto list in SKILL.md (loaded by every command) and README must name exactly
+# the commands whose argument hint offers --auto. It once listed /doc, which takes
+# no flag, and missed /frontend and /plan-all.
+auto_cmds = set()
+for p in glob.glob(os.path.join(PLUGIN_ROOT, "commands", "*.md")):
+    m = re.search(r"^argument-hint:\s*(.*)$", open(p, encoding="utf-8").read(), re.M)
+    if m and "--auto" in m.group(1):
+        auto_cmds.add(os.path.basename(p)[:-3])
+for label, path, pattern in (
+        ("SKILL.md", os.path.join(SKILL_DIR, "SKILL.md"), r"^Accepted by (.*?)\. Per-invocation"),
+        ("README", os.path.join(PLUGIN_ROOT, "README.md"), r"^Long-running commands \((.*?)\) accept a per-invocation")):
+    m = re.search(pattern, open(path, encoding="utf-8").read(), re.M)
+    if not m:
+        c.fail(f"{label} states which commands accept --auto")
+        continue
+    listed = set(re.findall(r"`/([a-z-]+)`", m.group(1)))
+    c.expect(listed == auto_cmds, f"{label} --auto list matches the commands that parse it ({len(auto_cmds)})",
+             f"listed but no --auto: {sorted(listed - auto_cmds)}\nmissing: {sorted(auto_cmds - listed)}")
+
 claude_md = open(os.path.join(PLUGIN_ROOT, "CLAUDE.md"), encoding="utf-8").read()
 for m in re.finditer(r"(?:one of|All) (\d+) command", claude_md):
     c.expect(int(m.group(1)) == len(commands),

@@ -161,7 +161,7 @@ Caveman rules above govern **agent-internal** output. These govern what the **hu
 
 ## Auto Mode (`--auto`)
 
-Accepted by `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`, `/doc`, `/converge`. Per-invocation only — no persistent toggle. Flag present → §A of `shared/preamble.md` loads `shared/auto-mode.md`: tag behavior, Hard-Override List, ambiguity heuristic, auto-log visibility. No flag → every gate asks and that file is never read.
+Accepted by `/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/frontend`, `/design`, `/plan-all`, `/converge`. Per-invocation only — no persistent toggle. Flag present → §A of `shared/preamble.md` loads `shared/auto-mode.md`: tag behavior, Hard-Override List, ambiguity heuristic, auto-log visibility. No flag → every gate asks and that file is never read.
 
 ## Progress Tracking
 

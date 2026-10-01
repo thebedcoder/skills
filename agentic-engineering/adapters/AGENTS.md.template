@@ -10,6 +10,7 @@ Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
 ## Core principles
 
 - **Test-driven development.** Write a failing test before any implementation code. No exceptions, even for "quick" changes.
+- **Evidence before "done".** A change is done only when the full test suite ran green on the final code, run to completion in non-watch mode. Record the run — command, result line, date — in the story's `### Evidence` table in `PROGRESS.md`. Output from an earlier step does not count for code changed since; any later edit makes the record stale until the suite runs again.
 - **Constitution.** `./docs/CONSTITUTION.md` lists non-negotiable project principles. Constitution violations are blockers — fix them before continuing, don't paper over them.
 - **Two changelogs, two audiences.**
   - `./docs/CHANGELOG.md` — engineering log, terse, one line per change, newest first. Every ship/fix/improve appends here.
@@ -32,22 +33,27 @@ Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
 - **Conventional commits**: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`, `style:`, `perf:`.
 - **Stories tagged `[P]`** can be implemented in parallel (no shared state). Other stories are sequential.
 - **Path-scoped rules** in `./.claude/rules/` (or `.cursor/rules/` depending on tool) auto-apply by file glob. Respect them when editing matching files.
-- **Shipped features get archived**: when every story in `docs/features/<name>/STORIES.md` is checked, compact PRD/EPICS/STORIES/PROGRESS/reviews/artifacts into one `SUMMARY.md` (story digests, links to the feature's `DEC-` ids in `DECISIONS.md`, frozen test rollup) and delete the originals — git history preserves them; `data-model.md` stays. Skip archived features when scanning for stories or progress.
+- **Requirements are traceable.** PRD requirements are numbered `FR-1…FR-n`; each story declares `Implements: FR-2, FR-5`. A requirement no story implements stops the breakdown.
+- **Stories carry `Priority: P1 | P2 | P3`.** The P1 set alone must be deployable. Ship in priority order — never a P2 while a P1 is open.
+- **Shipped features get archived in two steps.** When every story has a `PROGRESS.md` entry: first *propose* — write `SUMMARY.md` (story digests, links to the feature's `DEC-` ids, frozen test rollup) and list, for the user to edit, any decision the feature made that `DECISIONS.md` lacks and any open obligation from its progress notes; delete nothing. Then, on the user's go-ahead, append the surviving decisions to `DECISIONS.md` and obligations to `BACKLOG.md`, delete PRD/EPICS/STORIES/PROGRESS/reviews/artifacts (git keeps them; `data-model.md` stays) and mark the feature archived. Skip archived features when scanning for stories or progress.
+- **Optional: one task, one git worktree.** Starting work on `main`, a separate worktree (own folder, own branch) is an alternative to a plain branch — the main folder stays untouched. Finishing one: merge (run the tests on the merged result first), open a PR, keep it, or discard it — the user's call every time. Never remove a worktree that holds uncommitted files, never force.
 
 ---
 
 ## When the user asks you to research or plan a feature
 
-**In `full` mode**, all six steps:
+**In `full` mode**, all eight steps:
 
-1. **Propose 3 approach options first.** Don't pick one. Show trade-offs (debt, complexity, time). Wait for the user's choice.
-2. **Generate a PRD** with `[NEEDS CLARIFICATION: <question>]` markers for anything ambiguous.
+0. **Intent check.** The request must name who it is for, what changes for them, and a constraint. Missing any → ask, one question at a time, five at most, before anything else. All three present → say so in one line and move on.
+1. **Propose 3 approach options.** Don't pick one. Show trade-offs (debt, complexity, time). Wait for the user's choice.
+2. **Generate a PRD** with requirements numbered `FR-1…FR-n` and `[NEEDS CLARIFICATION: <question>]` markers for anything ambiguous.
 3. **Batch-resolve clarifications** in one pass before story breakdown.
 4. **Constitution check.** If the proposed feature would violate the constitution, surface it and stop. Don't work around it silently.
 5. **Generate data-model.md** if the feature touches the database.
-6. **Break into stories.** Tag `[P]` where parallelisable. Each story should have clear acceptance criteria.
+6. **Break into stories.** Each with acceptance criteria, `Implements: FR-…`, `Priority: P1|P2|P3`, and `[P]` where parallelisable.
+7. **Spec audit before any code.** Re-read PRD, epics and stories for ambiguity ("fast", "intuitive" with no threshold), duplicate stories, requirements no story implements, stories that trace to no requirement, constitution conflicts, and terminology drift. Fix gaps now; they are cheapest before code exists.
 
-**In `lite` mode**, steps 5 and 6 only. Write stories straight from the user's description plus a read of the codebase. No approach comparison, no PRD, no epics file. The constitution is still enforced — during review, not as a separate planning gate.
+**In `lite` mode**, steps 5, 6 and 7 only. Write stories straight from the user's description plus a read of the codebase. No approach comparison, no PRD, no epics file. The constitution is still enforced — during review, not as a separate planning gate.
 
 ---
 
@@ -64,10 +70,10 @@ Do these phases in order. Do not skip the review pass.
 
    **Persist both sections into `./docs/features/<name>/PROGRESS.md`** during the record step — the plan dies with the conversation, and "it was in the plan" is unverifiable afterwards.
 2. **Failing tests first.** Write tests that capture the acceptance criteria. Run them — they should fail. Show the failure.
-3. **Implement.** Minimum code to make the tests pass. No drive-by refactors.
+3. **Implement.** Minimum code to make the tests pass. No drive-by refactors. Then run the full suite, non-watch, and record the run in `PROGRESS.md` (see "Evidence before done"). Tick the story only after a green run.
 4. **Review across 7 areas.** Do each as a focused pass:
    - **Bug hunt** — null safety, async/concurrency, logic errors, resource leaks, error handling
-   - **Requirements + constitution** — does the code meet the acceptance criteria and the constitution?
+   - **Requirements + constitution** — does the code meet the acceptance criteria and the constitution? A story ticked without a green test run on this code is a blocker; weak tests are the test-quality pass's finding, not this one's.
    - **Test quality** — meaningful assertions, no useless mocks, no flaky patterns
    - **Conventions** — does the code match the surrounding codebase style?
    - **Security** — injection, auth, XSS, SSRF, secrets, data exposure — only HIGH confidence findings, no noise
@@ -91,8 +97,8 @@ Do these phases in order. Do not skip the review pass.
 New keyboard shortcut, another supported file format, a faster query, splitting a 400-line module. Nothing is broken, and there is no PRD to write.
 
 1. **Plan.** Precedent (how does this codebase already do the nearest thing?), scope, and an explicit **`Done when:`** list — the acceptance criteria for a change that has none on file.
-2. **Apply**, with a test per `Done when:` condition.
-3. **Review**, scoped: bug hunt and test quality always; then exactly one of security / fidelity / edge probe, picked by what the diff touches. The requirements pass does not run — there are no persisted acceptance criteria — so the test-quality pass carries the `Done when:` check and reports per-condition pass/fail. Any uncovered condition is a blocker.
+2. **Apply**, with a test per `Done when:` condition. Run the full suite after the last edit.
+3. **Review the uncommitted change** (commit after review, not before), scoped: bug hunt, test quality and reuse/simplification always; then exactly one of security / fidelity / edge probe, picked by what the diff touches. The requirements pass does not run — there are no persisted acceptance criteria — so the test-quality pass carries the `Done when:` check and reports per-condition pass/fail. Any uncovered condition is a blocker.
 4. **Both changelogs**, under `### Improved` — but only if a user can see the change. Pure refactors and perf work stay in the engineering log.
 
 On `main`/`master`, ask before starting; branch by default.
@@ -101,14 +107,23 @@ On `main`/`master`, ask before starting; branch by default.
 
 ## When the user asks you to fix a bug
 
-1. **Diagnose root cause.** Don't patch the symptom. Trace it back to where the contract was broken.
-2. **Write a failing test** that reproduces the bug. Run it — confirm it fails.
-3. **Surgical fix.** One bug, one fix. No tangential cleanup in the same change.
-4. **Run a focused bug-hunt review of the fix** — does it resolve the root cause, does it introduce new risk, would the test actually catch the regression, what is adjacent enough to need re-testing. This is one pass, not the full six.
-5. **Append to engineering changelog.** Append to product changelog only if users would have seen the bug.
-6. **Record what was learned** — a binding decision goes to `./docs/DECISIONS.md`, anything needed before touching this code again goes to `./docs/MEMORY.md`.
+1. **Reproduce it — run it now.** A failing test, script or command, executed, with the real output shown. Can't reproduce → gather data or ask; never diagnose a bug nobody has seen fail.
+2. **Diagnose before fixing.** It used to work → check recent changes (`git log`, `git bisect`). Walk the bad value back to where it is first produced, not where it surfaces. Find similar code that works and list the differences. Test one hypothesis at a time with the smallest probe that could refute it.
+3. **Write a failing regression test.** Run it — confirm it fails for the reason the diagnosis names.
+4. **Surgical fix.** One bug, one fix. No tangential cleanup in the same change. Then the full suite, non-watch, recorded.
+5. **Run a focused bug-hunt review of the fix** — does it resolve the root cause, is the test run current and green, would the test have failed without the fix, what calls the changed code. One pass, not the full seven.
+6. **Append to engineering changelog.** Append to product changelog only if users would have seen the bug.
+7. **Record what was learned** — a binding decision goes to `./docs/DECISIONS.md`, anything needed before touching this code again goes to `./docs/MEMORY.md`.
 
-On `main`/`master`, ask before starting; a bug fix is usually fine to land there, but it is the user's call.
+**A failed fix goes back to step 2**, never a second patch on top. **The third failed attempt stops**: each fix exposing a new problem is a design question — ask the user before trying again.
+
+On `main`/`master`, ask before starting; branch by default.
+
+---
+
+## When the user asks you to audit a feature against its PRD
+
+Checkboxes are written by the same process that claims completion, so check the code. List every `FR-` id, find the code each should produce, and classify: `missing`, `partial`, `contradicts`, or `unrequested`. Work queued in an unchecked story is pending, not a gap; a requirement claimed by a **checked** story with no matching code is a blocker. Never edit the PRD or the code here — propose the remaining work as new stories, and append them only after the user approves. In lite mode, audit checked stories' acceptance criteria instead.
 
 ---
 
@@ -130,13 +145,17 @@ This applies to every test invocation, including "quick checks."
 
 Stop and wait for the user before continuing past any of these points:
 
+- Intent check (full-mode planning, only when the request leaves the user, the outcome or a constraint unstated)
 - Approach selection (after presenting 3 options)
 - PRD approval (after resolving all `[NEEDS CLARIFICATION]` items)
 - Constitution violations (must be resolved or explicitly waived)
 - Implementation plan (before writing any code)
 - Design approval (mobile-first, then desktop, separately)
+- Review blockers — including a story ticked without a current green test run
+- A third failed fix attempt
+- Finishing a worktree — merge, PR, keep, or discard
 
-**Under `--auto` the plan and PRD gates are skipped** — they are approval ceremony, and auto mode exists to skip ceremony. Three exceptions re-arm them regardless: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the always-pause list under "Auto Mode" below. Constitution violations and destructive operations are never skipped.
+**Under `--auto` the plan and PRD gates are skipped** — they are approval ceremony, and auto mode exists to skip ceremony. Three exceptions re-arm them regardless: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the always-pause list under "Auto Mode" below. Constitution violations, review blockers, the third failed fix, finishing a worktree and destructive operations are never skipped.
 
 ---
 
@@ -145,7 +164,7 @@ Stop and wait for the user before continuing past any of these points:
 All of the following must be true before marking a story complete:
 
 - All acceptance criteria met (binary check)
-- Tests pass in non-watch mode
+- The full suite ran green in non-watch mode on the final code, and the run is recorded in `PROGRESS.md`
 - No constitution violations
 - Review across 7 areas produced no blockers
 - Decisions and project memory recorded
@@ -176,11 +195,11 @@ Any tool can surface the current task by reading the `title:` field of `# CURREN
 
 ## Auto Mode (`--auto`)
 
-Long-running operations accept a `--auto` flag: feature research, fix, improve, ship, ship-all, implement, design, doc. Under `--auto`, the agent skips ceremonial checkpoints and applies defaults from `./docs/CONSTITUTION.md` (especially a `## Default Decisions` section, if present). Every auto-decision is announced inline (`DECISION: <choice> — reason: <why> [auto]`) and appended to `.agentic/auto-log.md` (gitignored, alongside `.agentic/focus.md`).
+Long-running operations accept a `--auto` flag: feature research, planning all epics, fix, improve, ship, ship-all, implement, frontend, design, and the feature audit. Under `--auto`, the agent skips ceremonial checkpoints and applies defaults from `./docs/CONSTITUTION.md` (especially a `## Default Decisions` section, if present). Every auto-decision is announced inline (`DECISION: <choice> — reason: <why> [auto]`) and appended to `.agentic/auto-log.md` (gitignored, alongside `.agentic/focus.md`).
 
 The agent always pauses regardless of `--auto` for:
 - Review blockers (high-severity bugs, requirements miss, constitution violation)
-- Destructive operations (CI configs, secrets, force-push, DB migrations, mass deletes)
+- Destructive or sensitive operations (CI configs, creating/editing/committing secrets, force-push, DB migrations, mass deletes)
 - Constitution conflicts
 - Missing required project state (no test framework, no design tool, no feature directory)
 

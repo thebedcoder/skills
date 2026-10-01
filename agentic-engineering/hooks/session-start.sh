@@ -85,7 +85,8 @@ else
   reads="docs/INDEX.md"
   [ -f "$proj/docs/MEMORY.md" ] && reads="$reads, docs/MEMORY.md"
   [ -f "$proj/docs/CONSTITUTION.md" ] && reads="$reads, docs/CONSTITUTION.md"
-  add "Workflow active (mode: $(clean 10 "${mode:-full}")). Before changing code or docs, read in full: $reads."
+  [ -f "$proj/docs/CHANGELOG.md" ] && reads="$reads; newest 20 entries of docs/CHANGELOG.md"
+  add "Workflow active (mode: $(clean 10 "${mode:-full}")). Before changing code or docs, read: $reads."
 fi
 
 focus="$proj/.agentic/focus.md"

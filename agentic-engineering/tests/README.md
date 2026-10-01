@@ -63,6 +63,8 @@ not wording, so a rephrased reply does not flip a result.
 neither `ANTHROPIC_API_KEY` / `CLAUDE_CODE_OAUTH_TOKEN` is set nor `claude auth
 status` reports a login.
 
+**In CI.** `behavioral-smoke` runs `05`, `06` and `11` on every pull request (about $0.35) when the `ANTHROPIC_API_KEY` secret is available, and skips with a notice when it is not (unset, or a fork PR). The full set runs on manual dispatch.
+
 **Cost.** Each scenario carries a `--max-budget-usd` cap. A full run on Sonnet costs
 a few dollars; `02` (seven reviewers) is most of it. Transcripts, per-scenario token
 reports and (with `--keep`) the fixture projects land in `behavioral/out/<stamp>/`,

@@ -138,6 +138,8 @@ REMAINING 🔜
 
 Git: [X] commits on [branch]
 PR desc: ✅ updated to cover all shipped stories
+
+Next: [stories remain → /ship-all again · every story shipped → /converge [feature] before you archive · otherwise push and open the PR]
 ```
 
 **GIT** generates single PR desc covering all shipped stories — not one per story.

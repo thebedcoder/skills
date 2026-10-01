@@ -7,7 +7,9 @@
 #      folder's files and HEAD are untouched, the task's focus moved out of main,
 #      and the worktree is kept (merge/PR/discard never happen under --auto).
 #      Phase 3 dispatches a real agentic-engineering:ae-red on the captured
-#      uncommitted diff — never a RED block written inline.
+#      uncommitted diff — never a RED block written inline. An ignored .env in the
+#      main folder is copied into the worktree without stopping the run (the
+#      hard-override carve-out) and is never committed.
 set -uo pipefail
 . "$(dirname "$0")/../../lib/claude.sh"
 . "$(dirname "$0")/../../lib/fixtures.sh"
@@ -39,6 +41,8 @@ ae_check "A: nothing created, session did not move" bash -c "
 B="$AE_WORK/always"
 broken_fixture "$B"
 git -C "$B" config agentic.worktree always
+printf '.env\n' >> "$B/.gitignore" && fixture_commit "$B" "chore: ignore .env"
+printf 'API_TOKEN=local-only\n' > "$B/.env"
 head_b="$(git -C "$B" rev-parse HEAD)"
 ae_run_claude "$B" "$AE_OUT/always.jsonl" "/agentic-engineering:fix $BUG --auto" 4
 
@@ -63,6 +67,11 @@ ae_check "B: the reviewed diff was the uncommitted fix, inside the worktree" bas
   f=\$(ls '$WT'/.agentic/review/fix-*.diff 2>/dev/null | head -1); [ -n \"\$f\" ] && grep -q '^+.*a + b' \"\$f\""
 ae_check "B: /diagnose reports no review deviation for this run" bash -c "
   ! python3 '$AE_PLUGIN_ROOT/scripts/transcript-digest.py' '$AE_OUT/always.jsonl' --check | grep -q 'DEVIATION review'"
+ae_check "B: ignored .env copied into the worktree, unchanged in main, never committed" bash -c "
+  grep -q local-only '$WT/.env' && grep -q local-only '$B/.env' &&
+  ! git -C '$B' log --name-only --format= main..'$BR' | grep -qx .env"
+ae_check "B: no hard-pause on the .env copy" bash -c "
+  ! cat '$B/.agentic/auto-log.md' '$WT/.agentic/auto-log.md' 2>/dev/null | grep -i 'HARD-PAUSE' | grep -qi env"
 ae_check "B: worktree kept under --auto, decision logged" bash -c "
   test -d '$WT' && cat '$B/.agentic/auto-log.md' '$WT/.agentic/auto-log.md' 2>/dev/null | grep -qi 'DECISION.*worktree.*kept'"
 ae_done

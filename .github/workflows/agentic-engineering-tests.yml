@@ -65,3 +65,48 @@ jobs:
           name: behavioral-transcripts
           path: agentic-engineering/tests/behavioral/out/
           if-no-files-found: ignore
+
+  behavioral-smoke:
+    name: behavioral smoke (05 hook, 06 evidence gate, 11 worktree finish)
+    needs: static
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      # Secrets cannot appear in a job-level `if`, and fork PRs never receive them:
+      # gate on the value instead, and say why when the job does nothing.
+      - name: Check for the API key
+        id: gate
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::ANTHROPIC_API_KEY is not available to this run (unset, or a fork PR) - smoke scenarios skipped"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: "22"
+      - name: Install Claude Code
+        if: steps.gate.outputs.run == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Smoke scenarios (about $0.35 a run)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          rc=0
+          for s in 05 06 11; do
+            agentic-engineering/tests/run-tests.sh --scenario "$s" --model sonnet || rc=1
+          done
+          exit $rc
+      - name: Upload transcripts and token report
+        if: always() && steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: behavioral-smoke-transcripts
+          path: agentic-engineering/tests/behavioral/out/
+          if-no-files-found: ignore

@@ -86,6 +86,7 @@ Append format: `## [Feature] — [date]` header, then ARCH refactoring suggestio
 End of command:
 ```
 Improvements and potential issues saved to ./docs/improvements.md — review when ready.
+Next: /doc [next undocumented feature], or /doc-all to cover the rest.
 ```
 
 ---

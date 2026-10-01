@@ -114,7 +114,7 @@ ctx = context_of("plain repo", *run(d, '{"source":"startup"}'))
 if ctx is not None:
     c.expect(all(r in ctx for r in ROUTES), "plain repo: router names all five routes")
     c.expect("not set up" in ctx, "plain repo: marked 'not set up here'")
-    c.expect("Active task" not in ctx and "read in full" not in ctx,
+    c.expect("Active task" not in ctx and "Before changing code" not in ctx,
              "plain repo: no project-state lines (router only)")
 
 # 2. Scaffolded, no focus.
@@ -126,11 +126,18 @@ if ctx is not None:
     c.expect("mode: lite" in ctx, "scaffolded: reports mode from INDEX frontmatter")
     c.expect("Active task" not in ctx, "scaffolded, no focus: no Active task line")
 
+# 2b. CHANGELOG.md present → its newest entries join the read list (SKILL.md "Session start").
+open(os.path.join(d, "docs", "CHANGELOG.md"), "w").write("# Changelog\n")
+ctx = context_of("scaffolded with CHANGELOG", *run(d, '{"source":"startup"}'))
+if ctx is not None:
+    c.expect("newest 20 entries of docs/CHANGELOG.md" in ctx, "CHANGELOG.md named with its 20-entry limit")
+
 # 3. Scaffolded without MEMORY.md: only names files that exist.
 d = project(INDEX)
 ctx = context_of("scaffolded, no MEMORY.md", *run(d))
 if ctx is not None:
     c.expect("docs/MEMORY.md" not in ctx, "missing MEMORY.md is not named")
+    c.expect("CHANGELOG" not in ctx, "missing CHANGELOG.md is not named")
 
 # 4. Active focus.
 d = project(INDEX, memory=True, focus=FOCUS)

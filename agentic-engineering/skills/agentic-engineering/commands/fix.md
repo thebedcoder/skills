@@ -197,6 +197,8 @@ Docs:       ✅ updated / not needed
 Changelog:  ✅ both updated
 Git:        ✅ committed on [branch name]
 Cleanup:    ✅ MEMORY.md refreshed · [DEC-XXX recorded | no binding decision]
+
+Next: [one runnable line — push and open a PR for this branch · /ship for the story this fix unblocked · /fix for the next bug in BACKLOG.md · /status]
 ```
 
 ### Step N — Finish the worktree

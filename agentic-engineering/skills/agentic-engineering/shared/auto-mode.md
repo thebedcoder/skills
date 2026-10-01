@@ -19,7 +19,7 @@ Under `--auto`, every checkpoint is consulted by its tag:
 Regardless of tag, auto mode pauses + asks when **any** of these:
 
 1. `/review` reports a blocker — high-severity bug, requirements miss, constitution violation.
-2. Operation touches: CI configs (`.github/workflows/*`, `.gitlab-ci.yml`, etc.), secrets (`.env*`, `*secret*`, `*credential*`, `*.pem`, `*.key`), force-push, DB migrations creating/dropping tables, mass file deletion (>10 files).
+2. Operation touches: CI configs (`.github/workflows/*`, `.gitlab-ci.yml`, etc.), secrets (`.env*`, `*secret*`, `*credential*`, `*.pem`, `*.key`) — creating, editing, staging or sending one; copying an ignored `.env*` from the main folder into a task worktree of the same repo (`shared/worktree.md` §W4) is not, since it stays on this machine, unchanged and ignored — force-push, DB migrations creating/dropping tables, mass file deletion (>10 files).
 3. `CONSTITUTION.md` explicitly contradicts the recommended action.
 4. Required project state missing — no test framework, no design tool chosen, no feature directory.
 
