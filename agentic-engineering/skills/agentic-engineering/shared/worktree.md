@@ -69,7 +69,7 @@ CURRENT has `worktree_of:` → this run is one story of a parallel group.
 
 - Phases 1–4 and 6 run unchanged on this branch.
 - Phase 5 (end-user docs + changelogs) and Phase 7 (cleanup) → close their PLAN lines `deferred to merge (worktree)`. `docs/CHANGELOG.md`, `app-docs/`, `DECISIONS.md`, `MEMORY.md` are shared: two branches writing them in parallel conflict at merge and collide on `DEC-NNN` numbers. §W2 step 3 writes them once, in the main tree.
-- Story-scoped files still land here: code, tests, `STORIES.md` checkbox, `PROGRESS.md` entry, `reviews/`.
+- Story-scoped files still land here: code, tests, `STORIES.md` checkbox, `PROGRESS.md` entry, `plans/`, `reviews/`.
 - Release focus as normal — this worktree's `.agentic/focus.md` only.
 - Chain-complete block: `Docs: deferred to merge` · `Cleanup: deferred to merge`, and `Next: run /ship-all in <worktree_of> to merge STORY-XXX back.`
 

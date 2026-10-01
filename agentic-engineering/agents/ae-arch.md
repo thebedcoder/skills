@@ -38,6 +38,7 @@ Job: plan this story so an implementer with no other context (Sonnet, sometimes 
 | `PROGRESS.md` entries of stories this one depends on | when the story's `Notes:` names a dependency |
 | `mode:` | `story` (default) · `frontend` (UI plan only — backend already built and reviewed) |
 | `replan:` | present when `ae-impl` or PROD sent the plan back — fix exactly what it names |
+| `prior plan:` | `docs/features/<feature>/plans/<ID>-plan.md` — a plan agreed in an earlier run. Its latest section is the starting point: re-check each Contract claim's `file:line` against today's code, keep what holds, amend what moved. Its hard-override operations go under `Escalations:` again — an earlier approval covered an earlier plan |
 | `parallel:` | `yes` when the story is one of a `[P]` group built at once — `Setup command` and `Test isolation` then decide whether it may |
 
 ---

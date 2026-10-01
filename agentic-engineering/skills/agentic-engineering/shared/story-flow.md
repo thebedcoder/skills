@@ -5,7 +5,7 @@ One story, end to end. Run by `/implement` standalone and by `/ship` Phase 1 (an
 **Main session = orchestrator.** It holds artifacts, not work: the plan comes from `ae-arch` (session model), the code from `ae-impl` (Sonnet by default), each in a fresh context of its own. The main session never writes source or test files in this flow — doing so is the role-play failure by hand, and `/diagnose` flags it.
 
 ## Constraints
-- No code before the plan clears: PROD validation done, pre-review findings resolved, no open escalation
+- No code before the plan clears: PROD validation done, pre-review findings resolved, no open escalation — and its plan record committed
 - No code while a Contract claim is unproven — assertion is not proof
 - Tests drive implementation — the red run is recorded before code exists
 - No files outside the plan — scope creep forbidden
@@ -20,6 +20,7 @@ Dispatch `agentic-engineering:ae-arch`. No `model` parameter: its `model: inheri
 - the `DECISIONS.md` titles from §D, pasted (it is the one list worth inlining — a few lines)
 - `docs/specs/<feature>-design.md` when the story has UI
 - `PROGRESS.md` when the story's `Notes:` names a dependency
+- `docs/features/<feature>/plans/<STORY-ID>-plan.md` when it exists — a plan agreed earlier (a stopped chain, another machine). Pass as `prior plan:`: ARCH confirms it against today's code or amends it; the record gets a Replan section either way. Its `approved:` lines do not carry — a hard-override operation goes to the gate again
 
 It returns the plan (format in `agents/ae-arch.md`): Contract claims with proof, Failure states, files, test plan with red and full test commands, precedent, frontend block for UI stories, escalations, implementer tier, proportion. **Print it** — when a human reads it, the Human-Facing Output Rules apply.
 
@@ -74,6 +75,28 @@ Skip when the plan has no Contract claims **and** no Failure states — emit `SK
 
 ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: print the escalation(s), then *"STORY-XXX's plan needs your call. How should it go?"* → **Approve the plan (Recommended)** · **Revise it** · **Stop here**. Revise → `[ASK: prose]` for what to change → re-dispatch `ae-arch` with `replan:`. Approve on a hard-override item → list it under `approved:` in the brief; the implementer refuses anything not listed there.
 
+**Plan record — committed before any code.** Plan cleared (PROD done, pre-review folded in, gate passed or never fired) → write `docs/features/<feature>/plans/<STORY-ID>-plan.md`:
+
+```markdown
+# Plan: STORY-XXX — [title]
+date: YYYY-MM-DD · implementer tier: [haiku | sonnet]
+pre-review: [ae-red + ae-sec — N findings, folded in | skipped — no external contract, no partial state]
+gate: [none | each escalation, one line → the human's answer, Revise rounds included]
+approved: [the brief's approved: line]
+
+## Plan
+[the brief's ## Plan, verbatim]
+```
+
+Commit it alone — the path limits the commit, whatever else is staged:
+
+```bash
+git add docs/features/<feature>/plans/<STORY-ID>-plan.md
+git commit -q -m "docs(<feature>): STORY-XXX — plan" -- docs/features/<feature>/plans/<STORY-ID>-plan.md
+```
+
+Brief = the implementer's working copy: gitignored, gone with `.agentic/` or the worktree. Record = what was agreed: survives the session, the machine and the worktree; `/cleanup`, `/archive` and DOC read it. **Never rewritten.** A plan for the same story after its record exists — `NEEDS_PLAN_CHANGE`, a rerun with `prior plan:` — appends `## Replan N — YYYY-MM-DD — [why]` with its own `gate:` and `approved:` lines and the amended plan, committed `docs(<feature>): STORY-XXX — replan N`. Gate answered **Stop here** → no record: nothing was agreed.
+
 ## 2 · Build — `ae-impl`, fresh context
 
 **Tier.** ARCH proposes; the orchestrator decides:
@@ -93,7 +116,7 @@ It writes tests, records the red run, implements, records the green run, appends
 | Status | Orchestrator does |
 |---|---|
 | `DONE` · `DONE_WITH_CONCERNS` | Verify (§3). Concerns go to `### Notes` or `BACKLOG.md` — never fixed "while there" |
-| `NEEDS_PLAN_CHANGE` | Re-dispatch `ae-arch` with `replan:` + the implementer's note; PROD re-validates; the escalation gate applies to the amended plan; fresh `ae-impl`. Second time for one story → escalation gate |
+| `NEEDS_PLAN_CHANGE` | Re-dispatch `ae-arch` with `replan:` + the implementer's note; PROD re-validates; the escalation gate applies to the amended plan; Replan section appended to the plan record and committed; fresh `ae-impl`. Second time for one story → escalation gate |
 | `BLOCKED` on a hard-override item | `HARD-PAUSE` — escalation gate |
 | `BLOCKED` on capability (third red full-suite run) | One retry: fresh `ae-impl` on the session model, with the report path. Still blocked → ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"The implementer is stuck on STORY-XXX: [one line]. How do you want to proceed?"* → **Work it through together (Recommended)** · **Skip this story** · **Stop here** |
 
@@ -141,6 +164,7 @@ Standalone `/implement` → *"Story complete. Run `/review` before next story."*
 ## Gotchas
 
 - **No plan skip for small stories.** File list + test plan required. Skip → pattern-match → wrong arch.
+- **The brief is working state; the plan record is the record.** Approvals written only to the brief vanish with `.agentic/`. `/diagnose` flags a build with no record as `DEVIATION plan`.
 - **The main session writes no source here.** Not "just this one small fix" — that is the context this flow exists to keep clean, and the work nobody reviews as the implementer's.
 - **A report is a claim.** `DONE` with a typed evidence row reads `unverified`; `DONE` with an out-of-plan file is scope creep with a nice summary. Verify mechanically, every story.
 - **Criteria are checks, not goals.** Satisfies all but feels wrong → PRD incomplete. Flag it, don't ship on technicality.

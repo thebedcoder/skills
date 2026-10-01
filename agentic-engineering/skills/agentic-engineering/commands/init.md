@@ -50,6 +50,7 @@ Swap which one carries `(Recommended)` to match ARCH's proposal. Mode is written
       EPICS.md                  ← epics for this feature
       STORIES.md                ← user stories with checkboxes
       PROGRESS.md               ← completed work log
+      /plans/                   ← each story's plan as agreed, committed before its code
       /reviews/                 ← code review outputs
   improvements.md               ← ARCH/RED suggestions (appended over time)
   /specs/                       ← cross-feature and design handoff specs
@@ -325,6 +326,7 @@ No frontmatter, INDEX.md exists anyway → two cases:
 - Index:        ./docs/INDEX.md
 - Constitution: ./docs/CONSTITUTION.md
 - Features:     ./docs/features/[name]/PRD.md|EPICS.md|STORIES.md|PROGRESS.md
+- Plans:        ./docs/features/[name]/plans/
 - Reviews:      ./docs/features/[name]/reviews/
 - Specs:        ./docs/specs/
 - App Docs:     ./app-docs/   (end-user product documentation — not internal reference)
@@ -347,6 +349,7 @@ No frontmatter, INDEX.md exists anyway → two cases:
 - Index:        ./docs/INDEX.md
 - Constitution: ./docs/CONSTITUTION.md
 - Features:     ./docs/features/[name]/STORIES.md|PROGRESS.md
+- Plans:        ./docs/features/[name]/plans/
 - Reviews:      ./docs/features/[name]/reviews/
 ```
 

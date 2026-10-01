@@ -3,7 +3,9 @@
 # ae-impl (explicit tier) — each in a fresh context — and the main session writes
 # no source or test file. No plan-approval stop between plan and build. The red
 # run and the green run both land in the evidence ledger, so `check` reads fresh
-# and red=present; the orchestrator, not the implementer, ticks the story.
+# and red=present; the orchestrator, not the implementer, ticks the story. The plan
+# as agreed is committed to plans/STORY-001-plan.md before the code — the brief is
+# gitignored, so without the record nothing of the plan or its approvals survives.
 #
 # Cost control: the harness stops the chain after Phase 1 is committed.
 set -uo pipefail
@@ -55,5 +57,15 @@ ae_check "STORY-001 ticked" grep -q -- '- \[x\] STORY-001' "$P/docs/features/mai
 ae_check "evidence fresh, ledger-verified, red run recorded" bash -c "
   cd '$P' && bash '$AE_PLUGIN_ROOT/scripts/evidence.sh' check docs/features/main/PROGRESS.md STORY-001 | grep -q '^EVIDENCE: fresh .*red=present'"
 ae_check "PROGRESS.md records the implementer tier" grep -qE '^Implementer: (haiku|sonnet)' "$P/docs/features/main/PROGRESS.md"
+ae_check "plan record committed, with its header and the plan" bash -c "
+  cd '$P' && git ls-files --error-unmatch docs/features/main/plans/STORY-001-plan.md >/dev/null &&
+  git show HEAD:docs/features/main/plans/STORY-001-plan.md | grep -q '^## Plan' &&
+  git show HEAD:docs/features/main/plans/STORY-001-plan.md | grep -qE '^gate: ' &&
+  git show HEAD:docs/features/main/plans/STORY-001-plan.md | grep -qE '^approved: '"
+ae_check "plan record committed before the code" bash -c "
+  cd '$P' && plan=\$(git log --reverse --format=%H -- docs/features/main/plans/STORY-001-plan.md | head -1) &&
+  code=\$(git log --reverse --format=%H --grep=STORY-001 -- src test | head -1) &&
+  test -n \"\$plan\" && test -n \"\$code\" && test \"\$plan\" != \"\$code\" &&
+  git merge-base --is-ancestor \"\$plan\" \"\$code\""
 ae_check "feat commit landed — no plan-approval stop" bash -c "cd '$P' && git log --format=%s | grep -qE '^(feat|test)\\([^)]*\\): STORY-001'"
 ae_done

@@ -24,6 +24,7 @@ Read `mode:` from `./docs/INDEX.md` frontmatter. Sets the `MEMORY.md` line cap: 
 
 - `.agentic/focus.md` `# PLAN` — steps taken, which were skipped
 - `./docs/features/<feature>/PROGRESS.md` — the story's entry, files changed, AC coverage
+- `./docs/features/<feature>/plans/<ID>-plan.md` — the plan as agreed: approach, precedent, gate answers, approvals, replans and why
 - `./docs/features/<feature>/reviews/` — review output for the story
 - `./docs/CHANGELOG.md` — top entries, to detect what's already logged
 - `.agentic/auto-log.md` — this task's `RULING:` lines (an `--auto` run decided them; missing file → none)

@@ -29,6 +29,7 @@ Record `BASE` = `git rev-parse --abbrev-ref HEAD`, `BASE_SHA` = `git rev-parse H
    branch: feat/<feature>-<story-slug>
    setup: <plan's Setup command, or none>
    ```
+7. Plan records as story-flow §1, one commit for the group: `docs(<feature>): STORY-003, STORY-004 — plans`. Then `BASE_SHA` = `git rev-parse HEAD` again — the pin must hold the records, and §P5 merges into a clean tree.
 
 Print `PARALLEL BUILD — STORY-003, STORY-004 from <BASE> @ <short sha>`.
 

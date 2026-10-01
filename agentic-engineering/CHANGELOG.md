@@ -86,6 +86,13 @@ stopping. Plan and rationale: `docs/upgrade-plan-3.0.md`.
   `Test isolation`; `ae-impl` pins, sets up and runs a baseline before a parallel
   build. `/review` takes `range: A..B` for a story's own merge. `/diagnose` flags
   `DEVIATION base` — an isolated `ae-impl` with no `pin:`.
+- **Plan records** — a story's plan, once it clears PROD, pre-review and any escalation,
+  is committed to `docs/features/<feature>/plans/<ID>-plan.md` before any code, with the
+  gate answers and approved hard-override operations; a replan appends, never rewrites.
+  The brief stays gitignored working state. A rerun passes the record to `ae-arch` as
+  `prior plan:` (approvals do not carry). `[P]` groups commit their records before the
+  pin. `/cleanup`, `/archive` and DOC read it; `/diagnose` flags `DEVIATION plan`.
+  `/improve` puts its approved plan in the commit body.
 - **Unattended runs** — `scripts/ship-loop.sh`: one fresh headless
   `/agentic-engineering:ship --auto` session per story, each under its own
   `--session-id` with the launching session's variables (local and cloud) stripped,

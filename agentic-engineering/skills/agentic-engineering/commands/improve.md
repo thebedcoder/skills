@@ -218,6 +218,8 @@ docs([scope]): [what docs changed]               ← only if docs changed
 
 Prefix comes from the plan, never improvised. `feat(` on an additive improvement is correct — it signals the minor-version bump that `refactor(` would hide.
 
+**The plan rides the commit.** `/improve` writes no planning docs, so the `feat(` / `perf(` / `refactor(` commit body is the one durable record of what was agreed: the Phase 1 plan verbatim, then `Approved: human` — or `Approved: auto — precedent cited, no behavior change, one file` when `--auto` skipped the gate — and `Replanned: <why>` per Phase 2 `NEEDS_PLAN_CHANGE`. The brief stays gitignored working state.
+
 **GIT** outputs note for existing PR (not new PR description):
 ```markdown
 ### Improvement applied to this PR

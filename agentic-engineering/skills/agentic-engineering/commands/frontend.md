@@ -19,7 +19,7 @@ Run **§B** of `shared/preamble.md` — `title: frontend for <STORY-ID>`, `set_b
 
 1. **Plan.**
    - Nested in `/ship` → the brief `.agentic/briefs/<STORY-ID>.md` already holds the `Frontend:` block `ae-arch` wrote in Phase 1. No second planning pass.
-   - Standalone, or the brief has no `Frontend:` block → dispatch `agentic-engineering:ae-arch` with `mode: frontend`, the story id, `STORIES.md`, the handoff spec, `CONSTITUTION.md`, `CLAUDE.md`, plugin root. Write or extend the brief with its plan.
+   - Standalone, or the brief has no `Frontend:` block → dispatch `agentic-engineering:ae-arch` with `mode: frontend`, the story id, `STORIES.md`, the handoff spec, `CONSTITUTION.md`, `CLAUDE.md`, plugin root. Write or extend the brief with its plan. After PROD (step 2), append it to the plan record as `## Frontend — YYYY-MM-DD` (`shared/story-flow.md` §1 Plan record; no record yet → create it) and commit `docs(<feature>): STORY-XXX — frontend plan`.
 
 2. **PROD** reviews the frontend plan vs the user flow:
 ```

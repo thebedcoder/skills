@@ -200,6 +200,7 @@ your-project/
 │           ├── STORIES.md       ← stories with [P] parallel markers
 │           ├── PROGRESS.md
 │           ├── data-model.md    ← generated when feature touches DB
+│           ├── plans/           ← each story's plan as agreed, committed before its code
 │           ├── reviews/         ← review output per story
 │           ├── artifacts/       ← captured screenshots/recordings per story
 │           └── SUMMARY.md       ← replaces all of the above after /archive
@@ -299,6 +300,8 @@ Two required sections in ARCH's implementation plan, both of which outlive it.
 **Failure states** — whenever a story can fail partway (a commit, rollback, migration, batch write), a table of failure point × per-resource state × what the outcome reports, written *before* the code. These bugs do not arrive one at a time; a reversal path designed in prose and implemented ad hoc produces a cluster of individually plausible defects, all found late.
 
 **Pre-review** dispatches RED and SEC against the plan rather than the codebase. They re-open each cited `file:line` and ask whether it says what the claim says — and whether the claim's converse is also consistent with it — then look for a failure point the table omits. It runs under `--auto` and never pauses by itself; a disputed claim is one of the few things that stops the build to ask you. Both sections are persisted into `PROGRESS.md`, because "it was in the plan" is unverifiable once the session ends.
+
+**The plan itself is kept too.** Once a story's plan clears review — and you've answered any question it raised — it is committed to `docs/features/<feature>/plans/STORY-XXX-plan.md` *before* any code: the plan as agreed, which pre-review findings were folded in, every question put to you with your answer, and the risky operations you approved (a migration, a CI change). If the plan has to change mid-build, the new version is appended with the reason; the original is never rewritten. A run that stops and resumes on another machine picks the plan up from there, `/cleanup` and `/archive` mine it for decisions, and `/diagnose` flags a story built without one. `/improve` writes no planning docs, so its approved plan goes into the commit message instead.
 
 ### Human checkpoints
 

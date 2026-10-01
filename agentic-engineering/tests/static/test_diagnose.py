@@ -133,6 +133,24 @@ c.expect("DEVIATION build" not in p.stdout, "docs and brief writes are the orche
 p = run("--check", write([FIX_CMD, FIX_READ, PLAN, SRC, RED, result("t5", "RED — Fix review: clean"), COMMIT]))
 c.expect("DEVIATION build" not in p.stdout, "/fix writes its fix in the main thread by design — no build deviation")
 
+# The approved plan is committed as a record before the build; the brief alone is gitignored.
+REC_BASH = tool("m4", "t4", "Bash", {"command": "git add docs/features/main/plans/STORY-001-plan.md && "
+                                                 "git commit -q -m \"docs(main): STORY-001 — plan\" -- docs/features/main/plans/STORY-001-plan.md"})
+REC_WRITE = tool("m4", "t4", "Write", {"file_path": "/w/docs/features/main/plans/STORY-001-plan.md", "content": "# Plan"})
+ROUND = tool("m5", "t5", "Agent", {"subagent_type": "agentic-engineering:ae-impl",
+                                   "prompt": "brief: .agentic/briefs/STORY-001.md\nmode: fix-round\nround: 1"})
+p = run("--check", write([SHIP_CMD, PLAN, IMPL, result("t5", "IMPL — STORY-001 [build]: DONE")]))
+c.expect("DEVIATION plan" in p.stdout and "STORY-001 built at L3" in p.stdout,
+         "/ship built STORY-001 with no plan record → DEVIATION plan naming story and line", p.stdout[-500:])
+p = run("--check", write([SHIP_CMD, PLAN, REC_BASH, IMPL]))
+c.expect("DEVIATION plan" not in p.stdout, "record written and committed through Bash → no plan deviation", p.stdout[-400:])
+p = run("--check", write([SHIP_CMD, PLAN, REC_WRITE, IMPL]))
+c.expect("DEVIATION plan" not in p.stdout, "record written with Write → no plan deviation")
+p = run("--check", write([SHIP_CMD, PLAN, ROUND]))
+c.expect("DEVIATION plan" not in p.stdout, "a fix round is not a build → no plan deviation")
+p = run("--check", write([PLAN, IMPL]))
+c.expect("DEVIATION plan" not in p.stdout, "ae-impl outside a story chain → no plan deviation")
+
 # Parallel builds: an isolated implementer must be pinned to the feature branch.
 ISO = tool("m5", "t5", "Agent", {"subagent_type": "agentic-engineering:ae-impl", "isolation": "worktree",
                                  "prompt": "brief: /w/.agentic/briefs/STORY-002.md\nmode: build"})

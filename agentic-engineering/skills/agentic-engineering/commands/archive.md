@@ -124,7 +124,7 @@ Surface the count at the gate verbatim: `N of M features have no DECISIONS.md co
 Nothing checked this before. Live citations into the delete set are common, and they include shipped source — a comment in a `.ts` file citing a `PRD.md` for the rule it implements.
 
 ```bash
-grep -rnE "docs/features/<f>/(PRD|EPICS|STORIES|PROGRESS)\.md|docs/features/<f>/reviews/" . \
+grep -rnE "docs/features/<f>/(PRD|EPICS|STORIES|PROGRESS)\.md|docs/features/<f>/(plans|reviews)/" . \
   --exclude-dir=.git --exclude-dir=node_modules
 ```
 
@@ -153,7 +153,7 @@ Within 90 days → flag at the gate as `recently amended — still in use`. **No
 
 #### 2A — `SUMMARY.md`, one per feature
 
-Read `PRD.md`, `STORIES.md`, `PROGRESS.md`, `reviews/`. Write `./docs/features/[feature-name]/SUMMARY.md`:
+Read `PRD.md`, `STORIES.md`, `PROGRESS.md`, `plans/`, `reviews/`. Write `./docs/features/[feature-name]/SUMMARY.md`:
 
 ```markdown
 # [feature-name] — archived [YYYY-MM-DD]
@@ -266,7 +266,7 @@ source: archive · confidence: reconstructed
 - **`date:` is the feature's ship date**, from its last `PROGRESS.md` entry — never today. Stamping two years of history with today's date is how a decision log becomes unreadable.
 - **`source: archive · confidence: reconstructed`** is mandatory and never omitted. A reader must be able to tell a decision recorded when it was made from one inferred afterward.
 - **Write the title to stand alone.** `DECISIONS.md` is read titles-only at session start; that one line is the entire anti-re-litigation payload. `DEC-118 — Canonical intermediate format is ARB, not XLIFF` works. `DEC-118 — Format decision` does not.
-- Sources, in order: `PRD.md` non-goals and rationale, `PROGRESS.md` `### Notes`, resolutions in `reviews/`.
+- Sources, in order: `PRD.md` non-goals and rationale, `plans/` approaches and gate answers, `PROGRESS.md` `### Notes`, resolutions in `reviews/`.
 - Apply `/cleanup` Step 3's test — *would someone six months from now change this by accident if it weren't written down?* No → drop it. Extract only what still constrains code. **Zero for a feature is a normal, correct answer.**
 - Ids are provisional. Step 3 allocates the real ones from the highest existing `DEC-NNN` at apply time.
 
@@ -355,7 +355,7 @@ Then, per feature, in one commit:
 2. **Append surviving obligation blocks** to `./docs/BACKLOG.md`, ids from the highest existing `NOTE-NNN`.
 3. **Fill the `(pending --apply)` placeholders** in that feature's `SUMMARY.md` with the ids just allocated.
 4. **Repoint** blocking citations from Step 1B, if the user chose Repoint.
-5. **Delete** `PRD.md`, `EPICS.md`, `STORIES.md`, `PROGRESS.md`, `reviews/`, `artifacts/`. `data-model.md` **stays** — schema decisions outlive stories. Feature dir after: `SUMMARY.md` (+ `data-model.md` if it existed).
+5. **Delete** `PRD.md`, `EPICS.md`, `STORIES.md`, `PROGRESS.md`, `plans/`, `reviews/`, `artifacts/`. `data-model.md` **stays** — schema decisions outlive stories. Feature dir after: `SUMMARY.md` (+ `data-model.md` if it existed).
 6. `./docs/INDEX.md` feature row: status → `archived 📦`.
 7. `./docs/CHANGELOG.md` prepend: `- [ARCHIVE] [feature-name] docs compacted to SUMMARY.md — N decisions, M obligations extracted`.
 

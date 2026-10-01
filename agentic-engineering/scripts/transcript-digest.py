@@ -37,6 +37,7 @@ GATE_TEXT_RE = re.compile(r"(Human checkpoint|HARD-PAUSE|SKIPPED:|DECISION:|RULI
 # Paths a story chain's main thread may write: docs, working state, changelogs.
 # Anything else is source or tests — ae-impl's job (shared/story-flow.md).
 DOC_PATH_RE = re.compile(r"(^|/)(docs|app-docs|\.agentic|\.claude)/|\.md$|(^|/)\.gitignore$")
+PLAN_RECORD_RE = re.compile(r"plans/(STORY-\d+)-plan\.md")
 MAX = 160
 
 
@@ -113,6 +114,7 @@ def digest(path, check=False):
     commands, reads, gates, plan, tests, commits, compactions, autolog, texts = [], [], [], [], [], [], [], [], []
     source_edits = []
     unpinned = []
+    built, recorded = [], set()  # story builds dispatched · stories whose plan record was written
     groups, order = {}, []
     tool_results = {}
     for n, d in rows:
@@ -153,9 +155,14 @@ def digest(path, check=False):
                     order.append(mid)
                 groups[mid]["lines"].append(n)
                 groups[mid]["agents"].append(str(inp.get("subagent_type", "?")))
+                prompt = str(inp.get("prompt", ""))
                 if inp.get("subagent_type") == f"{NS}:ae-impl" and inp.get("isolation") == "worktree" \
-                        and "pin:" not in str(inp.get("prompt", "")):
+                        and "pin:" not in prompt:
                     unpinned.append(f"L{n}")
+                story = re.search(r"\.agentic/briefs/(STORY-\d+)\.md", prompt)
+                if inp.get("subagent_type") == f"{NS}:ae-impl" and story \
+                        and not re.search(r"mode:\s*(fix-round|frontend|improve)", prompt):
+                    built.append((story.group(1), f"L{n}"))
             elif name in ("Skill", "SlashCommand"):
                 commands.append(f"L{n} {name} {inp.get('skill') or inp.get('command')} {short(inp.get('args', ''), 60)}".rstrip())
             elif name == "Read":
@@ -168,6 +175,7 @@ def digest(path, check=False):
                 gates.append(f"L{n} AskUserQuestion: {short(q, 140)}")
             elif name in ("Write", "Edit", "MultiEdit"):
                 p = str(inp.get("file_path", ""))
+                recorded.update(PLAN_RECORD_RE.findall(p))
                 if p.endswith(".agentic/focus.md"):
                     body = str(inp.get("content") or inp.get("new_string") or "")
                     done = len(re.findall(r"(?m)^\s*- \[[xX]\]", body))
@@ -179,6 +187,7 @@ def digest(path, check=False):
                     source_edits.append(f"L{n} {name} {short(p, 120)}")
             elif name == "Bash":
                 cmd = str(inp.get("command", ""))
+                recorded.update(PLAN_RECORD_RE.findall(cmd))
                 if TEST_RE.search(cmd):
                     tests.append(f"L{n} {short(cmd, 120)}{err}")
                 m = re.search(r"git commit[^\n]*?-m\s+(\"[^\"]*\"|'[^']*'|\S+)", cmd)
@@ -225,12 +234,13 @@ def digest(path, check=False):
 
     if check:
         out.append("CHECKS")
-        devs = deviations(order, groups, commands, plan, reads, commits, source_edits, unpinned)
+        unrecorded = [(sid, ln) for sid, ln in built if sid not in recorded]
+        devs = deviations(order, groups, commands, plan, reads, commits, source_edits, unpinned, unrecorded)
         out.extend(devs or ["  no mechanical deviations — compare the digest with the command contract"])
     return "\n".join(out)
 
 
-def deviations(order, groups, commands, plan, reads=(), commits=(), source_edits=(), unpinned=()):
+def deviations(order, groups, commands, plan, reads=(), commits=(), source_edits=(), unpinned=(), unrecorded=()):
     devs = []
     # Review rounds: a maximal run of reviewer-dispatching messages in which no
     # reviewer repeats. Plan pre-review (red+sec), Phase 2 (7) and Phase 4 (6) each
@@ -285,6 +295,15 @@ def deviations(order, groups, commands, plan, reads=(), commits=(), source_edits
         devs.append(f"  DEVIATION base: {NS}:ae-impl dispatched with isolation 'worktree' and no 'pin:' at "
                     f"{', '.join(unpinned)} — the build starts from the default branch, not the feature branch "
                     "(shared/parallel-build.md §P3)")
+    # The approved plan lives in a gitignored brief until the orchestrator commits its
+    # record; a build with no record leaves what was agreed nowhere once .agentic/ goes.
+    if story_chain and unrecorded:
+        seen = {}
+        for sid, ln in unrecorded:
+            seen.setdefault(sid, ln)
+        devs.append(f"  DEVIATION plan: {', '.join(f'{sid} built at {ln}' for sid, ln in seen.items())} with no "
+                    "plan record written — the approved plan stays in the gitignored brief "
+                    "(shared/story-flow.md §1 Plan record: docs/features/<f>/plans/<ID>-plan.md)")
     chain = [c for c in commands if re.search(rf"/?{NS}:(ship|fix|improve|feature|ship-all|plan-all|doc-all)\b", c)]
     if chain and not plan:
         devs.append(f"  DEVIATION progress: chain command ({short(chain[0], 60)}) but no .agentic/focus.md PLAN write "

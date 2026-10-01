@@ -27,9 +27,10 @@ Note on app-docs: `./app-docs/` = **end-user product documentation** (how to use
 **Failure states** table, both must appear in that story's `PROGRESS.md` entry — claims
 with their `file:line` proofs, the table as written before implementation plus any
 correction implementation forced on it. Absent from `PROGRESS.md` → **Drift detected**,
-not a note: "it was in the plan" is unverifiable once the session ends. Story whose plan
-had neither → nothing to check. The plan = the brief `.agentic/briefs/<STORY-ID>.md` when the
-prompt passes it; no brief → judge from the `PROGRESS.md` entry alone and say so.
+not a note: `PROGRESS.md` holds them as built, the plan record only as planned. Story
+whose plan had neither → nothing to check. The plan = the brief `.agentic/briefs/<STORY-ID>.md`
+when the prompt passes it, else the plan record `docs/features/<feature>/plans/<STORY-ID>-plan.md`
+(its latest section); neither → judge from the `PROGRESS.md` entry alone and say so.
 
 Output format (caveman — terse, no filler):
 

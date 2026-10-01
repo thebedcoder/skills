@@ -47,6 +47,7 @@ On `main`/`master` → `bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh pref` fir
   EPICS.md
   STORIES.md
   PROGRESS.md
+  /plans/
   /reviews/
 ```
 
@@ -55,6 +56,7 @@ On `main`/`master` → `bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh pref` fir
 ./docs/features/[feature-name]/
   STORIES.md
   PROGRESS.md
+  /plans/
   /reviews/
 ```
 

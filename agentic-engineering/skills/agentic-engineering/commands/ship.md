@@ -72,7 +72,7 @@ NOTE-XXX: [title]
 Shaping into story for feature: [feature name]
 ```
 
-**Target feature dir.** Active feature from `INDEX.md` → use it. No feature exists yet (normal in lite mode, where `/note` → `/ship` is the main path) → default to `./docs/features/main/`, creating `STORIES.md`, `PROGRESS.md`, `reviews/` on first use and adding the `main` row to INDEX.md's feature table. Never fail with "no feature directory".
+**Target feature dir.** Active feature from `INDEX.md` → use it. No feature exists yet (normal in lite mode, where `/note` → `/ship` is the main path) → default to `./docs/features/main/`, creating `STORIES.md`, `PROGRESS.md`, `plans/`, `reviews/` on first use and adding the `main` row to INDEX.md's feature table. Never fail with "no feature directory".
 
 PROD converts → appends to `./docs/features/[feature-name]/STORIES.md`:
 ```markdown
@@ -94,11 +94,12 @@ Mark promoted in `BACKLOG.md`:
 ### Flow
 
 **Phase 1 — Plan + build** (`shared/story-flow.md` §1–§4)
-- `ae-arch` plans backend **and** frontend in one pass (its `Frontend:` block feeds Phase 3); PROD validates; `ae-red` + `ae-sec` pre-review; brief written to `.agentic/briefs/<STORY-ID>.md`
+- `ae-arch` plans backend **and** frontend in one pass (its `Frontend:` block feeds Phase 3); PROD validates; `ae-red` + `ae-sec` pre-review; brief written to `.agentic/briefs/<STORY-ID>.md`; plan record committed to `plans/<STORY-ID>-plan.md` before any code
 - **No start gate.** The plan prints and the chain proceeds. Only the story flow's escalation gate can stop it — new dependency, public interface change, disputed Contract claim, a hard-override operation, missing project state
 - `ae-impl` builds on its tier; the orchestrator verifies evidence + files + each AC; `PROGRESS.md` entry by the implementer, `STORIES.md` box ticked last by the orchestrator
 - **GIT** commits:
 ```
+docs([feature-name]): STORY-XXX — plan
 feat([feature-name]): STORY-XXX — [story title]
 test([feature-name]): STORY-XXX — add tests
 ```
