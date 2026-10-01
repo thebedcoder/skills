@@ -396,6 +396,8 @@ The plugin tests itself in two layers. See [`tests/README.md`](tests/README.md) 
 - `/feature` asks one intent question for a vague request and none for a clear one
 - `/fix` on `main` offers a worktree, and with `agentic.worktree=always` fixes the bug inside one while the main folder stays untouched
 - `/fix` hands its review to a real `ae-red` subagent rather than writing one itself, and `/improve` reviews its change on a fresh branch instead of aborting
+- `/worktree` changes nothing until you answer, then merges a finished worktree and leaves an unfinished one alone
+- `/archive` deletes nothing in its first pass, then moves a feature's decisions and open obligations into the durable docs before removing the originals
 
 Each run prints a per-scenario token report. Runs skip cleanly when no credentials are present.
 
