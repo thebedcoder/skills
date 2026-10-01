@@ -56,6 +56,19 @@ c.expect(not bad_paths, f"${{CLAUDE_PLUGIN_ROOT}} paths resolve ({checked_paths}
 c.expect(not bad_names, f"agentic-engineering:<name> dispatch/skill names resolve ({checked_names} checked)", "\n".join(bad_names))
 c.expect(not bad_rel, f"commands/, shared/, agents/ relative references resolve ({checked_rel} checked)", "\n".join(bad_rel))
 
+# Every `## §X` section of a shared block is run by some command body, SKILL.md or
+# another shared file. A section nothing names is dead text — or, worse, a step a
+# refactor unhooked from its caller (the /ship-all worktree finish went that way).
+section_re = re.compile(r"^## (§[A-Z][0-9]*)\b", re.M)
+callers = [p for p in shipped_files((".md",)) if p.startswith(SKILL_DIR)]
+orphans = []
+for shared in sorted(glob.glob(os.path.join(SKILL_DIR, "shared", "*.md"))):
+    for sec in section_re.findall(open(shared, encoding="utf-8").read()):
+        hit = re.compile(re.escape(sec) + r"(?![0-9])")
+        if not any(p != shared and hit.search(open(p, encoding="utf-8").read()) for p in callers):
+            orphans.append(f"{rel(shared)} {sec}")
+c.expect(not orphans, "every shared/ § section is referenced by a caller", "\n".join(orphans))
+
 # Every reviewer the batch dispatches is named with its namespace somewhere in /review.
 review = open(os.path.join(SKILL_DIR, "commands", "review.md"), encoding="utf-8").read()
 for a in ("ae-red", "ae-req", "ae-test", "ae-doc", "ae-sec", "ae-edge", "ae-lean"):

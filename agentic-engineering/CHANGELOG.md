@@ -4,6 +4,16 @@ All notable changes to the `agentic-engineering` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **`/ship-all` merges finished `[P]` worktrees again.** The 2.2.0 context diet
+  dropped Step 0c along with the focus boilerplate around it, so `§W2` (merge, PR,
+  keep or discard each shipped story worktree) had no caller and finished
+  worktrees were never offered back. Restored. A static check now fails when any
+  `§` section of a `shared/` file is referenced by nothing.
+
 ## [2.2.0] — 2026-09-30
 
 Gaps closed from a comparison with [obra/superpowers](https://github.com/obra/superpowers);

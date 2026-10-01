@@ -23,6 +23,10 @@ Per "Progress Tracking" in SKILL.md, write one PLAN line per unchecked story int
 
 Run **§B** of `shared/preamble.md`, always overwriting: `title: ship-all: <feature> (N stories)`, `set_by: /ship-all`, `note: starting`. Between stories update only `note:` → `phase: shipping STORY-X (k of N)`; `title:` stays — it names the whole chain. `--auto` propagates to every story's `/ship`.
 
+### Step 0c — Finish parallel worktrees
+
+`.worktrees/` holds story worktrees from an earlier run → run **§W2** of `shared/worktree.md` before anything else: merge, PR, keep or discard each shipped one. Merged stories count as shipped for the order below. No `.worktrees/` → skip silently, never read the file.
+
 ---
 
 ### On start
