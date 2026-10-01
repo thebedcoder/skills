@@ -10,6 +10,8 @@
 #   - no docs/INDEX.md in the project  -> router only, marked "not set up here"
 #   - docs/INDEX.md present            -> router + memory-doc read list
 #   - active CURRENT in .agentic/focus.md -> + task title, PLAN progress
+#   - linked worktree (scaffolded)     -> + branch + main folder (unless focus names worktree_of)
+#   - main folder with .claude/worktrees/* -> + count, pointer to /worktree
 #   - injected text never exceeds 40 lines
 #   - always exit 0; never write to stderr on the happy path
 #   - AGENTIC_SESSION_HOOK=0 -> emit nothing (headless drivers wanting bare context)
@@ -127,7 +129,27 @@ if [ -f "$focus" ]; then
   fi
 fi
 
-# Hard cap. The router is 7 lines and state adds at most 9, so this never trims
+# Worktrees, read from files only (no git call). A linked worktree's .git is a file
+# pointing into <main>/.git/worktrees/<name>; a submodule's points elsewhere.
+if [ -f "$index" ] && [ -z "${w:-}" ]; then
+  if [ -f "$proj/.git" ]; then
+    gd="$(sed -n '1s/^gitdir:[[:space:]]*//p' "$proj/.git" 2>/dev/null)"
+    case "$gd" in /*) ;; ?*) gd="$proj/$gd" ;; esac
+    case "$gd" in
+      */.git/worktrees/*)
+        br="$(sed -n '1s#^ref: refs/heads/##p' "$gd/HEAD" 2>/dev/null)"
+        main="$(cd "${gd%/.git/worktrees/*}" 2>/dev/null && pwd -P)"
+        add "In a worktree: branch $(clean 80 "${br:-detached}"), main folder $(clean 120 "${main:-?}"). Commits land on this branch only. Chain end offers merge/PR/keep/discard; later: /worktree from main folder."
+        ;;
+    esac
+  elif [ -d "$proj/.claude/worktrees" ]; then
+    n=0
+    for d in "$proj"/.claude/worktrees/*/; do [ -f "${d}.git" ] && n=$((n + 1)); done
+    [ "$n" -gt 0 ] && add "Worktrees: $n under .claude/worktrees/. /worktree lists them and merges or removes finished ones."
+  fi
+fi
+
+# Hard cap. The router is 7 lines and state adds at most 10, so this never trims
 # in practice; it exists so a future edit cannot quietly blow the budget.
 text=""
 i=0

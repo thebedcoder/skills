@@ -50,7 +50,13 @@ Before planning, run **§B** of `shared/preamble.md` — `title: improving: <imp
 
 ---
 
-**GIT** confirms current branch. On `main`/`master`, print `⚠️ GIT: You're on main. /improve expects to run on a feature branch.` then gate — ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"Continue on main?"* → **Branch first (Recommended)** · **Continue on main** · **Abort**. Never proceed silently on `main`, even under `--auto`.
+**GIT** confirms current branch. On `main`/`master` → `bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh pref`:
+
+- `PREF never` → print `⚠️ GIT: You're on main. /improve expects to run on a feature branch.` then gate — ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"Continue on main?"* → **Branch first (Recommended)** · **Continue on main** · **Abort**. Never proceed silently on `main`, even under `--auto`.
+- `PREF ask`, with or without `(default…)` → same gate, plus **New worktree** — "own folder under `.claude/worktrees/`; this session moves in, `main` stays untouched".
+- `PREF always` → no gate.
+
+Worktree (picked, or `always`) → **§W4** of `shared/worktree.md`, then Phase 1 runs inside it. Otherwise never open that file here.
 
 Off `main` → proceeds silently, no gate.
 
@@ -242,7 +248,11 @@ Cleanup:    ✅ MEMORY.md refreshed · [DEC-XXX recorded | no binding decision]
 Next: /improve for the next BACKLOG item, or /status to review the board.
 ```
 
-### Step N — Auto-mode summary
+### Step N — Finish the worktree
+
+`worktree.sh where` prints `kind=task` → **§W5** of `shared/worktree.md`. Anything else → skip.
+
+### Step N+1 — Auto-mode summary
 
 Run **§C** of `shared/preamble.md`.
 
@@ -251,7 +261,8 @@ Run **§C** of `shared/preamble.md`.
 | Checkpoint | Tag |
 |---|---|
 | Pick BACKLOG improvement (empty `$ARGUMENTS`) | `[AUTO: always-ask]` — target selection is never inferred |
-| Branch warning when on `main` | `[AUTO: always-ask]` — never proceed silently on `main` |
+| Branch warning when on `main` | `[AUTO: always-ask]` — never proceed silently on `main`; `agentic.worktree=always` → worktree, no gate |
+| Finish task worktree (§W5) | `[AUTO: skip]` → keep; merge, PR, discard only on a human answer |
 | Show plan, ask approval | `[AUTO: ask-if-ambiguous]` — skip when precedent cited + no behavior change + single file |
 | Review post-change `IMPROVEMENT PAUSED` | `[AUTO: always-ask]` (also hard-override #1) |
 

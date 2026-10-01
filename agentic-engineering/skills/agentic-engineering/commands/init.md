@@ -195,7 +195,9 @@ If it exists but lacks a `statusLine` key → merge the `statusLine` block into 
 
 If it already has a `statusLine` → leave alone (user's choice).
 
-3. Note in `./docs/INDEX.md` navigation section: `.agentic/focus.md` is per-worktree current-task pointer managed by `/focus` and `/next`.
+3. Worktree preference — per developer, in local git config (never committed). Not a git repo → skip. Current value from `bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh pref`, shown in the question body. ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"When `/feature`, `/ship`, `/fix` or `/improve` starts on `main`, where should the work go?"* → **Ask each time (Recommended)** — "`/feature` asks branch or worktree; the branch question in `/ship`, `/fix`, `/improve` gains a New worktree option" · **Always a new worktree** — "each task in its own folder under `.claude/worktrees/`, this session moves in, merged back when done" · **New branch, as before** — "no worktree option". Write `git config agentic.worktree ask|always|never`. Under `--auto`: SKIP — leave the value as it is (unset = `ask (default)`: `/feature` stays silent, the other three offer the option).
+
+4. Note in `./docs/INDEX.md` navigation section: `.agentic/focus.md` is per-worktree current-task pointer managed by `/focus` and `/next`.
 
 **PROD** generates `./docs/CONSTITUTION.md` by asking: non-negotiable tech standards, architectural principles, security/compliance, forbidden patterns.
 

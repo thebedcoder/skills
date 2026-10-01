@@ -18,6 +18,8 @@ Usage:
   transcript.py dispatches FILE                 print dispatch groups (JSON)
   transcript.py text FILE                       print main-thread assistant text
   transcript.py hook-events FILE                print SessionStart hook names seen
+  transcript.py tools FILE NAME[,NAME...]       print main-thread calls to those tools
+                                                (line + JSON input); exit 1 if none
 """
 import json
 import re
@@ -164,6 +166,14 @@ def main(argv):
     if cmd == "text":
         print(assistant_text(rows))
         return 0
+
+    if cmd == "tools":
+        names = set(argv[3].split(","))
+        found = 0
+        for n, _mid, b in tool_uses(rows, names):
+            found += 1
+            print(f"L{n} {b.get('name')} {json.dumps(b.get('input'), ensure_ascii=False)}")
+        return 0 if found else 1
 
     if cmd == "hook-events":
         for n, d in rows:

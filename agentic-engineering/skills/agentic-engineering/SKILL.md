@@ -24,7 +24,7 @@ Phase-gated SDLC workflow. Named specialist agents. On-demand command loading.
 
 ## How to use
 
-Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/` — full instructions there; this file holds the policy every command inherits. Bodies also point at `shared/` blocks (same base dir): `preamble.md` §A–§D, and on-demand files loaded only on their branch — `auto-mode.md` (`--auto`), `story-flow.md` (story work), `focus-release.md`, `worktree.md`, `visual-capture.md`.
+Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/` — full instructions there; this file holds the policy every command inherits. Bodies also point at `shared/` blocks (same base dir): `preamble.md` §A–§D, and on-demand files loaded only on their branch — `auto-mode.md` (`--auto`), `story-flow.md` (story work), `focus-release.md`, `worktree.md` (a worktree picked, present or finishing — `git config agentic.worktree` = `ask`·`always`·`never`), `visual-capture.md`.
 
 ## Command → File Map
 
@@ -38,6 +38,7 @@ Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-en
 | `/review` | `commands/review.md` | 7-agent parallel review (`--frontend-pass` drops LEAN) |
 | `/ship` | `commands/ship.md` | Full chain: implement→review→frontend→review→docs |
 | `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories. Opt-in worktree per `[P]` story (`shared/worktree.md`) |
+| `/worktree [name]` | `commands/worktree.md` | List workflow worktrees (task + `[P]` story); merge, PR, keep or discard finished ones |
 | `/fix [description]` | `commands/fix.md` | Diagnose → fix → review |
 | `/improve [description]` | `commands/improve.md` | Non-bug change — plan → apply → review. Bare call → picks improvement from `BACKLOG.md`. Wants it done now; "we should improve X someday" → `/note` |
 | `/plan-all` | `commands/plan-all.md` | Plan all unplanned epics from INDEX.md |

@@ -17,11 +17,11 @@ built-in parser, which CI also runs). No network, no API key.
 | Test | Catches |
 |---|---|
 | `test_frontmatter.py` | wrapper/agent/SKILL.md frontmatter that does not parse or lacks required keys; wrappers that don't point at their body or drop `$ARGUMENTS`; agent `name:` ≠ file stem; reviewers holding Bash or a write tool; SKILL.md description over 1,024 chars |
-| `test_references.py` | `${CLAUDE_PLUGIN_ROOT}/…` paths, `agentic-engineering:<name>` dispatch/skill names, and `commands/` · `shared/` · `agents/` references that resolve to nothing |
+| `test_references.py` | `${CLAUDE_PLUGIN_ROOT}/…` paths, `agentic-engineering:<name>` dispatch/skill names, and `commands/` · `shared/` · `agents/` references that resolve to nothing; a `§` section of a `shared/` file that nothing calls |
 | `test_home_paths.py` | `~/.claude` (or bare `$HOME/.claude`) literals in shipped content |
 | `test_command_tables.py` | README command table, SKILL.md Command → File Map and `commands/` drifting apart; stale command counts in CLAUDE.md |
-| `test_hooks.py` | invalid `hooks/hooks.json`; SessionStart output that is not exactly one valid JSON object with `hookSpecificOutput` under every project shape (plain repo, scaffolded, active focus, compact source, hostile focus titles, bad UTF-8, empty/garbage stdin, opt-out) |
-| `test_worktree.sh` | `scripts/worktree.sh` end to end: two `[P]` stories shipped in two worktrees and merged back with both `PROGRESS.md` entries intact; a code conflict or an edited (not appended) `PROGRESS.md` aborts with the tree unchanged; nothing is removed before it is asked for; a dirty worktree or unmerged branch refuses removal |
+| `test_hooks.py` | invalid `hooks/hooks.json`; SessionStart output that is not exactly one valid JSON object with `hookSpecificOutput` under every project shape (plain repo, scaffolded, active focus, compact source, hostile focus titles, bad UTF-8, empty/garbage stdin, opt-out, linked worktree, relative `gitdir`, submodule `.git` file, main folder with worktrees) |
+| `test_worktree.sh` | `scripts/worktree.sh` end to end: two `[P]` stories shipped in two worktrees and merged back with both `PROGRESS.md` entries intact; a code conflict or an edited (not appended) `PROGRESS.md` aborts with the tree unchanged; nothing is removed before it is asked for; a dirty worktree or unmerged branch refuses removal. Task kind: `pref` (default, explicit, invalid), `where` in main / task / hand-made worktree, `.claude/worktrees/` ignored via `.git/info/exclude` with `.gitignore` untouched, CURRENT + PLAN carried and NEXT left, `.agentic/` ignored in a worktree whose `.gitignore` lacks it, ignored `.env` listed not copied, `list` skips worktrees it did not make, `remove` carries the auto-log back |
 | `test_evidence.sh` | `scripts/evidence.sh`: tree id changes on any code edit (tracked or new), never on `docs/`, `app-docs/`, `.agentic/` or ignored build output, and is identical before and after a commit; `run` prints the row and keeps the command's exit code; `check` returns fresh / stale / failing / missing and detects a story ticked in the diff |
 | `test_diagnose.py` | `scripts/transcript-digest.py`: the one-reviewer-per-message fixture yields a `DEVIATION` citing L14…L26, batched fixtures yield none; bare `ae-*` names flagged; sidechain lines ignored; tool-result bodies never printed; a 2 MB line stays bounded; `--find`/`--locate` honour `CLAUDE_CONFIG_DIR`; `--scrub-file` removes emails, home paths, keys, IPs and remotes but keeps ids and line refs |
 | `test_transcript_lib.py` | the harness's own assertions: `batch` passes on a seven-in-one-message fixture and **fails** on the one-per-message fixture, subagent-thread lines never count as main-thread dispatches, `routed-to` fails without evidence |
@@ -49,6 +49,7 @@ claude -p --plugin-dir <this plugin> --output-format stream-json --verbose \
 | `06-req-evidence-gate` | `ae-req` (dispatched directly with the inputs `/review` hands it) blocks a story ticked in the diff whose evidence row is stale, and clears it after a real run on the current code |
 | `07-diagnose-sequential` | `/diagnose` on the one-reviewer-per-message transcript names the sequential dispatch, quotes the transcript lines, and writes nothing without `--bundle` |
 | `08-feature-intent-check` | full-mode `/feature` with a vague request asks one intent question and proposes no approaches or PRD yet; with user, outcome and constraint all stated it asks nothing and goes straight to the approach options |
+| `09-fix-in-worktree` | `/fix` on `main`: with no preference set the branch question offers a new worktree and nothing is created; with `agentic.worktree=always` and `--auto` the session enters a `.claude/worktrees/` worktree with `EnterWorktree`, the fix is committed on its branch, the main folder's HEAD and files are untouched, the task's focus left main, and the worktree is kept |
 | `05-session-focus` | the SessionStart hook makes a fresh session — and the first turn after `/compact` — name the active focus task; a plain repo gets the router only |
 
 Assertions target mechanism — dispatch grouping, files on disk, logged lines —
@@ -96,5 +97,5 @@ reports cost, turns, per-model tokens and per-subagent usage from stream-json.
 1. `behavioral/scenarios/NN-name.sh`, sourcing `lib/claude.sh` and `lib/fixtures.sh`.
 2. Build the fixture under `$AE_WORK/project` (temp dir, outside the repo); transcripts go to `$AE_OUT`, call `ae_run_claude DIR OUT PROMPT BUDGET [APPEND]`.
 3. Assert with `ae_check "description" command…`; query the transcript with
-   `lib/transcript.py` (`routed-to`, `batch`, `dispatches`, `text`, `hook-events`).
+   `lib/transcript.py` (`routed-to`, `batch`, `dispatches`, `text`, `hook-events`, `tools`).
 4. End with `ae_done`. Add a row to the table above.

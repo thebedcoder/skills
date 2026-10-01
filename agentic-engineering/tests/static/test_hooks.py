@@ -176,6 +176,56 @@ d = project(INDEX, focus=FOCUS)
 context_of("empty stdin", *run(d, ""))
 context_of("garbage stdin", *run(d, "not json {{{"))
 
+# 12–16. Worktrees, read from files only.
+import shutil  # noqa: E402
+
+if shutil.which("git"):
+    genv = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@example.invalid",
+                GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@example.invalid")
+    m = project(INDEX)
+    def git(*a, cwd=m):
+        subprocess.run(["git", *a], cwd=cwd, env=genv, check=True, capture_output=True)
+    git("init", "-q", "-b", "main"); git("add", "-A"); git("commit", "-qm", "init")
+    wt = os.path.join(m, ".claude", "worktrees", "fix-a")
+    git("worktree", "add", "-q", "-b", "fix/a", wt, "main")
+    ctx = context_of("linked task worktree", *run(wt, '{"source":"startup"}'))
+    if ctx is not None:
+        c.expect("In a worktree: branch fix/a" in ctx and os.path.realpath(m) in ctx,
+                 "linked worktree: names its branch and the main folder")
+    ctx = context_of("main folder with a worktree", *run(m, '{"source":"startup"}'))
+    if ctx is not None:
+        c.expect("Worktrees: 1 under .claude/worktrees/" in ctx and "/worktree" in ctx,
+                 "main folder: counts worktrees, points at /worktree")
+        c.expect("In a worktree" not in ctx, "main folder: no in-worktree line")
+    os.makedirs(os.path.join(wt, ".agentic"))
+    open(os.path.join(wt, ".agentic", "focus.md"), "w").write(
+        f"# CURRENT\ntitle: STORY-003 — Export CSV\nworktree_of: {m}\n")
+    ctx = context_of("story worktree", *run(wt))
+    if ctx is not None:
+        c.expect("worktree of:" in ctx and "In a worktree" not in ctx,
+                 "story worktree: worktree_of line only, no duplicate in-worktree line")
+else:
+    c.expect(True, "git missing — real-worktree hook cases skipped")
+
+# Relative gitdir (worktree.useRelativePaths), no git needed.
+m = project(INDEX)
+wt = os.path.join(m, ".claude", "worktrees", "improve-x")
+os.makedirs(os.path.join(m, ".git", "worktrees", "improve-x"))
+open(os.path.join(m, ".git", "worktrees", "improve-x", "HEAD"), "w").write("ref: refs/heads/improve/x\n")
+os.makedirs(os.path.join(wt, "docs"))
+open(os.path.join(wt, "docs", "INDEX.md"), "w").write(INDEX)
+open(os.path.join(wt, ".git"), "w").write("gitdir: ../../../.git/worktrees/improve-x\n")
+ctx = context_of("relative gitdir", *run(wt))
+if ctx is not None:
+    c.expect("branch improve/x" in ctx and os.path.realpath(m) in ctx, "relative gitdir: branch and main folder resolved")
+
+# A submodule's .git file is not a worktree.
+d = project(INDEX)
+open(os.path.join(d, ".git"), "w").write("gitdir: ../.git/modules/lib\n")
+ctx = context_of("submodule .git file", *run(d))
+if ctx is not None:
+    c.expect("In a worktree" not in ctx, "submodule: no worktree line")
+
 # 11. Opt-out.
 p, _ = run(d, "{}", {"AGENTIC_SESSION_HOOK": "0"})
 c.expect(p.returncode == 0 and p.stdout == b"", "AGENTIC_SESSION_HOOK=0 emits nothing")

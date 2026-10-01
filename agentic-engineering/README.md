@@ -67,6 +67,9 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 ┌──────────────────────────────────────────────────────────────────────┐
 │                             FEATURE LOOP                             │
 │                                                                      │
+│  On main, /ship /fix /improve (and /feature, once opted in) offer a  │
+│  git worktree: the task gets its own folder, merged back when done   │
+│                                                                      │
 │  /feature [name]                                                     │
 │    0. PROD intent check — user, outcome, constraint (≤5 questions)   │
 │    1. ARCH proposes 3 approach options                               │
@@ -126,6 +129,9 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │   /improve   │  Non-bug change → ARCH plans → apply → review → docs
 └──────────────┘   (new shortcut, new format, faster path, refactor)
 ┌──────────────┐
+│  /worktree   │  List worktrees → merge, PR, keep or discard each
+└──────────────┘
+┌──────────────┐
 │  /diagnose   │  A run misbehaved → compare its transcript with the
 └──────────────┘   command's rules, with line-by-line evidence
 ```
@@ -141,7 +147,8 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/feature [name]` | Intent check → research → PRD → clarifications → constitution check → stories → spec audit. In full mode it first checks the request for a user, an outcome and a constraint; if any is missing it asks — one question at a time, five at most — before proposing approaches (skipped under `--auto`, where the gaps become `[NEEDS CLARIFICATION]` markers). PRD acceptance criteria are numbered `FR-1…FR-n` and each story declares which it delivers (`Implements: FR-2, FR-5`), so every requirement is traceable to the work that closes it — an unmapped FR stops the breakdown. Each story also carries a `Priority:` of `P1`/`P2`/`P3`, where the P1 set alone must be deployable. The final stage dispatches `ae-req` in spec-audit mode over the PRD, epics and stories, checking ambiguity, duplication, underspecification, FR coverage, constitution conflicts and terminology drift before a line of code exists. In lite mode: stories only, no PRD or epics — the spec audit still runs, scoped to stories and the constitution |
 | `/design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown |
 | `/ship` | Full story, seven phases: implement → 7-agent review → frontend (+ visual capture) → 6-agent review + UX fidelity → end-user docs & changelogs → PR description → cleanup. Each phase that changes code ends with a recorded test run, and the story is ticked only after a green one (see "Evidence before completion"). Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates the references during the frontend pass — stale or missing references become should-fix warnings. Projects opt into automated capture during `/init` by picking a tool from the 15-entry catalog (`agentic-engineering/capture-tools/`); `/ship` Phase 3 then dispatches per mechanism and auto-populates the table. To require captures, add a "Visual artifacts" article to CONSTITUTION.md — `ae-ux` then escalates missing-artifact findings to blockers. |
-| `/ship-all` | Loop `/ship` across all unchecked stories, in priority order — never a `P2` while a `P1` is open. The session-start gate offers shipping the P1 set only, which finishes cleanly with the rest listed as remaining. Features whose stories predate the `Priority:` field ship in file order, unchanged. Two or more `[P]` stories at the next level → optional one-worktree-per-story path with a test baseline, merged back on the next run (see "Parallel stories" below) |
+| `/ship-all` | Loop `/ship` across all unchecked stories, in priority order — never a `P2` while a `P1` is open. The session-start gate offers shipping the P1 set only, which finishes cleanly with the rest listed as remaining. Features whose stories predate the `Priority:` field ship in file order, unchanged. Two or more `[P]` stories at the next level → optional one-worktree-per-story path with a test baseline, merged back on the next run (see "Worktrees" below) |
+| `/worktree [name]` | List the worktrees the workflow created — one per task, or one per parallel `[P]` story — with each one's branch, state and commits ahead, then finish them: merge (tests run on the merged result before anything is removed), push and open a PR, keep, or discard. Run it from the main folder. Worktrees you made yourself with `claude -w` are not listed. See "Worktrees" below |
 | `/plan-all` | Plan all unplanned epics from INDEX.md |
 | `/converge [feature]` | Audit a feature's shipped code against its PRD. `/review` is diff-scoped and story-scoped — after eight stories nobody has compared the requirements against the repository, and the checkboxes were written by the same process that claimed completion. `/converge` builds an inventory from the `FR-` ids, resolves each to the code that should exist, and classifies what it finds as `missing`, `partial`, `contradicts` or `unrequested`. Work that is simply queued in an unchecked story is reported as pending, never as a gap; a requirement claimed by a **checked** story with no matching code is the blocker it exists to catch. Findings with remaining work are appended to `STORIES.md` behind an approval gate, marked `Source: converge`. It never edits the PRD, never touches code, and never fixes anything — repairs go back through `/ship` or `/fix` with a full review behind them. Run it before `/archive`, which deletes the artifacts it audits against |
 | `/fix [desc]` | Reproduce → diagnose → fix → review → docs. Diagnosis is shown before any code changes: the bug reproduced by a command run now (with its real output), the commits that introduced it if it used to work, the bad value traced back to where it is first produced, a similar piece of code that works and how it differs, and one hypothesis tested at a time. The fix lands with a regression test, then the full suite runs and its result is recorded as evidence. A failed fix goes back to diagnosis instead of a second patch on top; the third failed attempt stops and asks whether this is a design problem rather than one bug |
@@ -291,22 +298,53 @@ Interactively, the workflow stops at each of these:
 - Design approval (mobile and desktop separately)
 - Review blockers — including a story ticked without fresh, green test evidence
 - A third failed fix attempt in `/fix` (rethink the approach, try once more, or log it)
-- Parallel `[P]` stories in `/ship-all`: whether to use worktrees at all, and what to do with each finished one (merge, PR, keep, discard)
+- Where the work goes when a command starts on `main`: new branch, new worktree, or stay (see "Worktrees")
+- Parallel `[P]` stories in `/ship-all`: whether to use worktrees at all
+- Finishing a worktree: merge, push and open a PR, keep, or discard
 
-**Under `--auto`, the plan and PRD gates are skipped** — they are approval ceremony, and that is what auto mode exists to skip. The intent check is skipped too; its gaps become `[NEEDS CLARIFICATION]` markers in the PRD. Three things re-arm the plan gate anyway: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the hard-override list below. Constitution violations, review blockers, the third failed fix, the worktree path and destructive operations are never skipped under any flag.
+**Under `--auto`, the plan and PRD gates are skipped** — they are approval ceremony, and that is what auto mode exists to skip. The intent check is skipped too; its gaps become `[NEEDS CLARIFICATION]` markers in the PRD. Three things re-arm the plan gate anyway: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the hard-override list below. Constitution violations, review blockers, the third failed fix, the parallel-worktree path, merging or discarding a worktree, and destructive operations are never skipped under any flag.
 
 ### Auto mode (`--auto`)
 
 Long-running commands (`/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/frontend`, `/design`, `/plan-all`, `/converge`, `/init`) accept a per-invocation `--auto` flag. Ceremonial checkpoints are skipped, unambiguous decisions proceed automatically (citing `CONSTITUTION.md` when it settles the choice), and everything that matters still pauses: review blockers, anything touching CI configs / secrets / DB migrations / mass deletions, constitution conflicts, and any architectural or destructive choice. Every auto-decision is announced inline and logged to `.agentic/auto-log.md` (gitignored), and the command ends with a one-line summary of decisions and hard-pauses. The auto-mode rules themselves live in a separate file that is loaded only when the flag is present, so interactive runs don't pay for them.
 
-### Parallel stories `[P]`
+### Worktrees
+
+A git worktree is a second checkout of the same repository in its own folder, on its own branch. Work there never touches the files in your main folder, so you can keep running the app, review a PR or start another session while a task is in progress. The workflow uses them in two ways, both under `.claude/worktrees/` — the same place Claude Code's own `claude -w` uses. They are ignored through `.git/info/exclude`, so nothing about them is ever committed.
+
+#### One task, one worktree
+
+When `/ship`, `/fix` or `/improve` starts on `main`, it already asks where the work should go; that question now has a **New worktree** option. `/feature`, which used to create its branch without asking, asks branch-or-worktree once you have chosen a preference (below). Pick the worktree and the command:
+
+1. **Creates** `.claude/worktrees/<name>` on a new branch (`feat/…`, `fix/…`, `improve/…`) from your current commit, and moves the task's focus and step plan into it. Uncommitted edits in your main folder stay there — you are told if there are any.
+2. **Offers to copy** ignored local files such as `.env`, which a fresh checkout does not have.
+3. **Moves this session into the worktree** (Claude Code's `EnterWorktree`), so everything after that — code, tests, reviews, docs, commits — happens there.
+4. **Runs a baseline**: installs dependencies and runs the tests before any change. A red baseline stops and asks, except in `/fix`, where a failing test is often the bug itself.
+5. **Finishes** when the chain completes: merge into the branch you started from, push and open a PR, keep working there, or discard. Merging runs the tests on the merged result before the worktree is removed. After a `/ship` with stories still open, keeping it is the suggested answer.
+
+Anything you keep can be finished later with `/worktree`, run from the main folder. It lists every worktree the workflow made, with its state, and offers the same choices for each.
+
+**Setting the default.** The choice is a per-developer setting in local git config, asked once by `/init`:
+
+```bash
+git config agentic.worktree ask      # the branch question offers New worktree; /feature asks too
+                                     # (unset: the same, except /feature just creates its branch)
+git config agentic.worktree always   # every task on main gets its own worktree, no question
+git config agentic.worktree never    # the branch question as before
+```
+
+With `always`, a `--auto` run on `main` goes straight into a worktree instead of stopping to ask about the branch. Finishing never happens on its own: under `--auto` the worktree is kept, and merge, PR or discard wait for you.
+
+Starting a session in a worktree yourself (`claude -w`) needs none of this — the commands see a branch that isn't `main` and carry on. `/worktree` leaves those alone; they're yours.
+
+#### Parallel stories `[P]`
 
 Stories tagged `[P]` have no dependencies on other stories. `/ship-all` surfaces these upfront, and when the next priority level holds two or more of them it offers to ship them in parallel — opt-in, never under `--auto`:
 
-1. **Create** — one git worktree per story under `.worktrees/`, each on its own branch (`feat/<feature>-story-xxx`). `.worktrees/` is added to `.gitignore` if it isn't already.
+1. **Create** — one worktree per story under `.claude/worktrees/`, each on its own branch (`feat/<feature>-story-xxx`).
 2. **Baseline** — the project's test command runs inside each worktree before any change, so a red suite later is unambiguous. A red baseline stops and asks.
 3. **Seed** — each worktree gets its own `.agentic/focus.md` pointing at its story. Open a terminal per worktree and run `/ship STORY-XXX` there; the session-start hook names the story for you.
-4. **Finish** — the next `/ship-all` in the main tree offers, per shipped worktree: merge, push and open a PR, keep, or discard. Merging runs the tests on the merged result, then writes the changelogs, `DECISIONS.md` and `MEMORY.md` once in the main tree — the story branches defer those phases so parallel branches never fight over shared docs. `PROGRESS.md` entries from both stories are joined, theirs after ours.
+4. **Finish** — the next `/ship-all` (or `/worktree`) in the main folder offers, per shipped worktree: merge, push and open a PR, keep, or discard. Merging runs the tests on the merged result, then writes the changelogs, `DECISIONS.md` and `MEMORY.md` once in the main folder — the story branches defer those phases so parallel branches never fight over shared docs. `PROGRESS.md` entries from both stories are joined, theirs after ours.
 
 Nothing is removed until you pick an option, and removing a worktree or deleting its branch is never auto-approved. A worktree with uncommitted files is never removed; the mechanics live in `scripts/worktree.sh` so they are the same every time.
 
@@ -330,7 +368,7 @@ The plugin registers one hook. It keeps the workflow framing alive across new se
 
 | Hook | Event (matcher) | What it injects |
 |---|---|---|
-| `hooks/session-start.sh` | `SessionStart` (`startup\|clear\|compact`) | A short router — bug → `/fix`, idea → `/note`, small change → `/improve`, new feature → `/feature`, "what's left" → `/status`. In a project with `docs/INDEX.md` it adds which memory docs to read before touching code, and if `.agentic/focus.md` has an active task, its title and PLAN progress, so the first reply picks up where you left off. |
+| `hooks/session-start.sh` | `SessionStart` (`startup\|clear\|compact`) | A short router — bug → `/fix`, idea → `/note`, small change → `/improve`, new feature → `/feature`, "what's left" → `/status`. In a project with `docs/INDEX.md` it adds which memory docs to read before touching code, and if `.agentic/focus.md` has an active task, its title and PLAN progress, so the first reply picks up where you left off. Inside a worktree it names the branch and the main folder; in the main folder it counts the worktrees waiting under `.claude/worktrees/`. |
 
 Outside a scaffolded project (no `docs/INDEX.md`) it injects only the router, marked as not set up, so ordinary requests stay ordinary. The text is capped at 40 lines, an explicit slash command or system prompt always wins over it, and `AGENTIC_SESSION_HOOK=0` turns it off for a session — useful for headless `claude -p` drivers that want a bare context.
 
@@ -338,13 +376,13 @@ Outside a scaffolded project (no `docs/INDEX.md`) it injects only the router, ma
 
 `/status`, `/analyze` and `/diagnose` use `context: fork` — they run in an isolated subagent context. The main conversation only sees the final result, not the intermediate tool calls and file reads. This keeps the main context lean on long sessions where you might check status or run analysis queries repeatedly.
 
-Other commands (`/ship`, `/feature`, `/design`) stay in the main context because they have human checkpoints that require conversation continuity.
+Other commands (`/ship`, `/feature`, `/design`, `/worktree`) stay in the main context because they have human checkpoints that require conversation continuity.
 
 ### Tests
 
 The plugin tests itself in two layers. See [`tests/README.md`](tests/README.md) for the full list.
 
-`tests/run-tests.sh --static` needs no API key and runs in GitHub Actions on every push. It checks frontmatter, every `${CLAUDE_PLUGIN_ROOT}` path and agent name, the command tables, and the SessionStart hook's JSON under hostile inputs. It also runs the helper scripts end to end against throwaway git repos: two worktrees merged back with both `PROGRESS.md` entries intact, the evidence fingerprint changing on any code edit but never on a docs edit, and `/diagnose`'s transcript reader catching a sequential reviewer dispatch.
+`tests/run-tests.sh --static` needs no API key and runs in GitHub Actions on every push. It checks frontmatter, every `${CLAUDE_PLUGIN_ROOT}` path and agent name, the command tables, and the SessionStart hook's JSON under hostile inputs. It also runs the helper scripts end to end against throwaway git repos: two worktrees merged back with both `PROGRESS.md` entries intact, a task's focus carried into its worktree, the evidence fingerprint changing on any code edit but never on a docs edit, and `/diagnose`'s transcript reader catching a sequential reviewer dispatch.
 
 `tests/run-tests.sh --behavioral` drives real headless `claude -p` sessions in throwaway fixture projects and checks what happened, from the transcript and the files left behind rather than the wording of the reply:
 
@@ -356,6 +394,7 @@ The plugin tests itself in two layers. See [`tests/README.md`](tests/README.md) 
 - REQ blocks a story ticked with stale test evidence
 - `/diagnose` spots reviewers dispatched one at a time
 - `/feature` asks one intent question for a vague request and none for a clear one
+- `/fix` on `main` offers a worktree, and with `agentic.worktree=always` fixes the bug inside one while the main folder stays untouched
 
 Each run prints a per-scenario token report. Runs skip cleanly when no credentials are present.
 
@@ -496,7 +535,7 @@ agentic-engineering/
 ├── .claude-plugin/plugin.json    ← plugin metadata
 ├── skills/agentic-engineering/
 │   ├── SKILL.md                  ← router + the policy every command inherits
-│   ├── commands/                 ← 23 command bodies, loaded on demand
+│   ├── commands/                 ← 24 command bodies, loaded on demand
 │   └── shared/                   ← pieces several commands load when needed
 │       ├── preamble.md           ← --auto parsing, focus writes, memory inputs
 │       ├── project-mode.md       ← lite/full mode + the three memory docs
@@ -516,10 +555,10 @@ agentic-engineering/
 │   ├── ae-ux.md                  ← UX fidelity (runs after the frontend pass)
 │   └── ae-scribe.md              ← end-user docs writer
 ├── references/<agent>/           ← the agents' on-demand reference + language docs
-├── commands/                     ← 23 slash-command wrappers
+├── commands/                     ← 24 slash-command wrappers
 ├── hooks/                        ← SessionStart router (hooks.json + session-start.sh)
 ├── scripts/                      ← helpers the commands call
-│   ├── worktree.sh               ← create / merge / remove [P] story worktrees
+│   ├── worktree.sh               ← create / merge / remove task and [P] story worktrees
 │   ├── evidence.sh               ← record a test run, check it is still fresh
 │   └── transcript-digest.py      ← /diagnose's transcript reader
 ├── tests/                        ← static + behavioral suite, run-tests.sh

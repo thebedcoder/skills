@@ -36,6 +36,8 @@ Lite: REQ still checks every story against CONSTITUTION.md in `/review`; no `PRD
 git checkout -b feat/[feature-name]
 ```
 
+On `main`/`master` → `bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh pref` first. `PREF never` or `PREF ask (default…)` → branch as above — nobody opted in, and `/feature` never asked here before. `PREF ask` → ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"Where should `<feature-name>` live?"* → **New branch `feat/<feature-name>` (Recommended)** · **New worktree** — "own folder under `.claude/worktrees/`; this session moves in, the stories ship there". Under `--auto`: SKIP → branch. `PREF always` → worktree, no gate. Worktree → **§W4** of `shared/worktree.md` instead of `git checkout -b`; never open that file otherwise.
+
 **ARCH** creates feature folder. **Full:**
 ```
 ./docs/features/[feature-name]/
@@ -344,6 +346,7 @@ Run **§C** of `shared/preamble.md`.
 
 | Line | Checkpoint | Tag |
 |---|---|---|
+| Where it lives | On `main` with `agentic.worktree=ask` set explicitly: branch or worktree | `[AUTO: skip]` — branch; `always` → worktree, no gate |
 | Intent check | ≤5 questions, one per message, when user / outcome / constraint missing | `[AUTO: skip]` — empty slots become `[NEEDS CLARIFICATION]` markers |
 | Approach pick | Choose A/B/C architectural option | `[AUTO: always-ask]` |
 | PRD review | Approve PRD draft | `[AUTO: ask-if-ambiguous]` — skip if no open clarification markers + no constitution conflict |

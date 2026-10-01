@@ -9,7 +9,7 @@ AE_TEST_TIMEOUT="${AE_TEST_TIMEOUT:-900}"
 # Tools a scenario may use without a permission prompt. Headless runs cannot
 # answer prompts, and --permission-mode bypassPermissions is refused as root, so
 # the list is explicit. AskUserQuestion is deliberately absent: -p has no human.
-AE_ALLOWED_TOOLS="Bash Read Write Edit MultiEdit Glob Grep Agent Task Skill TodoWrite TaskCreate TaskUpdate TaskList"
+AE_ALLOWED_TOOLS="Bash Read Write Edit MultiEdit Glob Grep Agent Task Skill TodoWrite TaskCreate TaskUpdate TaskList EnterWorktree ExitWorktree"
 
 # Appended to every run. Explicit instructions win over the SessionStart router,
 # which is exactly the precedence the hook promises headless drivers.

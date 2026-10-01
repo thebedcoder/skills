@@ -1,29 +1,40 @@
 #!/usr/bin/env bash
-# worktree.sh — deterministic git worktree lifecycle for /ship-all [P] stories.
+# worktree.sh — deterministic git worktree lifecycle for agentic-engineering.
 #
-# The command body (shared/worktree.md) owns every decision and every human gate;
+# Two kinds, same mechanics:
+#   story — /ship-all's parallel path: one worktree per [P] story, shipped there by
+#           another session, merged back by the next /ship-all
+#   task  — one /feature, /ship, /fix or /improve run that this session moves into
+#
+# The command bodies (shared/worktree.md) own every decision and every human gate;
 # this script owns only mechanics that must not be improvised. It never deletes
 # anything unless the caller names the destructive flag, and it never forces.
 #
-#   worktree.sh create <STORY-ID> <branch> [--dir DIR] [--base REF]
+#   worktree.sh pref
+#   worktree.sh where
+#   worktree.sh create <ID> <branch> [--kind story|task] [--carry-focus] [--base REF] [--dir DIR]
 #   worktree.sh seed-focus <path> <STORY-ID> <title> <feature> <base-branch>
-#   worktree.sh list [--dir DIR]
+#   worktree.sh list [--kind story|task]
 #   worktree.sh merge <path>
 #   worktree.sh remove <path> [--delete-branch | --discard]
 #
-# Run from the MAIN worktree root. Exit codes: 0 ok · 2 usage · 3 merge conflict
-# outside append-only files (merge aborted, tree unchanged) · 4 refused (dirty
-# tree, not merged, wrong location) · 1 other git failure.
+# pref and where run anywhere; everything else from the MAIN worktree root.
+# Exit codes: 0 ok · 2 usage · 3 merge conflict outside append-only files (merge
+# aborted, tree unchanged) · 4 refused (dirty tree, not merged, wrong location) ·
+# 1 other git failure.
 #
-# Output lines start with an upper-case verb (CREATED, SEEDED, WORKTREE, MERGED,
-# APPENDED, CONFLICT, REFUSED, REMOVED, KEPT) so the caller can parse them.
+# Output lines start with an upper-case verb (PREF, MAIN, WORKTREE, CREATED,
+# IGNORED, CARRIED, LOCAL-ONLY, NOTE, SEEDED, MERGED, APPENDED, CONFLICT, REFUSED,
+# REMOVED, KEPT) so the caller can parse them.
 
 set -uo pipefail
 
-DIR=".worktrees"
+# Claude Code's own `claude -w` and EnterWorktree use this directory; EnterWorktree
+# can only switch between worktrees that live here.
+DIR=".claude/worktrees"
 
 die() { echo "REFUSED: $*" >&2; exit 4; }
-usage() { sed -n '2,20p' "$0" >&2; exit 2; }
+usage() { sed -n '2,29p' "$0" >&2; exit 2; }
 
 main_root() {
   local gd gc
@@ -41,36 +52,72 @@ slug() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-' | s
 
 is_clean() { [ -z "$(git -C "$1" status --porcelain --untracked-files=normal 2>/dev/null)" ]; }
 
+# Ignore a path through .git/info/exclude: local, shared by every worktree of the
+# repo, never committed. A worktree directory that is not ignored gets committed
+# wholesale by the next `git add -A` in the main tree; an unignored .agentic/ in the
+# new worktree (its .gitignore line still uncommitted in main) gets committed there.
+exclude() {
+  local ex; ex="$(git rev-parse --git-common-dir)/info/exclude"
+  mkdir -p "$(dirname "$ex")"
+  [ -s "$ex" ] && [ -n "$(tail -c1 "$ex")" ] && echo >> "$ex"
+  echo "$1" >> "$ex"
+  echo "IGNORED: added $1 to .git/info/exclude (local, never committed)"
+}
+
+# Move CURRENT and PLAN out of the main tree's focus into the new worktree: the task
+# now lives there. NEXT stays — it is the main tree's queue.
+carry_focus() {
+  local path="$1" src=".agentic/focus.md"
+  if [ ! -f "$src" ]; then echo "CARRIED nothing (no .agentic/focus.md)"; return 0; fi
+  mkdir -p "$path/.agentic"
+  awk '/^# /{keep=($0 ~ /^# (CURRENT|PLAN)[[:space:]]*$/)} keep' "$src" > "$path/.agentic/focus.md"
+  local rest
+  rest="$(awk 'BEGIN{keep=1} /^# /{keep=($0 !~ /^# (CURRENT|PLAN)[[:space:]]*$/)} keep' "$src")"
+  if [ -n "$(printf '%s' "$rest" | tr -d '[:space:]')" ]; then printf '%s\n' "$rest" > "$src"; else rm -f "$src"; fi
+  echo "CARRIED CURRENT + PLAN to $path/.agentic/focus.md (NEXT stays here)"
+}
+
 cmd_create() {
-  local story="${1:-}" branch="${2:-}" base=""
-  [ -n "$story" ] && [ -n "$branch" ] || usage
+  local id="${1:-}" branch="${2:-}" base="" kind="story" carry=0
+  [ -n "$id" ] && [ -n "$branch" ] || usage
   shift 2
   while [ $# -gt 0 ]; do
     case "$1" in
       --dir) DIR="$2"; shift 2 ;;
       --base) base="$2"; shift 2 ;;
+      --kind) kind="$2"; shift 2 ;;
+      --carry-focus) carry=1; shift ;;
       *) usage ;;
     esac
   done
+  case "$kind" in story|task) ;; *) usage ;; esac
   local root; root="$(main_root)" || exit 4
   cd "$root" || exit 1
   [ -n "$base" ] || base="$(git rev-parse --abbrev-ref HEAD)"
-  local path="$DIR/$(slug "$story")"
+  local name; name="$(slug "$id")"
+  [ -n "$name" ] || die "'$id' gives an empty directory name"
+  local path="$DIR/$name"
   [ -e "$path" ] && die "$path already exists"
   git show-ref --verify --quiet "refs/heads/$branch" && die "branch $branch already exists"
-  # A worktree directory that is not ignored gets committed wholesale by the next
-  # `git add -A` in the main tree.
-  if ! git check-ignore -q "$DIR/probe" 2>/dev/null; then
-    [ -f .gitignore ] && [ -n "$(tail -c1 .gitignore)" ] && echo >> .gitignore
-    echo "$DIR/" >> .gitignore
-    echo "IGNORED: added $DIR/ to .gitignore (uncommitted)"
-  fi
+  local dirty; dirty="$(git status --porcelain --untracked-files=normal | wc -l | tr -d ' ')"
   mkdir -p "$DIR"
+  git check-ignore -q "$DIR/" 2>/dev/null || exclude "/$DIR/"
   git worktree add -q -b "$branch" "$path" "$base" || { echo "git worktree add failed" >&2; exit 1; }
   # The base also lives in focus.md, but /focus done clears CURRENT there. Branch
   # config survives it, and `git branch -d/-D` removes it with the branch.
   git config "branch.$branch.agenticBase" "$base"
+  git config "branch.$branch.agenticKind" "$kind"
   echo "CREATED $root/$path $branch $base"
+  git -C "$path" check-ignore -q .agentic/focus.md 2>/dev/null || exclude ".agentic/"
+  [ "$dirty" -gt 0 ] && echo "NOTE main tree has $dirty uncommitted file(s) — they stay here; the worktree starts from $base"
+  [ "$carry" = 1 ] && carry_focus "$path"
+  # Ignored local config the worktree will not have. Listed, never copied here:
+  # copying is the caller's decision.
+  local f
+  for f in .env*; do
+    [ -f "$f" ] && git check-ignore -q "$f" && echo "LOCAL-ONLY $f"
+  done
+  return 0
 }
 
 cmd_seed_focus() {
@@ -93,31 +140,67 @@ EOF
 }
 
 cmd_list() {
+  local want=""
   while [ $# -gt 0 ]; do
     case "$1" in
-      --dir) DIR="$2"; shift 2 ;;
+      --kind) want="$2"; shift 2 ;;
       *) usage ;;
     esac
   done
   local root; root="$(main_root)" || exit 4
-  local abs_dir="$root/$DIR" wt="" br=""
+  local wt="" br=""
+  # Only worktrees this script created: their branch carries agenticBase. A
+  # worktree from `claude -w` or a hand-made `git worktree add` is not ours to finish.
   git -C "$root" worktree list --porcelain | while IFS= read -r line; do
     case "$line" in
       "worktree "*) wt="${line#worktree }" ;;
       "branch "*) br="${line#branch refs/heads/}" ;;
       "")
-        if [ -n "$wt" ] && [[ "$wt" == "$abs_dir"/* ]]; then
-          local state="clean"; is_clean "$wt" || state="dirty"
-          local base; base="$(git -C "$root" config "branch.$br.agenticBase" 2>/dev/null)"
-          local ahead="?"
-          [ -n "$base" ] && ahead="$(git -C "$root" rev-list --count "$base..$br" 2>/dev/null || echo "?")"
-          local merged="no"
-          git -C "$root" merge-base --is-ancestor "$br" HEAD 2>/dev/null && merged="yes"
-          echo "WORKTREE $wt branch=$br state=$state ahead=$ahead base=${base:-?} merged=$merged"
+        local base=""
+        [ -n "$br" ] && base="$(git -C "$root" config "branch.$br.agenticBase" 2>/dev/null)"
+        if [ -n "$wt" ] && [ "$wt" != "$root" ] && [ -n "$base" ]; then
+          local kind; kind="$(git -C "$root" config "branch.$br.agenticKind" 2>/dev/null)"
+          kind="${kind:-story}"
+          if [ -z "$want" ] || [ "$kind" = "$want" ]; then
+            local state="clean"; is_clean "$wt" || state="dirty"
+            local ahead; ahead="$(git -C "$root" rev-list --count "$base..$br" 2>/dev/null || echo "?")"
+            local merged="no"
+            git -C "$root" merge-base --is-ancestor "$br" HEAD 2>/dev/null && merged="yes"
+            echo "WORKTREE $wt branch=$br kind=$kind state=$state ahead=$ahead base=$base merged=$merged"
+          fi
         fi
         wt=""; br="" ;;
     esac
   done
+}
+
+# `PREF ask (default)` = nobody chose yet. Commands that already ask on main add the
+# worktree option either way; /feature, which never asked, asks only on an explicit
+# `ask`.
+cmd_pref() {
+  local v; v="$(git config --get agentic.worktree 2>/dev/null)"
+  case "$v" in
+    ask|always|never) echo "PREF $v" ;;
+    "") echo "PREF ask (default)" ;;
+    *) echo "PREF ask (default — agentic.worktree=$v is not ask, always or never, ignored)" ;;
+  esac
+}
+
+cmd_where() {
+  local top; top="$(git rev-parse --show-toplevel 2>/dev/null)" || die "not inside a git repository"
+  local main; main="$(git worktree list --porcelain | sed -n '1s/^worktree //p')"
+  if [ "$(cd "$top" && pwd -P)" = "$(cd "$main" && pwd -P)" ]; then
+    echo "MAIN $main"
+    return 0
+  fi
+  local br; br="$(git rev-parse --abbrev-ref HEAD)"
+  local base kind
+  base="$(git config "branch.$br.agenticBase" 2>/dev/null)"
+  kind="$(git config "branch.$br.agenticKind" 2>/dev/null)"
+  if [ -z "$kind" ]; then
+    if [ -n "$base" ]; then kind="story"; else kind="external"; fi
+  fi
+  echo "WORKTREE $top branch=$br kind=$kind base=${base:-?} main=$main"
 }
 
 # Append-only story logs: two branches that each appended one entry conflict at
@@ -202,6 +285,12 @@ cmd_remove() {
   if [ "$mode" = "--delete-branch" ] && ! git merge-base --is-ancestor "$branch" HEAD; then
     die "$branch is not merged into $(git rev-parse --abbrev-ref HEAD) — merge it, or discard explicitly"
   fi
+  # The run's auto-log lives in the worktree's ignored .agentic/; keep it.
+  if [ -s "$path/.agentic/auto-log.md" ]; then
+    mkdir -p .agentic
+    cat "$path/.agentic/auto-log.md" >> .agentic/auto-log.md
+    echo "CARRIED $path/.agentic/auto-log.md into .agentic/auto-log.md"
+  fi
   git worktree remove "$path" || { echo "git worktree remove failed" >&2; exit 1; }
   git worktree prune
   echo "REMOVED $path"
@@ -216,6 +305,8 @@ sub="${1:-}"
 [ -n "$sub" ] || usage
 shift
 case "$sub" in
+  pref) cmd_pref "$@" ;;
+  where) cmd_where "$@" ;;
   create) cmd_create "$@" ;;
   seed-focus) cmd_seed_focus "$@" ;;
   list) cmd_list "$@" ;;

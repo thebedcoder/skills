@@ -1,7 +1,7 @@
 {
   "name": "agentic-engineering",
   "version": "2.2.0",
-  "description": "Full SDLC agentic engineering workflow for Claude Code using named specialist agents — research, PRD, stories, implementation, 7-agent parallel review, fresh test evidence before completion, end-user product docs, a session-start router and /diagnose for misbehaving runs",
+  "description": "Full SDLC agentic engineering workflow for Claude Code using named specialist agents — research, PRD, stories, implementation, 7-agent parallel review, fresh test evidence before completion, end-user product docs, a git worktree per task on request, a session-start router and /diagnose for misbehaving runs",
   "author": {
     "name": "thebedcoder",
     "url": "https://github.com/thebedcoder"

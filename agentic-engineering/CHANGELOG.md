@@ -6,6 +6,47 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
 
 ## [Unreleased]
 
+### Added
+
+- **A worktree per task.** When `/ship`, `/fix` or `/improve` starts on `main`, the
+  branch question they already ask gains a **New worktree** option. Picking it
+  creates `.claude/worktrees/<name>` on a new branch from the current commit, moves
+  the task's CURRENT and PLAN into it, offers to copy ignored `.env*` files, moves
+  the session in with `EnterWorktree`, and runs a baseline (deps + tests; a red
+  baseline asks, except in `/fix`). The chain then runs in full there. At chain
+  end `/ship`, `/ship-all`, `/fix` and `/improve` offer merge (tests run on the
+  merged result before removal), push + PR, keep, or discard — `ExitWorktree`
+  brings the session back first. Under `--auto` the worktree is kept and logged;
+  merge, PR and discard wait for a human. `shared/worktree.md` §W4 / §W5.
+- **`git config agentic.worktree ask|always|never`** — per developer, never
+  committed, asked once by `/init`. `always` skips the branch question and goes
+  straight into a worktree, so a `--auto` run on `main` no longer stops there.
+  `/feature`, which never asked about its branch, offers branch-or-worktree only
+  on an explicit `ask` (or goes to a worktree on `always`); unset leaves it as it was.
+- **`/worktree [name]`** — lists the worktrees the workflow made (task and `[P]`
+  story), with branch, state and commits ahead, and finishes each through the same
+  merge / PR / keep / discard gate. Main context, every finish a human answer.
+  Worktrees from `claude -w` are not listed.
+- **Session hook names the worktree.** Inside one: its branch and the main folder.
+  In the main folder: how many wait under `.claude/worktrees/`. Read from files,
+  no git call.
+- `scripts/worktree.sh`: `pref`, `where`, `create --kind task --carry-focus`,
+  `list --kind`; `remove` carries the worktree's `.agentic/auto-log.md` back.
+- Behavioral scenario `09-fix-in-worktree`: unset preference offers the option and
+  creates nothing; `always` + `--auto` fixes and commits inside a worktree with the
+  main folder untouched and the worktree kept.
+
+### Changed
+
+- **Worktrees live in `.claude/worktrees/`**, `[P]` story ones included — where
+  `claude -w` puts its own and the only place `EnterWorktree` switches between.
+  They are ignored through `.git/info/exclude`, so `/ship-all` no longer commits a
+  `.gitignore` line, and `.agentic/` is excluded too when the worktree's own
+  `.gitignore` lacks it.
+- `worktree.sh list` shows only worktrees it made (branch config `agenticBase`),
+  with their `kind`, wherever they sit. A `claude -w` or hand-made worktree is never
+  offered for merge or removal.
+
 ### Fixed
 
 - **`/ship-all` merges finished `[P]` worktrees again.** The 2.2.0 context diet

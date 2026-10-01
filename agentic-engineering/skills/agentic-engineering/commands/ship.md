@@ -35,9 +35,15 @@ Mark #1 in progress at Phase 1. Advance one at a time. Backend-only story → cl
 git rev-parse --abbrev-ref HEAD
 ```
 
-On `main` / `master` → ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"You're on `<branch>`. Ship this story where?"* → **New branch `feat/<story-slug>` (Recommended)** · **Stay on `<branch>`** · **Abort**
+On `main` / `master` → `bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh pref`:
 
-No-op after full-mode `/feature` (it branched already); **lite's `/note` → `/ship` path has no branch step**, so without this guard every lite story lands on `main`.
+- `PREF never` → ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"You're on `<branch>`. Ship this story where?"* → **New branch `feat/<story-slug>` (Recommended)** · **Stay on `<branch>`** · **Abort**
+- `PREF ask`, with or without `(default…)` → same gate, plus **New worktree** — "own folder under `.claude/worktrees/`; this session moves in, `main` stays untouched".
+- `PREF always` → no gate.
+
+Worktree (picked, or `always`) → **§W4** of `shared/worktree.md`. Otherwise never open that file here.
+
+No-op after full-mode `/feature` (it branched already); **lite's `/note` → `/ship` path has no branch step**, so without this guard every lite story lands on `main`. Nested in `/ship-all` → the guard fires once, on the first story; the branch or worktree is named for the feature, not the story.
 
 ### Step 0d — Worktree mode
 
@@ -202,7 +208,11 @@ This story was the feature's last unchecked one → append: `Feature complete �
 
 Run `shared/focus-release.md` (`auto` under `--auto`). `set_by:` contains `/ship-all` → skip; the chain releases after its last story.
 
-### Step N+1 — Auto-mode summary
+### Step N+1 — Finish the worktree
+
+Not nested in `/ship-all` and `worktree.sh where` prints `kind=task` → **§W5** of `shared/worktree.md`. Anything else → skip.
+
+### Step N+2 — Auto-mode summary
 
 Run **§C** of `shared/preamble.md`.
 
@@ -210,6 +220,8 @@ Run **§C** of `shared/preamble.md`.
 
 | Checkpoint | Tag |
 |---|---|
+| Branch guard on `main` — branch / worktree / stay / abort | `[AUTO: always-ask]`; `agentic.worktree=always` → worktree, no gate |
+| Finish task worktree (§W5) — merge / PR / keep / discard | `[AUTO: skip]` → keep; merge, PR, discard only on a human answer |
 | Promoted backlog item review | `[AUTO: ask-if-ambiguous]` — skip when AC clear and shaping mechanical |
 | Single ship-chain approval ('go' to start) | `[AUTO: skip]` — proceed silently |
 | SHIP PAUSED — review blockers (Phase 2) | `[AUTO: always-ask]` (hard-override #1) |

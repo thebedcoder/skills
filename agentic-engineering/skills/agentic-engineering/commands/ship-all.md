@@ -25,7 +25,7 @@ Run **§B** of `shared/preamble.md`, always overwriting: `title: ship-all: <feat
 
 ### Step 0c — Finish parallel worktrees
 
-`.worktrees/` holds story worktrees from an earlier run → run **§W2** of `shared/worktree.md` before anything else: merge, PR, keep or discard each shipped one. Merged stories count as shipped for the order below. No `.worktrees/` → skip silently, never read the file.
+`bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh list --kind story` prints any `WORKTREE` line → story worktrees from an earlier run: run **§W2** of `shared/worktree.md` before anything else — merge, PR, keep or discard each shipped one. Merged stories count as shipped for the order below. No output → skip silently, never read the file.
 
 ---
 
@@ -146,6 +146,10 @@ PR desc: ✅ updated to cover all shipped stories
 
 After the final story only: run `shared/focus-release.md` (`auto` under `--auto`). Mid-chain stories never release.
 
+### Step N — Finish the worktree
+
+First story's branch guard put the chain in a task worktree (`worktree.sh where` prints `kind=task`) → **§W5** of `shared/worktree.md`, once, after the last story. Anything else → skip.
+
 ---
 
 ### Step N — Auto-mode summary
@@ -164,6 +168,7 @@ Run **§C** of `shared/preamble.md`, counting across every story in the chain: `
 | Worktree baseline red | `[AUTO: always-ask]` (`shared/worktree.md` §W1) |
 | Finish a shipped worktree — merge / PR / keep / discard | `[AUTO: always-ask]` — removal and branch deletion are destructive |
 | Discard confirmation | `[AUTO: always-ask]` |
+| Finish the chain's task worktree (§W5) | `[AUTO: skip]` → keep; merge, PR, discard only on a human answer |
 
 ### Guardrails
 
