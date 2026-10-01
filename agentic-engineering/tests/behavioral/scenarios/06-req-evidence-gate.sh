@@ -74,7 +74,7 @@ Plugin root: $AE_PLUGIN_ROOT. Do NOT write, edit, or create any file in the repo
 review_inputs
 ae_check "fixture: evidence check reports stale, ticked in this diff" \
   grep -q '^EVIDENCE: stale story=STORY-001 checked_in_diff=yes' "$P/.agentic/review/STORY-001.evidence"
-AE_TEST_MODEL=haiku ae_run_claude "$P" "$AE_OUT/stale.jsonl" "$PROMPT" 1 "" -- --agent agentic-engineering:ae-req
+AE_TEST_MODEL=sonnet ae_run_claude "$P" "$AE_OUT/stale.jsonl" "$PROMPT" 1 "" -- --agent agentic-engineering:ae-req
 # Verdict = the text right after each "EVIDENCE" mention, whatever the layout
 # (one line, or a bold header with the verdict underneath).
 cat > "$AE_OUT/verdict.py" <<'PY'
@@ -97,7 +97,7 @@ write_progress "$row"
 fixture_commit "$P" "docs(main): STORY-001 — evidence"
 review_inputs
 ae_check "fixture: evidence check now fresh" grep -q '^EVIDENCE: fresh' "$P/.agentic/review/STORY-001.evidence"
-AE_TEST_MODEL=haiku ae_run_claude "$P" "$AE_OUT/fresh.jsonl" "$PROMPT" 1 "" -- --agent agentic-engineering:ae-req
+AE_TEST_MODEL=sonnet ae_run_claude "$P" "$AE_OUT/fresh.jsonl" "$PROMPT" 1 "" -- --agent agentic-engineering:ae-req
 ae_check "fresh evidence → REQ reports EVIDENCE ✅, no evidence blocker" \
   python3 "$AE_OUT/verdict.py" "$AE_PLUGIN_ROOT/tests/lib/transcript.py" "$AE_OUT/fresh.jsonl" fresh
 ae_check "REQ wrote nothing to the repo" bash -c "cd '$P' && [ -z \"\$(git status --porcelain)\" ]"

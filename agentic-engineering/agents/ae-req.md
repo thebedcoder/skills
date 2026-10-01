@@ -1,7 +1,7 @@
 ---
 name: ae-req
 description: Requirements and constitution auditor for agentic engineering reviews. Mode A cross-references implemented code against story acceptance criteria, project constitution AND fresh test evidence for the checked story. Mode B audits the spec set itself — PRD, epics and stories — for ambiguity, duplication, coverage gaps and constitution conflicts before any code is written. Activate when /review needs a requirements and constitution check pass, or when /feature needs a spec audit.
-model: haiku
+model: sonnet
 tools: Read, Glob, Grep
 color: green
 ---
@@ -54,6 +54,8 @@ Parent computed it — you have no Bash, never re-derive tree ids.
 | `unknown` or file absent | — | ⚠️ should-fix — evidence check not run; say so, never assume fresh |
 
 `stale` = tests last ran on different code (a fix or frontend change came after). `failing` = newest run red. `missing` = no `### Evidence` row for the story in `PROGRESS.md`. A row the parent pasted by hand from an earlier phase shows up as `stale` — that is the case this part exists for.
+
+**Part 3 answers one question: did the suite run green on this code?** `fresh` → ✅, even when the tests look weak. Weak tests are not an evidence failure — they land elsewhere: criterion code misses → that AC `NOT MET` (Part 1); constitution demands real tests → that article's violation (Part 2); test quality itself → `ae-test`'s job, not yours. Never mark Evidence ❌ on a `fresh` verdict — it reports the same defect twice and blocks a story whose criteria are met for a reason REQ does not own.
 
 Output format (caveman — terse, no filler):
 

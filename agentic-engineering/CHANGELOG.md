@@ -38,6 +38,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
 
 ### Changed
 
+- **`ae-test`, `ae-req` and `ae-ux` run on Sonnet** (were Haiku). Measured, not
+  assumed: each agent ran twice per tier on a fixture with 16 planted defects
+  (3 weak tests, 4 unmet criteria / constitution violations, 4 spec problems, 5 UI
+  departures from the handoff). Both tiers caught all 16 every time. Haiku also
+  marked a met criterion "❌ … MET", made shared test state a blocker, called
+  drifting terminology consistent, and reported no UI polish where Sonnet found
+  four real ones. The Sonnet agents cost the same per run ($0.145 / $0.168 vs
+  $0.138 / $0.165) because Haiku read and wrote more to get there. `ae-doc` and
+  `ae-scribe` stay on Haiku.
+
 - **Worktrees live in `.claude/worktrees/`**, `[P]` story ones included — where
   `claude -w` puts its own and the only place `EnterWorktree` switches between.
   They are ignored through `.git/info/exclude`, so `/ship-all` no longer commits a
@@ -48,6 +58,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
   offered for merge or removal.
 
 ### Fixed
+
+- **`ae-req` no longer blocks on fresh evidence.** In 3 of 4 implementation audits,
+  on both tiers, it marked Evidence ❌ BLOCKER on a fresh, green row because the
+  tests looked weak. Part 3 now answers only "did the suite run green on this
+  code?"; weak tests land under the unmet criterion, the constitution's testing
+  article, or `ae-test`. Re-run: 4 of 4 audits report fresh evidence as ✅, unmet
+  criteria still block, and a story whose criteria are met with thin tests passes
+  REQ. Scenario 06 (stale evidence blocks, fresh clears) passes on Sonnet.
 
 - **Reviewers run on the current Sonnet.** `ae-red`, `ae-sec`, `ae-edge` and
   `ae-lean` declared `model: claude-sonnet-5`, which pins Sonnet 5: run logs billed

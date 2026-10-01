@@ -39,7 +39,7 @@ Commands are handled by a cast of named specialist agents. Each has a distinct r
 └───────────┴────────────────────────────────┴────────────────────────┘
 ```
 
-Seven review agents (RED, REQ, TEST, DOC, SEC, EDGE, LEAN) run as **parallel subagents** after every story — RED, SEC, EDGE and LEAN on Sonnet, REQ, TEST and DOC on Haiku — dispatched in one batch, results back together, main context stays clean. EDGE adversarially probes backend code for missing edge cases (boundary, null, race, malformed, resource, error-path) and hands back failing test code; LEAN is the only reviewer looking at code that already works, hunting duplicates of what the repo already has.
+Seven review agents (RED, REQ, TEST, DOC, SEC, EDGE, LEAN) run as **parallel subagents** after every story — DOC on Haiku, the other six on Sonnet — dispatched in one batch, results back together, main context stays clean. EDGE adversarially probes backend code for missing edge cases (boundary, null, race, malformed, resource, error-path) and hands back failing test code; LEAN is the only reviewer looking at code that already works, hunting duplicates of what the repo already has.
 
 One UX subagent (ae-ux) runs after the frontend pass with a structured checklist across 6 dimensions.
 
