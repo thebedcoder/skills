@@ -24,7 +24,7 @@ Phase-gated SDLC workflow. Named specialist agents. On-demand command loading.
 
 ## How to use
 
-Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/` — full instructions there; this file holds the policy every command inherits. Bodies also point at `shared/` blocks (same base dir): `preamble.md` §A–§D, and on-demand files loaded only on their branch — `auto-mode.md` (`--auto`), `story-flow.md` (story work), `fix-loop.md` (a chain's review returned blockers), `focus-release.md`, `worktree.md` (a worktree picked, present or finishing — `git config agentic.worktree` = `ask`·`always`·`never`), `visual-capture.md`.
+Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/` — full instructions there; this file holds the policy every command inherits. Bodies also point at `shared/` blocks (same base dir): `preamble.md` §A–§D, and on-demand files loaded only on their branch — `auto-mode.md` (`--auto`), `story-flow.md` (story work), `fix-loop.md` (a chain's review returned blockers), `parallel-build.md` (a `[P]` group built at once), `focus-release.md`, `worktree.md` (a worktree picked, present or finishing — `git config agentic.worktree` = `ask`·`always`·`never`), `visual-capture.md`.
 
 ## Command → File Map
 
@@ -37,7 +37,7 @@ Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-en
 | `/implement` | `commands/implement.md` | Next unchecked story — `ae-arch` plans, `ae-impl` builds test-first |
 | `/review` | `commands/review.md` | 7-agent parallel review (`--frontend-pass` drops LEAN) |
 | `/ship` | `commands/ship.md` | Full chain: plan→build→review→frontend→review→docs, no stop |
-| `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories, no stop between them. Opt-in worktree per `[P]` story (`shared/worktree.md`) |
+| `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories, no stop between them. `[P]` groups built in parallel by isolated implementers pinned to the branch (`shared/parallel-build.md`), or a worktree per story for separate sessions (`shared/worktree.md`) |
 | `/worktree [name]` | `commands/worktree.md` | List workflow worktrees (task + `[P]` story); merge, PR, keep or discard finished ones |
 | `/fix [description]` | `commands/fix.md` | Diagnose → fix → review |
 | `/improve [description]` | `commands/improve.md` | Non-bug change — plan → apply → review. Bare call → picks improvement from `BACKLOG.md`. Wants it done now; "we should improve X someday" → `/note` |
@@ -98,7 +98,7 @@ Reviewers have no Bash; `ae-arch` has Bash for read-only probes; `ae-impl` has B
 
 ## Execution Model
 
-**Main session = orchestrator, session model.** Plans features with the human, gates, consolidates, commits. In story work it holds artifacts — plan, statuses, consolidated reviews — and writes no source code. Story plan → `ae-arch` (`inherit` = session model). Build, fix rounds, `/improve` apply → `ae-impl` (`sonnet`; `haiku` for mechanical stories; session model for fix round 3). Each runs in a fresh context per story. Tier routing, brief and report → `shared/story-flow.md`; fix rounds → `shared/fix-loop.md`. A status is a claim: the parent re-checks evidence, files and every AC itself.
+**Main session = orchestrator, session model.** Plans features with the human, gates, consolidates, commits. In story work it holds artifacts — plan, statuses, consolidated reviews — and writes no source code. Story plan → `ae-arch` (`inherit` = session model). Build, fix rounds, `/improve` apply → `ae-impl` (`sonnet`; `haiku` for mechanical stories; session model for fix round 3). Each runs in a fresh context per story; a `[P]` group's implementers run at once, each in an isolated worktree pinned to the feature branch. Tier routing, brief and report → `shared/story-flow.md`; fix rounds → `shared/fix-loop.md`; parallel groups → `shared/parallel-build.md`. A status is a claim: the parent re-checks evidence, files and every AC itself.
 
 ## Project Mode and Memory Docs
 

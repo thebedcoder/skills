@@ -112,6 +112,7 @@ def digest(path, check=False):
 
     commands, reads, gates, plan, tests, commits, compactions, autolog, texts = [], [], [], [], [], [], [], [], []
     source_edits = []
+    unpinned = []
     groups, order = {}, []
     tool_results = {}
     for n, d in rows:
@@ -152,6 +153,9 @@ def digest(path, check=False):
                     order.append(mid)
                 groups[mid]["lines"].append(n)
                 groups[mid]["agents"].append(str(inp.get("subagent_type", "?")))
+                if inp.get("subagent_type") == f"{NS}:ae-impl" and inp.get("isolation") == "worktree" \
+                        and "pin:" not in str(inp.get("prompt", "")):
+                    unpinned.append(f"L{n}")
             elif name in ("Skill", "SlashCommand"):
                 commands.append(f"L{n} {name} {inp.get('skill') or inp.get('command')} {short(inp.get('args', ''), 60)}".rstrip())
             elif name == "Read":
@@ -221,12 +225,12 @@ def digest(path, check=False):
 
     if check:
         out.append("CHECKS")
-        devs = deviations(order, groups, commands, plan, reads, commits, source_edits)
+        devs = deviations(order, groups, commands, plan, reads, commits, source_edits, unpinned)
         out.extend(devs or ["  no mechanical deviations — compare the digest with the command contract"])
     return "\n".join(out)
 
 
-def deviations(order, groups, commands, plan, reads=(), commits=(), source_edits=()):
+def deviations(order, groups, commands, plan, reads=(), commits=(), source_edits=(), unpinned=()):
     devs = []
     # Review rounds: a maximal run of reviewer-dispatching messages in which no
     # reviewer repeats. Plan pre-review (red+sec), Phase 2 (7) and Phase 4 (6) each
@@ -275,6 +279,12 @@ def deviations(order, groups, commands, plan, reads=(), commits=(), source_edits
         devs.append(f"  DEVIATION build: {len(source_edits)} source/test edit(s) in the main thread "
                     f"({short(source_edits[0], 60)}) with no {NS}:ae-impl dispatch — story code is built by "
                     "the implementer subagent, never inline (shared/story-flow.md §2)")
+    # An isolated implementer starts in a worktree Claude Code made from the default
+    # branch; without its pin it builds blind to every story on the feature branch.
+    if unpinned:
+        devs.append(f"  DEVIATION base: {NS}:ae-impl dispatched with isolation 'worktree' and no 'pin:' at "
+                    f"{', '.join(unpinned)} — the build starts from the default branch, not the feature branch "
+                    "(shared/parallel-build.md §P3)")
     chain = [c for c in commands if re.search(rf"/?{NS}:(ship|fix|improve|feature|ship-all|plan-all|doc-all)\b", c)]
     if chain and not plan:
         devs.append(f"  DEVIATION progress: chain command ({short(chain[0], 60)}) but no .agentic/focus.md PLAN write "

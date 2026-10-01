@@ -2,7 +2,9 @@
 # scripts/worktree.sh end to end: a feature with two [P] stories shipped in two
 # worktrees and merged back, PROGRESS.md correct in the main tree, nothing removed
 # before it is asked for, and every destructive path refusing what it should. Then
-# the task kind: preference, location, focus carried in, auto-log carried out.
+# the task kind: preference, location, focus carried in, auto-log carried out. Then
+# in-session parallel builds: isolated subagent worktrees pinned to the feature
+# branch, adopted and merged back.
 set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -270,6 +272,83 @@ check "header-less CURRENT carried under a restored heading, NEXT left in main" 
   grep -q '^- \[ \] Diagnose' $W/fix-rounding/.agentic/focus.md &&
   ! grep -q '^title:' .agentic/focus.md && grep -q '^1. export CSV' .agentic/focus.md"
 bash "$WT" remove $W/fix-rounding --delete-branch >/dev/null 2>&1
+
+# --- in-session parallel build: pin + adopt + merge -----------------------------
+# Claude Code makes an isolated subagent's worktree from the DEFAULT branch. The
+# implementer pins it onto the feature branch's commit; the orchestrator adopts the
+# result and merges it back — from the main tree, or from the task worktree that
+# holds the feature branch.
+P2="$T/par"; mkdir -p "$P2/src" "$P2/docs/features/arith"
+cd "$P2" || exit 1
+g init -q -b main
+printf '.agentic/\n' > .gitignore; printf 'export const add = (a, b) => a + b;\n' > src/add.js
+printf '# Arith — Progress\n' > docs/features/arith/PROGRESS.md
+g add -A && g commit -q -m init
+g checkout -q -b feat/arith
+printf 'export const one = 1;\n' > src/one.js && g add -A && g commit -q -m "feat(arith): STORY-001 — one"
+BASE_SHA="$(git rev-parse HEAD)"
+# Two worktrees the way Claude Code makes them for isolated subagents: from main.
+g worktree add -q .claude/worktrees/agent-aaa -b worktree-agent-aaa main
+g worktree add -q .claude/worktrees/agent-bbb -b worktree-agent-bbb main
+check "pin refuses in the main tree — it would reset it" bash -c "! bash '$WT' pin $BASE_SHA feat/arith-story-002"
+check "pin moves a fresh subagent worktree onto the feature commit under the story branch" bash -c "
+  cd .claude/worktrees/agent-aaa && bash '$WT' pin $BASE_SHA feat/arith-story-002 | grep -q '^PINNED .* feat/arith-story-002' &&
+  [ \"\$(git rev-parse HEAD)\" = '$BASE_SHA' ] && test -f src/one.js"
+check "pin renamed the branch — no stray worktree-agent-* left" bash -c "! git show-ref --verify --quiet refs/heads/worktree-agent-aaa"
+( cd .claude/worktrees/agent-bbb && printf 'x\n' > dirty.txt )
+check "pin refuses a dirty worktree" bash -c "cd .claude/worktrees/agent-bbb && ! bash '$WT' pin $BASE_SHA feat/arith-story-003"
+( cd .claude/worktrees/agent-bbb && rm dirty.txt && printf 'y\n' > only.txt && g add only.txt && g commit -q -m only )
+check "pin refuses to drop commits found on no other branch" bash -c "cd .claude/worktrees/agent-bbb && ! bash '$WT' pin $BASE_SHA feat/arith-story-003"
+( cd .claude/worktrees/agent-bbb && g reset -q --hard main )
+check "pin the second worktree" bash -c "cd .claude/worktrees/agent-bbb && bash '$WT' pin $BASE_SHA feat/arith-story-003 >/dev/null"
+# Each implementer builds its story and appends its PROGRESS entry; the
+# orchestrator commits in each worktree.
+( cd .claude/worktrees/agent-aaa && printf 'export const two = 2;\n' > src/two.js \
+  && printf '\n## STORY-002: Two — 2026-10-01\n\n### Files changed\n- src/two.js\n' >> docs/features/arith/PROGRESS.md \
+  && g add -A && g commit -q -m "feat(arith): STORY-002 — two" )
+( cd .claude/worktrees/agent-bbb && printf 'export const three = 3;\n' > src/three.js \
+  && printf '\n## STORY-003: Three — 2026-10-01\n\n### Files changed\n- src/three.js\n' >> docs/features/arith/PROGRESS.md \
+  && g add -A && g commit -q -m "feat(arith): STORY-003 — three" )
+g worktree add -q "$T/stray" -b stray main
+check "adopt refuses a branch never pinned to the base" bash -c "! bash '$WT' adopt '$T/stray' feat/arith $BASE_SHA"
+check "adopt records both pinned branches as story worktrees of feat/arith" bash -c "
+  bash '$WT' adopt .claude/worktrees/agent-aaa feat/arith $BASE_SHA | grep -q '^ADOPTED' &&
+  bash '$WT' adopt .claude/worktrees/agent-bbb feat/arith $BASE_SHA | grep -q '^ADOPTED' &&
+  [ \"\$(git config branch.feat/arith-story-002.agenticBase)\" = feat/arith ] &&
+  [ \"\$(git config branch.feat/arith-story-003.agenticKind)\" = story ]"
+check "adopt ignored the subagent worktree directory, main tree stays clean" bash -c "
+  grep -qxF '/.claude/worktrees/' \"\$(git rev-parse --git-common-dir)/info/exclude\" && [ -z \"\$(git status --porcelain)\" ]"
+check "list shows the adopted worktrees" bash -c "[ \$(bash '$WT' list --kind story | grep -c 'base=feat/arith') -eq 2 ]"
+check "merge both back: code from both, PROGRESS entries joined" bash -c "
+  bash '$WT' merge .claude/worktrees/agent-aaa >/dev/null && bash '$WT' merge .claude/worktrees/agent-bbb >/dev/null &&
+  test -f src/one.js -a -f src/two.js -a -f src/three.js &&
+  grep -q '^## STORY-002' docs/features/arith/PROGRESS.md && grep -q '^## STORY-003' docs/features/arith/PROGRESS.md"
+check "adopt refuses when the base no longer contains the pinned commit" bash -c "
+  git worktree add -q .claude/worktrees/agent-ccc -b worktree-agent-ccc main &&
+  ( cd .claude/worktrees/agent-ccc && bash '$WT' pin $BASE_SHA feat/arith-story-009 >/dev/null ) &&
+  git branch -q -f moved main && ! bash '$WT' adopt .claude/worktrees/agent-ccc moved $BASE_SHA"
+check "remove both with their merged branches" bash -c "
+  bash '$WT' remove .claude/worktrees/agent-aaa --delete-branch >/dev/null &&
+  bash '$WT' remove .claude/worktrees/agent-bbb --delete-branch >/dev/null &&
+  ! test -d .claude/worktrees/agent-aaa && ! git show-ref --verify --quiet refs/heads/feat/arith-story-002"
+# The same, for a session living in a task worktree of feat/arith.
+g checkout -q main
+g worktree add -q .claude/worktrees/task -b feat/arith-task feat/arith
+TASK="$P2/.claude/worktrees/task"
+TBASE="$(git -C "$TASK" rev-parse HEAD)"
+g worktree add -q .claude/worktrees/agent-ddd -b worktree-agent-ddd main
+( cd .claude/worktrees/agent-ddd && bash "$WT" pin "$TBASE" feat/arith-story-004 >/dev/null \
+  && printf 'export const four = 4;\n' > src/four.js && g add -A && g commit -q -m "feat(arith): STORY-004 — four" )
+check "from a task worktree: adopt + merge into the branch it holds" bash -c "
+  cd '$TASK' && bash '$WT' adopt '$P2/.claude/worktrees/agent-ddd' feat/arith-task $TBASE >/dev/null &&
+  bash '$WT' merge '$P2/.claude/worktrees/agent-ddd' | grep -q '^MERGED feat/arith-story-004 into feat/arith-task' && test -f src/four.js"
+check "from an unrelated linked worktree: merge refused" bash -c "
+  git worktree add -q .claude/worktrees/agent-eee -b worktree-agent-eee main &&
+  ( cd .claude/worktrees/agent-eee && bash '$WT' pin $TBASE feat/arith-story-005 >/dev/null ) &&
+  cd '$TASK' && bash '$WT' adopt '$P2/.claude/worktrees/agent-eee' feat/arith-task $TBASE >/dev/null &&
+  cd '$T/stray' && ! bash '$WT' merge '$P2/.claude/worktrees/agent-eee'"
+check "remove refuses the tree it runs from" bash -c "cd '$TASK' && ! bash '$WT' remove '$TASK'"
+cd "$R" || exit 1
 
 echo "  worktree lifecycle: $PASSES passed, $FAILS failed — $([ $FAILS -eq 0 ] && echo PASSED || echo "FAILED ($FAILS)")"
 [ "$FAILS" -eq 0 ]

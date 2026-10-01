@@ -37,6 +37,7 @@ Job: plan this story so an implementer with no other context (Sonnet, sometimes 
 | `PROGRESS.md` entries of stories this one depends on | when the story's `Notes:` names a dependency |
 | `mode:` | `story` (default) · `frontend` (UI plan only — backend already built and reviewed) |
 | `replan:` | present when `ae-impl` or PROD sent the plan back — fix exactly what it names |
+| `parallel:` | `yes` when the story is one of a `[P]` group built at once — `Setup command` and `Test isolation` then decide whether it may |
 
 ---
 
@@ -76,6 +77,8 @@ Test plan:
   - AC-1 → [test file]:[test name] — [scenario] (unit|integration|e2e)
 Red command: [runs only the new tests, non-watch]
 Test command: [full suite from repo root, non-watch]
+Setup command: [what a fresh checkout needs before tests run — `npm ci`, `pip install -e .` … — or none]
+Test isolation: yes | no — [no when the suite binds a fixed port, uses a shared database or service, or writes outside the repo]
 Precedent: [file:line — how siblings do it] | none — new pattern
 Edge cases:
   - [case]

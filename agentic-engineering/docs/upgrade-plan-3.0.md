@@ -32,13 +32,14 @@ discarded on a human answer".
 | U5 Rulings with "cost if wrong" | borrow #3 | partial | built in this change |
 | U6 Plan proportion check | borrow #4 | missing | built in this change |
 | U7 Pressure-test before prose ships | borrow #2 | partial | built in this change |
-| I1 License conflict | issue | — | **owner decision** — not changed |
+| I1 License conflict | issue | — | resolved by the owner: `LICENSE` is now MIT |
 | I2 `auto-mode.md` names the wrong commands | issue | bug | fixed + pinned by a test |
 | I3 Installer says "6-agent review" | issue | bug | fixed (also `smart-setup` workflow spec) |
 | I4 README "~75% token reduction" unmeasured | issue | bug | number removed |
 | I5 A hand-written evidence row reads as fresh | issue | bug | fixed — run ledger |
 | I6 The red run of TDD leaves no evidence | issue | missing | fixed — `--phase red --expect-fail` |
-| X1–X8 | ask 5 | proposals | listed at the end — **not built**, need your OK |
+| X5 Parallel `[P]` builds in one session | ask 5 | missing | **built** on the owner's go — pinned to the feature branch |
+| X1, X2–X4, X6–X8 | ask 5 | proposals | listed at the end — **not built**; X1 analysed, waiting for a go |
 
 Version: **3.0.0**. The default gate behaviour changes (U4) and two agents are added
 (U2/U3), so existing users see a different flow without passing a new flag.
@@ -318,10 +319,9 @@ Change:
 
 ## Issues found in 2.3.0
 
-- **I1 License — owner decision, not changed.** Every `plugin.json` in the repo and the
-  README say MIT; the repo `LICENSE` is proprietary and grants no license. Either the
-  manifests change to `"license": "SEE LICENSE IN LICENSE"` (and README's License
-  section follows), or `LICENSE` becomes MIT. This is a legal choice for the owner.
+- **I1 License — resolved.** Every `plugin.json` and the READMEs said MIT; the repo
+  `LICENSE` was proprietary. The owner chose MIT: `LICENSE` is now the MIT text, and the
+  README License sections point at it.
 - **I2** `shared/auto-mode.md:5` listed `/doc` and missed `/frontend` and `/plan-all`.
   The list is gone; the file points at `SKILL.md`'s, which `test_command_tables.py`
   already pins. The test now also fails if `auto-mode.md` grows its own list again.
@@ -343,12 +343,31 @@ Change:
 
 ## Proposals — not built, need your OK (ask 5)
 
-- **X1 Trim the always-on listing.** `disable-model-invocation: true` on the commands a
-  human should start — `/archive`, `/worktree`, `/bootstrap`, `/init`, `/plan-all`,
-  `/ship-all`, `/doc-all`, `/focus`, `/next`, `/cleanup`. Their descriptions leave every
-  session's skill listing (about 10 × 30 words), and the model can no longer start a
-  destructive flow by itself. The router's five targets stay model-invocable. This is
-  the cheap half of U1.
+- **X1 Trim the always-on listing — analysed, not built.** `disable-model-invocation: true`
+  on the commands only a human should start.
+  - *Does the flow call them?* No. No chain uses the Skill tool to start another
+    command: `/ship-all` reads `commands/ship.md`, `/ship` reads `review.md`,
+    `frontend.md`, `cleanup.md`, the planning Build gates read `commands/ship-all.md`,
+    finishing worktrees runs `shared/worktree.md` §W2, releasing focus runs
+    `shared/focus-release.md`. The only Skill-tool path is the SessionStart router, and
+    it targets `/fix`, `/note`, `/improve`, `/feature`, `/status`. Every other "run /X"
+    in a body is a `Next:` suggestion to the human. A typed slash command still works
+    with the flag set — it only stops the model from starting one.
+  - *What it buys:* all 24 descriptions sit in the skill listing of every session in
+    every project with the plugin enabled, scaffolded or not — 3,358 characters, about
+    840 tokens. The candidate set — `/archive`, `/worktree`, `/bootstrap`, `/init`,
+    `/ship-all`, `/plan-all`, `/doc-all`, `/cleanup`, `/implement`, `/frontend`,
+    `/review` — is about 1,400 characters (~350 tokens) of that. More useful than the
+    tokens: the model can no longer start a long autonomous run (`/ship-all`,
+    `/plan-all`) or a destructive one (`/archive`, `/worktree`) from an ambiguous
+    sentence, and `init` / `review` stop competing with the built-in `/init` and
+    `/code-review` for "set up this project" and "review my diff".
+  - *Cost:* those eleven no longer start from plain language — "archive the payments
+    feature" gets a suggestion to type `/agentic-engineering:archive`. And the flag is
+    a soft barrier on its own: the router skill's command map still lets the model read
+    a body directly, so `SKILL.md` would add one line marking them human-started.
+  - Keep model-invocable: `/fix`, `/note`, `/improve`, `/feature`, `/status` (router),
+    `/ship`, `/analyze`, `/converge`, `/design`, `/doc`, `/diagnose`, `/focus`, `/next`.
 - **X2 Headless story driver.** `scripts/ship-loop.sh`: one fresh `claude -p` session per
   story, resumable from PLAN, stopping the loop on any `HARD-PAUSE`. Zero shared context
   and runnable overnight or in CI; needs `--auto` semantics since `-p` has no
@@ -359,9 +378,26 @@ Change:
 - **X4 Risk-tiered review.** A Haiku-tier story or a docs-only diff gets RED + REQ +
   TEST; the full seven stay for everything else. Roughly halves review cost on small
   stories. Wants X3's numbers first.
-- **X5 Parallel `[P]` builds inside one session** with the Agent tool's
-  `isolation: worktree`. Blocked today: that worktree branches from the default branch,
-  not the feature branch. Revisit when it can branch from `HEAD`.
+- **X5 Parallel `[P]` builds inside one session — built** (`shared/parallel-build.md`).
+  Claude Code creates an isolated subagent's worktree from the default branch unless
+  the user setting `worktree.baseRef` is `"head"`, and that setting cannot name a
+  branch. Two experiments settled the design: an isolated subagent can move its own
+  worktree to another commit, run scripts that call git, edit and commit, and its
+  worktree survives with the commit; a non-isolated subagent can also write into a
+  worktree the orchestrator made, but nothing stops it writing into the checkout. So
+  each implementer runs with `isolation: "worktree"` (enforced) and its first command
+  is `worktree.sh pin <base-sha> <branch>`, which moves the fresh worktree onto the
+  feature branch's commit — every story already built is there, and the plan comes
+  from the brief by absolute path. The orchestrator plans the group at once, drops
+  stories with overlapping files or tests that can't run side by side, builds them at
+  once, verifies each in its worktree, `adopt`s, commits and merges them in plan order,
+  runs the suite once on the merged result, and continues each story through review,
+  frontend, docs and cleanup one at a time. `/diagnose` flags isolation without a pin.
+  Verified by scenario `15-ship-all-parallel-build` (Sonnet, $0.98): two planners, then
+  four pre-reviewers, then two isolated implementers, each in one message; both pinned
+  to the feature commit; both stories merged with a green run on the merged result;
+  worktrees removed. In the same fixture an unpinned isolated subagent starts on
+  origin's `main`, without the story the two builds depend on.
 - **X6 `effort:` per agent** — `high` for `ae-arch`, `medium` for `ae-impl` and the
   Haiku reviewers. Cheap to add, but untested; would want a planted-defect comparison
   like the one that moved REQ/TEST/UX to Sonnet.

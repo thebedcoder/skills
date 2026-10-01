@@ -43,6 +43,8 @@ fi
 
 `<STORY-ID>` → current story id, else branch name.
 
+Caller passed `range: <A>..<B>` (a story built in a parallel group: its merge commit, `M^1..M`) → `git diff <A> <B>` and `--name-only` into the same two files instead of `BASE...HEAD`, and skip the base search.
+
 Story under review → also capture the evidence verdict for REQ (no Bash on its side):
 
 ```bash

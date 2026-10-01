@@ -69,8 +69,26 @@ stopping. Plan and rationale: `docs/upgrade-plan-3.0.md`.
 - `/status` runs on Haiku, `/analyze` and `/diagnose` on Sonnet (forked wrappers).
 - `/diagnose` flags `DEVIATION build` — a story chain that wrote source or tests in the
   main thread with no `ae-impl` dispatch — and lists main-thread source edits.
-- Behavioral scenarios `13-ship-subagent-build` and `14-ship-all-runs-on`; `03` also
-  asserts the implementer is never dispatched before a hard pause is answered.
+- **Parallel `[P]` builds in one session** (`shared/parallel-build.md`). A `[P]` group
+  is planned by one `ae-arch` per story at once, checked for overlapping files and
+  tests that can't run side by side, then built by one `ae-impl` per story at once —
+  each with `isolation: "worktree"`, so Claude Code keeps it out of your checkout.
+  Claude Code starts those worktrees from the default branch; each implementer first
+  runs `worktree.sh pin` onto the feature branch's commit, so it has every story
+  already built there and reads its plan from the brief. The orchestrator verifies
+  each in its worktree, `adopt`s, commits and merges them in plan order, runs the
+  suite once on the merged result, ticks the stories, and continues each through
+  review, frontend, docs and cleanup one at a time. The default for a `[P]` group;
+  *One after another* and *Separate sessions* (the old worktree-per-session path)
+  remain at the start question.
+- `worktree.sh pin` and `adopt`; `adopt`, `merge` and `remove` also run from a task
+  worktree holding the base branch. `ae-arch` reports `Setup command` and
+  `Test isolation`; `ae-impl` pins, sets up and runs a baseline before a parallel
+  build. `/review` takes `range: A..B` for a story's own merge. `/diagnose` flags
+  `DEVIATION base` — an isolated `ae-impl` with no `pin:`.
+- Behavioral scenarios `13-ship-subagent-build`, `14-ship-all-runs-on` and
+  `15-ship-all-parallel-build`; `03` also asserts the implementer is never dispatched
+  before a hard pause is answered.
 
 ### Fixed
 
@@ -82,10 +100,8 @@ stopping. Plan and rationale: `docs/upgrade-plan-3.0.md`.
   the number is gone.
 - `evidence.sh` with no subcommand printed nothing when run by a relative path.
 
-### Not changed — needs the owner
-
-- `plugin.json` and the README say MIT; the repository `LICENSE` is proprietary. Which
-  one is right is a legal call, not a code change.
+- The repository `LICENSE` was proprietary while every `plugin.json` and README said
+  MIT. It is now MIT.
 
 ## [2.3.0] — 2026-10-01
 

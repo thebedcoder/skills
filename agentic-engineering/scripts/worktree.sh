@@ -3,7 +3,9 @@
 #
 # Two kinds, same mechanics:
 #   story — /ship-all's parallel path: one worktree per [P] story, shipped there by
-#           another session, merged back by the next /ship-all
+#           another session and merged back by the next /ship-all — or built by an
+#           isolated ae-impl subagent in this session (pin + adopt) and merged back
+#           as soon as it returns
 #   task  — one /feature, /ship, /fix or /improve run that this session moves into
 #
 # The command bodies (shared/worktree.md) own every decision and every human gate;
@@ -17,15 +19,22 @@
 #   worktree.sh list [--kind story|task]
 #   worktree.sh merge <path>
 #   worktree.sh remove <path> [--delete-branch | --discard]
+#   worktree.sh pin <base-sha> <branch>
+#   worktree.sh adopt <path> <base-branch> <base-sha>
 #
-# pref and where run anywhere; everything else from the MAIN worktree root.
+# pref and where run anywhere. pin runs only INSIDE a linked worktree: it moves the
+# fresh worktree Claude Code made for an isolated subagent onto <base-sha> (the
+# feature branch, not the default branch Claude Code branches from) under <branch>.
+# adopt, merge and remove run from the MAIN worktree root, or from the worktree
+# that has the story's base branch checked out (a session living in a task
+# worktree). Everything else from the MAIN worktree root.
 # Exit codes: 0 ok · 2 usage · 3 merge conflict outside append-only files (merge
 # aborted, tree unchanged) · 4 refused (dirty tree, not merged, wrong location) ·
 # 1 other git failure.
 #
 # Output lines start with an upper-case verb (PREF, MAIN, WORKTREE, CREATED,
 # IGNORED, CARRIED, LOCAL-ONLY, NOTE, SEEDED, MERGED, APPENDED, CONFLICT, REFUSED,
-# REMOVED, KEPT) so the caller can parse them.
+# REMOVED, KEPT, PINNED, ADOPTED) so the caller can parse them.
 
 set -uo pipefail
 
@@ -34,7 +43,24 @@ set -uo pipefail
 DIR=".claude/worktrees"
 
 die() { echo "REFUSED: $*" >&2; exit 4; }
-usage() { sed -n '2,29p' "$0" >&2; exit 2; }
+usage() { sed -n "2,$(grep -n '^set -uo' "$0" | cut -d: -f1)p" "$0" | sed '$d' >&2; exit 2; }
+
+# The tree a story branch merges into: the main tree as always, or — for a session
+# that lives in a task worktree — that linked worktree, when its branch is <base>.
+home_root() {
+  local base="${1:-}" gd gc cur top
+  gd="$(cd "$(git rev-parse --git-dir 2>/dev/null)" 2>/dev/null && pwd -P)" || die "not inside a git repository"
+  gc="$(cd "$(git rev-parse --git-common-dir 2>/dev/null)" 2>/dev/null && pwd -P)"
+  top="$(git rev-parse --show-toplevel)"
+  if [ "$gd" = "$gc" ] || [ -n "$(git rev-parse --show-superproject-working-tree 2>/dev/null)" ]; then
+    printf '%s' "$top"; return 0
+  fi
+  cur="$(git rev-parse --abbrev-ref HEAD)"
+  [ -n "$base" ] && [ "$cur" = "$base" ] && { printf '%s' "$top"; return 0; }
+  die "run from the main worktree, or from the worktree that has ${base:-the base branch} checked out ($top has $cur)"
+}
+
+abspath() { if [ -d "$1" ]; then (cd "$1" && pwd -P); else printf '%s' "$1"; fi; }
 
 main_root() {
   local gd gc
@@ -226,7 +252,10 @@ appendable() { [[ "$1" =~ ^docs/features/[^/]+/PROGRESS\.md$ ]]; }
 cmd_merge() {
   local path="${1:-}"
   [ -n "$path" ] || usage
-  local root; root="$(main_root)" || exit 4
+  path="$(abspath "$path")"
+  local tbase=""
+  [ -d "$path" ] && tbase="$(git config "branch.$(git -C "$path" rev-parse --abbrev-ref HEAD 2>/dev/null).agenticBase" 2>/dev/null)"
+  local root; root="$(home_root "$tbase")" || exit 4
   cd "$root" || exit 1
   [ -d "$path" ] || die "no worktree at $path"
   is_clean "$path" || die "worktree $path has uncommitted changes — commit or stash them there first"
@@ -284,9 +313,13 @@ cmd_remove() {
   local path="${1:-}" mode="${2:-}"
   [ -n "$path" ] || usage
   case "$mode" in ""|--delete-branch|--discard) ;; *) usage ;; esac
-  local root; root="$(main_root)" || exit 4
+  path="$(abspath "$path")"
+  local tbase=""
+  [ -d "$path" ] && tbase="$(git config "branch.$(git -C "$path" rev-parse --abbrev-ref HEAD 2>/dev/null).agenticBase" 2>/dev/null)"
+  local root; root="$(home_root "$tbase")" || exit 4
   cd "$root" || exit 1
   [ -d "$path" ] || die "no worktree at $path"
+  [ "$path" != "$root" ] || die "refusing to remove the tree this command runs from"
   local branch; branch="$(git -C "$path" rev-parse --abbrev-ref HEAD)"
   if ! is_clean "$path"; then
     echo "REFUSED: $path holds uncommitted files that exist nowhere else:" >&2
@@ -312,6 +345,68 @@ cmd_remove() {
   esac
 }
 
+# Run by an isolated ae-impl as its first command. Claude Code creates a subagent's
+# worktree from the default branch (unless worktree.baseRef is "head"), which lacks
+# the feature branch's committed stories. Move it onto <sha> under <branch>. Only a
+# clean linked worktree, and never one holding commits found on no other branch.
+cmd_pin() {
+  local sha="${1:-}" branch="${2:-}"
+  [ -n "$sha" ] && [ -n "$branch" ] || usage
+  local gd gc top cur target
+  gd="$(cd "$(git rev-parse --git-dir 2>/dev/null)" 2>/dev/null && pwd -P)" || die "not inside a git repository"
+  gc="$(cd "$(git rev-parse --git-common-dir 2>/dev/null)" 2>/dev/null && pwd -P)"
+  top="$(git rev-parse --show-toplevel)"
+  [ "$gd" != "$gc" ] || die "pin runs only inside a linked worktree — it never resets the main tree"
+  is_clean "$top" || die "worktree $top has uncommitted changes"
+  target="$(git rev-parse --verify --quiet "$sha^{commit}")" || die "no commit $sha in this repository"
+  cur="$(git rev-parse --abbrev-ref HEAD)"
+  [ "$cur" != "HEAD" ] || die "detached HEAD in $top"
+  local -a others=()
+  local ref
+  while IFS= read -r ref; do [ "$ref" = "refs/heads/$cur" ] || others+=("$ref"); done \
+    < <(git for-each-ref --format='%(refname)' refs/heads)
+  [ -z "$(git rev-list -n 1 HEAD --not "${others[@]}" "$target" 2>/dev/null)" ] \
+    || die "$cur has commits found on no other branch — pin would drop them"
+  if [ "$branch" != "$cur" ]; then
+    git show-ref --verify --quiet "refs/heads/$branch" && die "branch $branch already exists"
+    git branch -m "$branch" || exit 1
+  fi
+  git reset -q --hard "$target" || exit 1
+  echo "PINNED $top $branch $(git rev-parse --short HEAD)"
+}
+
+# Run by the orchestrator once an isolated ae-impl returns: record the pinned branch
+# as a story worktree of <base-branch>, so merge, remove and /worktree treat it like
+# one this script created. Refuses a branch that does not start at <base-sha>.
+cmd_adopt() {
+  local path="${1:-}" base="${2:-}" sha="${3:-}"
+  [ -n "$path" ] && [ -n "$base" ] && [ -n "$sha" ] || usage
+  local root; root="$(home_root "$base")" || exit 4
+  cd "$root" || exit 1
+  [ -d "$path" ] || die "no worktree at $path"
+  path="$(abspath "$path")"
+  local mine theirs
+  mine="$(cd "$(git rev-parse --git-common-dir)" && pwd -P)"
+  theirs="$(cd "$path" && cd "$(git rev-parse --git-common-dir 2>/dev/null)" 2>/dev/null && pwd -P)"
+  [ -n "$theirs" ] && [ "$mine" = "$theirs" ] || die "$path is not a worktree of this repository"
+  [ "$path" != "$root" ] || die "$path is the tree this command runs from"
+  local branch; branch="$(git -C "$path" rev-parse --abbrev-ref HEAD)"
+  [ "$branch" != "HEAD" ] || die "detached HEAD in $path"
+  git merge-base --is-ancestor "$sha" "$branch" 2>/dev/null \
+    || die "$branch does not start at $sha — it was never pinned to $base; refusing to adopt it"
+  git merge-base --is-ancestor "$sha" "$base" 2>/dev/null \
+    || die "$sha is not on $base — the base moved under the build; refusing to adopt"
+  git config "branch.$branch.agenticBase" "$base"
+  git config "branch.$branch.agenticKind" "story"
+  # Claude Code puts subagent worktrees under the repo's .claude/worktrees/, which a
+  # project need not ignore; an unignored one makes this tree dirty and blocks merge.
+  case "$path" in
+    "$root"/*) git check-ignore -q "$path/" 2>/dev/null || exclude "/$(dirname "${path#"$root"/}")/" ;;
+  esac
+  git -C "$path" check-ignore -q .agentic/focus.md 2>/dev/null || exclude ".agentic/"
+  echo "ADOPTED $path $branch $base"
+}
+
 sub="${1:-}"
 [ -n "$sub" ] || usage
 shift
@@ -323,5 +418,7 @@ case "$sub" in
   list) cmd_list "$@" ;;
   merge) cmd_merge "$@" ;;
   remove) cmd_remove "$@" ;;
+  pin) cmd_pin "$@" ;;
+  adopt) cmd_adopt "$@" ;;
   *) usage ;;
 esac

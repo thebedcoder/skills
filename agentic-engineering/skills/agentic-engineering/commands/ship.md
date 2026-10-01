@@ -104,7 +104,7 @@ test([feature-name]): STORY-XXX — add tests
 ```
 
 **Phase 2 — Backend Review** *(automatic)*
-Run full `/review` flow immediately.
+Run full `/review` flow immediately. Story built in a parallel group (`shared/parallel-build.md` §P6 — Phase 1 already done there, chain starts here) → pass `range: <merge>^1..<merge>` so the review sees this story's change, not the whole branch.
 - RED, REQ, TEST, DOC, SEC, EDGE, LEAN run parallel — seven agents
 - **LEAN runs here and only here.** Phase 4 re-reviews the same branch and passes `--frontend-pass` to drop it
 - Consolidated fix list

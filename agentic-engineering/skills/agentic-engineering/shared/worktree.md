@@ -7,7 +7,7 @@ Loaded on demand only. Two kinds, one helper:
 | `task` | `/feature`, `/ship`, `/fix`, `/improve` on `main` — user picked **New worktree**, or `agentic.worktree=always` | **this** session, moved in with `EnterWorktree` | §W4 enter · §W5 finish at chain end |
 | `story` | `/ship-all`, one per `[P]` story, opt-in | **other** sessions, one per story | §W1 create · §W3 `/ship` inside · §W2 finish |
 
-§W2 also runs from `/worktree` for both kinds. Every other run never opens this file.
+§W2 also runs from `/worktree` for both kinds. Every other run never opens this file. A `[P]` group built in parallel **in this session** uses `shared/parallel-build.md` instead: Claude Code makes each implementer's worktree, `worktree.sh pin` / `adopt` turn it into a `story` worktree of this branch, and one that is not merged there (conflict, failed build) is listed and finished by §W2 like any other.
 
 **Helper:** `${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh` — mechanics only (`pref`, `where`, `create`, `seed-focus`, `list`, `merge`, `remove`). Every decision and every gate below stays here, in the parent. `create`, `list`, `merge`, `remove` run from the **main** worktree root and refuse from a linked one.
 

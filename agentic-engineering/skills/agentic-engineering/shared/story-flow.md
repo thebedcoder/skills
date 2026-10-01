@@ -52,6 +52,8 @@ approved: [hard-override operations the human approved at the gate below, or non
 [ARCH's plan as amended by PROD and pre-review]
 ```
 
+A parallel build adds `base:`, `branch:` and `setup:` header lines (`shared/parallel-build.md` §P2).
+
 **Pre-review.** Dispatch `agentic-engineering:ae-red` and `agentic-engineering:ae-sec` in **one message**, against the plan — **not** the codebase. Both have a **Mode B — Plan pre-review** section; say "Mode B" so they skip their diff step. Pass the brief path; each reads only the story, its AC, the Contract claims and the Failure states. Prompt both with:
 
 > Attack this plan's model of the world, not its style. For each Contract claim:

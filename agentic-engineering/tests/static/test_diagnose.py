@@ -133,6 +133,17 @@ c.expect("DEVIATION build" not in p.stdout, "docs and brief writes are the orche
 p = run("--check", write([FIX_CMD, FIX_READ, PLAN, SRC, RED, result("t5", "RED — Fix review: clean"), COMMIT]))
 c.expect("DEVIATION build" not in p.stdout, "/fix writes its fix in the main thread by design — no build deviation")
 
+# Parallel builds: an isolated implementer must be pinned to the feature branch.
+ISO = tool("m5", "t5", "Agent", {"subagent_type": "agentic-engineering:ae-impl", "isolation": "worktree",
+                                 "prompt": "brief: /w/.agentic/briefs/STORY-002.md\nmode: build"})
+ISO_PIN = tool("m5", "t6", "Agent", {"subagent_type": "agentic-engineering:ae-impl", "isolation": "worktree",
+                                     "prompt": "brief: /w/.agentic/briefs/STORY-003.md\nmode: build\npin: 1a2b3c feat/x-story-003"})
+p = run("--check", write([SHIP_CMD, PLAN, ISO, ISO_PIN]))
+c.expect("DEVIATION base" in p.stdout and "L3" in p.stdout and "L4" not in p.stdout.split("DEVIATION base")[1].split("\n")[0],
+         "isolated ae-impl with no pin: → DEVIATION base citing only that line", p.stdout[-500:])
+p = run("--check", write([SHIP_CMD, PLAN, ISO_PIN]))
+c.expect("DEVIATION base" not in p.stdout, "isolated ae-impl with pin: → no base deviation")
+
 # One huge line must not flood the digest.
 huge = write([{"type": "user", "message": {"role": "user", "content": "x" * 2_000_000}},
               tool("m1", "t1", "Bash", {"command": "pytest " + "y" * 100_000})])
