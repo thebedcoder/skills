@@ -1,6 +1,6 @@
 ---
 description: Implement the next unchecked user story with tests
-argument-hint: [--auto]
+argument-hint: "[--auto]"
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/implement.md` — that file holds the real instructions; this wrapper holds none.
 

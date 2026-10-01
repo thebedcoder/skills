@@ -1,6 +1,6 @@
 ---
 description: Audit a feature's shipped code against its PRD — finds requirements that are claimed done but missing, partial, or contradicted, and appends the remaining work as stories
-argument-hint: [feature-name] [--auto]
+argument-hint: "[feature-name] [--auto]"
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/converge.md` — that file holds the real instructions; this wrapper holds none.
 

@@ -30,22 +30,28 @@ Commands are handled by a cast of named specialist agents. Each has a distinct r
 │ 🧪 TEST   │ Coverage & test quality        │ Flags useless tests    │
 │ 🔍 EDGE   │ Adversarial edge-case probe    │ Hunts what's missing   │
 │ 📖 DOC    │ Convention alignment           │ Notices code drift     │
-│ ✍️ SCRIBE  │ End-user product docs         │ Writes for app users,  │
+│ ✍️ SCRIBE │ End-user product docs          │ Writes for app users,  │
 │           │                                │ not the dev team       │
 │ 🔀 GIT    │ Commits, branches, PRs         │ Conventional always    │
 │ 🔐 SEC    │ Security vulnerabilities       │ High-confidence only   │
+│ ♻️ LEAN   │ Reuse, simplification          │ Searches the repo      │
+│           │                                │ before flagging        │
 └───────────┴────────────────────────────────┴────────────────────────┘
 ```
 
-Seven review agents (RED, REQ, TEST, DOC, SEC, EDGE, LEAN) run as **parallel subagents** after every story — RED, SEC, EDGE and LEAN on Sonnet, REQ, TEST and DOC on Haiku — results back simultaneously, main context stays clean. Now includes `ae-edge`, which adversarially probes backend code for missing edge cases (boundary, null, race, malformed, resource, error-path) and emits failing test code + suggested fixes into the consolidated blocker list.
+Seven review agents (RED, REQ, TEST, DOC, SEC, EDGE, LEAN) run as **parallel subagents** after every story — DOC on Haiku, the other six on Sonnet — dispatched in one batch, results back together, main context stays clean. EDGE adversarially probes backend code for missing edge cases (boundary, null, race, malformed, resource, error-path) and hands back failing test code; LEAN is the only reviewer looking at code that already works, hunting duplicates of what the repo already has.
 
-One UX subagent (ae-ux) runs after the frontend pass with a structured checklist across 6 dimensions.
+One UX subagent (ae-ux) runs after the frontend pass with a structured checklist across 6 dimensions. It reviews what was built; it doesn't design. In `/design`, UX is the main session itself, making the mockups with you through Figma, Pencil or Markdown specs.
 
 ---
 
 ## Workflow
 
 ```
+  every session ─► SessionStart hook: command router + your active task
+                   (also after /clear and /compact)
+       │
+       ▼
 ┌──────────────┐
 │  /bootstrap  │  New project — pick stack, scaffold, install deps,
 │              │  create base structure, plan core epics.
@@ -59,15 +65,21 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────┐
-│                         FEATURE LOOP                                 │
+│                             FEATURE LOOP                             │
+│                                                                      │
+│  On main, /ship /fix /improve (and /feature, once opted in) offer a  │
+│  git worktree: the task gets its own folder, merged back when done   │
 │                                                                      │
 │  /feature [name]                                                     │
+│    0. PROD intent check — user, outcome, constraint (≤5 questions)   │
 │    1. ARCH proposes 3 approach options                               │
-│    2. PROD generates PRD with [NEEDS CLARIFICATION] markers          │
+│    2. PROD writes the PRD — FR-1…FR-n, [NEEDS CLARIFICATION] marks   │
 │    3. Clarification pass — batch resolve all ambiguous items         │
 │    4. REQ constitution check — violations block story breakdown      │
 │    5. ARCH generates data-model.md (if DB changes)                   │
-│    6. PROD writes stories tagged [P] where parallelisable            │
+│    6. PROD writes prioritised stories, [P] where parallelisable      │
+│    7. REQ spec audit — gaps fixed before any code exists             │
+│    (lite mode: stories + spec audit only)                            │
 │                                                                      │
 │  /design  (if UI)                                                    │
 │    Mobile-first → desktop → handoff spec in ./docs/specs/            │
@@ -76,42 +88,52 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │    ┌─────────────┐                                                   │
 │    │ implement   │  ARCH plans (Contract claims + Failure states)    │
 │    │             │  → RED + SEC pre-review the PLAN, not the code    │
-│    │             │  → PROD validates → code + tests                  │
+│    │             │  → PROD validates → tests first, then code        │
+│    │             │  → test run recorded as evidence → story ticked   │
 │    └──────┬──────┘                                                   │
 │           │                                                          │
 │    ┌──────▼──────────────────────────────────────────────────┐       │
-│    │              6 PARALLEL REVIEW AGENTS                   │       │
+│    │              7 PARALLEL REVIEW AGENTS                   │       │
 │    │  🔴 RED    bug hunt (null/async/logic/resources)        │       │
-│    │  ✅ REQ    requirements + constitution audit            │       │
-│    │  🧪 TEST   coverage quality + framework patterns        │       │
+│    │  ✅ REQ    requirements, constitution, fresh evidence   │       │
+│    │  🧪 TEST   coverage quality + AC coverage matrix        │       │
 │    │  📖 DOC    convention alignment                         │       │
 │    │  🔐 SEC    security vulnerabilities                     │       │
 │    │  🔍 EDGE   edge case hunting (boundary/race/malformed)  │       │
+│    │  ♻️ LEAN   reuse, simplification, efficiency            │       │
 │    └──────┬──────────────────────────────────────────────────┘       │
-│           │  consolidated: blockers / should-fix / clean             │
-│           │                                                          │
+│           │  consolidated: blockers / should-fix / won't-fix         │
+│           │  blocker fixed → tests re-run → new evidence row         │
 │    ┌──────▼──────┐                                                   │
-│    │  frontend   │  (if story has UI)                                │
-│    │  + ae-ux    │  🎨 fidelity check — states/forms/a11y/responsive │
+│    │  frontend   │  (if story has UI) → 6-agent review               │
+│    │  + ae-ux    │  🎨 fidelity — states, forms, a11y, responsive    │
 │    └──────┬──────┘                                                   │
 │           │                                                          │
-│    ✍️ SCRIBE  updates end-user app-docs + both changelogs            │
-│              (final step before commit — keeps product docs in sync) │
-│    🔀 GIT    commits with conventional message + PR description      │
-│    🧹 CLEAN  records DEC- decisions + refreshes docs/MEMORY.md       │
+│    ✍️ SCRIBE  updates end-user app-docs; both changelogs written     │
+│    🔀 GIT     conventional commits + PR description                  │
+│    🧹 /cleanup records DEC- decisions + refreshes docs/MEMORY.md     │
 │                                                                      │
-│  /ship-all — chains /ship across all stories                         │
-│    Shows [P] parallel groups upfront                                 │
-│    Prompts you to /compact between stories                                │
+│  /ship-all — chains /ship across stories, in priority order          │
+│    Offers one git worktree per [P] story (opt-in), merges them back  │
+│    Prompts you to /compact between stories                           │
+│                                                                      │
+│  /converge — audits shipped code against the PRD, before /archive    │
 └──────────────────────────────────────────────────────────────────────┘
        │
        ▼
 ┌──────────────┐
-│    /fix      │  Bug reported → FIXER diagnoses → fix → review → docs
+│    /fix      │  Bug → reproduce → trace to the root cause → test one
+│              │  hypothesis → fix + regression test → RED review → docs
 └──────────────┘
 ┌──────────────┐
 │   /improve   │  Non-bug change → ARCH plans → apply → review → docs
 └──────────────┘   (new shortcut, new format, faster path, refactor)
+┌──────────────┐
+│  /worktree   │  List worktrees → merge, PR, keep or discard each
+└──────────────┘
+┌──────────────┐
+│  /diagnose   │  A run misbehaved → compare its transcript with the
+└──────────────┘   command's rules, with line-by-line evidence
 ```
 
 ---
@@ -121,23 +143,25 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | Command | What it does |
 |---|---|
 | `/bootstrap` | Scaffold a new project — stack, deps, structure, epic roadmap |
-| `/init` | Pick project mode (lite or full), then create the docs scaffold, CLAUDE.md, and CONSTITUTION.md |
-| `/feature [name]` | Research → PRD → clarifications → constitution check → stories → spec audit. PRD acceptance criteria are numbered `FR-1…FR-n` and each story declares which it delivers (`Implements: FR-2, FR-5`), so every requirement is traceable to the work that closes it — an unmapped FR stops the breakdown. Each story also carries a `Priority:` of `P1`/`P2`/`P3`, where the P1 set alone must be deployable. The final stage dispatches `ae-req` in spec-audit mode over the PRD, epics and stories, checking ambiguity, duplication, underspecification, FR coverage, constitution conflicts and terminology drift before a line of code exists. In lite mode: stories only, no PRD or epics — the spec audit still runs, scoped to stories and the constitution |
-| `/design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown |
-| `/ship` | Full story, seven phases: implement → 7-agent review → frontend (+ visual capture) → 6-agent review + UX fidelity → end-user docs & changelogs → PR description → cleanup. Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates the references during the frontend pass — stale or missing references become should-fix warnings. Projects opt into automated capture during `/init` by picking a tool from the 15-entry catalog (`agentic-engineering/capture-tools/`); `/ship` Phase 3 then dispatches per mechanism and auto-populates the table. To require captures, add a "Visual artifacts" article to CONSTITUTION.md — `ae-ux` then escalates missing-artifact findings to blockers. |
-| `/ship-all` | Loop `/ship` across all unchecked stories, in priority order — never a `P2` while a `P1` is open. The session-start gate offers shipping the P1 set only, which finishes cleanly with the rest listed as remaining. Features whose stories predate the `Priority:` field ship in file order, unchanged |
-| `/plan-all` | Plan all unplanned epics from INDEX.md |
+| `/init` | Pick project mode (lite or full), then create the docs scaffold, CLAUDE.md, and CONSTITUTION.md. Also asks once whether work started on `main` should get its own git worktree (see "Worktrees") |
+| `/feature [name]` | Intent check → research → PRD → clarifications → constitution check → stories → spec audit. In full mode it first checks the request for a user, an outcome and a constraint; if any is missing it asks — one question at a time, five at most — before proposing approaches (skipped under `--auto`, where the gaps become `[NEEDS CLARIFICATION]` markers). PRD acceptance criteria are numbered `FR-1…FR-n` and each story declares which it delivers (`Implements: FR-2, FR-5`), so every requirement is traceable to the work that closes it — an unmapped FR stops the breakdown. Each story also carries a `Priority:` of `P1`/`P2`/`P3`, where the P1 set alone must be deployable. The final stage dispatches `ae-req` in spec-audit mode over the PRD, epics and stories, checking ambiguity, duplication, underspecification, FR coverage, constitution conflicts and terminology drift before a line of code exists. In lite mode: stories only, no PRD or epics — the spec audit still runs, scoped to stories and the constitution |
+| `/design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown, then desktop, then a handoff spec in `docs/specs/`. Works from the approved PRD, or from the stories' acceptance criteria in lite projects, which have no PRD |
+| `/ship` | Full story, seven phases: implement → 7-agent review → frontend (+ visual capture) → 6-agent review + UX fidelity → end-user docs & changelogs → PR description → cleanup. Each phase that changes code ends with a recorded test run, and the story is ticked only after a green one (see "Evidence before completion"). Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates the references during the frontend pass — stale or missing references become should-fix warnings. Projects opt into automated capture during `/init` by picking a tool from the 15-entry catalog (`agentic-engineering/capture-tools/`); `/ship` Phase 3 then dispatches per mechanism and auto-populates the table. To require captures, add a "Visual artifacts" article to CONSTITUTION.md — `ae-ux` then escalates missing-artifact findings to blockers. |
+| `/ship-all` | Loop `/ship` across all unchecked stories, in priority order — never a `P2` while a `P1` is open. The session-start gate offers shipping the P1 set only, which finishes cleanly with the rest listed as remaining. Features whose stories predate the `Priority:` field ship in file order, unchanged. Two or more `[P]` stories at the next level → optional one-worktree-per-story path with a test baseline, merged back on the next run (see "Worktrees" below) |
+| `/worktree [name]` | List the worktrees the workflow created — one per task, or one per parallel `[P]` story — with each one's branch, state and commits ahead, then finish them: merge (tests run on the merged result before anything is removed), push and open a PR, keep, or discard. Run it from the main folder. Worktrees you made yourself with `claude -w` are not listed. See "Worktrees" below |
+| `/plan-all` | Plan every unplanned epic from INDEX.md: you pick which, then it runs `/feature` for each in turn, asking you to `/compact` between epics. With `--auto`, each `/feature` runs in auto mode; choosing approaches still asks you |
 | `/converge [feature]` | Audit a feature's shipped code against its PRD. `/review` is diff-scoped and story-scoped — after eight stories nobody has compared the requirements against the repository, and the checkboxes were written by the same process that claimed completion. `/converge` builds an inventory from the `FR-` ids, resolves each to the code that should exist, and classifies what it finds as `missing`, `partial`, `contradicts` or `unrequested`. Work that is simply queued in an unchecked story is reported as pending, never as a gap; a requirement claimed by a **checked** story with no matching code is the blocker it exists to catch. Findings with remaining work are appended to `STORIES.md` behind an approval gate, marked `Source: converge`. It never edits the PRD, never touches code, and never fixes anything — repairs go back through `/ship` or `/fix` with a full review behind them. Run it before `/archive`, which deletes the artifacts it audits against |
-| `/fix [desc]` | Diagnose bug → fix → review → docs |
-| `/improve [desc]` | A change that is neither a bug nor a whole feature — a new keyboard shortcut, support for a new file format, an extra export option, a faster query, a long module split in two. ARCH plans it against the precedent set by whatever already does the same kind of thing, states 2–4 inline `Done when:` conditions (printed only — never written to `STORIES.md` or a PRD), applies it, then `ae-red` + `ae-test` plus one specialist picked from the diff review it. The Phase 1 `Change type` (`feat` / `perf` / `refactor`) fixes the commit prefix up front, so additive work lands as `feat(` and gets its minor-version bump. Called bare, it picks an `improvement`-typed item out of `BACKLOG.md`. |
+| `/fix [desc]` | Reproduce → diagnose → fix → review → docs. Diagnosis is shown before any code changes: the bug reproduced by a command run now (with its real output), the commits that introduced it if it used to work, the bad value traced back to where it is first produced, a similar piece of code that works and how it differs, and one hypothesis tested at a time. The fix lands with a regression test, then the full suite runs and its result is recorded as evidence. Then RED — the `ae-red` subagent, not the session that wrote the fix — reviews it: is the root cause really fixed, is the evidence current, would the test have caught the bug, what else calls the changed code. A failed fix goes back to diagnosis instead of a second patch on top; the third failed attempt stops and asks whether this is a design problem rather than one bug |
+| `/improve [desc]` | A change that is neither a bug nor a whole feature — a new keyboard shortcut, support for a new file format, an extra export option, a faster query, a long module split in two. ARCH plans it against the precedent set by whatever already does the same kind of thing, states 2–4 inline `Done when:` conditions (printed only — never written to `STORIES.md` or a PRD), applies it, runs the full test suite and records the result as evidence, then `ae-red` + `ae-test` + `ae-lean` plus one specialist picked from the diff review the still-uncommitted change. The Phase 1 `Change type` (`feat` / `perf` / `refactor`) fixes the commit prefix up front, so additive work lands as `feat(` and gets its minor-version bump. Called bare, it picks an `improvement`-typed item out of `BACKLOG.md`. |
 | `/note [desc]` | Capture bug/idea/improvement to BACKLOG.md |
 | `/focus [task\|done\|clear]` | Set, clear, or advance the current-task pointer and step plan for this worktree (`.agentic/focus.md` — shown in the status bar, see below) |
 | `/next [task\|drop N]` | Queue a task to be picked up after the current one finishes |
 | `/doc [feature]` | Document a feature interactively with Q&A |
 | `/doc-all [--full]` | Document multiple features (`--full` adds guides + index) |
-| `/status` | Progress overview across all features + backlog (runs in forked context) |
+| `/status` | Progress overview across all features, the backlog, and any worktrees waiting to be finished, ending with the next command to run (runs in forked context) |
 | `/analyze [question]` | Answer any question — searches docs and codebase (runs in forked context) |
-| `/archive [feature\|--all]` | Compact a shipped feature's docs (PRD, stories, progress, reviews, artifacts) into a single `SUMMARY.md` with story digests, links to the feature's `DEC-` entries, and a frozen test rollup. Originals are deleted — git history preserves them; `data-model.md` stays. `/status` and `/ship-all` skip archived features, keeping their scans fast as shipped features accumulate. `--all` archives every fully-shipped feature behind one combined confirmation, with a separate commit per feature so each can be reverted individually. |
+| `/diagnose [session-id\|path] [--bundle]` | When a run misbehaved — a phase skipped, reviewers dispatched one at a time, a gate that should have paused under `--auto` — read that session's transcript and compare it with the command's contract. Reports each deviation with the contract line and the transcript lines that show it. `--bundle` writes a scrubbed report, digest and issue body to `.agentic/diagnose/<id>/` for a GitHub issue; it never posts anything. Runs in a forked context, read-only |
+| `/archive [feature\|--all\|--apply]` | Retire a shipped feature's working docs in two steps, so nothing durable is lost. First it **proposes** without deleting anything: a `SUMMARY.md` per feature (story digests, links to its `DEC-` entries, a frozen test rollup), decisions the feature made that `DECISIONS.md` doesn't hold yet, and open obligations from its progress notes, all in `.agentic/archive-extract.md` for you to edit, plus a deletion table to approve. Then `/archive --apply` writes the extracted decisions to `DECISIONS.md` and obligations to `BACKLOG.md`, and deletes the originals (PRD, stories, progress, reviews, artifacts); git history keeps them and `data-model.md` stays. `/status` and `/ship-all` skip archived features. `--all` covers every fully-shipped feature, with a separate commit per feature so each can be reverted on its own. |
 | `/cleanup [story\|feature]` | Promote finished work into durable docs: binding decisions appended to `docs/DECISIONS.md` as `DEC-NNN` entries, and `docs/MEMORY.md` rewritten within a hard line cap. Runs automatically as the last phase of every `/ship`, `/fix`, and `/improve`; use it standalone for work done outside those chains. |
 
 ---
@@ -186,7 +210,7 @@ A **lite** project (see below) starts with a much smaller subset of this tree �
 
 ### Project mode — lite or full
 
-Not every project is a production system. A landing page does not need a PRD, an epic breakdown, and an end-user documentation site before the first line of CSS. But it still benefits from stories with acceptance criteria, real tests, and a six-agent review.
+Not every project is a production system. A landing page does not need a PRD, an epic breakdown, and an end-user documentation site before the first line of CSS. But it still benefits from stories with acceptance criteria, real tests, and a seven-agent review.
 
 So `/init` asks once, and records the answer in `docs/INDEX.md` frontmatter:
 
@@ -208,9 +232,9 @@ mode: lite
 
 `/init` proposes a mode from what it can observe — test framework, CI config, deploy config, contributor count — and defaults to lite when the signals are ambiguous. You can override at the prompt, and re-running `/init` changes the marker.
 
-In lite mode the shipping path is `/note` → `/ship` rather than `/feature` → `/ship`: capture the thing, then ship it. `/ship` promotes a backlog item into `docs/features/main/` when no feature exists yet. `/feature` still works when you want a group of related stories planned at once — it just skips the research and PRD stages.
+In lite mode the shipping path is `/note` → `/ship` rather than `/feature` → `/ship`: capture the thing, then ship it. `/ship` promotes a backlog item into `docs/features/main/` when no feature exists yet. `/feature` still works when you want a group of related stories planned at once — it just skips the intent check, research and PRD stages.
 
-Only four commands behave differently between modes (`/init`, `/feature`, `/status`, `/cleanup`). Everything else — `/ship`, `/implement`, `/review`, `/fix`, `/doc` — is identical, because it reads `STORIES.md` and `PROGRESS.md`, which both modes produce.
+Only five commands behave differently between modes (`/init`, `/feature`, `/status`, `/cleanup`, and `/converge`, which audits checked stories' acceptance criteria when there is no PRD). Everything else — `/ship`, `/implement`, `/review`, `/fix`, `/doc` — is identical, because it reads `STORIES.md` and `PROGRESS.md`, which both modes produce.
 
 ### Three memory documents
 
@@ -247,6 +271,12 @@ All APIs must follow JSON:API specification.
 
 Constitution violations found in review are always blockers.
 
+### Evidence before completion
+
+A checkbox is a claim; the test run is the evidence. Every phase that changes code — implementation, review fixes, frontend, `/fix`, `/improve` — ends by running the project's test command through `scripts/evidence.sh`, which prints a row for the story's `### Evidence` table in `PROGRESS.md`: phase, command, exit code, the runner's own pass/fail summary, time, and a **tree id** — a fingerprint of the code the tests ran against, with docs excluded. The story box is ticked only after a green row is recorded.
+
+`/review` re-checks that fingerprint against the current code and hands the verdict to REQ. A story ticked in the diff under review whose newest row is **stale** (code changed after the run), **failing**, or **missing** is a blocker. Stories ticked before this existed are unaffected. `/fix` and `/improve` carry their row in the completion summary and as an `Evidence:` trailer on the commit.
+
 ### Contract claims, failure states, and plan pre-review
 
 Two required sections in ARCH's implementation plan, both of which outlive it.
@@ -260,22 +290,63 @@ Two required sections in ARCH's implementation plan, both of which outlive it.
 ### Human checkpoints
 
 Interactively, the workflow stops at each of these:
+- Intent check (full-mode `/feature`, only when the request leaves the user, the outcome or a constraint unstated — one question at a time)
 - Approach selection (after 3 options presented)
 - PRD approval (after the clarification pass resolves all `[NEEDS CLARIFICATION]` items)
 - Constitution violations (must be resolved before stories are written)
 - Implementation plan (before any code is written)
 - Design approval (mobile and desktop separately)
-- Review blockers
+- Review blockers — including a story ticked without fresh, green test evidence
+- A third failed fix attempt in `/fix` (rethink the approach, try once more, or log it)
+- Where the work goes when a command starts on `main`: new branch, new worktree, or stay (see "Worktrees")
+- Parallel `[P]` stories in `/ship-all`: whether to use worktrees at all
+- Finishing a worktree: merge, push and open a PR, keep, or discard
 
-**Under `--auto`, the plan and PRD gates are skipped** — they are approval ceremony, and that is what auto mode exists to skip. Three things re-arm them anyway: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the hard-override list below. Constitution violations, review blockers and destructive operations are never skipped under any flag.
+**Under `--auto`, the plan and PRD gates are skipped** — they are approval ceremony, and that is what auto mode exists to skip. The intent check is skipped too; its gaps become `[NEEDS CLARIFICATION]` markers in the PRD. Three things re-arm the plan gate anyway: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the hard-override list below. Constitution violations, review blockers, the third failed fix, the parallel-worktree path, merging or discarding a worktree, and destructive operations are never skipped under any flag.
 
 ### Auto mode (`--auto`)
 
-Long-running commands (`/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`) accept a per-invocation `--auto` flag. Ceremonial checkpoints are skipped, unambiguous decisions proceed automatically (citing `CONSTITUTION.md` when it settles the choice), and everything that matters still pauses: review blockers, anything touching CI configs / secrets / DB migrations / mass deletions, constitution conflicts, and any architectural or destructive choice. Every auto-decision is announced inline and logged to `.agentic/auto-log.md` (gitignored), and the command ends with a one-line summary of decisions and hard-pauses.
+Long-running commands (`/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/frontend`, `/design`, `/plan-all`, `/converge`) accept a per-invocation `--auto` flag. Ceremonial checkpoints are skipped, unambiguous decisions proceed automatically (citing `CONSTITUTION.md` when it settles the choice), and everything that matters still pauses: review blockers, anything touching CI configs / secrets / DB migrations / mass deletions, constitution conflicts, and any architectural or destructive choice. Every auto-decision is announced inline and logged to `.agentic/auto-log.md` (gitignored), and the command ends with a one-line summary of decisions and hard-pauses. The auto-mode rules themselves live in a separate file that is loaded only when the flag is present, so interactive runs don't pay for them.
 
-### Parallel stories `[P]`
+### Worktrees
 
-Stories tagged `[P]` have no dependencies on other stories. `/ship-all` surfaces these upfront — you can run them in separate Claude Code sessions simultaneously.
+A git worktree is a second checkout of the same repository in its own folder, on its own branch. Work there never touches the files in your main folder, so you can keep running the app, review a PR or start another session while a task is in progress. The workflow uses them in two ways, both under `.claude/worktrees/` — the same place Claude Code's own `claude -w` uses. They are ignored through `.git/info/exclude`, so nothing about them is ever committed.
+
+#### One task, one worktree
+
+When `/ship`, `/fix` or `/improve` starts on `main`, it already asks where the work should go; that question now has a **New worktree** option. `/feature`, which used to create its branch without asking, asks branch-or-worktree once you have chosen a preference (below). Pick the worktree and the command:
+
+1. **Creates** `.claude/worktrees/<name>` on a new branch (`feat/…`, `fix/…`, `improve/…`) from your current commit, and moves the task's focus and step plan into it. Uncommitted edits in your main folder stay there — you are told if there are any.
+2. **Offers to copy** ignored local files such as `.env`, which a fresh checkout does not have. Under `--auto` it copies them without asking: the copy stays on this machine and stays ignored, so it is not treated as a secrets operation. A file that isn't ignored is never copied.
+3. **Moves this session into the worktree** (Claude Code's `EnterWorktree`), so everything after that — code, tests, reviews, docs, commits — happens there.
+4. **Runs a baseline**: installs dependencies and runs the tests before any change. A red baseline stops and asks, except in `/fix`, where a failing test is often the bug itself.
+5. **Finishes** when the chain completes: merge into the branch you started from, push and open a PR, keep working there, or discard. Merging runs the tests on the merged result before the worktree is removed. After a `/ship` with stories still open, keeping it is the suggested answer.
+
+Anything you keep can be finished later with `/worktree`, run from the main folder. It lists every worktree the workflow made, with its state, and offers the same choices for each.
+
+**Setting the default.** The choice is a per-developer setting in local git config, asked once by `/init`:
+
+```bash
+git config agentic.worktree ask      # the branch question offers New worktree; /feature asks too
+                                     # (unset: the same, except /feature just creates its branch)
+git config agentic.worktree always   # every task on main gets its own worktree, no question
+git config agentic.worktree never    # the branch question as before
+```
+
+With `always`, a `--auto` run on `main` goes straight into a worktree instead of stopping to ask about the branch. Finishing never happens on its own: under `--auto` the worktree is kept, and merge, PR or discard wait for you.
+
+Starting a session in a worktree yourself (`claude -w`) needs none of this — the commands see a branch that isn't `main` and carry on. `/worktree` leaves those alone; they're yours.
+
+#### Parallel stories `[P]`
+
+Stories tagged `[P]` have no dependencies on other stories. `/ship-all` surfaces these upfront, and when the next priority level holds two or more of them it offers to ship them in parallel — opt-in, never under `--auto`:
+
+1. **Create** — one worktree per story under `.claude/worktrees/`, each on its own branch (`feat/<feature>-story-xxx`).
+2. **Baseline** — the project's test command runs inside each worktree before any change, so a red suite later is unambiguous. A red baseline stops and asks.
+3. **Seed** — each worktree gets its own `.agentic/focus.md` pointing at its story. Open a terminal per worktree and run `/ship STORY-XXX` there; the session-start hook names the story for you.
+4. **Finish** — the next `/ship-all` (or `/worktree`) in the main folder offers, per shipped worktree: merge, push and open a PR, keep, or discard. Merging runs the tests on the merged result, then writes the changelogs, `DECISIONS.md` and `MEMORY.md` once in the main folder — the story branches defer those phases so parallel branches never fight over shared docs. `PROGRESS.md` entries from both stories are joined, theirs after ours.
+
+Nothing is removed until you pick an option, and removing a worktree or deleting its branch is never auto-approved. A worktree with uncommitted files is never removed; the mechanics live in `scripts/worktree.sh` so they are the same every time.
 
 ### Two changelogs
 
@@ -289,13 +360,46 @@ Both maintained automatically — never skip this step:
 Long sessions stay lean through three mechanisms:
 - **Caveman rules** — agent-to-agent output drops filler words (~75% token reduction), technical terms kept exact
 - **A compact checkpoint** between stories in `ship-all` and between epics in `plan-all`. `/compact` is a user command — the workflow prints the command and asks you to run it; it cannot run it for you
-- **On-demand loading** — only the command file for the current command is loaded into context, not the full skill
+- **On-demand loading** — only the command file for the current command is loaded into context, not the full skill. Pieces that only one branch needs — the auto-mode rules, the worktree path, visual capture, releasing the focus task — sit in their own files and load only when that branch runs. In 2.2.0 this cut what `/ship` and `/feature` load up front by about a fifth; `tests/token-report.py static <command>` shows the current numbers
+
+### Session hook
+
+The plugin registers one hook. It keeps the workflow framing alive across new sessions, `/clear` and `/compact`, so you don't have to remember which command fits.
+
+| Hook | Event (matcher) | What it injects |
+|---|---|---|
+| `hooks/session-start.sh` | `SessionStart` (`startup\|clear\|compact`) | A short router — bug → `/fix`, idea → `/note`, small change → `/improve`, new feature → `/feature`, "what's left" → `/status`. In a project with `docs/INDEX.md` it adds which memory docs to read before touching code, and if `.agentic/focus.md` has an active task, its title and PLAN progress, so the first reply picks up where you left off. Inside a worktree it names the branch and the main folder; in the main folder it counts the worktrees waiting under `.claude/worktrees/`. |
+
+Outside a scaffolded project (no `docs/INDEX.md`) it injects only the router, marked as not set up, so ordinary requests stay ordinary. The text is capped at 40 lines, an explicit slash command or system prompt always wins over it, and `AGENTIC_SESSION_HOOK=0` turns it off for a session — useful for headless `claude -p` drivers that want a bare context.
 
 ### Context forking
 
-`/status` and `/analyze` use `context: fork` — they run in an isolated subagent context. The main conversation only sees the final result, not the intermediate tool calls and file reads. This keeps the main context lean on long sessions where you might check status or run analysis queries repeatedly.
+`/status`, `/analyze` and `/diagnose` use `context: fork` — they run in an isolated subagent context. The main conversation only sees the final result, not the intermediate tool calls and file reads. This keeps the main context lean on long sessions where you might check status or run analysis queries repeatedly.
 
-Other commands (`/ship`, `/feature`, `/design`) stay in the main context because they have human checkpoints that require conversation continuity.
+Other commands (`/ship`, `/feature`, `/design`, `/worktree`) stay in the main context because they have human checkpoints that require conversation continuity.
+
+### Tests
+
+The plugin tests itself in two layers. See [`tests/README.md`](tests/README.md) for the full list.
+
+`tests/run-tests.sh --static` needs no API key and runs in GitHub Actions on every push. It checks frontmatter, every `${CLAUDE_PLUGIN_ROOT}` path and agent name, the command tables, and the SessionStart hook's JSON under hostile inputs. It also runs the helper scripts end to end against throwaway git repos: two worktrees merged back with both `PROGRESS.md` entries intact, a task's focus carried into its worktree, the evidence fingerprint changing on any code edit but never on a docs edit, and `/diagnose`'s transcript reader catching a sequential reviewer dispatch.
+
+`tests/run-tests.sh --behavioral` drives real headless `claude -p` sessions in throwaway fixture projects and checks what happened, from the transcript and the files left behind rather than the wording of the reply:
+
+- "fix this failing test" lands in `/fix`, which reproduces the failure before diagnosing it
+- `/ship` dispatches all seven reviewers in one message
+- `/ship --auto` still pauses on a table-creating migration
+- `/converge` flags a checked story whose code is missing
+- the session hook names your active task in a fresh session and after `/compact`
+- REQ blocks a story ticked with stale test evidence
+- `/diagnose` spots reviewers dispatched one at a time
+- `/feature` asks one intent question for a vague request and none for a clear one
+- `/fix` on `main` offers a worktree, and with `agentic.worktree=always` fixes the bug inside one while the main folder stays untouched
+- `/fix` hands its review to a real `ae-red` subagent rather than writing one itself, and `/improve` reviews its change on a fresh branch instead of aborting
+- `/worktree` changes nothing until you answer, then merges a finished worktree and leaves an unfinished one alone
+- `/archive` deletes nothing in its first pass, then moves a feature's decisions and open obligations into the durable docs before removing the originals
+
+Each run prints a per-scenario token report. Runs skip cleanly when no credentials are present. With an `ANTHROPIC_API_KEY` repository secret, CI also runs three cheap scenarios on every pull request; the full set runs on manual dispatch.
 
 ### Built-in gotchas
 
@@ -345,7 +449,7 @@ You can add your own rules any time by dropping a markdown file with YAML frontm
 
 Each review agent loads reference files on demand based on what's in the diff. No generic checklists, no pattern-matching noise — each reference defines what "vulnerable", "broken", or "missing" looks like in that specific context with real code examples.
 
-RED carries 7 bug-category references and 7 language guides; TEST 4 references and 7 framework guides; SEC 17 topic references and 8 language guides; EDGE 4 probe categories; UX 6 fidelity dimensions. The full file listing is in [`docs/review-agent-references.md`](docs/review-agent-references.md).
+RED carries 7 bug-category references and 7 language guides; TEST 4 references and 7 framework guides; SEC 16 topic references and 8 language guides; EDGE 4 probe categories; UX 6 fidelity dimensions. The full file listing is in [`docs/review-agent-references.md`](docs/review-agent-references.md).
 
 ---
 
@@ -393,7 +497,14 @@ Then re-run `/init` in each project so the statusline points at the project-loca
 
 ### Other coding agents — the portable workflow
 
-The full workflow (slash commands + specialist subagents) is Claude Code-native and doesn't port. The **portable workflow rules** do — plain markdown any agent can follow. Run the installer with `--tool=<name>` from your project root:
+The full workflow (slash commands + specialist subagents) is Claude Code-native and doesn't port. The **portable workflow rules** do — plain markdown any agent can follow. They cover the same ground in prose:
+- planning with an intent check, numbered requirements, priorities and a spec audit;
+- test-first implementation, with a recorded green test run before anything counts as done;
+- the seven review passes;
+- the reproduce → diagnose → one-hypothesis bug-fix flow;
+- the two-phase archive, the feature audit, and optional worktrees.
+
+Run the installer with `--tool=<name>` from your project root:
 
 ```bash
 # From inside your project:
@@ -425,7 +536,7 @@ curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh 
 
 ### Claude.ai
 
-Upload `agentic-engineering.skill` via **Settings → Customize → Skills → Upload**. This is the skill only — no subagents, so `/review` runs as a single pass rather than six parallel ones.
+Upload `agentic-engineering.skill` via **Settings → Customize → Skills → Upload**. This is the skill only — no subagents, so `/review` runs as a single pass rather than seven parallel ones. The session hook and the helper scripts (worktrees, test evidence, `/diagnose`) also need the Claude Code plugin install.
 
 **What's inside the plugin:**
 
@@ -434,20 +545,34 @@ agentic-engineering/
 ├── .claude-plugin/plugin.json    ← plugin metadata
 ├── skills/agentic-engineering/
 │   ├── SKILL.md                  ← router + the policy every command inherits
-│   ├── commands/                 ← 22 command bodies, loaded on demand
-│   └── shared/preamble.md        ← blocks many command bodies reuse
+│   ├── commands/                 ← 24 command bodies, loaded on demand
+│   └── shared/                   ← pieces several commands load when needed
+│       ├── preamble.md           ← --auto parsing, focus writes, memory inputs
+│       ├── project-mode.md       ← lite/full mode + the three memory docs
+│       ├── auto-mode.md          ← loaded only under --auto
+│       ├── story-flow.md         ← plan → implement → verify → record
+│       ├── focus-release.md      ← marks the focus task done
+│       ├── worktree.md           ← loaded only on the parallel [P] path
+│       └── visual-capture.md     ← loaded only when capture is configured
 ├── agents/                       ← 9 flat agent files, nothing else
 │   ├── ae-red.md                 ← bug hunter
 │   ├── ae-req.md                 ← requirements + constitution
 │   ├── ae-test.md                ← test quality + AC coverage matrix
 │   ├── ae-doc.md                 ← convention drift
-│   ├── ae-sec.md                 ← security (Sonnet, with ae-red and ae-edge)
+│   ├── ae-sec.md                 ← security vulnerabilities, high-confidence only
 │   ├── ae-edge.md                ← adversarial edge-case prober
 │   ├── ae-lean.md                ← reuse, simplification, efficiency, altitude
 │   ├── ae-ux.md                  ← UX fidelity (runs after the frontend pass)
 │   └── ae-scribe.md              ← end-user docs writer
 ├── references/<agent>/           ← the agents' on-demand reference + language docs
-├── commands/                     ← 21 slash-command wrappers
+├── commands/                     ← 24 slash-command wrappers
+├── hooks/                        ← SessionStart router (hooks.json + session-start.sh)
+├── scripts/                      ← helpers the commands call
+│   ├── worktree.sh               ← create / merge / remove task and [P] story worktrees
+│   ├── evidence.sh               ← record a test run, check it is still fresh
+│   ├── review-diff.sh            ← uncommitted change → diff file for /fix and /improve reviewers
+│   └── transcript-digest.py      ← /diagnose's transcript reader
+├── tests/                        ← static + behavioral suite, run-tests.sh
 ├── rules-library/                ← 16 rule templates for /init to offer
 ├── capture-tools/                ← 15-entry visual-capture catalog for /init to offer
 ├── adapters/AGENTS.md.template   ← portable rules for non-Claude tools
@@ -466,7 +591,7 @@ The nested layout produced 59 phantom agents named after reference documents.
 `/init` and `/bootstrap` wire this up automatically: they copy the statusline script into your project's `.claude/` and point `.claude/settings.local.json` at it. Nothing to do on new projects.
 
 ```
-~/dev/myapp  feat/payments  Sonnet 4.6  ctx:42%
+~/dev/myapp  feat/payments  Sonnet 5.5  ctx:42%
 🎯 STORY-003: Stripe webhook handler
 ```
 
@@ -525,9 +650,10 @@ ARCH:   Plan for STORY-001: [implementation plan]
 You:    go
 
         → implement + tests
-        → 6 parallel reviews return simultaneously
+        → test run recorded: 14 passed · story ticked
+        → 7 parallel reviews return simultaneously
         → 1 blocker: hardcoded Stripe key in config (SEC)
-        → fix blocker
+        → fix blocker → tests re-run → new evidence row
         → SCRIBE updates changelogs
         → GIT: feat(payments): add Stripe customer creation
 
@@ -542,6 +668,7 @@ Built with Claude Code. Informed by:
 - [Spec Kit](https://github.com/github/spec-kit) — constitution and spec-driven development
 - [getsentry/skills](https://github.com/getsentry/skills) — reference-backed skill architecture
 - [anthropics/claude-code-security-review](https://github.com/anthropics/claude-code-security-review) — confidence-based security review approach
+- [obra/superpowers](https://github.com/obra/superpowers) — session hook, headless transcript testing, worktree lifecycle, evidence before completion, systematic debugging
 
 ---
 

@@ -4,6 +4,352 @@ All notable changes to the `agentic-engineering` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] — 2026-10-01
+
+### Added
+
+- **A worktree per task.** When `/ship`, `/fix` or `/improve` starts on `main`, the
+  branch question they already ask gains a **New worktree** option. Picking it
+  creates `.claude/worktrees/<name>` on a new branch from the current commit, moves
+  the task's CURRENT and PLAN into it, offers to copy ignored `.env*` files, moves
+  the session in with `EnterWorktree`, and runs a baseline (deps + tests; a red
+  baseline asks, except in `/fix`). The chain then runs in full there. At chain
+  end `/ship`, `/ship-all`, `/fix` and `/improve` offer merge (tests run on the
+  merged result before removal), push + PR, keep, or discard — `ExitWorktree`
+  brings the session back first. Under `--auto` the worktree is kept and logged;
+  merge, PR and discard wait for a human. `shared/worktree.md` §W4 / §W5.
+- **`git config agentic.worktree ask|always|never`** — per developer, never
+  committed, asked once by `/init`. `always` skips the branch question and goes
+  straight into a worktree, so a `--auto` run on `main` no longer stops there.
+  `/feature`, which never asked about its branch, offers branch-or-worktree only
+  on an explicit `ask` (or goes to a worktree on `always`); unset leaves it as it was.
+- **`/worktree [name]`** — lists the worktrees the workflow made (task and `[P]`
+  story), with branch, state and commits ahead, and finishes each through the same
+  merge / PR / keep / discard gate. Main context, every finish a human answer.
+  Worktrees from `claude -w` are not listed.
+- **Session hook names the worktree.** Inside one: its branch and the main folder.
+  In the main folder: how many wait under `.claude/worktrees/`. Read from files,
+  no git call.
+- `scripts/worktree.sh`: `pref`, `where`, `create --kind task --carry-focus`,
+  `list --kind`; `remove` carries the worktree's `.agentic/auto-log.md` back.
+- Behavioral scenario `09-fix-in-worktree`: unset preference offers the option and
+  creates nothing; `always` + `--auto` fixes and commits inside a worktree with the
+  main folder untouched and the worktree kept.
+
+### Changed
+
+- **`ae-test`, `ae-req` and `ae-ux` run on Sonnet** (were Haiku). Measured, not
+  assumed: each agent ran twice per tier on a fixture with 16 planted defects
+  (3 weak tests, 4 unmet criteria / constitution violations, 4 spec problems, 5 UI
+  departures from the handoff). Both tiers caught all 16 every time. Haiku also
+  marked a met criterion "❌ … MET", made shared test state a blocker, called
+  drifting terminology consistent, and reported no UI polish where Sonnet found
+  four real ones. The Sonnet agents cost the same per run ($0.145 / $0.168 vs
+  $0.138 / $0.165) because Haiku read and wrote more to get there. `ae-doc` and
+  `ae-scribe` stay on Haiku.
+
+- **Worktrees live in `.claude/worktrees/`**, `[P]` story ones included — where
+  `claude -w` puts its own and the only place `EnterWorktree` switches between.
+  They are ignored through `.git/info/exclude`, so `/ship-all` no longer commits a
+  `.gitignore` line, and `.agentic/` is excluded too when the worktree's own
+  `.gitignore` lacks it.
+- `worktree.sh list` shows only worktrees it made (branch config `agenticBase`),
+  with their `kind`, wherever they sit. A `claude -w` or hand-made worktree is never
+  offered for merge or removal.
+
+### Fixed
+
+- **Final sweep.**
+  - The portable rules non-Claude tools install (`adapters/AGENTS.md.template`)
+    were 2.1-era. They now carry evidence before "done", the reproduce → diagnose
+    → one-hypothesis fix flow with its three-failed-fixes stop, the intent check,
+    `FR-` traceability, priorities and the spec audit, the uncommitted-change review
+    with a reuse pass in improvements, a feature audit, the two-phase archive, and
+    optional worktrees. Their `--auto` list no longer names `doc`. Checked through
+    `install.sh --tool=cursor` twice: one block, replaced in place.
+  - SKILL.md's `--auto` list named `/doc` (no such flag) and missed `/frontend`
+    and `/plan-all`. `test_command_tables.py` now pins SKILL.md's and README's lists
+    to the commands whose hint offers `--auto`.
+  - Hard-override #2 (secrets always pause) contradicted the worktree step that
+    copies an ignored `.env` under `--auto`. The rule now says what it guards —
+    creating, editing, staging or sending a secret — and carves out that local
+    copy; scenario 09 runs `/fix --auto` with a real ignored `.env`.
+  - `/fix`, `/ship-all`, `/doc` and `/status` end with the `Next:` line SKILL.md
+    requires of every command.
+  - `/init`'s `CLAUDE.md` template asks for `MEMORY.md` at session start and a
+    recorded green run before a story is complete; its closing prompt fits the
+    chosen mode. The session hook names the newest 20 `CHANGELOG.md` entries, as
+    SKILL.md's session-start rule always said. README's SEC count is 16.
+  - CI: a `behavioral-smoke` job runs scenarios 05, 06 and 11 on pull requests
+    (about $0.35) when the `ANTHROPIC_API_KEY` secret is available, and skips
+    with a notice otherwise.
+
+- **Command audit.** A read of all 24 commands against each other, the README and
+  the agents:
+  - `/review`'s severity table had no row for REQ's unmet criteria or TEST's
+    `Missing coverage:` entries (an AC with no test, a matrix row naming a missing
+    test, a test that cannot fail) while forbidding a fourth bucket. Both now map
+    to Blocker, and an unlisted reviewer "blocker" is never dropped.
+  - `/design` required an approved `PRD.md`, which lite projects never have. It
+    now works from `STORIES.md` when no PRD exists (existence check, not a mode
+    check).
+  - `/frontend` run on its own wrote UI code with no test run, no evidence row, no
+    blocker gate and no commit. It now verifies through `evidence.sh` (the row
+    `/ship` Phase 3 already cited) and, standalone, gates ae-ux blockers and
+    commits.
+  - `/plan-all` offered `--auto` but never parsed it; it now does and passes it to
+    every `/feature`, writes and releases its CURRENT task, and prints the auto
+    summary. Nested `/feature` runs leave the parent's CURRENT and PLAN alone, and
+    a standalone `/feature` now writes the PLAN `/focus` always said it did.
+  - `/init` no longer offers an `--auto` it never read; `test_frontmatter.py` now
+    fails any command whose hint offers `--auto` without §A and §C.
+  - `/fix` states the non-watch test rule. `/status` lists the workflow's
+    worktrees. `/note` routes ideas to `/ship` or `/feature`.
+  - Stale text: `/review`'s description said 6 agents and its hint lacked
+    `--frontend-pass`; `/fix`'s said "stays on current branch"; `/doc-all --full`
+    promised architecture docs; README's `/archive` row described the old one-shot
+    flow; the constitution template `/init` writes listed six `--auto` commands.
+
+- **`ae-req` no longer blocks on fresh evidence.** In 3 of 4 implementation audits,
+  on both tiers, it marked Evidence ❌ BLOCKER on a fresh, green row because the
+  tests looked weak. Part 3 now answers only "did the suite run green on this
+  code?"; weak tests land under the unmet criterion, the constitution's testing
+  article, or `ae-test`. Re-run: 4 of 4 audits report fresh evidence as ✅, unmet
+  criteria still block, and a story whose criteria are met with thin tests passes
+  REQ. Scenario 06 (stale evidence blocks, fresh clears) passes on Sonnet.
+
+- **Reviewers run on the current Sonnet.** `ae-red`, `ae-sec`, `ae-edge` and
+  `ae-lean` declared `model: claude-sonnet-5`, which pins Sonnet 5: run logs billed
+  them as `claude-sonnet-5` while the session ran `claude-sonnet-5-5`, with half
+  its output ceiling. All nine agents now name the tier — `model: sonnet` /
+  `model: haiku` — which tracks the current model and resolves on Bedrock and
+  Vertex. Verified: `ae-red` dispatched from a Haiku session runs on
+  `claude-sonnet-5-5`. `test_frontmatter.py` now rejects pinned ids.
+- **Roster says what each name is.** `ae-ux` was listed as doing "design flows,
+  mockups", but it is a read-only reviewer of built UI; `/design`'s mockups are made
+  by the main model speaking as UX. SKILL.md now lists the three subagent names that
+  double as inline hats — UX in `/design`, SCRIBE in `/doc` and `/doc-all`, RED's
+  improvement notes in `/doc` — and says that everywhere else those names mean a
+  dispatch. The command headers say the same. `ae-sec` and `ae-edge` descriptions no
+  longer say "six parallel subagents"; `ae-red`, `ae-test`, `ae-lean` and `ae-ux`
+  descriptions name every command that dispatches them. README's workflow diagram
+  drops a "CLEAN" speaker that existed nowhere else.
+
+- **A focus file missing its `# CURRENT` heading still names the task.** A real
+  `/fix` run wrote the CURRENT fields bare, so the new worktree got no task, the
+  main folder kept it, and the session hook and status line showed none. Fields
+  before any heading now count as CURRENT in `worktree.sh --carry-focus` (which
+  restores the heading), the SessionStart hook and `agentic-statusline.sh`, and
+  preamble §B states the heading rule.
+
+- **`/fix` reviews with a real `ae-red`.** Phase 3 said "RED runs focused review"
+  without naming a dispatch, and a headless `/fix --auto` wrote the RED block itself
+  — self-review under a reviewer's name. It now dispatches
+  `agentic-engineering:ae-red` in a new **fix-review mode** (`agents/ae-red.md`
+  Mode C): root cause actually resolved, evidence row fresh and green, regression
+  test fails without the fix, blast radius, plus the usual CRITICAL/WARNING
+  findings and a `Verdict:` that drives the existing pause. `/diagnose --check`
+  flags a `/fix` that commits with no `ae-red` dispatch.
+- **`/improve`'s review sees the change.** Its reviewers ran before the commit on
+  a diff captured "exactly as `/review` Step 0c" — committed work only. On a fresh
+  branch that resolves the base to HEAD and aborts; on an older one it reviews the
+  wrong commits. New `scripts/review-diff.sh <name>` captures uncommitted work
+  (tracked, staged, new; not ignored files, `.agentic/` or nested worktrees)
+  against HEAD through a throwaway index — the user's staging is untouched, and an
+  empty change exits 3 instead of passing as a clean review. `/fix` uses it too.
+
+- **`/ship-all` merges finished `[P]` worktrees again.** The 2.2.0 context diet
+  dropped Step 0c along with the focus boilerplate around it, so `§W2` (merge, PR,
+  keep or discard each shipped story worktree) had no caller and finished
+  worktrees were never offered back. Restored. A static check now fails when any
+  `§` section of a `shared/` file is referenced by nothing.
+
+## [2.2.0] — 2026-09-30
+
+Gaps closed from a comparison with [obra/superpowers](https://github.com/obra/superpowers);
+audit and per-item plan in [`docs/improvement-plan.md`](docs/improvement-plan.md).
+
+### Added
+
+- **SessionStart router hook** (`hooks/hooks.json`, `hooks/session-start.sh`), both
+  modes. Fires on `startup|clear|compact` and injects a router of at most 40 lines:
+  bug → `/fix`, idea → `/note`, small change → `/improve`, new feature → `/feature`,
+  "what's left" → `/status`. In a project with `docs/INDEX.md` it names the memory
+  docs to read before touching code; with an active CURRENT in `.agentic/focus.md` it
+  inlines the task title and PLAN progress, so a fresh session — or the first turn
+  after `/compact` — names the task unprompted. Before this, everything hung on the
+  user remembering the right command, and `/compact` dropped the workflow framing.
+  Outside a scaffolded project it emits the router only, marked "not set up here".
+  Pure bash, emits only `hookSpecificOutput.additionalContext` (a second shape would
+  be injected twice), exits 0 always. An explicit slash command or system prompt wins
+  over the router; `AGENTIC_SESSION_HOOK=0` disables it for headless drivers.
+- **Test harness** (`tests/`), both modes. `tests/run-tests.sh` is the one entry point.
+  - *Static* (`--static`, no API key, runs in the new
+    `.github/workflows/agentic-engineering-tests.yml` on every push): frontmatter of
+    every wrapper, agent and SKILL.md; every `${CLAUDE_PLUGIN_ROOT}` path,
+    `agentic-engineering:<name>` dispatch name and `commands/`/`shared/`/`agents/`
+    reference resolves; no `~/.claude` literal; README command table, SKILL.md map and
+    `commands/` agree; `hooks.json` is valid and the SessionStart script emits exactly
+    one valid JSON object under eleven project shapes, hostile focus titles included.
+  - *Behavioral* (`--behavioral`): headless `claude -p --output-format stream-json` runs
+    in throwaway fixture projects, asserting on the transcript — "fix this failing test"
+    routes to `/fix`; `/ship` Phase 2 dispatches all seven reviewers in one assistant
+    message; `/ship --auto` logs a `HARD-PAUSE` and writes no migration when a story
+    needs a new table; `/converge` reports a checked story with no code as a Blocker;
+    the hook makes a fresh session, and the first turn after `/compact`, name the
+    active focus task. Skipped with exit 0 when no credentials are present.
+  - `tests/token-report.py`, modeled on superpowers' `analyze-token-usage.py`: per-run
+    cost, turns, per-model and per-subagent tokens from stream-json, plus a static
+    per-command load estimate driven by `tests/load-manifest.json`.
+
+- **Worktree lifecycle for `[P]` stories** (`/ship-all`, `shared/worktree.md`,
+  `scripts/worktree.sh`), both modes. When the next priority level holds two or more
+  `[P]` stories, `/ship-all` offers one worktree per story (`[AUTO: skip]` — `--auto`
+  keeps shipping them sequentially). Opting in creates `.worktrees/<story>` on
+  `feat/<feature>-story-xxx` (ignoring `.worktrees/` first), runs the test command
+  there as a baseline (red → ask), and seeds that worktree's `.agentic/focus.md`. A
+  `/ship` inside a seeded worktree runs Phases 1–4 and 6 and defers Phase 5
+  (changelogs, app-docs) and Phase 7 (cleanup) to the merge, because two branches
+  writing `CHANGELOG.md`, `DECISIONS.md` and `MEMORY.md` in parallel conflict and
+  collide on `DEC-NNN` numbers. The next `/ship-all` finishes each shipped worktree:
+  merge / PR / keep / discard, always asked. Merge joins both stories'
+  `PROGRESS.md` entries, re-runs the tests on the merged result, then runs the deferred
+  phases once in the main tree. Removal refuses a dirty worktree or an unmerged branch;
+  discard shows what it destroys and asks again.
+  - `PROGRESS.md` is **not** merged with `git merge-file --union`: git aligns the lines
+    two entries share (`### AC Coverage`, the table header) and union splices one
+    story's rows into the other's entry. The script keeps our file and appends exactly
+    what their side added past the merge base, and aborts when their side edited
+    rather than appended. `tests/static/test_worktree.sh` ships two `[P]` stories in
+    two worktrees and checks both entries survive intact.
+
+- **Evidence gate before completion** (`scripts/evidence.sh`, `/implement`, `/ship`,
+  `/review`, `/fix`, `/improve`, `ae-req`), both modes. Checkboxes were ticked by the
+  same process that claimed success, and nothing required a test run to back the
+  claim; `/converge` only caught it late, and only for missing code. Now every phase
+  that changes code ends with `evidence.sh run --phase <p> -- <test command>`, which
+  prints a row — exit code, the runner's own summary, and a **tree id**: `git
+  write-tree` of the working tree through a throwaway index, docs excluded, identical
+  before and after a commit, changed by any code edit. The row goes into the story's
+  new `### Evidence` table before the box is ticked. `/review` runs `evidence.sh check`
+  and passes the verdict to `ae-req`, whose new Mode A Part 3 blocks a story ticked in
+  the diff under review when the newest row is stale, failing or missing. `/fix` and
+  `/improve` have no story entry by design; their row goes in the completion block and
+  an `Evidence:` commit trailer, plus the story's table when the change targets one.
+  New gotcha everywhere: **claimed green without running**.
+
+- **`/diagnose [session-id | path] [--bundle]`** (`commands/diagnose.md`,
+  `scripts/transcript-digest.py`), both modes, forked context. When a run misbehaves —
+  a phase skipped, reviewers dispatched one by one, a gate that should have paused
+  under `--auto` — there was no structured way to find out why. `/diagnose` locates
+  the session transcript (by id, path, or newest in this project), builds a
+  line-cited digest (commands, plugin files read, Agent dispatches grouped by
+  assistant message, gates, PLAN and auto-log writes, test runs, commits,
+  compactions, subagent transcripts) that never prints tool-result bodies, then
+  compares it with the invoked command's own contract and reports each deviation
+  with the contract line and the transcript lines. The digest's `--check` flags what a
+  transcript proves on its own: reviewers of one round spread across messages, bare
+  `ae-*` dispatch names, a chain command with no PLAN write. `--bundle` writes a
+  scrubbed report, digest, excerpts and issue body under `.agentic/diagnose/<id>/`
+  and never posts anything.
+
+- **Intent check before approaches in `/feature`** (Stage 0), full mode only. ARCH
+  used to propose three approaches straight from `$ARGUMENTS`, so a one-word idea got
+  three architectures before anyone knew who it was for. PROD now checks the request
+  for a **user**, an **outcome** and a **constraint**; a complete request asks
+  nothing, an incomplete one gets at most five questions, one per message, stopping
+  as soon as all three are known. The answers become a three-line intent note that
+  Stage 1 and the PRD build on; Stage 2b never re-asks them. Skipped under `--auto`
+  (`[AUTO: skip]`), where each empty slot becomes a `[NEEDS CLARIFICATION]` marker so
+  the existing pass still surfaces it. Lite mode keeps its own one-round ask at story
+  breakdown.
+
+### Changed
+
+- **`/fix` diagnosis is executed, not read off the code**, both modes. Compared with
+  superpowers' systematic debugging, `/fix` already had root cause at `file:line`,
+  blast radius, a fail-first regression test and "one bug, one fix"; it lacked the
+  steps that make the root cause *proven*. Phase 1 now runs, in order: reproduce by
+  running the failing thing and pasting its output; check recent changes (`git log`,
+  `git log -S`, `git bisect run`) for regressions; trace the bad value back to its
+  origin, with one boundary-instrumentation pass for multi-component paths (removed
+  before commit); compare with a working sibling; state one hypothesis and test it
+  with the smallest probe. The diagnosis template gains `Reproduced`, `Recent
+  changes`, `Trace`, `Working sibling`, `Hypothesis` and optional `Guards`
+  (defense in depth, only on this bug's own data path, each with a test — "one bug,
+  one fix" holds). A failed attempt goes back to diagnosis instead of stacking a
+  second patch, and the **third failed attempt stops** at an `[AUTO: always-ask]`
+  gate: it is a design question, not a bug. The `--auto` diagnosis skip now also
+  requires a reproduction and a confirmed probe.
+
+- **Context diet** — every command, both modes. Measured with `tests/token-report.py
+  static` (main-context load, tokens ≈ bytes/4), no behavior change:
+
+  | Command | before | after | change |
+  |---|---|---|---|
+  | `/ship` | 21,080 | 16,844 | −20.1% |
+  | `/feature` (full mode) | 10,623 | 8,368 | −21.2% |
+  | `/ship --auto` | 21,080 | 17,484 | −17.1% |
+  | `/feature --auto` | 10,623 | 9,008 | −15.2% |
+
+  - The `--auto` policy (tag behavior, Hard-Override List, ambiguity heuristic,
+    auto-log visibility) moved verbatim from SKILL.md to `shared/auto-mode.md`; §A
+    loads it only when the flag is present. Without the flag every gate asks, so the
+    text was dead weight in every interactive run.
+  - `/ship` no longer loads all of `commands/implement.md` and `commands/focus.md`.
+    The story flow (constraints → plan → pre-review → implement → verify → record)
+    is `shared/story-flow.md`, shared by `/implement` and `/ship` Phase 1; release on
+    success is `shared/focus-release.md`, shared by `/focus done` and every chain.
+  - Visual capture dispatch and its auto-row markers moved to `shared/visual-capture.md`,
+    read only when `.claude/visual-capture.md` exists.
+  - Restated preamble blocks became one-line references: the focus write (§B) in nine
+    commands, the auto-mode summary (§C, which now also states what to count) in five,
+    the PLAN-mirror sentence in four.
+  - Duplicates dropped where a loaded file already states the rule: `ship.md`'s SCRIBE
+    rules (`ae-scribe.md` carries them; the parent's app-docs tree creation stays in
+    Phase 5), SKILL.md's compact-gate template (`/ship-all` and `/plan-all` own theirs),
+    `/feature` gotchas that repeated its stage text, story-flow gotchas that repeated its
+    constraints. `/feature` no longer reads `shared/project-mode.md` — its Step 0c
+    table is complete.
+  - The "untagged `[AUTO:]` is deliberate" note is authoring guidance, not runtime
+    policy; it moved to `CLAUDE.md`.
+
+### Fixed
+
+- **`argument-hint` values that YAML reads as lists, or cannot read at all.**
+  `converge`'s `[feature-name] [--auto]` was invalid YAML, and thirteen other wrappers'
+  `[--auto]`-style hints parsed as one-element lists rather than strings. All bracketed
+  hints are now quoted. Found by the new frontmatter test.
+
+### Migration
+
+- **`PROGRESS.md` story entries gain an optional `### Evidence` subsection**
+  (between `### AC Coverage` and `### Edge probes`). Nothing to do for existing
+  features: entries without it stay valid, and `ae-req` gates only a story whose box
+  is ticked *in the diff under review* — stories ticked before this release are never
+  re-judged. `/status`, `/archive` and `ae-test` key on `### AC Coverage` and ignore
+  the new heading. Tooling of your own that parses `PROGRESS.md` sections should expect
+  one more `###` block per new story.
+
+## [2.1.1] — 2026-09-15
+
+Entry added retroactively in 2.2.0; the version shipped without one.
+
+### Fixed
+
+- **Superseded decisions no longer read as current in the session-start scan.**
+  `DECISIONS.md` is read titles-only, and a superseded entry's marker lived only on its
+  `status:` line below the heading, so every session read a reversed decision as
+  current. `/cleanup` now also prefixes the title with `[superseded]`, and
+  `shared/preamble.md` §D skips those titles (a superseded entry is still read in full
+  when a change touches its subject).
+- **`/archive`'s `SUMMARY.md` says what the feature was.** New conditional `## What it
+  was` (the PRD's problem statement, ≤3 lines, plus the `**Approach:**` line and the
+  option it beat) and `## Where it lives` (directories touched, existence-checked).
+  The story line's AC digest is now required. `## Non-Goals` is never copied: it
+  describes the world at plan time, and frozen into a summary it becomes false
+  statements about the product.
+
 ## [2.1.0] — 2026-09-14
 
 ### Changed

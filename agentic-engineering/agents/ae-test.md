@@ -1,7 +1,7 @@
 ---
 name: ae-test
-description: Test coverage reviewer for agentic engineering reviews. Evaluates test quality and identifies missing coverage. Runs as parallel subagent during /review. Reports gaps that would allow real regressions to go undetected.
-model: claude-haiku-4-5
+description: Test coverage reviewer for agentic engineering reviews. Evaluates test quality and identifies missing coverage. Runs as one of the seven parallel reviewers in /review, and checks `Done when:` coverage for /improve. Reports gaps that would allow real regressions to go undetected.
+model: sonnet
 tools: Read, Glob, Grep
 color: yellow
 ---

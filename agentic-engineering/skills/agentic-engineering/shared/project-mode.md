@@ -21,7 +21,7 @@ mode: lite   # lite | full
 | `STORIES.md`, `PROGRESS.md`, `reviews/` | same | same |
 | 7-agent review, tests, checkpoints | same | same |
 
-**Only `/init`, `/feature`, `/status`, `/cleanup` read the marker.** `/cleanup` reads it for one thing — `MEMORY.md`'s line cap. Every other command is mode-blind: they consume `STORIES.md` + `PROGRESS.md`, which both modes produce. Adding a mode branch anywhere else is a design break, not a feature.
+Who reads the marker, and why nothing else may: SKILL.md "Project Mode and Memory Docs". `/cleanup` reads it for one thing — `MEMORY.md`'s line cap.
 
 No `mode:` key (project predates modes) → treat as `full`.
 

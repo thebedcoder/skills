@@ -1,7 +1,7 @@
 ---
 name: ae-lean
-description: Reuse and simplification reviewer for agentic engineering. Finds code that works but should not exist — duplication of something the repo already has, indirection that earns nothing, and needless work in hot paths. Runs as one of the parallel subagents during /review's backend pass. Reports only findings backed by a cited alternative.
-model: claude-sonnet-5
+description: Reuse and simplification reviewer for agentic engineering. Finds code that works but should not exist — duplication of something the repo already has, indirection that earns nothing, and needless work in hot paths. Runs as one of the parallel reviewers in /review's backend pass, and on every /improve. Reports only findings backed by a cited alternative.
+model: sonnet
 tools: Read, Glob, Grep
 color: cyan
 ---

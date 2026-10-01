@@ -18,20 +18,14 @@ Per "Progress Tracking" in SKILL.md, write one PLAN line per unchecked story int
 - User picks **Skip this story** → close the line with `skipped` noted; story stays unchecked in `STORIES.md`.
 - User picks **End session** → leave remaining lines open; they show as unfinished, which is accurate.
 
-Mirror into a harness task list **if this session exposes one** — it is a convenience view, not the record. PLAN survives compaction and session end.
-
 
 ### Step 0 — Auto-write focus
 
-At the start of the chain, update `.agentic/focus.md`:
+Run **§B** of `shared/preamble.md`, always overwriting: `title: ship-all: <feature> (N stories)`, `set_by: /ship-all`, `note: starting`. Between stories update only `note:` → `phase: shipping STORY-X (k of N)`; `title:` stays — it names the whole chain. `--auto` propagates to every story's `/ship`.
 
-1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
+### Step 0c — Finish parallel worktrees
 
-2. Overwrite CURRENT to represent the whole chain: `title: ship-all: <feature> (N stories)`, `since: [now]`, `set_by: /ship-all`, `note: starting`.
-
-Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value. Propagate `--auto` to every internal `/ship` invocation in the chain.
-
-Between stories: update `note:` to `phase: shipping STORY-X (k of N)`. Do **not** overwrite `title:` per story — it represents the whole chain.
+`bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh list --kind story` prints any `WORKTREE` line → story worktrees from an earlier run: run **§W2** of `shared/worktree.md` before anything else — merge, PR, keep or discard each shipped one. Merged stories count as shipped for the order below. No output → skip silently, never read the file.
 
 ---
 
@@ -68,6 +62,8 @@ You'll approve each implementation plan before it runs.
 ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"Start the ship-all session?"* → **Ship everything (Recommended)** · **Ship the P1 set only** · **Cancel**. Under `--auto`: SKIP and ship everything.
 
 **Ship the P1 set only** → chain covers P1 stories, then ends at the normal Session-complete block; P2/P3 listed under `REMAINING 🔜`. That is a clean finish, not an early stop. Unprioritised feature → drop that option; there is no P1 set to offer.
+
+**Parallel group.** Lowest open level has ≥2 `[P]` stories with no unchecked dependency → ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"STORY-003 and STORY-004 can run in parallel. How should they ship?"* → **Here, one after another (Recommended)** · **One worktree per story** · **Skip the group**. Under `--auto`: SKIP — ship them here, sequentially, as always; worktrees are opt-in only. Second option → run **§W1** of `shared/worktree.md`, which ends this session with the worktrees ready.
 
 ---
 
@@ -142,29 +138,25 @@ REMAINING 🔜
 
 Git: [X] commits on [branch]
 PR desc: ✅ updated to cover all shipped stories
+
+Next: [stories remain → /ship-all again · every story shipped → /converge [feature] before you archive · otherwise push and open the PR]
 ```
 
 **GIT** generates single PR desc covering all shipped stories — not one per story.
 
 ### Step N — Release focus
 
-After the final story completes successfully (chain end):
+After the final story only: run `shared/focus-release.md` (`auto` under `--auto`). Mid-chain stories never release.
 
-- If invoked with `--auto` → run `/focus done auto` (auto-promotes NEXT silently per `commands/focus.md` Phase 3).
-- Else → run `/focus done` (interactive prompt y/n/b).
+### Step N — Finish the worktree
 
-Mid-chain story completions do NOT call `/focus done` — only the final story triggers release.
+First story's branch guard put the chain in a task worktree (`worktree.sh where` prints `kind=task`) → **§W5** of `shared/worktree.md`, once, after the last story. Anything else → skip.
 
 ---
 
 ### Step N — Auto-mode summary
 
-If `AUTO=true`:
-
-1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` across all stories in this chain.
-2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses across <Y> stories. See .agentic/auto-log.md`
-
-If `AUTO=false`: skip.
+Run **§C** of `shared/preamble.md`, counting across every story in the chain: `…hard-pauses across <Y> stories. See .agentic/auto-log.md`.
 
 ### Checkpoint tag reference (this file)
 
@@ -174,6 +166,11 @@ If `AUTO=false`: skip.
 | Per-story 'go' prompt | `[AUTO: skip]` |
 | Constitution conflict surfaced by a story | `[AUTO: always-ask]` (hard-override #3) |
 | Recurring blocker class across multiple stories | `[AUTO: always-ask]` — stop + ask whether to update constitution |
+| Parallel group — here / worktrees / skip | `[AUTO: skip]` — ships the group here, sequentially |
+| Worktree baseline red | `[AUTO: always-ask]` (`shared/worktree.md` §W1) |
+| Finish a shipped worktree — merge / PR / keep / discard | `[AUTO: always-ask]` — removal and branch deletion are destructive |
+| Discard confirmation | `[AUTO: always-ask]` |
+| Finish the chain's task worktree (§W5) | `[AUTO: skip]` → keep; merge, PR, discard only on a human answer |
 
 ### Guardrails
 
@@ -187,7 +184,8 @@ If `AUTO=false`: skip.
 
 - **Compaction is the human's action, not yours.** `/compact` is a user command; no tool invokes it. After 3-4 stories context fills and quality drops, so always surface the gate — but never claim the chain compacted by itself, and never stall waiting for it.
 - **One story = its own commit(s).** No batching. User must revert story without touching others.
-- **`[P]` markers are user-facing suggestions, not self-instructions.** Ship-all runs sequential. No interleaving.
+- **`[P]` markers are user-facing suggestions, not self-instructions.** Ship-all runs sequential in this session — no interleaving. Parallelism happens only through the opt-in worktree path, in other sessions, one story each.
+- **Worktree cleanup is never automatic.** Merge, PR, keep, discard: the human picks, `--auto` or not. Removing a worktree or deleting its branch without that answer destroys work that exists nowhere else.
 - **Priority order is not a suggestion.** A P2 shipped before an open P1 wastes the MVP slice — what the field protects. `[P]` reorders within a level, never across one.
 - **Don't re-prioritise mid-chain.** A story that turns out harder than priced stays at its level. Re-cutting priorities is `/feature`'s job, and doing it here silently rewrites the plan the user approved.
 - **Recurring blockers → stop + fix pattern.** Same blocker class 3 stories in row → update constitution/conventions, not more fixes.

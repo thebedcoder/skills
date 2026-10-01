@@ -25,3 +25,7 @@ node_modules/
 
 # graphify knowledge-graph build output
 graphify-out/
+
+# agentic-engineering test harness output (transcripts, fixtures, token reports)
+agentic-engineering/tests/behavioral/out/
+__pycache__/

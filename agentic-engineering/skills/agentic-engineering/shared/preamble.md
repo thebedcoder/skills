@@ -1,9 +1,6 @@
 # Shared command preamble
 
-Three blocks that every multi-phase command runs before its own work. They used
-to be copy-pasted into 8–12 command files; they live here once. A command body
-says which blocks it runs — read this file, run them, then continue with the
-command.
+Blocks multi-phase commands share. A command body names the blocks it runs.
 
 ---
 
@@ -19,9 +16,11 @@ Detect whether `$ARGUMENTS` contains the `--auto` token.
   ## [now YYYY-MM-DD HH:MM] — /<command> <ARGS> --auto
   ```
 - **Propagate `AUTO=true` into every nested command** this one dispatches.
+- `AUTO` → **read `shared/auto-mode.md` now**, before the first gate: tag behavior,
+  Hard-Override List, ambiguity heuristic, auto-log line formats. `AUTO=false` →
+  don't open it.
 
-Tag taxonomy, hard-override list and ambiguity heuristic → "Auto Mode" in
-`SKILL.md`. Checkpoint tags → the table at the bottom of the calling command.
+Checkpoint tags → the table at the bottom of the calling command.
 
 ---
 
@@ -35,7 +34,7 @@ if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
 grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
 ```
 
-2. Write CURRENT using the **story-id-match heuristic**:
+2. Write CURRENT using the **story-id-match heuristic**. Fields go under a `# CURRENT` heading, then `# PLAN`, then `# NEXT` — shape in `commands/focus.md`. Hook, statusline and worktree carry find the task by heading.
 
 - Existing `CURRENT.title` already references this STORY-ID or branch (typical
   when a parent chain set it) → update `note:` and `set_by:` only. Leave
@@ -43,16 +42,17 @@ grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
 - Otherwise → overwrite CURRENT with the calling command's own title, `since:
   [now]`, `set_by: /<command>`.
 
-Under `--auto`: append ` (auto)` to the `set_by:` value.
+Under `--auto`: append ` (auto)` to the `set_by:` value. A new title (not a
+same-story update) also clears PLAN — it belonged to the previous task.
 
-The calling command supplies the `title:` / `note:` values — everything else
-above is the same wherever this runs.
+The calling command supplies the `title:` / `feature:` / `note:` values —
+everything else above is the same wherever this runs.
 
 ---
 
 ## §C — Auto-mode summary
 
-Last line of a command that ran with `AUTO=true`:
+Last line of a command that ran with `AUTO=true`. Count the `DECISION:`, `SKIPPED:` and `HARD-PAUSE:` lines this run appended to `.agentic/auto-log.md` — a chain counts its nested commands' lines too:
 
 ```
 🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md
@@ -78,14 +78,9 @@ Missing file → skip it silently; a project may predate the doc.
 grep '^## DEC-' docs/DECISIONS.md | grep -v '\[superseded\]'
 ```
 
-**Why superseded titles are skipped.** `DECISIONS.md` never deletes — `/cleanup`
-marks a contradicted entry and keeps it. Its `status:` line sits below the
-heading, so a titles-only scan never sees it, and the bare title then asserts
-the opposite of current truth. Skipping is a correctness fix first; that the
-file stops growing without bound in the session-start read is the second
-benefit. A superseded entry is still read in full when the current change
-touches its subject — knowing an approach was tried and dropped is the point of
-keeping it.
+**Superseded titles are skipped** because a bare title of a reversed decision
+asserts the opposite of current truth — its `status:` line sits below the heading.
+Still read a superseded entry in full when the change touches its subject.
 
 These exist to be read. `/cleanup` rewrites `MEMORY.md` and appends to
 `DECISIONS.md` after every `/ship`, `/fix` and `/improve`; a command that

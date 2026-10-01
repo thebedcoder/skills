@@ -19,6 +19,14 @@ Mode gates what counts as a gap. In `lite`, absent `PRD.md`, `EPICS.md`, `docs/s
 
 Feature marked `archived` in INDEX (or has `SUMMARY.md` + no `STORIES.md`) → read `SUMMARY.md` only. Never scan archived features for stories or progress.
 
+### Step 2b — Worktrees
+
+`bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh where`:
+- `MAIN` → `worktree.sh list` — the worktrees this workflow made, one `WORKTREE …` line each.
+- `WORKTREE … main=<root>` → this session runs inside one; note its branch and main folder, skip the list (it runs from the main folder only).
+
+Nothing to show → omit the block.
+
 ### Step 3 — Render
 
 ```
@@ -52,12 +60,19 @@ Features: X total
 [Feature Name] — planning 📋
   Stories not yet created — run /feature [name] to start
 
+WORKTREES 🌿 — X  (finish from the main folder: /worktree)
+  fix-login   fix/login             task   clean · 2 ahead of main · not merged
+  story-003   feat/notes-story-003  story  dirty · work in progress
+  [or, inside one: "You are in worktree fix/login — main folder /path/to/app"]
+
 BACKLOG 📋 — X items
   NOTE-001: [title] — bug / S / high
   NOTE-002: [title] — idea / M / medium
   (run /ship to pick one up and implement it)
 
 ARCH NOTE: [any cross-feature technical concerns?]
+
+Next: [one runnable line — the UP NEXT story → /ship STORY-XXX · a finished worktree → /worktree · nothing open → /feature or /note]
 ```
 
 Rendering rules:
@@ -65,6 +80,7 @@ Rendering rules:
 - CURRENT empty (or file absent) → `FOCUS 🎯 (none — run /focus <text> to set)`
 - PLAN empty or absent → omit the entire PLAN block. Cap at 5 lines per SKILL.md — more than 5 steps → show the pending ones plus `+N done`.
 - NEXT empty → omit the entire NEXT block
+- WORKTREES: omit when `list` prints nothing. Order: unmerged with commits first (they wait on a decision), then dirty, then merged-but-not-removed.
 - Stale → append `⚠️ stale (Nd old) — still working on this?`
 - CURRENT.`set_by` may contain ` (auto)` or ` (auto-promoted)` suffix from auto mode — render as-is
 - **Archived features:** excluded from Tests/Pyramid rollups — their `PROGRESS.md` is gone; frozen rollup lives in their `SUMMARY.md`. Story count for the archived line comes from `SUMMARY.md`.

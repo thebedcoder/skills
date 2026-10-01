@@ -1,6 +1,6 @@
 ## `/doc [feature]` — Interactive Feature Documentation
 
-**Agents:** SCRIBE (lead), ARCH (analysis), RED (improvement spotter)
+**Agents:** SCRIBE (lead — inline hat for the Q&A, template from `agents/ae-scribe.md`), ARCH (analysis), RED (improvement notes — inline hat, not an `ae-red` review)
 
 `./app-docs/` = **end-user product documentation**. Reader = app user. Not dev team. Not AI context.
 
@@ -10,17 +10,7 @@ Use to document existing feature with Q&A for what code alone can't infer. ARCH 
 
 ### Step 0 — Auto-write focus
 
-Before documenting, update `.agentic/focus.md`:
-
-1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
-
-2. Read existing CURRENT. Apply story-id-match heuristic:
-   - Existing CURRENT references the same feature → update `note:` to `phase: documenting` and `set_by:` to `/doc`. Leave `title:` + `since:` alone.
-   - Otherwise → overwrite CURRENT: `title: documenting <feature>`, `feature: <feature>`, `since: [now]`, `set_by: /doc`.
-
-Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
-
-3. Continue with the command's real work below.
+Before documenting, run **§B** of `shared/preamble.md` — `title: documenting <feature>`, `feature: <feature>`, `set_by: /doc`. CURRENT already names this feature → only `note: phase: documenting` + `set_by:` change.
 
 ---
 
@@ -96,6 +86,7 @@ Append format: `## [Feature] — [date]` header, then ARCH refactoring suggestio
 End of command:
 ```
 Improvements and potential issues saved to ./docs/improvements.md — review when ready.
+Next: /doc [next undocumented feature], or /doc-all to cover the rest.
 ```
 
 ---

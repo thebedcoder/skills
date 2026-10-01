@@ -107,4 +107,4 @@ Last line routes by `Type` — print exactly one:
 |---|---|
 | bug | `Next: /fix [short title] — diagnose and fix it on a branch.` |
 | improvement | `Next: /improve — picks this up from BACKLOG.md, or /improve [short title] to name it directly.` |
-| idea | `Next: /ship — promotes this item into docs/features/ and ships it.` |
+| idea | `Next: /ship to promote and ship it as one story, or /feature [short title] if it needs research and a PRD first.` |

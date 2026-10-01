@@ -24,6 +24,8 @@ set_by: [manual | /ship | /fix | /improve | ...]
 1. [queued task]
 ```
 
+CURRENT may also carry `feature:` and `note:` (chain commands), and `worktree_of:` + `worktree_base:` — written only by `/ship-all`'s parallel path into a story worktree (`shared/worktree.md`). `/ship` reads `worktree_of:` to defer its shared-doc phases to the merge.
+
 `# PLAN` **is** the progress record; a harness task list, where the session exposes one, is a mirror of it. Chain commands (`/ship`, `/ship-all`, `/plan-all`, `/fix`, `/improve`, `/feature`, `/doc-all`) write PLAN at start and tick steps as phases close. A one-step task needs no PLAN; absent is valid.
 
 **Never hand-edit PLAN from `/focus <text>`** — setting a new CURRENT wipes PLAN, because a plan for the previous task is worse than none.
@@ -67,43 +69,7 @@ Exit.
 
 ### Phase 3 — `/focus done` (clear CURRENT, promote NEXT)
 
-Read `.agentic/focus.md`. **PLAN is cleared in every sub-case below** — it describes the task being closed. `/cleanup` reads PLAN, so a chain command that wants its steps recorded must run cleanup *before* calling `/focus done`.
-
-Three sub-cases:
-
-**NEXT empty (or file absent):** Clear CURRENT + PLAN (delete sections, or remove file if NEXT also empty). Print:
-```
-━━━ FOCUS DONE ━━━
-🎯 (none)
-NEXT queue empty.
-```
-Exit.
-
-**Auto-mode short-circuit (NEXT non-empty + `$ARGUMENTS` contains `auto` token):** Parent command runs under `--auto`. Skip y/n/b prompt entirely. Promote NEXT item #1 to CURRENT with `set_by: /focus done (auto-promoted)`, `since: now`. Renumber NEXT (remove item 1, shift up). Append DECISION line to `.agentic/auto-log.md` (create if missing) describing promotion. Print:
-```
-━━━ FOCUS DONE (auto-promoted) ━━━
-🎯 [promoted item]
-```
-Exit.
-
-**NEXT non-empty (interactive):** Read item #1 of NEXT. Print state, then gate:
-
-```
-━━━ FOCUS DONE ━━━
-🎯 (cleared)
-
-Next queued: [item #1 text]
-```
-
-⚠️ **Human checkpoint** `[ASK: single]`: *"Pick up '[item #1 text]' next?"*
-
-| Option | Effect |
-|---|---|
-| **Pick it up (Recommended)** | Rewrite CURRENT with `title: <item #1 text>`, `since: now`, `set_by: /focus done (promoted)`. Remove item #1 from NEXT; renumber. |
-| **Leave it queued** | Clear CURRENT only. NEXT untouched. |
-| **Move to backlog** | Invoke `/note` workflow with the item text. Remove from NEXT; renumber. |
-
-Confirm result.
+Run `shared/focus-release.md` — `$ARGUMENTS` containing `auto` selects its auto-promote branch.
 
 ---
 
@@ -119,13 +85,4 @@ CURRENT + PLAN + NEXT wiped.
 
 ### Auto-write protocol (for other commands)
 
-When another command (`/feature`, `/implement`, `/ship`, `/ship-all`, `/fix`, `/improve`, `/design`, `/review`, `/doc`, `/frontend`) starts, it runs this protocol before doing real work:
-
-1. Ensure `.agentic/` exists + gitignored (same idempotent block as Phase 2).
-2. Read existing CURRENT.
-3. **Story-id match heuristic:** if new task references same STORY-ID (or same feature, when no story) as existing CURRENT, **only** update `note:` and `set_by:` — leave `title:`, `since:`, and PLAN alone. Prevents flicker when `/ship` includes `/implement` + `/review` inline.
-4. Otherwise overwrite CURRENT with new title/feature/set_by, fresh `since:`, and clear PLAN.
-5. Under `--auto`: append ` (auto)` suffix to `set_by:` value.
-6. Chain commands (`/ship`, `/ship-all`, `/plan-all`, `/fix`, `/improve`, `/feature`, `/doc-all`) then write their phase list into PLAN and tick it as phases close. Single-phase commands write no PLAN.
-
-`/implement` and `/ship` additionally call Phase 3 (`/focus done`) on success — except `/ship` suppresses this when it is mid-chain inside `/ship-all` (chain caller decides when to release focus). Under `--auto` the caller does not re-invoke the slash command — it reads this file and applies the auto branch of `/focus done` inline: promote NEXT item #1 silently, no widget.
+Commands write CURRENT through **§B** of `shared/preamble.md` (create + gitignore `.agentic/`, story-id match heuristic, ` (auto)` suffix). A new title — not a same-story update — also clears PLAN. Chain commands (`/ship`, `/ship-all`, `/plan-all`, `/fix`, `/improve`, `/feature`, `/doc-all`) then write their phase list into PLAN and tick it as phases close. Release on success → `shared/focus-release.md`.

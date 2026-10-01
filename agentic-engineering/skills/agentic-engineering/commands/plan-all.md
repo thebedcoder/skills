@@ -6,6 +6,14 @@ Use after `/bootstrap` or when epics exist in `./docs/INDEX.md` but no stories y
 Runs `/feature` for each unplanned epic in sequence, pausing at PRD step for approval.
 After completion, run `/ship-all` to implement.
 
+### Step 0a — Parse `--auto` flag
+
+Run **§A** of `shared/preamble.md`. Auto-log header: `/plan-all --auto`. **Propagate `AUTO=true` into every `/feature` the loop runs** — intent check, PRD approval and story breakdown then take their own `--auto` tags. Approach pick stays `always-ask` per epic; so do this command's own two gates.
+
+### Step 0 — Auto-write focus
+
+Run **§B** of `shared/preamble.md`, always overwriting: `title: plan-all: <N> epics`, `set_by: /plan-all`, `note: starting`. Per epic update only `note:` → `phase: planning <epic> (k of N)`. Nested `/feature` runs see `set_by: /plan-all` and update `note:` only.
+
 ---
 
 ### Phase 1 — Epic Inventory
@@ -74,6 +82,22 @@ Git: X commits (chore: add PRD, epics and stories per feature)
 
 Ready to build. Run /ship-all to implement all planned stories.
 ```
+
+### Step N — Release focus
+
+Run `shared/focus-release.md` (`auto` under `--auto`).
+
+### Step N+1 — Auto-mode summary
+
+Run **§C** of `shared/preamble.md`, counting across every epic's `/feature`.
+
+### Checkpoint tag reference (this file)
+
+| Checkpoint | Tag |
+|---|---|
+| Which epics to plan | untagged → `always-ask` — scope is never inferred |
+| Compact between epics | untagged → `always-ask` — only the human can run `/compact` |
+| Nested `/feature` gates | their own tags (`feature.md`); approach pick is `always-ask` |
 
 ### Gotchas
 

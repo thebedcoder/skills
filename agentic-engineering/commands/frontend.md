@@ -1,6 +1,6 @@
 ---
 description: Implement frontend for the current story from design handoff spec
-argument-hint: [--auto]
+argument-hint: "[--auto]"
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/frontend.md` — that file holds the real instructions; this wrapper holds none.
 

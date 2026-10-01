@@ -1,0 +1,17 @@
+{
+  "description": "agentic-engineering: inject a short workflow router (plus project state when docs/INDEX.md exists) at session start and after /clear or /compact.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -10,7 +10,7 @@ Not `/fix` — nothing is broken. Not `/feature` — no research, no PRD, no epi
 **Inputs (read first):**
 - `./CLAUDE.md` — conventions
 - relevant feature docs in `./app-docs/features/`
-- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`. `/cleanup` writes these after every chain; a chain that never reads them is a write-only log
+- **Project memory** — run **§D** of `shared/preamble.md`: `MEMORY.md` in full, `DECISIONS.md` titles, `CONSTITUTION.md`
 
 ### Step 0a — Parse `--auto` flag
 
@@ -31,7 +31,7 @@ Mark the chosen item in `BACKLOG.md`: `**Status:** in-progress`. Set to `done` i
 
 Target resolved, so write PLAN now — never before Step 0b, which can stop the command with nothing to do.
 
-Per "Progress Tracking" in SKILL.md, one PLAN line per phase in `.agentic/focus.md`. Mirror into a harness task list **if this session exposes one** — it is a convenience view, not the record. PLAN survives compaction and session end.
+Written to the `# PLAN` section of `.agentic/focus.md` (SKILL.md "Progress Tracking").
 
 
 
@@ -43,27 +43,20 @@ Per "Progress Tracking" in SKILL.md, one PLAN line per phase in `.agentic/focus.
 
 Mark #1 `in_progress` at Phase 1. Advance one at a time. `Behavior change: none` → complete #4 with `changelogs only (not user-facing)`. Review blockers unresolved → leave the current task `in_progress`; do not complete #5, Phase 5 is skipped.
 
-Step 0 below mirrors the same list into the `# PLAN` section of `.agentic/focus.md`. The harness task list dies with the session; PLAN survives it.
 
 ### Step 0 — Auto-write focus
 
-Before planning, update `.agentic/focus.md`:
-
-1. Run **§B step 1** of `shared/preamble.md` — creates `.agentic/` and gitignores it, idempotent.
-
-2. Read existing CURRENT. Apply story-id-match heuristic:
-   - Existing CURRENT.title already references the same improvement → update `note:` to `phase: improving` and `set_by:` to `/improve`. Leave `title:` + `since:` alone.
-   - Otherwise → overwrite CURRENT: `title: improving: <improvement summary>`, `since: [now]`, `set_by: /improve`.
-
-Under `--auto` (see "Auto Mode" in SKILL.md): append ` (auto)` suffix to `set_by:` value.
-
-3. Write the chain into the `# PLAN` section of `.agentic/focus.md` (see `commands/focus.md`) — `plan`, `apply + tests`, `review`, `docs + changelogs`, `cleanup`. Tick each as its phase closes.
-
-4. Continue with the command's real work below.
+Before planning, run **§B** of `shared/preamble.md` — `title: improving: <improvement summary>`, `set_by: /improve`. CURRENT already names this improvement → only `note: phase: improving` + `set_by:` change. Then write the Step 0c PLAN lines.
 
 ---
 
-**GIT** confirms current branch. On `main`/`master`, print `⚠️ GIT: You're on main. /improve expects to run on a feature branch.` then gate — ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"Continue on main?"* → **Branch first (Recommended)** · **Continue on main** · **Abort**. Never proceed silently on `main`, even under `--auto`.
+**GIT** confirms current branch. On `main`/`master` → `bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh pref`:
+
+- `PREF never` → print `⚠️ GIT: You're on main. /improve expects to run on a feature branch.` then gate — ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"Continue on main?"* → **Branch first (Recommended)** · **Continue on main** · **Abort**. Never proceed silently on `main`, even under `--auto`.
+- `PREF ask`, with or without `(default…)` → same gate, plus **New worktree** — "own folder under `.claude/worktrees/`; this session moves in, `main` stays untouched".
+- `PREF always` → no gate.
+
+Worktree (picked, or `always`) → **§W4** of `shared/worktree.md`, then Phase 1 runs inside it. Otherwise never open that file here.
 
 Off `main` → proceeds silently, no gate.
 
@@ -135,6 +128,8 @@ Test obligation keyed to `Change type`:
 
 Test execution is non-watch mode only — see "Test Execution Rules" in SKILL.md.
 
+**Evidence before review.** After the last edit, full suite through the script — `bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase improve -- <project test command>`. Red → not done. Green row goes into the review block, the completion block and an `Evidence:` trailer on the `feat(`/`perf(`/`refactor(` commit. Review blockers fixed → new row; the old one is stale. `/improve` writes no planning docs, so no `PROGRESS.md` entry — unless the change lands on a story that has one, then append the row there too.
+
 **Phase 3 — Review** *(automatic)*
 
 Dispatch reviewers in **single tool-call batch**, not sequentially. Each gets paths, not full file content.
@@ -150,7 +145,13 @@ Dispatch reviewers in **single tool-call batch**, not sequentially. Each gets pa
 
 ae-red, ae-test and ae-lean always run. Exactly one of ae-sec / ae-ux / ae-edge joins them — pick by what the diff touches. Ambiguous → ae-edge.
 
-Reviewers have no Bash: capture the diff first exactly as `/review` Step 0c does (`.agentic/review/<slug>.diff`) and pass the path.
+Reviewers have no Bash: capture the change first and pass the printed paths. It is still uncommitted (the commit is Phase 4), so **not** `/review` Step 0c — its branch diff misses uncommitted work, and on a fresh branch it aborts with no base.
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/review-diff.sh improve-<slug>
+```
+
+`DIFF <path> FILES <path>` → every reviewer gets both. Exit 3 (nothing uncommitted) → Phase 2 changed nothing; stop and say so.
 
 `ae-req` does not run: no persisted acceptance criteria for it to check. `ae-test` carries the `Done when:` check instead — its Step 8, which needs the `Done when:` list in the prompt and emits per-condition ✅/❌. `ae-doc` does not run either — convention drift on a scoped diff is ARCH's `Fits existing pattern` job.
 
@@ -163,6 +164,8 @@ Done when:
   ✅ [condition] — [test that proves it]
   ❌ [condition] — not covered
 
+Evidence: [command] → exit 0 · [runner summary] · tree [id]   ← missing or red = blocker
+
 Blockers:
 1. [issue] — [source agent] — [fix plan]
 
@@ -173,7 +176,7 @@ Won't-fix (logged to improvements.md):
 1. [issue] — [reason]
 ```
 
-Blocker raised, or any `Done when:` condition uncovered → pause. Print `⚠️ IMPROVEMENT PAUSED — review found blockers` + findings, then ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to proceed?"* → **Revise the change (Recommended)** · **Accept it anyway** · **Revert the change**.
+Blocker raised, any `Done when:` condition uncovered, or no fresh green evidence row → pause. Print `⚠️ IMPROVEMENT PAUSED — review found blockers` + findings, then ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to proceed?"* → **Revise the change (Recommended)** · **Accept it anyway** · **Revert the change**.
 
 Clean → continue.
 
@@ -241,6 +244,7 @@ Type:       feat | perf | refactor
 Changed:    [files]
 Done when:  ✅ all [N] conditions covered
 Tests:      ✅ added / updated — [count]
+Evidence:   ✅ [command] → [runner summary] · tree [id]
 Measured:   [before → after]  ← perf only
 Docs:       ✅ app-docs updated / not user-facing
 Changelog:  ✅ both updated / docs only
@@ -250,21 +254,21 @@ Cleanup:    ✅ MEMORY.md refreshed · [DEC-XXX recorded | no binding decision]
 Next: /improve for the next BACKLOG item, or /status to review the board.
 ```
 
-### Step N — Auto-mode summary
+### Step N — Finish the worktree
 
-If `AUTO=true`:
+`worktree.sh where` prints `kind=task` → **§W5** of `shared/worktree.md`. Anything else → skip.
 
-1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
-2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
+### Step N+1 — Auto-mode summary
 
-If `AUTO=false`: skip.
+Run **§C** of `shared/preamble.md`.
 
 ### Checkpoint tag reference (this file)
 
 | Checkpoint | Tag |
 |---|---|
 | Pick BACKLOG improvement (empty `$ARGUMENTS`) | `[AUTO: always-ask]` — target selection is never inferred |
-| Branch warning when on `main` | `[AUTO: always-ask]` — never proceed silently on `main` |
+| Branch warning when on `main` | `[AUTO: always-ask]` — never proceed silently on `main`; `agentic.worktree=always` → worktree, no gate |
+| Finish task worktree (§W5) | `[AUTO: skip]` → keep; merge, PR, discard only on a human answer |
 | Show plan, ask approval | `[AUTO: ask-if-ambiguous]` — skip when precedent cited + no behavior change + single file |
 | Review post-change `IMPROVEMENT PAUSED` | `[AUTO: always-ask]` (also hard-override #1) |
 
@@ -275,6 +279,7 @@ If `AUTO=false`: skip.
 - **`Change type` is decided in Phase 1, not at commit time.** Deciding the prefix after the diff exists is how `feat` work lands as `refactor` and skips a version bump.
 - **`Done when:` never persists.** No `STORIES.md`, no `PRD.md`, no `docs/specs/` entry. Persisting it turns `/improve` into a second, worse `/feature`.
 - **Read the precedent before adding to it.** Third format handler that ignores how the first two work is technical debt shipped as an improvement.
+- **Claimed green without running.** Review and completion cite an `evidence.sh` row from after the last edit. Earlier output does not count; a `refactor` whose "tests still pass" was never re-run after the refactor is the exact failure.
 - **Untested code gets a characterization test before refactoring, not after.** After-the-fact test proves the new behavior, not that behavior is unchanged.
 - **No `/improve` on `main`.** Override GIT check → no PR, no review, no trail.
 

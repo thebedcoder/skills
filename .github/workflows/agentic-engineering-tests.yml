@@ -1,0 +1,112 @@
+name: agentic-engineering tests
+
+on:
+  push:
+    paths:
+      - "agentic-engineering/**"
+      - ".claude-plugin/marketplace.json"
+      - ".github/workflows/agentic-engineering-tests.yml"
+  pull_request:
+    paths:
+      - "agentic-engineering/**"
+      - ".claude-plugin/marketplace.json"
+      - ".github/workflows/agentic-engineering-tests.yml"
+  workflow_dispatch:
+    inputs:
+      behavioral:
+        description: "Also run behavioral scenarios (real claude -p sessions; needs the ANTHROPIC_API_KEY secret, costs money)"
+        type: boolean
+        default: false
+      model:
+        description: "Model for behavioral scenarios"
+        type: string
+        default: "sonnet"
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: static infra tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyYAML (strict frontmatter parsing)
+        run: python -m pip install --quiet pyyaml
+      - name: Static tests
+        run: agentic-engineering/tests/run-tests.sh --static
+      - name: Frontmatter again without PyYAML (stdlib subset parser)
+        run: AE_TESTS_NO_YAML=1 python3 agentic-engineering/tests/static/test_frontmatter.py
+
+  behavioral:
+    name: behavioral scenarios
+    needs: static
+    if: github.event_name == 'workflow_dispatch' && inputs.behavioral
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Behavioral scenarios (skip cleanly without the secret)
+        run: agentic-engineering/tests/run-tests.sh --behavioral --model "${{ inputs.model }}"
+      - name: Upload transcripts and token report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: behavioral-transcripts
+          path: agentic-engineering/tests/behavioral/out/
+          if-no-files-found: ignore
+
+  behavioral-smoke:
+    name: behavioral smoke (05 hook, 06 evidence gate, 11 worktree finish)
+    needs: static
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      # Secrets cannot appear in a job-level `if`, and fork PRs never receive them:
+      # gate on the value instead, and say why when the job does nothing.
+      - name: Check for the API key
+        id: gate
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::ANTHROPIC_API_KEY is not available to this run (unset, or a fork PR) - smoke scenarios skipped"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: "22"
+      - name: Install Claude Code
+        if: steps.gate.outputs.run == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Smoke scenarios (about $0.35 a run)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          rc=0
+          for s in 05 06 11; do
+            agentic-engineering/tests/run-tests.sh --scenario "$s" --model sonnet || rc=1
+          done
+          exit $rc
+      - name: Upload transcripts and token report
+        if: always() && steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: behavioral-smoke-transcripts
+          path: agentic-engineering/tests/behavioral/out/
+          if-no-files-found: ignore

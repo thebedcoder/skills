@@ -1,6 +1,6 @@
 ---
 description: Interactively document a feature — reads code, asks clarifying questions, writes end-user docs
-argument-hint: [feature-name]
+argument-hint: "[feature-name]"
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/doc.md` — that file holds the real instructions; this wrapper holds none.
 

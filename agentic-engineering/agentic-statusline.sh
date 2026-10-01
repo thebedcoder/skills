@@ -10,6 +10,7 @@ focus_file="$project_dir/.agentic/focus.md"
 
 if [[ -f "$focus_file" ]]; then
   title=$(awk '
+    BEGIN               { in_current=1 }   # title before any heading counts too
     /^# CURRENT/        { in_current=1; next }
     /^# / && in_current { exit }
     in_current && /^title:/ {

@@ -195,7 +195,9 @@ If it exists but lacks a `statusLine` key → merge the `statusLine` block into 
 
 If it already has a `statusLine` → leave alone (user's choice).
 
-3. Note in `./docs/INDEX.md` navigation section: `.agentic/focus.md` is per-worktree current-task pointer managed by `/focus` and `/next`.
+3. Worktree preference — per developer, in local git config (never committed). Not a git repo → skip. Current value from `bash ${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh pref`, shown in the question body. ⚠️ **Human checkpoint** `[ASK: single]`: *"When `/feature`, `/ship`, `/fix` or `/improve` starts on `main`, where should the work go?"* → **Ask each time (Recommended)** — "`/feature` asks branch or worktree; the branch question in `/ship`, `/fix`, `/improve` gains a New worktree option" · **Always a new worktree** — "each task in its own folder under `.claude/worktrees/`, this session moves in, merged back when done" · **New branch, as before** — "no worktree option". Write `git config agentic.worktree ask|always|never`. Unset reads as `ask (default)`: `/feature` stays silent, the other three offer the option.
+
+4. Note in `./docs/INDEX.md` navigation section: `.agentic/focus.md` is per-worktree current-task pointer managed by `/focus` and `/next`.
 
 **PROD** generates `./docs/CONSTITUTION.md` by asking: non-negotiable tech standards, architectural principles, security/compliance, forbidden patterns.
 
@@ -217,7 +219,7 @@ Constitution format:
 ## Default Decisions
 
 <!--
-Auto mode (`--auto` flag on /feature, /fix, /ship, /ship-all, /implement, /design) reads this section as the authoritative source for default choices. Add one-line defaults below. Auto mode cites the matching line in its DECISION reasoning. Section is optional — auto mode falls back to general best-practice judgment when absent.
+Auto mode (the `--auto` flag on any command that takes it) reads this section as the authoritative source for default choices. Add one-line defaults below. Auto mode cites the matching line in its DECISION reasoning. Section is optional — auto mode falls back to general best-practice judgment when absent.
 
 Example entries (replace with your project's real defaults):
 - DB: Postgres unless feature explicitly requires SQLite
@@ -328,9 +330,10 @@ No frontmatter, INDEX.md exists anyway → two cases:
 - App Docs:     ./app-docs/   (end-user product documentation — not internal reference)
 
 ## Agent Rules
-- Always read ./docs/INDEX.md and ./docs/CONSTITUTION.md first every session
+- Always read ./docs/INDEX.md, ./docs/MEMORY.md and ./docs/CONSTITUTION.md first every session
 - Work one User Story at a time
-- Write tests before marking a story complete
+- Write tests before the code they cover
+- A story is complete only after its tests ran green on the final code, with the run recorded in PROGRESS.md
 - Update PROGRESS.md after completing each story
 - Never modify files outside the current story's scope
 - Constitution violations must be flagged — never silently ignored
@@ -398,6 +401,6 @@ On 'none':
 chore: initialise project structure, CLAUDE.md, CONSTITUTION.md, and project rules
 ```
 
-9. **PROD** summarizes created + prompts: *"Run `/feature [name]` to start your first feature."*
+9. **PROD** summarizes created + prompts the next step for the mode just chosen: full → *"Run `/feature [name]` to start your first feature."* · lite → *"Capture work with `/note [what]`, then `/ship` it — or `/feature [name]` to plan a group of stories."*
 
 ---

@@ -186,7 +186,7 @@ fi
 # ~/.claude/plugins/cache/<owner>/<plugin>/<version>/, so a ~/.claude/skills/…
 # or ~/.claude/agents/… path resolves to nothing and fails silently — a missing
 # rules library, a statusline that never renders, an agent with no references.
-if [[ "$REL" =~ ^agentic-engineering/(skills|agents|references|commands|adapters|capture-tools|rules-library)/ ]]; then
+if [[ "$REL" =~ ^agentic-engineering/(skills|agents|references|commands|adapters|capture-tools|rules-library|hooks|scripts)/ ]]; then
   if grep -q '~/\.claude' "$FILE" 2>/dev/null; then
     fail "$REL contains a literal ~/.claude path. agentic-engineering installs only through the marketplace, where its files live in the plugin cache. Use CLAUDE_PLUGIN_ROOT/... instead."
   fi
