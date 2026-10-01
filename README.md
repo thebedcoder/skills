@@ -82,4 +82,4 @@ Each plugin follows the same internal layout — see [`CLAUDE.md`](./CLAUDE.md) 
 
 ## License
 
-See [LICENSE](./LICENSE).
+MIT — see [LICENSE](./LICENSE).

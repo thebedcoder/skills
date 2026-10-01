@@ -283,4 +283,4 @@ Built with Claude Code. Informed by:
 
 ## License
 
-MIT
+MIT — see [LICENSE](../LICENSE).
