@@ -26,6 +26,8 @@ Read `mode:` from `./docs/INDEX.md` frontmatter. Sets the `MEMORY.md` line cap: 
 - `./docs/features/<feature>/PROGRESS.md` — the story's entry, files changed, AC coverage
 - `./docs/features/<feature>/reviews/` — review output for the story
 - `./docs/CHANGELOG.md` — top entries, to detect what's already logged
+- `.agentic/auto-log.md` — this task's `RULING:` lines (an `--auto` run decided them; missing file → none)
+- `.agentic/briefs/<ID>.report.md` — the implementer's `deviations from plan` and `concerns`
 
 Sources missing (story never ran through `/ship`) → work from the git diff for the story's commits. Say so in the summary; don't silently produce a thinner result.
 
@@ -42,6 +44,8 @@ No entry (standalone `/cleanup` on work done by hand) → prepend, newest first,
 ### Step 3 — Binding decisions → `./docs/DECISIONS.md`
 
 **ARCH** extracts decisions that constrain code not yet written. **PROD** challenges each: *"would someone six months from now change this by accident if it weren't written down?"* No → drop it.
+
+A `RULING:` from the auto-log goes through the same test. One that sets a pattern later work must follow becomes a `DEC-` entry citing the ruling and its `cost if wrong`; one that only settled this task stays in the log.
 
 Qualifies:
 - API or data contract fixed

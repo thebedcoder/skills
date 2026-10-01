@@ -24,7 +24,7 @@ Phase-gated SDLC workflow. Named specialist agents. On-demand command loading.
 
 ## How to use
 
-Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/` — full instructions there; this file holds the policy every command inherits. Bodies also point at `shared/` blocks (same base dir): `preamble.md` §A–§D, and on-demand files loaded only on their branch — `auto-mode.md` (`--auto`), `story-flow.md` (story work), `focus-release.md`, `worktree.md` (a worktree picked, present or finishing — `git config agentic.worktree` = `ask`·`always`·`never`), `visual-capture.md`.
+Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/` — full instructions there; this file holds the policy every command inherits. Bodies also point at `shared/` blocks (same base dir): `preamble.md` §A–§D, and on-demand files loaded only on their branch — `auto-mode.md` (`--auto`), `story-flow.md` (story work), `fix-loop.md` (a chain's review returned blockers), `focus-release.md`, `worktree.md` (a worktree picked, present or finishing — `git config agentic.worktree` = `ask`·`always`·`never`), `visual-capture.md`.
 
 ## Command → File Map
 
@@ -34,10 +34,10 @@ Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-en
 | `/init` | `commands/init.md` | Docs scaffold + CLAUDE.md |
 | `/feature [name]` | `commands/feature.md` | Research + PRD + stories |
 | `/design` | `commands/design.md` | Mockups via Figma/Pencil/Markdown |
-| `/implement` | `commands/implement.md` | Next unchecked story + tests |
+| `/implement` | `commands/implement.md` | Next unchecked story — `ae-arch` plans, `ae-impl` builds test-first |
 | `/review` | `commands/review.md` | 7-agent parallel review (`--frontend-pass` drops LEAN) |
-| `/ship` | `commands/ship.md` | Full chain: implement→review→frontend→review→docs |
-| `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories. Opt-in worktree per `[P]` story (`shared/worktree.md`) |
+| `/ship` | `commands/ship.md` | Full chain: plan→build→review→frontend→review→docs, no stop |
+| `/ship-all` | `commands/ship-all.md` | Loop ship across unchecked stories, no stop between them. Opt-in worktree per `[P]` story (`shared/worktree.md`) |
 | `/worktree [name]` | `commands/worktree.md` | List workflow worktrees (task + `[P]` story); merge, PR, keep or discard finished ones |
 | `/fix [description]` | `commands/fix.md` | Diagnose → fix → review |
 | `/improve [description]` | `commands/improve.md` | Non-bug change — plan → apply → review. Bare call → picks improvement from `BACKLOG.md`. Wants it done now; "we should improve X someday" → `/note` |
@@ -59,10 +59,12 @@ Command invoked → read its file under `${CLAUDE_PLUGIN_ROOT}/skills/agentic-en
 
 Agent speaks → prefix output with name. Internal output = caveman rules.
 
-**Nine are real subagents.** Dispatch the left column verbatim. A bare name (`ae-red`) does not resolve under a plugin install — the model then role-plays the reviewer inline and the report looks normal.
+**Eleven are real subagents.** Dispatch the left column verbatim. A bare name (`ae-red`) does not resolve under a plugin install — the model then role-plays the agent inline and the output looks normal.
 
 | `subagent_type` | Speaks as | Role | Bias |
 |---|---|---|---|
+| `agentic-engineering:ae-arch` | 🏗 **ARCH** | Story plan — Contract claims, Failure states, files, test plan, frontend plan, implementer tier. Session model, read-only | Suspects shortcuts + hidden debt |
+| `agentic-engineering:ae-impl` | 🔨 **IMPL** | Builds one brief test-first; red + green runs through `evidence.sh`; never ticks, never commits. Sonnet by default | Plan's file list is the fence |
 | `agentic-engineering:ae-red` | 🔴 **RED** | Bugs — null/async/logic | Assumes code broken |
 | `agentic-engineering:ae-req` | ✅ **REQ** | Requirements + constitution | Binary. Constitution violation = blocker |
 | `agentic-engineering:ae-test` | 🧪 **TEST** | Test coverage + quality | Flags tests that prove nothing |
@@ -73,26 +75,30 @@ Agent speaks → prefix output with name. Internal output = caveman rules.
 | `agentic-engineering:ae-ux` | 🎨 **UX** | Fidelity review of built UI — states, forms, a11y, responsive. Read-only, designs nothing | Never skips empty/error/loading |
 | `agentic-engineering:ae-scribe` | ✍️ **SCRIBE** | End-user product docs in `./app-docs/` | Writes for app users, not dev team |
 
-**Four are inline roles**, not subagents — the main model wearing a hat. Never dispatch them.
+**Three are inline roles**, not subagents — the main model wearing a hat. Never dispatch them.
 
 | Speaks as | Role | Bias |
 |---|---|---|
-| 🏗 **ARCH** | Architecture, planning, structure | Suspects shortcuts + hidden debt |
-| 📋 **PROD** | PRD, stories, acceptance | Challenges vague specs |
+| 📋 **PROD** | PRD, stories, plan validation, acceptance checks | Challenges vague specs |
 | 🔧 **FIXER** | Root cause, surgical fixes | One bug, one fix |
 | 🔀 **GIT** | Commits, branches, PR desc | Conventional only |
 
-**Three subagent names double as inline hats** — main model, no dispatch — where the work needs the human or a tool no subagent has:
+**Four subagent names double as inline hats** — main model, no dispatch — where the work needs the human or a tool no subagent has:
 
 | Speaks as | Where | Why inline |
 |---|---|---|
+| 🏗 **ARCH** | `/feature`, `/plan-all`, `/improve`, `/bootstrap`, `/init`, `/doc`, `/converge`, `/archive` | Approach options, PRD and story review, `/improve`'s plan, project scaffolding — the human answers each, or it is a doc pass, not a plan. Story *implementation* plans are always `ae-arch` |
 | 🎨 **UX** | `/design` | Mockups through the design tool's MCP; `ae-ux` is read-only and reviews built UI later |
 | ✍️ **SCRIBE** | `/doc`, `/doc-all` | Q&A with the user; follows `agents/ae-scribe.md`'s template |
 | 🔴 **RED** | `/doc` | Improvement notes to `improvements.md` — no verdict, not a review |
 
 Everywhere else these names mean the subagent: dispatch it, never write its block yourself.
 
-Subagents have no Bash and cannot call `AskUserQuestion`. Anything needing a command run or a human answer stays with the parent.
+Reviewers have no Bash; `ae-arch` has Bash for read-only probes; `ae-impl` has Bash, Write, Edit. No subagent can ask the human — that comes back to the parent as a status or an escalation.
+
+## Execution Model
+
+**Main session = orchestrator, session model.** Plans features with the human, gates, consolidates, commits. In story work it holds artifacts — plan, statuses, consolidated reviews — and writes no source code. Story plan → `ae-arch` (`inherit` = session model). Build, fix rounds, `/improve` apply → `ae-impl` (`sonnet`; `haiku` for mechanical stories; session model for fix round 3). Each runs in a fresh context per story. Tier routing, brief and report → `shared/story-flow.md`; fix rounds → `shared/fix-loop.md`. A status is a claim: the parent re-checks evidence, files and every AC itself.
 
 ## Project Mode and Memory Docs
 
@@ -113,13 +119,14 @@ Apply to every command. Not command-specific.
 3. **One story at a time.** No batching.
 4. **Tests not optional.** Done = implemented + tested + a fresh green `scripts/evidence.sh` row for the code being claimed. Output from an earlier phase proves nothing about code changed since.
 5. **Docs stay in sync.** PROGRESS.md, STORIES.md, reviews reflect reality.
-6. **Plan before code.** ARCH plans. PROD validates. Then build.
+6. **Plan before code.** ARCH plans (`ae-arch`, session model). PROD validates. IMPL builds (`ae-impl`, fresh context). The main session orchestrates.
+7. **Planning asks, execution runs.** See below.
 
 ## Caveman Communication Rules
 
 Apply to agent-internal output — reports, reviews, agent-to-agent handoffs. NOT to human checkpoints, code, commits, app-docs pages.
 
-**A plan shown at an approval gate is human-facing** — ARCH's plan, the PRD summary, a `Done when:` list follow the Human-Facing Output Rules below. Caveman only while agents pass it between themselves.
+**What a human answers is human-facing** — the PRD summary, a `Done when:` list, an escalation and its question follow the Human-Facing Output Rules below. ARCH's story plan prints as `ae-arch` returned it: a structured block, read before the build, not prose to restyle.
 
 - **Drop:** articles (a/an/the), filler (just/really/basically), pleasantries, hedging
 - **Keep:** technical terms exact, code blocks unchanged, file paths verbatim
@@ -148,6 +155,10 @@ Rules:
 - >4 options → collapse to the top 3; the built-in "Other" escape hatch covers the rest.
 - Gate needing a choice *and* detail → `[ASK: single]` first, then a `[ASK: prose]` follow-up. Never one widget doing both.
 - **Destructive gates are never `[ASK: confirm]` alone** — show what will be destroyed in the message body first (`/archive` deletes files; `/focus clear` wipes queue).
+
+### Planning asks, execution runs
+
+`/feature`, `/design`, `/plan-all` stop at their gates, then end on one **Build** gate that chains into `/ship-all`. From there `/ship`, `/ship-all`, `/implement`, `/frontend` run with no approval and no compact gate — stopping only for a plan escalation, a blocker that survives the fix loop or needs a decision, a hard override, a stuck implementer, `/fix`'s third failed attempt, or a worktree finish. `--auto` also skips ceremonial planning gates and the Build gate; it never removes one of those stops.
 
 ## Human-Facing Output Rules
 
@@ -183,11 +194,11 @@ Rules:
 
 **`/compact` is a user command. The model cannot invoke it.** Any instruction that says "compact now" is really a checkpoint asking the human to do it.
 
-Between stories (`/ship-all`) and between epics (`/plan-all`) those commands carry their own compact gate and the copy-paste `/compact Focus on: …` block. Human may choose Continue without compacting — their call; proceed, never re-ask.
+**No compact gate between stories** — story work runs in fresh subagent contexts; never ask for `/compact` mid-chain. `/plan-all` keeps its gate between epics (planning happens here, with the human). Continue without compacting is the human's call — never re-ask.
 
 Other rules:
 
-- **SessionStart hook** (`hooks/session-start.sh`) re-injects intent router + active focus on startup, `/clear`, `/compact`. Its focus line = CURRENT + PLAN from `.agentic/focus.md`; trust PLAN over memory of pre-compact turns
+- **SessionStart hook** (`hooks/session-start.sh`) re-injects intent router + active focus on startup, `/clear`, `/compact`. Its focus line = CURRENT + PLAN from `.agentic/focus.md`; trust PLAN over memory of pre-compact turns. After a compaction mid-chain: re-read the running command's body (`set_by:`), resume at the first open PLAN line
 - **Session start:** `INDEX.md`, `MEMORY.md`, `CONSTITUTION.md` in full; newest 20 `CHANGELOG.md` entries; `DECISIONS.md` titles only, skipping `[superseded]` (`shared/preamble.md` §D has the grep)
 - **Read only files relevant to current story** — not whole project
 - **Never re-read** files already in context
@@ -202,4 +213,4 @@ Non-watch mode only. Watch workers outlive Bash timeout → pile up across chain
 - **Go:** `go test ./...` — no watcher wrapper
 - **Other:** pass explicit one-shot / non-watch flag
 
-Applies to the main conversation. **Subagents never read this file** — a dispatch prompt that lets a subagent run tests must restate the non-watch rule inline. Today only the parent runs tests; the batch reviewers have no Bash at all. No exceptions, even "quick checks."
+Applies to the main conversation. **Subagents never read this file** — every agent that runs tests restates the non-watch rule in its own file (`ae-impl`, `ae-arch`), and a dispatch prompt that lets any other subagent run tests must restate it inline. The batch reviewers have no Bash at all. No exceptions, even "quick checks."

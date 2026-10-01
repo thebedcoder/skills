@@ -324,9 +324,7 @@ MVP (P1): 3 of 9 stories — STORY-001, STORY-002, STORY-004
 
 MVP line is required — it answers "smallest shippable thing".
 
-Feature has UI screens → end: *"Run `/design` to prepare mockups before building."*
-Purely backend/API/CLI, no UI → end: *"Run `/ship` to start implementing."*
-Never suggest `/implement` — internal command.
+Next step is the Build gate below — never print "run `/ship`" and stop. Never suggest `/implement` — internal command.
 
 **ARCH** updates `./docs/INDEX.md`:
 ```markdown
@@ -340,7 +338,19 @@ chore([feature-name]): add PRD, epics and stories
 
 Lite → `chore([feature-name]): add stories`.
 
-### Step N — Auto-mode summary
+### Step N — Hand over to building
+
+Planning asks, execution runs (SKILL.md): this is the last question before code. Nested in `/plan-all` (`set_by:` contains `/plan-all`) → skip; the parent hands over once, after every epic.
+
+⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"Planning is done — [N] stories, [M] in the MVP. Start building?"*
+- No UI → **Build all now (Recommended)** · **Build the P1 set** · **Stop here**
+- UI screens → **Design first (Recommended)** · **Stop here** — building UI with no handoff is hard-override #4
+
+Build → read `commands/ship-all.md` and run it in this session, *entered from a Build gate* with the scope chosen here; it asks nothing more at start. From there `/ship-all` owns focus, release and the auto-mode summary; this command's remaining steps are skipped. Design first → read `commands/design.md` and run it; its own Build gate follows. Stop here → `Next: /ship-all to build every story` (UI: `/design`).
+
+Under `--auto`: SKIP — log `SKIPPED: build hand-over [auto]` and chain: no UI → `/ship-all --auto`, everything; UI → `/design --auto` (its visual approvals still ask).
+
+### Step N+1 — Auto-mode summary
 
 Run **§C** of `shared/preamble.md`.
 
@@ -356,6 +366,7 @@ Run **§C** of `shared/preamble.md`.
 | FR coverage gate | unmapped FR or undefined FR cited | not a checkpoint — a hard stop; fix the breakdown |
 | Spec audit itself (`ae-req` Mode B) | — | not a checkpoint — always runs, never pauses |
 | Spec audit reports a blocker | `[AUTO: always-ask]` |
+| Build hand-over — build all / P1 / design first / stop | `[AUTO: skip]` — chains into `/ship-all` (or `/design` for UI) |
 
 
 Lite mode: first three rows never fire — their stages don't run. Only the thin-description `[ASK: prose]` in Stage 3 can pause a lite `/feature`.

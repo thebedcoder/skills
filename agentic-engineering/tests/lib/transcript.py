@@ -16,6 +16,9 @@ Usage:
   transcript.py routed-to FILE COMMAND          exit 0 if the run entered /COMMAND
   transcript.py batch FILE AGENT[,AGENT...]     exit 0 if one message dispatched all
   transcript.py dispatches FILE                 print dispatch groups (JSON)
+  transcript.py dispatched FILE AGENT [MODEL]   exit 0 if the main thread dispatched AGENT
+                                                (with that `model` parameter, when given);
+                                                prints line, model and first prompt words
   transcript.py text FILE                       print main-thread assistant text
   transcript.py hook-events FILE                print SessionStart hook names seen
   transcript.py tools FILE NAME[,NAME...]       print main-thread calls to those tools
@@ -162,6 +165,22 @@ def main(argv):
     if cmd == "dispatches":
         print(json.dumps(dispatch_groups(rows), indent=1))
         return 0
+
+    if cmd == "dispatched":
+        agent = argv[3] if ":" in argv[3] else f"{NS}:{argv[3]}"
+        model = argv[4] if len(argv) > 4 else None
+        hits = 0
+        for n, _mid, b in tool_uses(rows, {"Agent", "Task"}):
+            inp = b.get("input") or {}
+            if inp.get("subagent_type") != agent:
+                continue
+            m = inp.get("model")
+            ok = model is None or m == model or (model == "*" and m)
+            print(f"L{n} {agent} model={m or '-'} {'OK' if ok else 'model mismatch'} :: {str(inp.get('prompt', ''))[:80]!r}")
+            hits += 1 if ok else 0
+        if not hits:
+            print(f"no main-thread dispatch of {agent}" + (f" with model={model}" if model else ""))
+        return 0 if hits else 1
 
     if cmd == "text":
         print(assistant_text(rows))

@@ -127,7 +127,7 @@ if [ -f "$focus" ]; then
       add "  PLAN $(get P_done)/$total done${step:+ · next: $step}"
     fi
     add "Name this task in first reply and offer to resume it, unless user asks for something else."
-    [ "$source_kind" = "compact" ] && add "Context compacted: PLAN in .agentic/focus.md = where chain stopped. Re-read before resuming."
+    [ "$source_kind" = "compact" ] && add "Context compacted: PLAN in .agentic/focus.md = where chain stopped. Re-read it and the body of the command named in via, then resume at the first open line."
   fi
 fi
 

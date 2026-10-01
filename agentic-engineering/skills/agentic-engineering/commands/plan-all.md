@@ -79,9 +79,9 @@ PLANNED ✅
 - [epic]: X stories → ./docs/features/[name]/
 
 Git: X commits (chore: add PRD, epics and stories per feature)
-
-Ready to build. Run /ship-all to implement all planned stories.
 ```
+
+**Hand over to building.** ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"Every selected epic is planned. Start building?"* → **Build everything now (Recommended)** · **Stop here**. Any planned epic has UI screens without a handoff → its stories wait for `/design`; say which, and build the rest. Build → read `commands/ship-all.md` and run it in this session, *entered from a Build gate*. From there `/ship-all` owns focus, release and the auto-mode summary; this command's remaining steps are skipped. Stop here → `Next: /ship-all to build every planned story`. Under `--auto`: SKIP — log `SKIPPED: build hand-over [auto]` and chain into `/ship-all --auto`.
 
 ### Step N — Release focus
 
@@ -97,7 +97,8 @@ Run **§C** of `shared/preamble.md`, counting across every epic's `/feature`.
 |---|---|
 | Which epics to plan | untagged → `always-ask` — scope is never inferred |
 | Compact between epics | untagged → `always-ask` — only the human can run `/compact` |
-| Nested `/feature` gates | their own tags (`feature.md`); approach pick is `always-ask` |
+| Nested `/feature` gates | their own tags (`feature.md`); approach pick is `always-ask`; its own Build gate is skipped — this command hands over once |
+| Build hand-over — build everything / stop | `[AUTO: skip]` — chains into `/ship-all` |
 
 ### Gotchas
 

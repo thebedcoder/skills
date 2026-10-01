@@ -8,7 +8,7 @@
 #   bash install.sh [--skill=<skill>] [--tool=<tool>] [--branch=main] [--scope=project|user]
 #
 # Available skills (--skill=, default: agentic-engineering):
-#   agentic-engineering  Full SDLC workflow — TDD, PRDs, stories, 6-agent review (Claude Code: marketplace plugin only)
+#   agentic-engineering  Full SDLC workflow — TDD, PRDs, stories, 7-agent review (Claude Code: marketplace plugin only)
 #   jtbd                 Jobs to Be Done — research, personas, landing copy, ad scripts
 #
 # Supported tools:
@@ -60,7 +60,7 @@ Usage:
   bash install.sh [--skill=<skill>] [--tool=<tool>] [--branch=main] [--scope=project|user]
 
 Available skills (--skill=, default: agentic-engineering):
-  agentic-engineering  Full SDLC workflow — TDD, PRDs, stories, 6-agent review (Claude Code: marketplace plugin only)
+  agentic-engineering  Full SDLC workflow — TDD, PRDs, stories, 7-agent review (Claude Code: marketplace plugin only)
   jtbd                 Jobs to Be Done — research, personas, landing copy, ad scripts
 
 Supported tools:

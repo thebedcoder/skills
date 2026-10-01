@@ -74,7 +74,7 @@ Non-zero exit is the verdict, not an error — write the file either way. Branch
 | `agentic-engineering:ae-red` | diff path + changed impl files | runtime errors, null safety, async bugs, logic, resource leaks |
 | `agentic-engineering:ae-req` | STORIES.md + CONSTITUTION.md + changed files + PROGRESS.md + `.agentic/review/<STORY-ID>.evidence` | acceptance criteria met, constitution violations, story ticked without fresh evidence |
 | `agentic-engineering:ae-test` | diff path + changed files + test files + STORIES.md + PROGRESS.md + feature name | coverage gaps, AC Coverage matrix validity, tests that wouldn't catch regressions |
-| `agentic-engineering:ae-doc` | CLAUDE.md + changed files + related app-docs | convention drift, docs needing update |
+| `agentic-engineering:ae-doc` | CLAUDE.md + changed files + related app-docs + the story's brief `.agentic/briefs/<STORY-ID>.md` when it exists (the plan — for its persisted-artifacts check) | convention drift, docs needing update |
 | `agentic-engineering:ae-sec` | diff path + changed impl files | high-confidence exploitable vulnerabilities |
 | `agentic-engineering:ae-edge` | diff path + changed impl files + tests + AC + CONSTITUTION | adversarial backend edge cases the diff doesn't handle (boundary, null, race, malformed, resource, error-path) |
 | `agentic-engineering:ae-lean` | diff path + changed impl files + `CLAUDE.md` + the project's dependency manifest | code that works but shouldn't exist — duplicates of what the repo already has, indirection earning nothing, needless work in hot paths. **Skipped under `--frontend-pass`** |
@@ -101,7 +101,7 @@ Won't-fix (logged to improvements.md):
 
 Clean areas:
 - RED: [scope checked and clear]
-- REQ: X/Y criteria met. Constitution: N compliant, M violations. Evidence: [fresh / stale / failing / missing / n/a]
+- REQ: X/Y criteria met. Constitution: N compliant, M violations. Evidence: [fresh / stale / failing / unverified / missing / n/a] · fail-first: [present / missing / n/a]
 - TEST: [verdict]
 - DOC: [aligned / drifts noted]
 - SEC: [Clean / X findings — Critical: N, High: N, Medium: N]
@@ -116,14 +116,14 @@ Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`
 | Reviewer says | Bucket |
 |---|---|
 | RED `CRITICAL`, SEC `Critical` / `High`, EDGE `Blocker`, REQ criterion `NOT MET`, REQ constitution violation, REQ `EVIDENCE: ❌`, TEST `Missing coverage:` entries — an AC with no test, a matrix row naming a test that does not exist, a test that cannot fail for its AC — LEAN verbatim-duplication `Blocker` | Blocker |
-| RED `WARNING`, SEC `Medium`, EDGE / TEST `should-cover` / `should-fix`, TEST test-quality notes, DOC drift, **all LEAN `should-fix`** | Should-fix |
+| RED `WARNING`, SEC `Medium`, EDGE / TEST `should-cover` / `should-fix`, TEST test-quality notes, DOC drift, REQ `FAIL-FIRST: ⚠️ missing`, **all LEAN `should-fix`** | Should-fix |
 | anything the agent itself marked won't-fix, or matching a prior `improvements.md` entry | Won't-fix |
 
 `should-cover` and `should-fix` are the same bucket. Never invent a fourth — and never drop a finding because its label is missing from this table: a reviewer's own `blocker` wording goes to Blocker, anything softer to Should-fix.
 
 ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to handle the blockers?"* → **Fix now (Recommended)** · **Show me the full report first** · **Log and move on**. No blockers → skip the gate entirely and print the clean summary.
 
-**Nested under `/ship` or `/improve`:** the parent's blocker gate wins. `/review` reports, does not gate — the parent fires its own `[ASK: single]` with its own options. Two gates for one decision is a bug.
+**Nested under `/ship` or `/improve`:** `/review` reports, does not gate — the parent runs `shared/fix-loop.md` on the blockers, and only what survives it reaches a gate. Two gates for one decision is a bug.
 
 `Next:` — blockers fixed → return to the parent chain. Standalone `/review` with blockers logged → `/fix` for the blocker, or `/status` to see what's next.
 
@@ -138,7 +138,7 @@ Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`
 - **No 8th reviewer ad-hoc.** Roster is exactly the seven above. New dimension missing → skill change, not improvisation. Flag it.
 - **LEAN findings never block a ship except on verbatim duplication.** Working code that could be simpler is `should-fix`, always. An operator who has to argue about a ternary at a blocker gate stops reading review reports — and then misses the RED finding underneath.
 - **A LEAN report with no `Reuse:` line means it skipped the repo search.** That is the half of its job the diff cannot supply. Treat the report as incomplete and say so rather than consolidating it.
-- **Unverified completion = blocker.** Story ticked in this diff with evidence `stale`, `failing` or `missing` → REQ blocks. Fix is a fresh `evidence.sh run`, never an edited row — a row's tree id is only reproducible by running the tests on that code.
+- **Unverified completion = blocker.** Story ticked in this diff with evidence `stale`, `failing`, `unverified` or `missing` → REQ blocks. Fix is a fresh `evidence.sh run`, never an edited row — a row's tree id is only reproducible by running the tests on that code, and `check` looks every row up in the run ledger, so a typed one reads `unverified`.
 - **Constitution violations = always blockers.** Never downgrade to "should-fix." Fix cost irrelevant.
 - **ae-edge is read-only.** Despite emitting failing test code, ae-edge does NOT write files. Test code lives in the report as inert text; blocker-fix flow downstream copies it into project test files. If ae-edge writes a file, that's a bug.
 - **ae-edge defers frontend.** If diff is frontend-only, ae-edge emits "out of scope" and exits. Don't expect findings on `.tsx`/`.vue`/`.jsx` changes or `.swift` under `Views/` — that's `ae-ux`'s beat.

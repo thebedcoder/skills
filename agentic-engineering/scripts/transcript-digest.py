@@ -33,7 +33,10 @@ REVIEWERS = {f"{NS}:{a}" for a in ("ae-red", "ae-req", "ae-test", "ae-doc", "ae-
 TEST_RE = re.compile(r"(^|[\s;&|(])(npm (run )?test|yarn test|pnpm test|npx (vitest|jest)|vitest|jest|pytest|"
                      r"go test|cargo test|flutter test|dart test|mvn test|gradle\w* test|swift test|"
                      r"node --test|bun test|evidence\.sh run)")
-GATE_TEXT_RE = re.compile(r"(Human checkpoint|HARD-PAUSE|SKIPPED:|DECISION:|PAUSED)")
+GATE_TEXT_RE = re.compile(r"(Human checkpoint|HARD-PAUSE|SKIPPED:|DECISION:|RULING:|PAUSED)")
+# Paths a story chain's main thread may write: docs, working state, changelogs.
+# Anything else is source or tests — ae-impl's job (shared/story-flow.md).
+DOC_PATH_RE = re.compile(r"(^|/)(docs|app-docs|\.agentic|\.claude)/|\.md$|(^|/)\.gitignore$")
 MAX = 160
 
 
@@ -108,6 +111,7 @@ def digest(path, check=False):
     out.append(f"  first prompt L{fn}: {short(fp, 200)}")
 
     commands, reads, gates, plan, tests, commits, compactions, autolog, texts = [], [], [], [], [], [], [], [], []
+    source_edits = []
     groups, order = {}, []
     tool_results = {}
     for n, d in rows:
@@ -167,6 +171,8 @@ def digest(path, check=False):
                     plan.append(f"L{n} {name} focus.md" + (f" — PLAN {done} done / {open_} open" if done + open_ else ""))
                 elif p.endswith(".agentic/auto-log.md"):
                     autolog.append(f"L{n} {name} auto-log.md")
+                elif p and not DOC_PATH_RE.search(p):
+                    source_edits.append(f"L{n} {name} {short(p, 120)}")
             elif name == "Bash":
                 cmd = str(inp.get("command", ""))
                 if TEST_RE.search(cmd):
@@ -198,6 +204,7 @@ def digest(path, check=False):
     section("AUTO-LOG WRITES", autolog)
     section("TEST RUNS", tests)
     section("COMMITS", commits)
+    section("SOURCE EDITS (main thread)", source_edits)
     section("COMPACTIONS", compactions)
 
     sub_dir = os.path.join(os.path.splitext(path)[0], "subagents")
@@ -214,12 +221,12 @@ def digest(path, check=False):
 
     if check:
         out.append("CHECKS")
-        devs = deviations(order, groups, commands, plan, reads, commits)
+        devs = deviations(order, groups, commands, plan, reads, commits, source_edits)
         out.extend(devs or ["  no mechanical deviations — compare the digest with the command contract"])
     return "\n".join(out)
 
 
-def deviations(order, groups, commands, plan, reads=(), commits=()):
+def deviations(order, groups, commands, plan, reads=(), commits=(), source_edits=()):
     devs = []
     # Review rounds: a maximal run of reviewer-dispatching messages in which no
     # reviewer repeats. Plan pre-review (red+sec), Phase 2 (7) and Phase 4 (6) each
@@ -259,6 +266,15 @@ def deviations(order, groups, commands, plan, reads=(), commits=()):
     if ran_fix and fix_commit and f"{NS}:ae-red" not in dispatched:
         devs.append(f"  DEVIATION review: /fix committed ({short(fix_commit, 60)}) with no {NS}:ae-red dispatch — "
                     "Phase 3 RED review was skipped or written inline (commands/fix.md Phase 3)")
+    # A story chain wrote source or tests in the main thread and never dispatched the
+    # implementer: the build was done inline, by the session that also plans and
+    # verifies it — the context and the separation the subagent exists for, both lost.
+    story_chain = any(re.search(rf"\b{NS}:(ship|ship-all|implement|frontend)\b", c) for c in commands) or \
+        any(re.search(r"/commands/(ship|ship-all|implement|frontend)\.md$", r) for r in reads)
+    if story_chain and source_edits and f"{NS}:ae-impl" not in dispatched:
+        devs.append(f"  DEVIATION build: {len(source_edits)} source/test edit(s) in the main thread "
+                    f"({short(source_edits[0], 60)}) with no {NS}:ae-impl dispatch — story code is built by "
+                    "the implementer subagent, never inline (shared/story-flow.md §2)")
     chain = [c for c in commands if re.search(rf"/?{NS}:(ship|fix|improve|feature|ship-all|plan-all|doc-all)\b", c)]
     if chain and not plan:
         devs.append(f"  DEVIATION progress: chain command ({short(chain[0], 60)}) but no .agentic/focus.md PLAN write "

@@ -115,6 +115,24 @@ c.expect("DEVIATION review" not in p.stdout, "/fix with ae-red dispatched → no
 p = run("--check", write([FIX_CMD, FIX_READ, PLAN]))
 c.expect("DEVIATION review" not in p.stdout, "/fix stopped before its commit → no review deviation")
 
+# Story chains: source and tests are ae-impl's to write, never the main thread's.
+SHIP_CMD = {"type": "user", "message": {"role": "user", "content": "<command-name>/agentic-engineering:ship</command-name>"}}
+SRC = tool("m6", "t6", "Write", {"file_path": "/w/src/math.js", "content": "export const x = 1;"})
+TST = tool("m7", "t7", "Edit", {"file_path": "/w/test/math.test.js", "old_string": "a", "new_string": "b"})
+DOCS = tool("m8", "t8", "Edit", {"file_path": "/w/docs/features/main/STORIES.md", "old_string": "[ ]", "new_string": "[x]"})
+IMPL = tool("m5", "t5", "Agent", {"subagent_type": "agentic-engineering:ae-impl", "prompt": "brief: .agentic/briefs/STORY-001.md", "model": "sonnet"})
+p = run("--check", write([SHIP_CMD, PLAN, SRC, TST, DOCS]))
+c.expect("DEVIATION build" in p.stdout and "2 source/test edit(s)" in p.stdout,
+         "/ship editing src/ and test/ in the main thread with no ae-impl → DEVIATION build", p.stdout[-500:])
+c.expect("SOURCE EDITS (main thread) (2)" in p.stdout and "/w/src/math.js" in p.stdout,
+         "SOURCE EDITS lists the main-thread code writes, not the docs edit", p.stdout[-500:])
+p = run("--check", write([SHIP_CMD, PLAN, IMPL, result("t5", "IMPL — STORY-001 [build]: DONE"), DOCS]))
+c.expect("DEVIATION build" not in p.stdout, "/ship that dispatched ae-impl and only ticked docs → no build deviation", p.stdout[-400:])
+p = run("--check", write([SHIP_CMD, PLAN, DOCS, tool("m9", "t9", "Write", {"file_path": "/w/.agentic/briefs/STORY-001.md", "content": "x"})]))
+c.expect("DEVIATION build" not in p.stdout, "docs and brief writes are the orchestrator's — no build deviation")
+p = run("--check", write([FIX_CMD, FIX_READ, PLAN, SRC, RED, result("t5", "RED — Fix review: clean"), COMMIT]))
+c.expect("DEVIATION build" not in p.stdout, "/fix writes its fix in the main thread by design — no build deviation")
+
 # One huge line must not flood the digest.
 huge = write([{"type": "user", "message": {"role": "user", "content": "x" * 2_000_000}},
               tool("m1", "t1", "Bash", {"command": "pytest " + "y" * 100_000})])

@@ -3,6 +3,10 @@
 # Sourced by tests/behavioral/scenarios/*.sh via tests/run-tests.sh.
 
 AE_PLUGIN_ROOT="${AE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+# The plugin the headless session loads. Same as AE_PLUGIN_ROOT except under
+# run-tests.sh --against <ref>, where it is that ref's copy; the harness, fixtures
+# and assertions always come from AE_PLUGIN_ROOT.
+AE_PLUGIN_UNDER_TEST="${AE_PLUGIN_UNDER_TEST:-$AE_PLUGIN_ROOT}"
 AE_TEST_MODEL="${AE_TEST_MODEL:-sonnet}"
 AE_TEST_TIMEOUT="${AE_TEST_TIMEOUT:-900}"
 
@@ -63,7 +67,7 @@ ae_run_claude() {
       timeout "$AE_TEST_TIMEOUT" claude -p \
         --model "$AE_TEST_MODEL" \
         --session-id "$sid" \
-        --plugin-dir "$AE_PLUGIN_ROOT" \
+        --plugin-dir "$AE_PLUGIN_UNDER_TEST" \
         --output-format stream-json --verbose --include-hook-events \
         --permission-mode acceptEdits \
         --max-budget-usd "$budget" \
@@ -86,7 +90,7 @@ ae_resume_claude() {
       timeout "$AE_TEST_TIMEOUT" claude -p \
         --model "$AE_TEST_MODEL" \
         --resume "$sid" \
-        --plugin-dir "$AE_PLUGIN_ROOT" \
+        --plugin-dir "$AE_PLUGIN_UNDER_TEST" \
         --output-format stream-json --verbose --include-hook-events \
         --permission-mode acceptEdits \
         --max-budget-usd "$budget" \

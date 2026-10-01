@@ -1,6 +1,7 @@
 ---
 description: Show progress overview — all features, story counts, what's done and what's next
 context: fork
+model: haiku
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/status.md` — that file holds the real instructions; this wrapper holds none.
 

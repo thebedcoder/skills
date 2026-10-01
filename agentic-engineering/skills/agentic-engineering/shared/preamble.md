@@ -52,10 +52,10 @@ everything else above is the same wherever this runs.
 
 ## §C — Auto-mode summary
 
-Last line of a command that ran with `AUTO=true`. Count the `DECISION:`, `SKIPPED:` and `HARD-PAUSE:` lines this run appended to `.agentic/auto-log.md` — a chain counts its nested commands' lines too:
+Last line of a command that ran with `AUTO=true`. Count the `DECISION:`, `RULING:`, `SKIPPED:` and `HARD-PAUSE:` lines this run appended to `.agentic/auto-log.md` — a chain counts its nested commands' lines too:
 
 ```
-🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md
+🤖 Auto mode: <D> decisions, <R> rulings, <S> skips, <H> hard-pauses. See .agentic/auto-log.md
 ```
 
 `AUTO=false` → print nothing.

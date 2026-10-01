@@ -86,6 +86,19 @@ for label, path, pattern in (
     c.expect(listed == auto_cmds, f"{label} --auto list matches the commands that parse it ({len(auto_cmds)})",
              f"listed but no --auto: {sorted(listed - auto_cmds)}\nmissing: {sorted(auto_cmds - listed)}")
 
+# shared/auto-mode.md carried a third copy of that list, which went stale (it named
+# /doc and missed /frontend and /plan-all) while the two pinned above were fixed.
+# It points at SKILL.md instead; a list creeping back in must match too.
+auto_mode = open(os.path.join(SKILL_DIR, "shared", "auto-mode.md"), encoding="utf-8").read()
+m = re.search(r"^.*accept `--auto`:(.*)$", auto_mode, re.M)
+if m:
+    listed = set(re.findall(r"`/([a-z-]+)`", m.group(1)))
+    c.expect(listed == auto_cmds, "shared/auto-mode.md --auto list matches the commands that parse it",
+             f"listed but no --auto: {sorted(listed - auto_cmds)}\nmissing: {sorted(auto_cmds - listed)}")
+else:
+    c.expect("SKILL.md \"Auto Mode\"" in auto_mode,
+             "shared/auto-mode.md defers to SKILL.md's --auto list instead of keeping its own")
+
 claude_md = open(os.path.join(PLUGIN_ROOT, "CLAUDE.md"), encoding="utf-8").read()
 for m in re.finditer(r"(?:one of|All) (\d+) command", claude_md):
     c.expect(int(m.group(1)) == len(commands),

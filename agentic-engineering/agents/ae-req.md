@@ -42,18 +42,20 @@ Every article in CONSTITUTION.md:
 **Part 3 — Evidence**
 Checkbox says done; evidence proves it. Read `.agentic/review/<STORY-ID>.evidence` (path in dispatch prompt). First line:
 
-`EVIDENCE: <fresh|stale|failing|missing> story=<ID> checked_in_diff=<yes|no|unknown> row_tree=… current_tree=…`
+`EVIDENCE: <fresh|stale|failing|unverified|missing> story=<ID> checked_in_diff=<yes|no|unknown> row_tree=… current_tree=… red=<present|missing>`
 
 Parent computed it — you have no Bash, never re-derive tree ids.
 
 | `checked_in_diff` | verdict | Result |
 |---|---|---|
 | `yes` | `fresh` | ✅ — cite the row's Result cell |
-| `yes` | `stale` · `failing` · `missing` | ❌ **Blocker** — story ticked in this diff without a green run on this code |
+| `yes` | `stale` · `failing` · `unverified` · `missing` | ❌ **Blocker** — story ticked in this diff without a green run on this code |
 | `no` | any | ✅ n/a — box was ticked before this diff, not this change's claim |
 | `unknown` or file absent | — | ⚠️ should-fix — evidence check not run; say so, never assume fresh |
 
-`stale` = tests last ran on different code (a fix or frontend change came after). `failing` = newest run red. `missing` = no `### Evidence` row for the story in `PROGRESS.md`. A row the parent pasted by hand from an earlier phase shows up as `stale` — that is the case this part exists for.
+`stale` = tests last ran on different code (a fix or frontend change came after). `failing` = newest run red. `unverified` = newest row matches no run in the evidence ledger — typed, edited, or recorded on another machine. `missing` = no `### Evidence` row for the story in `PROGRESS.md`. A row pasted from an earlier phase shows up as `stale`; a row written by hand shows up as `unverified` — those are the cases this part exists for.
+
+`red=missing` on a story ticked in this diff → ⚠️ **should-fix**, never blocker: no verified failing-first run (`evidence.sh run --phase red --expect-fail`) recorded, so test-first is unproven. A `refactor`-shaped story legitimately starts green — say which it looks like.
 
 **Part 3 answers one question: did the suite run green on this code?** `fresh` → ✅, even when the tests look weak. Weak tests are not an evidence failure — they land elsewhere: criterion code misses → that AC `NOT MET` (Part 1); constitution demands real tests → that article's violation (Part 2); test quality itself → `ae-test`'s job, not yours. Never mark Evidence ❌ on a `fresh` verdict — it reports the same defect twice and blocks a story whose criteria are met for a reason REQ does not own.
 
@@ -72,7 +74,8 @@ CONSTITUTION:
 ❌ Article [N] [name]: VIOLATION — [what's wrong] — [fix plan]
 ⚠️ Article [N] [name]: borderline — [note]
 
-EVIDENCE: ✅ fresh — [row Result cell] | ❌ BLOCKER — [stale|failing|missing] — run evidence.sh on current code, paste new row | ✅ n/a — not ticked in this diff | ⚠️ not checked — [why]
+EVIDENCE: ✅ fresh — [row Result cell] | ❌ BLOCKER — [stale|failing|unverified|missing] — run evidence.sh on current code, paste new row | ✅ n/a — not ticked in this diff | ⚠️ not checked — [why]
+FAIL-FIRST: ✅ present | ⚠️ missing — no verified red run | n/a — not ticked in this diff
 
 Summary: X/Y criteria met. Constitution: N compliant, M violations. Evidence: [verdict].
 ```

@@ -148,9 +148,11 @@ PROD — Handoff Review:
 Any acceptance criterion design doesn't address?]
 ```
 
-After approval: *"Design complete. Run `/ship` to start building."*
+### Step N — Hand over to building
 
-### Step N — Auto-mode summary
+Design approved = planning done for this feature. ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"Design is handed off. Start building?"* → **Build all now (Recommended)** · **Build the P1 set** · **Stop here**. Build → read `commands/ship-all.md` and run it in this session, *entered from a Build gate* with that scope. From there `/ship-all` owns focus, release and the auto-mode summary; this command's remaining steps are skipped. Stop here → `Next: /ship-all to build every story`. Under `--auto`: SKIP — log `SKIPPED: build hand-over [auto]` and chain into `/ship-all --auto`, everything.
+
+### Step N+1 — Auto-mode summary
 
 Run **§C** of `shared/preamble.md`.
 
@@ -162,5 +164,6 @@ Run **§C** of `shared/preamble.md`.
 | Mobile designs review | `[AUTO: always-ask]` — visual review is human-only |
 | Desktop designs review | `[AUTO: always-ask]` — visual review is human-only |
 | Design tool selection (from CLAUDE.md) | `[AUTO: ask-if-ambiguous]` — defer to project's existing setting |
+| Build hand-over — build all / P1 / stop | `[AUTO: skip]` — chains into `/ship-all` |
 
 ---

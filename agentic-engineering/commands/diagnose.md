@@ -2,6 +2,7 @@
 description: Diagnose a misbehaving agentic-engineering run — reads the session transcript and reports every deviation from the command's contract (skipped phases, sequential reviewer dispatch, gates missed under --auto) with line-level evidence; --bundle writes a scrubbed bundle for a GitHub issue
 argument-hint: "[session-id | transcript-path] [--bundle]"
 context: fork
+model: sonnet
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/diagnose.md` — that file holds the real instructions; this wrapper holds none.
 
