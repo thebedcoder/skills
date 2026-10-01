@@ -1,5 +1,5 @@
 ---
-description: Full story chain — implement → review → frontend → review → docs, one story
+description: Full story chain, no stop — plan (session model) → build (Sonnet subagent) → review → frontend → review → docs, one story
 argument-hint: "[--auto]"
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/ship.md` — that file holds the real instructions; this wrapper holds none.

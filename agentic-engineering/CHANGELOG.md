@@ -4,6 +4,138 @@ All notable changes to the `agentic-engineering` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] — 2026-10-01
+
+The main session becomes an orchestrator: you plan with it, then it builds without
+stopping. Plan and rationale: `docs/upgrade-plan-3.0.md`.
+
+### Changed — breaking
+
+- **Planning asks, execution runs.** `/ship`, `/ship-all`, `/implement` and
+  `/frontend` no longer ask for plan approval, per story or per chain, and
+  `/ship-all` no longer asks you to `/compact` between stories. They stop only for a
+  plan escalation (new dependency, public interface change, disputed Contract claim,
+  missing project state), a review blocker the fix loop could not clear or that
+  needs a decision, an operation on the hard-override list, an implementer still
+  stuck after a retry on the session model, `/fix`'s third failed attempt, and a
+  worktree finish. Without `--auto`, too.
+- **Planning hands over to building.** `/feature`, `/design` and `/plan-all` end with
+  *Start building?* — build everything, the P1 set, design first, or stop — and chain
+  straight into `/ship-all`. `[AUTO: skip]`: under `--auto` they chain without asking.
+  `/ship-all` entered that way asks nothing more at start; otherwise it asks once,
+  scope and parallel groups in one widget, never mid-chain.
+- **Review blockers go through a fix loop** (`shared/fix-loop.md`): each blocker is
+  triaged as *fix* or *decision*; decisions pause at once; fixes go to the implementer
+  for two rounds on its tier and a third on the session model, each re-reviewed by
+  only the reviewers that raised them. Survivors pause with the old options.
+  Hard-override #1 now reads "a blocker that survives the fix loop, or needs a
+  decision". Standalone `/review` still reports and asks.
+
+### Added
+
+- **`ae-arch` — the story planner**, `model: inherit`: plans each story on the
+  session's own model in a fresh context — Contract claims with proof, Failure
+  states, files, test plan with red and full test commands, the frontend plan for UI
+  stories, escalations, and the implementer tier. Read-only: Bash for probes, no
+  write tool.
+- **`ae-impl` — the story implementer**, `model: sonnet`: builds one brief test-first
+  in a fresh context, records the red run and the green run, appends the story's
+  `PROGRESS.md` entry (with an `Implementer:` tier line), writes a report and returns
+  ≤12 lines. Never ticks, never commits, refuses out-of-plan files and hard-override
+  operations it was not cleared for. Dispatch passes `model` per story: `haiku` only
+  for mechanical stories that copy a cited precedent, the session model for fix
+  round 3. Also builds `/frontend` and `/improve`'s apply phase and runs fix rounds.
+- **Briefs and reports** in `.agentic/briefs/` — the planner's output and the
+  implementer's account, so neither lives in the main context. The orchestrator
+  re-checks evidence, files and every acceptance criterion itself before ticking.
+- **Run ledger** — `evidence.sh run` appends every run to
+  `<git common dir>/agentic/evidence.log` (never committed, shared by worktrees);
+  `check` looks the newest row up there and reports **`unverified`** for a typed,
+  edited or foreign row, which REQ blocks like `stale`. `check-row` gives the same
+  verdict for one row (`/improve`).
+- **Red runs on record** — `evidence.sh run --phase red --expect-fail` records the
+  failing-first run, exits 0 when it fails as expected and 1 when the tests already
+  pass. `check` reports `red=present|missing`; REQ reports a missing one as
+  should-fix (`FAIL-FIRST:`). `/fix` records its regression test failing before the fix.
+- **Rulings** under `--auto`: an ambiguous call whose worst case is rework inside the
+  current task is decided and logged with `cost if wrong` and `reversal`; anything
+  costlier still asks. `/cleanup` promotes rulings that set a pattern to `DEC-` entries;
+  §C counts them.
+- **Proportional plans** — about 40 lines for an S story, 80 for M, signatures never
+  bodies; PROD's plan review checks it.
+- **Pressure tests** — `tests/run-tests.sh --against <ref>` runs scenarios with the
+  plugin as it was at `<ref>`; a new rule's scenario must fail there and pass on the
+  change (`CLAUDE.md`).
+- `/status` runs on Haiku, `/analyze` and `/diagnose` on Sonnet (forked wrappers).
+- `/diagnose` flags `DEVIATION build` — a story chain that wrote source or tests in the
+  main thread with no `ae-impl` dispatch — and lists main-thread source edits.
+- **Parallel `[P]` builds in one session** (`shared/parallel-build.md`). A `[P]` group
+  is planned by one `ae-arch` per story at once, checked for overlapping files and
+  tests that can't run side by side, then built by one `ae-impl` per story at once —
+  each with `isolation: "worktree"`, so Claude Code keeps it out of your checkout.
+  Claude Code starts those worktrees from the default branch; each implementer first
+  runs `worktree.sh pin` onto the feature branch's commit, so it has every story
+  already built there and reads its plan from the brief. The orchestrator verifies
+  each in its worktree, `adopt`s, commits and merges them in plan order, runs the
+  suite once on the merged result, ticks the stories, and continues each through
+  review, frontend, docs and cleanup one at a time. The default for a `[P]` group;
+  *One after another* and *Separate sessions* (the old worktree-per-session path)
+  remain at the start question.
+- `worktree.sh pin` and `adopt`; `adopt`, `merge` and `remove` also run from a task
+  worktree holding the base branch. `ae-arch` reports `Setup command` and
+  `Test isolation`; `ae-impl` pins, sets up and runs a baseline before a parallel
+  build. `/review` takes `range: A..B` for a story's own merge. `/diagnose` flags
+  `DEVIATION base` — an isolated `ae-impl` with no `pin:`.
+- **Plan records** — a story's plan, once it clears PROD, pre-review and any escalation,
+  is committed to `docs/features/<feature>/plans/<ID>-plan.md` before any code, with the
+  gate answers and approved hard-override operations; a replan appends, never rewrites.
+  The brief stays gitignored working state. A rerun passes the record to `ae-arch` as
+  `prior plan:` (approvals do not carry). `[P]` groups commit their records before the
+  pin. `/cleanup`, `/archive` and DOC read it; `/diagnose` flags `DEVIATION plan`.
+  `/improve` puts its approved plan in the commit body.
+- **Unattended runs** — `scripts/ship-loop.sh`: one fresh headless
+  `/agentic-engineering:ship --auto` session per story, each under its own
+  `--session-id` with the launching session's variables (local and cloud) stripped,
+  stopping with the session to resume on any hard pause (exit 3) or a run that shipped
+  nothing (exit 4); `--max`, `--dry-run`, a log in `.agentic/ship-loop.log`.
+  `STORIES.md` is its state.
+- **Measured cost per story** — `scripts/story-cost.py` reads the session's own
+  subagent transcripts and `/ship` Phase 5 writes a `### Cost` table (tokens per agent
+  and model) into the story's `PROGRESS.md` entry — each message counted once at its
+  final usage, the transcript under this project's dir preferred when an id appears in
+  several. Unavailable → nothing written.
+- **Lite review** for a Haiku-tier story or a docs-only change: RED, REQ, TEST (+SEC on
+  auth, input parsing, crypto, file or network I/O). Everything else keeps all seven.
+- **Review memory** — `docs/review-memory.md`, kept by `/review` and read by RED, SEC
+  and LEAN: patterns found in a second story, and claims that turned out not to hold.
+  Claude Code's agent `memory:` is ignored for plugin agents and would give the
+  reviewers write tools, so the orchestrator owns the file.
+- **Human-started commands** — `archive`, `worktree`, `bootstrap`, `init`, `ship-all`,
+  `plan-all`, `doc-all`, `cleanup`, `implement`, `frontend`, `review` carry
+  `disable-model-invocation: true`: out of every session's skill listing, never
+  started by the model from a plain-language request. Chains are unaffected.
+- **Effort** — `ae-arch` runs at `high`, `ae-impl` at `medium`, whatever the session's
+  level. Not on the Haiku agents: Haiku has no effort levels.
+- **Pressure test in CI** — `tests/pressure.sh <base>`: every scenario a pull request
+  adds must fail on the base and pass on the branch; every changed one must pass. New
+  `pressure-test` job, skipped without the API key secret.
+- Behavioral scenarios `13-ship-subagent-build`, `14-ship-all-runs-on` and
+  `15-ship-all-parallel-build`; `03` also asserts the implementer is never dispatched
+  before a hard pause is answered.
+
+### Fixed
+
+- `shared/auto-mode.md` kept its own `--auto` command list, which named `/doc` and
+  missed `/frontend` and `/plan-all` after 2.3.0 fixed the other two. It now defers to
+  SKILL.md's, and `test_command_tables.py` fails if a divergent list comes back.
+- The top-level installer and smart-setup's workflow spec said "6-agent review".
+- The README's "~75% token reduction" for caveman output had no measurement behind it;
+  the number is gone.
+- `evidence.sh` with no subcommand printed nothing when run by a relative path.
+
+- The repository `LICENSE` was proprietary while every `plugin.json` and README said
+  MIT. It is now MIT.
+
 ## [2.3.0] — 2026-10-01
 
 ### Added

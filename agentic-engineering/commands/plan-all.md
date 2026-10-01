@@ -1,6 +1,7 @@
 ---
-description: Plan all unplanned epics — runs feature research + PRD + stories for each one
+description: Plan all unplanned epics — runs feature research + PRD + stories for each one, then hands over to building
 argument-hint: "[--auto]"
+disable-model-invocation: true
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/plan-all.md` — that file holds the real instructions; this wrapper holds none.
 

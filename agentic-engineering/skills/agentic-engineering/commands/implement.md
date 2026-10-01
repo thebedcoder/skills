@@ -1,8 +1,8 @@
 ## `/implement` — Implement Next Story
 
-**Goal:** Ship one story end-to-end — plan approved, code + tests written, acceptance criteria verified, progress recorded.
+**Goal:** Ship one story end-to-end — plan cleared, code + tests written, acceptance criteria verified, progress recorded.
 
-**Agents:** ARCH (plan), PROD (validation), `ae-red` + `ae-sec` (pre-review of the plan)
+**Agents:** `ae-arch` (plan, session model), PROD (validation, inline), `ae-red` + `ae-sec` (pre-review of the plan), `ae-impl` (build, Sonnet by default)
 
 **Inputs (read first):**
 - `./CLAUDE.md` — conventions
@@ -16,9 +16,9 @@ Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/impleme
 
 ### Step 0b — PLAN
 
-Nested under `/ship` or `/ship-all` → **do not write a PLAN**; advance the parent's. The parent also owns the start gate — nested, this command's own gate does not fire.
+Nested under `/ship` or `/ship-all` → **do not write a PLAN**; advance the parent's.
 
-Standalone → write one PLAN line per phase (plan · implement + tests · verify AC · record progress) into `.agentic/focus.md` — SKILL.md "Progress Tracking".
+Standalone → write one PLAN line per phase (plan (ae-arch) · build (ae-impl) · verify AC · record progress) into `.agentic/focus.md` — SKILL.md "Progress Tracking".
 
 
 ### Step 0 — Auto-write focus
@@ -27,7 +27,7 @@ Before planning, run **§B** of `shared/preamble.md` — `title: <STORY-ID> — 
 
 ### Flow
 
-Run `shared/story-flow.md` — constraints, plan with Contract claims and Failure states, `ae-red` + `ae-sec` pre-review, the plan-approval gate, implement test-first, verify with fresh evidence, record `PROGRESS.md`. Its gates and tags apply as written.
+Run `shared/story-flow.md` — constraints, `ae-arch` plan with Contract claims and Failure states, PROD review, `ae-red` + `ae-sec` pre-review, the escalation gate, `ae-impl` build test-first on its tier, mechanical verify, record. Its gates and tags apply as written. No plan-approval gate: the plan prints and the build starts — escalations are the only stop.
 
 ### Step N — Release focus
 
@@ -41,10 +41,9 @@ Run **§C** of `shared/preamble.md`.
 
 | Checkpoint | Tag |
 |---|---|
-| Plan-approval ('go' to start) | `[AUTO: skip]` — proceed silently when plan has no new deps / interface changes |
-| Plan introduces new library or alters public API | `[AUTO: always-ask]` — escalates from skip to ask |
-| Pre-review disputes a Contract claim, unresolved | `[AUTO: always-ask]` — escalates from skip to ask |
+| Plan approval | **none** — execution runs; the plan prints and the build starts |
+| Escalation: new library, public API change, disputed Contract claim, hard-override op, missing state | `[AUTO: always-ask]` — `shared/story-flow.md` §1 |
+| Implementer stuck after a session-model retry | `[AUTO: always-ask]` — `shared/story-flow.md` §2 |
 | Pre-review itself (`ae-red` + `ae-sec` on the plan) | not a checkpoint — always runs, never pauses |
-| Tests passing → commit | `[AUTO: skip]` — tests verify correctness; no user judgment needed |
 
 ---

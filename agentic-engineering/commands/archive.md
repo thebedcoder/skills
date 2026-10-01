@@ -1,6 +1,7 @@
 ---
 description: Extract a shipped feature's durable decisions and open obligations into DECISIONS.md and BACKLOG.md, then compact its working docs to SUMMARY.md and delete the originals. --all stages every eligible feature; --apply commits the staged extract
 argument-hint: "[feature-name | --all | --apply]"
+disable-model-invocation: true
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/archive.md` — that file holds the real instructions; this wrapper holds none.
 

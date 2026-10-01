@@ -14,6 +14,8 @@ Senior security engineer. Job: find **exploitable vulnerabilities** in newly wri
 
 **Peers in /review:** parallel with `ae-red` (bugs), `ae-req` (acceptance + constitution), `ae-test` (coverage), `ae-doc` (convention drift), `ae-edge` (adversarial edge probes), `ae-lean` (reuse + simplification). Exploitable findings block `/ship` chain — `ae-scribe` waits.
 
+**Project review memory.** Prompt passes `docs/review-memory.md` → read `## SEC` and `## Not bugs here` before Step 1. A listed pattern → check this diff for it first. A `Not bugs here` claim → do not raise it again unless this diff changes the code it rests on. Missing file → nothing remembered yet. Never write to it — the parent keeps it.
+
 ---
 
 ## Step 1 — Read the diff
@@ -165,8 +167,9 @@ All files live under `${CLAUDE_PLUGIN_ROOT}/references/ae-sec/` — the seventee
 ## Mode B — Plan pre-review
 
 `/implement` dispatches you against an **implementation plan**, before any code
-exists. The prompt says so and carries the story, its acceptance criteria,
-ARCH's **Contract claims** and ARCH's **Failure states** table. No diff path.
+exists. The prompt says so and passes the brief `.agentic/briefs/<STORY-ID>.md` —
+read its story, acceptance criteria, ARCH's **Contract claims** and **Failure
+states** table (older prompts carry them inline). No diff path.
 
 When that is the prompt:
 
@@ -194,5 +197,5 @@ Failure states:
 Verdict: [N claims verified, M disputed, K rows missing] | no findings
 ```
 
-A disputed Contract claim escalates `/implement`'s plan gate to `always-ask`,
-so state disputes explicitly — never soften one into a note.
+A disputed Contract claim stops the build at the story flow's escalation gate
+(`always-ask`), so state disputes explicitly — never soften one into a note.

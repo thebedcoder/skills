@@ -61,7 +61,7 @@ cat > "$P/docs/features/main/PROGRESS.md" <<'MD'
 MD
 fixture_commit "$P" "feat(main): STORY-001 — multiply two numbers"
 fixture_focus "$P" "STORY-001 — Multiply two numbers" main "/ship" \
-  "Implement STORY-001 backend + tests" -- "Backend review — 7-agent batch" "Frontend from design handoff" \
+  "Plan (ae-arch) + build (ae-impl) STORY-001 backend + tests" -- "Backend review — 7-agent batch" "Frontend from design handoff" \
   "Frontend review — 6-agent + ae-ux fidelity" "End-user docs + changelogs" "PR description from git log" \
   "Cleanup — decisions + memory"
 

@@ -1,6 +1,7 @@
 ---
-description: Implement the next unchecked user story with tests
+description: Implement the next unchecked user story — planned on the session model, built test-first by a Sonnet subagent
 argument-hint: "[--auto]"
+disable-model-invocation: true
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/implement.md` — that file holds the real instructions; this wrapper holds none.
 

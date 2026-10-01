@@ -52,8 +52,9 @@ Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
 5. **Generate data-model.md** if the feature touches the database.
 6. **Break into stories.** Each with acceptance criteria, `Implements: FR-…`, `Priority: P1|P2|P3`, and `[P]` where parallelisable.
 7. **Spec audit before any code.** Re-read PRD, epics and stories for ambiguity ("fast", "intuitive" with no threshold), duplicate stories, requirements no story implements, stories that trace to no requirement, constitution conflicts, and terminology drift. Fix gaps now; they are cheapest before code exists.
+8. **Hand over: "Start building?"** This is the last planning question. Yes → implement the stories in priority order, one after another, without stopping between them (next section). A feature with UI screens → design first, then ask again.
 
-**In `lite` mode**, steps 5, 6 and 7 only. Write stories straight from the user's description plus a read of the codebase. No approach comparison, no PRD, no epics file. The constitution is still enforced — during review, not as a separate planning gate.
+**In `lite` mode**, steps 5, 6, 7 and 8 only. Write stories straight from the user's description plus a read of the codebase. No approach comparison, no PRD, no epics file. The constitution is still enforced — during review, not as a separate planning gate.
 
 ---
 
@@ -61,7 +62,11 @@ Source: https://github.com/thebedcoder/skills/tree/main/agentic-engineering
 
 Do these phases in order. Do not skip the review pass.
 
-1. **Plan.** Write the implementation plan. Show it. Wait for approval. The plan carries two sections that outlive it:
+**Planning asks, execution runs.** The stories were approved during planning, so building a story — or every story in a row — needs no further approval. Stop only when something needs the user: a plan that adds a dependency or changes a public interface, a Contract claim the pre-review disputes, an operation on the always-pause list (see "Auto Mode"), a review blocker that survives three fix rounds or needs a decision rather than a fix, or work you cannot make pass. Never ask the user to compact or clear between stories.
+
+**If your tool can choose a model or run a sub-agent:** plan on the most capable model; build each story in a fresh context on a faster one. Treat what the builder reports as a claim — re-run or re-check its test evidence, the files it touched and each acceptance criterion yourself before ticking the story.
+
+1. **Plan.** Write the implementation plan and show it, then continue — the plan is not an approval gate unless it hits one of the stops above. Keep it proportional: decisions, interfaces and test scenarios, never function bodies — about 40 lines for a small story, 80 for a medium one. The plan carries two sections that outlive it:
 
    - **Contract claims** — every assumption about code you did not write ("this returns null on miss", "this call is idempotent"), each backed by a `file:line` citation or real probe output. An assertion is not a proof.
    - **Failure states** — a table with one row per step that can fail, naming the state of each resource after that failure.
@@ -69,7 +74,7 @@ Do these phases in order. Do not skip the review pass.
    **Pre-review the plan before writing code.** Re-read each Contract claim against the file it cites: does the file say what the claim says, and is the claim's converse also consistent with it? Then name a failure point the table omits. Findings amend the plan; a disputed claim means stop and ask. A plan with neither section (a pure function over types you own) skips this.
 
    **Persist both sections into `./docs/features/<name>/PROGRESS.md`** during the record step — the plan dies with the conversation, and "it was in the plan" is unverifiable afterwards.
-2. **Failing tests first.** Write tests that capture the acceptance criteria. Run them — they should fail. Show the failure.
+2. **Failing tests first.** Write tests that capture the acceptance criteria. Run them — they must fail — and record that run in `PROGRESS.md` as a `red` row. A "red" run that passes means the tests prove nothing new; fix them first.
 3. **Implement.** Minimum code to make the tests pass. No drive-by refactors. Then run the full suite, non-watch, and record the run in `PROGRESS.md` (see "Evidence before done"). Tick the story only after a green run.
 4. **Review across 7 areas.** Do each as a focused pass:
    - **Bug hunt** — null safety, async/concurrency, logic errors, resource leaks, error handling
@@ -82,6 +87,7 @@ Do these phases in order. Do not skip the review pass.
    - **Reuse and simplification** — the only pass that looks at code which is *correct*. Before flagging anything, **search the repo** for an existing implementation of what the diff just added: grep for the operation, not the name the author chose, and check the dependency manifest before calling something a hand-rolled utility. Then look for conditionals that collapse, layers passed straight through, work repeated inside a loop on a path that runs often, and abstractions with one implementation. **Every finding names the replacement** — an existing `file:line`, a shorter shape, a cheaper call; "this feels complex" is not a finding. Scope to code this diff added or changed, since drive-by refactors are banned. **Findings are never blockers** except a verbatim duplicate of an existing function, where both locations are cited.
 
    **Bugs vs. missing tests do not double-count.** The bug hunt owns "crashes on the current path"; the edge probe owns "no test proves the guard". One null dereference is one blocker plus, at most, one missing-test entry.
+   **Blockers → fix loop, not a stop.** Fix each blocker (regression test first, then revert the fix and watch the test fail, then restore), re-run the full suite and record it, then re-check only the review areas that raised blockers. Up to three rounds. Stop and ask only if blockers survive the third round, or if a blocker needs a decision rather than a fix (an ambiguous criterion, a constitution conflict, a public interface change).
 5. **If UI:** also check fidelity — loading/empty/error states, form validation, accessibility (keyboard, contrast, focus), responsive behavior.
 6. **Update both changelogs** — engineering log always, product release notes only if user-visible.
 7. **Conventional commit** with a descriptive subject and a body explaining the why.
@@ -143,19 +149,24 @@ This applies to every test invocation, including "quick checks."
 
 ## Human checkpoints
 
-Stop and wait for the user before continuing past any of these points:
+**While planning**, stop and wait for the user at each of these:
 
 - Intent check (full-mode planning, only when the request leaves the user, the outcome or a constraint unstated)
 - Approach selection (after presenting 3 options)
 - PRD approval (after resolving all `[NEEDS CLARIFICATION]` items)
 - Constitution violations (must be resolved or explicitly waived)
-- Implementation plan (before writing any code)
 - Design approval (mobile-first, then desktop, separately)
-- Review blockers — including a story ticked without a current green test run
+- "Start building?" — the hand-over from planning to implementation
+
+**While building**, there is no approval stop per story. Stop only for:
+
+- A plan that adds a dependency, changes a public interface, or rests on a disputed Contract claim
+- Review blockers that survive three fix rounds, or need a decision rather than a fix — including a story ticked without a current green test run that cannot be produced
 - A third failed fix attempt
+- Anything on the always-pause list under "Auto Mode" below
 - Finishing a worktree — merge, PR, keep, or discard
 
-**Under `--auto` the plan and PRD gates are skipped** — they are approval ceremony, and auto mode exists to skip ceremony. Three exceptions re-arm them regardless: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the always-pause list under "Auto Mode" below. Constitution violations, review blockers, the third failed fix, finishing a worktree and destructive operations are never skipped.
+**Under `--auto` the ceremonial planning gates are skipped too** — intent check, PRD approval when nothing is open, and "Start building?". Approach selection, design approval and everything on the "while building" list are never skipped.
 
 ---
 
@@ -195,13 +206,13 @@ Any tool can surface the current task by reading the `title:` field of `# CURREN
 
 ## Auto Mode (`--auto`)
 
-Long-running operations accept a `--auto` flag: feature research, planning all epics, fix, improve, ship, ship-all, implement, frontend, design, and the feature audit. Under `--auto`, the agent skips ceremonial checkpoints and applies defaults from `./docs/CONSTITUTION.md` (especially a `## Default Decisions` section, if present). Every auto-decision is announced inline (`DECISION: <choice> — reason: <why> [auto]`) and appended to `.agentic/auto-log.md` (gitignored, alongside `.agentic/focus.md`).
+Long-running operations accept a `--auto` flag: feature research, planning all epics, fix, improve, ship, ship-all, implement, frontend, design, and the feature audit. Under `--auto`, the agent skips ceremonial checkpoints and applies defaults from `./docs/CONSTITUTION.md` (especially a `## Default Decisions` section, if present). Every auto-decision is announced inline (`DECISION: <choice> — reason: <why> [auto]`) and appended to `.agentic/auto-log.md` (gitignored, alongside `.agentic/focus.md`). An ambiguous choice whose worst case is rework inside the current task is decided as a ruling instead of a question — `RULING: <choice> — why — cost if wrong — reversal [auto]`; anything costlier (more than three files, a public interface, the data model, a new dependency, anything irreversible) still asks.
 
 The agent always pauses regardless of `--auto` for:
-- Review blockers (high-severity bugs, requirements miss, constitution violation)
+- Review blockers that survive three fix rounds, or need a decision (high-severity bugs, requirements miss, constitution violation)
 - Destructive or sensitive operations (CI configs, creating/editing/committing secrets, force-push, DB migrations, mass deletes)
 - Constitution conflicts
 - Missing required project state (no test framework, no design tool, no feature directory)
 
-End of command prints a one-line summary referring to the log file: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`.
+End of command prints a one-line summary referring to the log file: `🤖 Auto mode: <D> decisions, <R> rulings, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`.
 <!-- agentic-engineering:end v1 -->

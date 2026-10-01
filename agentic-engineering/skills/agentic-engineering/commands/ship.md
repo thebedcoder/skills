@@ -1,8 +1,10 @@
 ## `/ship` — Full Story Chain
 
-**Chain:** implement → review → frontend → review → docs
+**Chain:** plan → build → review → frontend → review → docs
 
-Use after `/design` approved. Ships story end-to-end without manual triggers.
+Use after stories (and `/design`, for UI) are approved. Ships story end-to-end without a stop — planning is done, so execution runs (SKILL.md "Planning asks, execution runs").
+
+**Main session orchestrates.** ARCH plans in `ae-arch` (session model), IMPL builds in `ae-impl` (Sonnet by default), seven reviewers review — each in a fresh context. The main session holds the plan, the statuses and the consolidated reviews; it writes no source code in this chain.
 
 **Inputs (read first):**
 - `./CLAUDE.md` — conventions
@@ -19,7 +21,7 @@ Run **§A** of `shared/preamble.md`. Auto-log header: `/ship <STORY-ID> --auto`.
 
 Otherwise write these seven lines to the `# PLAN` section of `.agentic/focus.md` before any work starts:
 
-1. `Implement STORY-XXX backend + tests`
+1. `Plan (ae-arch) + build (ae-impl) STORY-XXX backend + tests`
 2. `Backend review — 7-agent batch`
 3. `Frontend from design handoff`
 4. `Frontend review — 6-agent + ae-ux fidelity`
@@ -70,7 +72,7 @@ NOTE-XXX: [title]
 Shaping into story for feature: [feature name]
 ```
 
-**Target feature dir.** Active feature from `INDEX.md` → use it. No feature exists yet (normal in lite mode, where `/note` → `/ship` is the main path) → default to `./docs/features/main/`, creating `STORIES.md`, `PROGRESS.md`, `reviews/` on first use and adding the `main` row to INDEX.md's feature table. Never fail with "no feature directory".
+**Target feature dir.** Active feature from `INDEX.md` → use it. No feature exists yet (normal in lite mode, where `/note` → `/ship` is the main path) → default to `./docs/features/main/`, creating `STORIES.md`, `PROGRESS.md`, `plans/`, `reviews/` on first use and adding the `main` row to INDEX.md's feature table. Never fail with "no feature directory".
 
 PROD converts → appends to `./docs/features/[feature-name]/STORIES.md`:
 ```markdown
@@ -91,43 +93,33 @@ Mark promoted in `BACKLOG.md`:
 
 ### Flow
 
-**Phase 1 — Backend** (`shared/story-flow.md`)
-- ARCH generates plan
-- PROD validates vs acceptance criteria
-- ⚠️ **Single human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: Show both plans, then ask *"Start the full ship chain?"* → Go / Stop. **This gate replaces the story flow's own plan-approval gate** — one gate, not two; the flow's escalations (new dependency, public interface, disputed Contract claim → `always-ask`) still apply to it. Under `--auto`: SKIP — emit `SKIPPED: ship-chain approval [auto]` and proceed. Hard-override #4 still applies (missing test framework, missing design tool → HARD-PAUSE).
-- On 'go': implement + tests. Update PROGRESS.md + STORIES.md — Record step's `### Evidence` row first, checkbox last
+**Phase 1 — Plan + build** (`shared/story-flow.md` §1–§4)
+- `ae-arch` plans backend **and** frontend in one pass (its `Frontend:` block feeds Phase 3); PROD validates; `ae-red` + `ae-sec` pre-review; brief written to `.agentic/briefs/<STORY-ID>.md`; plan record committed to `plans/<STORY-ID>-plan.md` before any code
+- **No start gate.** The plan prints and the chain proceeds. Only the story flow's escalation gate can stop it — new dependency, public interface change, disputed Contract claim, a hard-override operation, missing project state
+- `ae-impl` builds on its tier; the orchestrator verifies evidence + files + each AC; `PROGRESS.md` entry by the implementer, `STORIES.md` box ticked last by the orchestrator
 - **GIT** commits:
 ```
+docs([feature-name]): STORY-XXX — plan
 feat([feature-name]): STORY-XXX — [story title]
 test([feature-name]): STORY-XXX — add tests
 ```
 
 **Phase 2 — Backend Review** *(automatic)*
-Run full `/review` flow immediately.
-- RED, REQ, TEST, DOC, SEC, EDGE, LEAN run parallel — seven agents
+Run full `/review` flow immediately — roster full, or lite for a Haiku-tier story (`review.md` "Roster"). Story built in a parallel group (`shared/parallel-build.md` §P6 — Phase 1 already done there, chain starts here) → pass `range: <merge>^1..<merge>` so the review sees this story's change, not the whole branch.
+- RED, REQ, TEST, DOC, SEC, EDGE, LEAN run parallel — seven agents (lite roster: RED, REQ, TEST, + SEC when the diff touches auth, input, crypto or I/O)
 - **LEAN runs here and only here.** Phase 4 re-reviews the same branch and passes `--frontend-pass` to drop it
-- Consolidated fix list
+- Consolidated fix list, saved to `reviews/STORY-XXX-review.md` even when clean — fix loop reads its overflow; it rides the story's next commit
 
-**Blockers** → pause + surface (`[AUTO: always-ask]` `[ASK: single]` — also hard-override #1):
-```
-⚠️ SHIP PAUSED — blockers found by [agent]
-
-[consolidated blocker list — top 5, then "+N more"]
-```
-Then ask *"How do you want to handle these?"* → **Fix now (Recommended)** (agent fixes, chain resumes) · **I'll fix them** (pause for manual fix, then re-review) · **Abort chain**.
-
-Blockers fixed → fresh evidence before the commit: `evidence.sh run --phase review-fix -- <test command>`, append the row to the story's `### Evidence` table. Phase 1's row is stale the moment a fix touches code. Then **GIT** amends or commits:
+**Blockers** → `shared/fix-loop.md` (read it only now): triage fix vs decision, up to three implementer rounds each re-reviewed by the reviewers that raised them, then — only if blockers survive or need a decision — the one gate (`[AUTO: always-ask]`, hard-override #1). Each round records `evidence.sh run --phase review-fix`; Phase 1's row is stale the moment a fix touches code. Loop clean → **GIT** commits:
 ```
 fix([feature-name]): STORY-XXX — address review blockers
 ```
-No blockers → continue.
+No blockers → continue, never open `fix-loop.md`.
 
-**Phase 3 — Frontend** *(automatic after clean review or 'fixed')* (`/frontend` flow)
-- UX reads design handoff spec
-- ARCH plans components
-- PROD validates flow
-- Implement pixel-faithful to designs
-- Evidence row `--phase frontend` appended before the commit — same script, same table
+**Phase 3 — Frontend** *(automatic after clean review)* (`/frontend` flow, nested)
+- Plan = the brief's `Frontend:` block from Phase 1 — no second planning pass; PROD validates the flow against the handoff
+- `ae-impl` `mode: frontend` builds pixel-faithful to the handoff, records `red` + `--phase frontend` rows in the story's table
+- Orchestrator verifies (`evidence.sh check` fresh, files in plan) before the commit
 - **GIT** commits:
 ```
 feat([feature-name]): STORY-XXX — frontend implementation
@@ -135,10 +127,10 @@ feat([feature-name]): STORY-XXX — frontend implementation
 - **Visual capture** — `./.claude/visual-capture.md` exists → run `shared/visual-capture.md` (dispatch per `mechanism:`, auto-append Visual Artifacts rows; a failed capture warns, never blocks). Absent → remind the operator to capture manually, continue.
 
 **Phase 4 — Frontend Review** *(automatic)* (`/review --frontend-pass` + ae-ux fidelity)
-- 6-agent parallel pass — the Phase 2 seven minus LEAN, which already reviewed this branch
+- 6-agent parallel pass — the Phase 2 seven minus LEAN, which already reviewed this branch (lite roster: the same three or four as Phase 2)
 - ae-ux checks fidelity vs design handoff
-- Blockers → pause + surface, same pattern as Phase 2
-- Blockers fixed → evidence row `--phase frontend-fix`, then **GIT** commits:
+- Blockers (six-agent pass or ae-ux) → `shared/fix-loop.md`, same as Phase 2; rounds record `--phase frontend-fix`
+- Loop clean → **GIT** commits:
 ```
 fix([feature-name]): STORY-XXX — address frontend review blockers
 ```
@@ -171,6 +163,8 @@ After SCRIBE returns, prepend to both changelogs (newest first):
 
 SCRIBE returned "no user-facing change" → skip `### Added` entry + skip `app-docs/CHANGELOG.md` commit. Still prepend terse entry to `docs/CHANGELOG.md`.
 
+**Cost.** `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/story-cost.py <STORY-ID>` → its table, under `### Cost`, at the end of the story's `PROGRESS.md` entry: tokens per agent and model for every subagent run this story caused, measured from this session's transcripts. `COST: unavailable` → write nothing; never estimate.
+
 - **GIT** commits:
 ```
 docs([feature-name]): STORY-XXX — update app docs and changelogs
@@ -189,10 +183,12 @@ Chain ended in an unresolved blocker pause → **skip Phase 7 entirely**. Unfini
 **Chain complete:**
 ```
 ━━━ STORY-XXX SHIPPED ━━━
-Backend:  ✅ implemented + reviewed
+Plan:     ✅ ae-arch · [N] pre-review findings resolved
+Backend:  ✅ built by ae-impl ([tier]) + reviewed · [K] fix rounds
 Evidence: ✅ [latest row's result] — tree [id], fresh
 Frontend: ✅ implemented + reviewed
 Docs:     ✅ updated
+Cost:     [N] subagent runs · [tokens] tokens (PROGRESS.md ### Cost)
 Git:      ✅ committed (see log above)
 PR desc:  ✅ ready to copy
 Stories:  [x] marked complete
@@ -223,21 +219,21 @@ Run **§C** of `shared/preamble.md`.
 | Branch guard on `main` — branch / worktree / stay / abort | `[AUTO: always-ask]`; `agentic.worktree=always` → worktree, no gate |
 | Finish task worktree (§W5) — merge / PR / keep / discard | `[AUTO: skip]` → keep; merge, PR, discard only on a human answer |
 | Promoted backlog item review | `[AUTO: ask-if-ambiguous]` — skip when AC clear and shaping mechanical |
-| Single ship-chain approval ('go' to start) | `[AUTO: skip]` — proceed silently |
-| SHIP PAUSED — review blockers (Phase 2) | `[AUTO: always-ask]` (hard-override #1) |
-| SHIP PAUSED — frontend review blockers (Phase 4) | `[AUTO: always-ask]` (hard-override #1) |
-| Story-flow plan approval | folded into the ship-chain gate above; its `always-ask` escalations (new dependency, public interface, disputed Contract claim) still apply |
-| Internal `/frontend` plan-approval (Phase 3) | inherited tag from frontend.md (`[AUTO: skip]`) |
-| Internal `/review` blocker surface | inherited tag from review.md / hard-override #1 |
+| Ship-chain start / plan approval | **none** — execution runs; the plan prints and the chain proceeds |
+| Story-flow escalation (new dependency, public interface, disputed claim, hard-override op, missing state, second replan) | `[AUTO: always-ask]` |
+| Implementer stuck after a session-model retry | `[AUTO: always-ask]` |
+| PAUSED — blockers that survived the fix loop or need a decision (Phases 2, 4) | `[AUTO: always-ask]` (hard-override #1) — `shared/fix-loop.md` §4 |
+| Internal `/review` blocker surface | nested: reports only; the fix loop owns blockers |
 
 
 ### Gotchas
 
+- **The main session writes no source code here.** Plan → `ae-arch`, code → `ae-impl`, fixes → `ae-impl` fix rounds. Editing a source file in the main thread is the role-play failure; `/diagnose` flags it. Only exception: the human picks "Work through them together" at a stop.
 - **One story, one commit chain.** Related bug found → BACKLOG.md, never fix "while there."
 - **No skipping Phase 2.** RED + SEC find what authors miss.
-- **"Fixed" ≠ self-attested.** User replies "fixed" → fresh evidence row, then re-run review.
+- **"Fixed" ≠ self-attested.** Implementer's `fixed` or the user's "fixed" → fresh evidence row, then the raising reviewers re-review.
 - **Claimed green without running.** Every phase that changes code ends with its own `evidence.sh` row. Output from Phase 1 does not vouch for code Phase 2 fixed. REQ reads the verdict in `/review` and blocks a checked story whose newest row is stale, red or missing.
-- **No early commit.** Implementation commits at end of Phase 1. Phase 2 blockers → separate commits.
+- **No early commit.** Implementation commits at end of Phase 1, after the orchestrator verified it. Phase 2 blockers → separate commits. The implementer never commits.
 - **PR description from `git log`, not imagination.** Read actual commits. Never generate from plan.
 - **No UI story → skip Phase 3.** Backend-only → Phase 2 → Phase 5.
 - **Test runners non-watch only.** Ship chains multiple test invocations back-to-back. Watch-mode leak compounds → freeze. `vitest run`, `go test ./...`, etc. See SKILL.md "Test Execution Rules."

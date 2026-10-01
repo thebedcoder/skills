@@ -71,13 +71,13 @@ done
 
 | # | Assertion | Why it matters |
 |---|---|---|
-| 9 | Exactly **nine** `agentic-engineering:ae-*` names: `ae-red`, `ae-req`, `ae-test`, `ae-doc`, `ae-sec`, `ae-edge`, `ae-lean`, `ae-ux`, `ae-scribe` | this is the flagship mechanism. Anything else means dispatch silently degrades to the main model role-playing the reviewers |
+| 9 | Exactly **eleven** `agentic-engineering:ae-*` names: `ae-arch`, `ae-impl`, `ae-red`, `ae-req`, `ae-test`, `ae-doc`, `ae-sec`, `ae-edge`, `ae-lean`, `ae-ux`, `ae-scribe` | this is the flagship mechanism. Anything else means dispatch silently degrades to the main model role-playing the planner, the implementer or the reviewers |
 | 10 | Exactly **five** `jtbd:jtbd-*` names: `jtbd-researcher`, `jtbd-analyst`, `jtbd-scout`, `jtbd-copywriter`, `jtbd-scriptwriter` | MODE 0/1/2B/3/4 dispatch these by name; a miss degrades to inline role-play with no error |
 | 11 | **No** doubled name (`agentic-engineering:ae-red:ae-red`, `jtbd:jtbd-scout:jtbd-scout`) | a directory-form agent came back |
 | 12 | **No** `:references:` or `:languages:` entry from either plugin | reference docs drifted back under `agents/` and became phantom agent types |
 | 13 | `grep -rn '~/\.claude' agentic-engineering/{skills,agents,references,commands,adapters,capture-tools,rules-library}` returns nothing | a `~/.claude` literal resolves to nothing under the plugin cache and fails silently |
 | 14 | `grep -rn '~/\.claude' jtbd/{agents,references,commands,adapters}` returns nothing. **`jtbd/skills/jtbd/SKILL.md` is excluded**: its `PostToolUse` hook appends to `~/.claude/jtbd-usage.log`, which is a runtime log write, not a content path | same failure mode, minus the one legitimate use |
-| 15 | No reviewer agent declares `Bash` in `tools:` — `awk` the frontmatter of `agentic-engineering/agents/ae-*.md` | `Bash(git diff:*)` is not honoured as a restriction; the agent gets full Bash and can write to the repo under review |
+| 15 | No reviewer agent declares `Bash` in `tools:` — `awk` the frontmatter of `agentic-engineering/agents/ae-*.md`. `ae-arch` (planner, read-only probes) and `ae-impl` (implementer) are the two that hold Bash, and only `ae-impl` holds `Write`/`Edit` | `Bash(git diff:*)` is not honoured as a restriction; the agent gets full Bash and can write to the repo under review |
 | 16 | `python3 .claude/hooks/desc-length.py agentic-engineering/skills/agentic-engineering/SKILL.md` ≤ 1024 | over the cap the tail is truncated, and the tail holds the "do NOT trigger on" disambiguation |
 | 17 | Every `.md` under `agentic-engineering/agents/` and `jtbd/agents/` is a flat file — `find <plugin>/agents -mindepth 2` is empty | the nested form both mis-registers the agent and turns its neighbours into phantom agents |
 | 18 | Every `${CLAUDE_PLUGIN_ROOT}/references/...` path named in `jtbd/agents/*.md` and `agentic-engineering/agents/*.md` resolves to a file that exists | the agents' only pointer to their references; a stale path fails silently mid-dispatch |

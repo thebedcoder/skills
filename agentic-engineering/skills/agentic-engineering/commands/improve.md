@@ -1,7 +1,7 @@
 ## `/improve [description]` — Improvement Chain
 
 **Chain:** plan → apply → review → docs → cleanup
-**Agents:** ARCH (lead), RED + TEST + LEAN + one scoped specialist (reviewers)
+**Agents:** ARCH (plan, inline — the human approves it), `ae-impl` (apply, Sonnet by default), RED + TEST + LEAN + one scoped specialist (reviewers)
 
 For changes that are neither bug nor whole feature. Adding keyboard shortcut, supporting new file format, new export option, faster query, 400-line hook split in two. Existing thing gets better, or small new capability lands on existing feature.
 
@@ -110,12 +110,14 @@ Risk:
 
 ⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: single]`: Show plan, then ask *"Does this plan look right?"* → **Approve (Recommended)** · **Narrow the scope** · **Wrong approach**. Either non-first option → follow up `[ASK: prose]` and re-plan; never proceed to Phase 2 on a corrected plan without re-running ARCH. Under `--auto`: SKIP when `Fits existing pattern` cites a precedent, `Behavior change` is `none`, and scope is a single file; otherwise ASK.
 
-**Phase 2 — Apply** *(automatic after approval)*
+**Phase 2 — Apply** *(automatic after approval — `ae-impl`, fresh context)*
 
-ARCH applies the planned change. Rules:
+The plan is approved; the build leaves the main context. Write the brief `.agentic/briefs/improve-<slug>.md`: header (`mode: improve`, `implementer tier:`), the improvement description verbatim, ARCH's plan verbatim, the project's non-watch test command. Dispatch `agentic-engineering:ae-impl` with `model: <tier>` — `haiku` only when `Fits existing pattern` cites a precedent, scope is ≤3 files and nothing public changes; otherwise `sonnet` — `mode: improve`, brief path, plugin root. Statuses and retries as in `shared/story-flow.md` §2; `NEEDS_PLAN_CHANGE` here → re-plan inline (ARCH) and re-gate Phase 1.
+
+Rules the implementer carries (`agents/ae-impl.md`):
 - Change only what plan listed
 - No refactoring unrelated code
-- No "while I'm here" improvements — spotted something else? → `./docs/improvements.md`
+- No "while I'm here" improvements — spotted something else → reported under `concerns:`, the orchestrator logs it to `./docs/improvements.md`
 - Follow the precedent named in `Fits existing pattern`. Deviating from it is a plan change, not an implementation detail — re-gate.
 
 Test obligation keyed to `Change type`:
@@ -128,7 +130,7 @@ Test obligation keyed to `Change type`:
 
 Test execution is non-watch mode only — see "Test Execution Rules" in SKILL.md.
 
-**Evidence before review.** After the last edit, full suite through the script — `bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase improve -- <project test command>`. Red → not done. Green row goes into the review block, the completion block and an `Evidence:` trailer on the `feat(`/`perf(`/`refactor(` commit. Review blockers fixed → new row; the old one is stale. `/improve` writes no planning docs, so no `PROGRESS.md` entry — unless the change lands on a story that has one, then append the row there too.
+**Evidence before review.** The implementer's last act is the full suite through the script — `evidence.sh run --phase improve -- <project test command>`. The orchestrator verifies the row it returns, never its word: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh check-row '<row>'` → `fresh`. Anything else → back to the implementer. Green row goes into the review block, the completion block and an `Evidence:` trailer on the `feat(`/`perf(`/`refactor(` commit. Review blockers fixed → new row; the old one is stale. `/improve` writes no planning docs, so no `PROGRESS.md` entry — unless the change lands on a story that has one, then append the row there too.
 
 **Phase 3 — Review** *(automatic)*
 
@@ -176,7 +178,7 @@ Won't-fix (logged to improvements.md):
 1. [issue] — [reason]
 ```
 
-Blocker raised, any `Done when:` condition uncovered, or no fresh green evidence row → pause. Print `⚠️ IMPROVEMENT PAUSED — review found blockers` + findings, then ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to proceed?"* → **Revise the change (Recommended)** · **Accept it anyway** · **Revert the change**.
+Blocker raised, any `Done when:` condition uncovered, or no fresh green evidence row → `shared/fix-loop.md`: implementer fix rounds (`mode: fix-round` on the improve brief), each re-reviewed by the raising reviewers. Survivors, or a blocker that needs a decision → print `⚠️ IMPROVEMENT PAUSED — review found blockers` + findings, then ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to proceed?"* → **Revise the change (Recommended)** · **Accept it anyway** · **Revert the change**.
 
 Clean → continue.
 
@@ -215,6 +217,8 @@ docs([scope]): [what docs changed]               ← only if docs changed
 ```
 
 Prefix comes from the plan, never improvised. `feat(` on an additive improvement is correct — it signals the minor-version bump that `refactor(` would hide.
+
+**The plan rides the commit.** `/improve` writes no planning docs, so the `feat(` / `perf(` / `refactor(` commit body is the one durable record of what was agreed: the Phase 1 plan verbatim, then `Approved: human` — or `Approved: auto — precedent cited, no behavior change, one file` when `--auto` skipped the gate — and `Replanned: <why>` per Phase 2 `NEEDS_PLAN_CHANGE`. The brief stays gitignored working state.
 
 **GIT** outputs note for existing PR (not new PR description):
 ```markdown
@@ -270,7 +274,7 @@ Run **§C** of `shared/preamble.md`.
 | Branch warning when on `main` | `[AUTO: always-ask]` — never proceed silently on `main`; `agentic.worktree=always` → worktree, no gate |
 | Finish task worktree (§W5) | `[AUTO: skip]` → keep; merge, PR, discard only on a human answer |
 | Show plan, ask approval | `[AUTO: ask-if-ambiguous]` — skip when precedent cited + no behavior change + single file |
-| Review post-change `IMPROVEMENT PAUSED` | `[AUTO: always-ask]` (also hard-override #1) |
+| Review post-change `IMPROVEMENT PAUSED` — blockers that survived the fix loop or need a decision | `[AUTO: always-ask]` (also hard-override #1) |
 
 ### Gotchas
 

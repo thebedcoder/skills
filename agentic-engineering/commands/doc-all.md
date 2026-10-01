@@ -1,6 +1,7 @@
 ---
 description: Document multiple features for end users. Add --full on a new project to also generate the docs landing page and user guides
 argument-hint: "[--full]"
+disable-model-invocation: true
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/doc-all.md` — that file holds the real instructions; this wrapper holds none.
 

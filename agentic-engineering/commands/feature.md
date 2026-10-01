@@ -1,5 +1,5 @@
 ---
-description: Research a feature, generate PRD, and break it into user stories
+description: Research a feature, generate PRD, and break it into user stories — then hand over to building
 argument-hint: <feature-name> [--auto]
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/feature.md` — that file holds the real instructions; this wrapper holds none.

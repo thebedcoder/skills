@@ -1,6 +1,6 @@
 ## `/frontend` — Frontend Implementation
 
-**Agents:** ARCH (structure), UX (fidelity), PROD (UX validation)
+**Agents:** `ae-arch` (frontend plan — standalone only), `ae-impl` (build), `ae-ux` (fidelity), PROD (UX validation, inline)
 
 Read `./CLAUDE.md`, target story, `./docs/specs/[feature-name]-design.md`.
 No `/design` yet → prompt user to run it first or confirm proceeding without designs.
@@ -15,33 +15,13 @@ Run **§B** of `shared/preamble.md` — `title: frontend for <STORY-ID>`, `set_b
 
 ### Steps
 
-1. **UX** reads design handoff spec + summarises:
-```
-UX — Design Brief: STORY-XXX
-[Key screens + states this story covers]
-[Interaction notes from handoff spec]
-[What developer needs to watch for]
-```
+**Main session orchestrates** (`shared/story-flow.md` rules): the plan comes from `ae-arch`, the code from `ae-impl`; the main session writes no component code.
 
-2. **ARCH** audits design system. Lists reuse vs build:
+1. **Plan.**
+   - Nested in `/ship` → the brief `.agentic/briefs/<STORY-ID>.md` already holds the `Frontend:` block `ae-arch` wrote in Phase 1. No second planning pass.
+   - Standalone, or the brief has no `Frontend:` block → dispatch `agentic-engineering:ae-arch` with `mode: frontend`, the story id, `STORIES.md`, the handoff spec, `CONSTITUTION.md`, `CLAUDE.md`, plugin root. Write or extend the brief with its plan. After PROD (step 2), append it to the plan record as `## Frontend — YYYY-MM-DD` (`shared/story-flow.md` §1 Plan record; no record yet → create it) and commit `docs(<feature>): STORY-XXX — frontend plan`.
 
-```
-ARCH — Frontend Plan: STORY-XXX
-
-Reuse:
-  - [component] from [path]
-
-Build new:
-  - [component] — [props, variants, states needed]
-
-Data connections:
-  - [API call] → [expected shape]
-
-Responsive:
-  - [mobile / tablet / desktop notes from UX handoff]
-```
-
-3. **PROD** reviews plan vs user flow:
+2. **PROD** reviews the frontend plan vs the user flow:
 ```
 PROD — UX Review:
 [Does this deliver every screen + state in handoff?
@@ -49,15 +29,15 @@ Any interaction state missing — loading, empty, error?
 Any shortcut diverging from approved design?]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: confirm]`: Show all three, then ask *"Implement this frontend plan?"* → Go / Stop. Under `--auto`: SKIP — emit `SKIPPED: frontend plan approval [auto]` and proceed. Exception per hard-override #4: no design handoff spec exists → HARD-PAUSE regardless of tag.
+No approval gate — the design was approved in `/design`. Escalations only (`shared/story-flow.md` §1): a new UI dependency, a public interface change. No design handoff spec exists → HARD-PAUSE regardless of tag (hard-override #4) — never build UI against no design.
 
-4. Implement per ARCH's plan, pixel-faithful to handoff.
-
-4b. **Verify.** Full suite from the repo root, non-watch (SKILL.md "Test Execution Rules"):
+3. **Build.** Dispatch `agentic-engineering:ae-impl` with `model: sonnet` (frontend is never Haiku-tier — fidelity is judgement), `mode: frontend`, brief path, plugin root. It writes component tests first, records the red run, builds pixel-faithful to the handoff, records the green run:
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase frontend -- <project test command>
 ```
-Red → not done; fix before ae-ux runs. Green row → append to the story's `### Evidence` table in `PROGRESS.md`. Nested in `/ship` this is Phase 3's evidence row — same run, not a second one.
+Nested in `/ship` this is Phase 3's evidence row — same run, not a second one.
+
+4. **Verify** as in `shared/story-flow.md` §3: `evidence.sh check` → `fresh`, files within the plan. Red → back to the implementer before ae-ux runs.
 
 5. **ae-ux** runs structured fidelity review.
 
@@ -100,7 +80,7 @@ PROD — Final Check:
 Anything technically working but wrong to use?]
 ```
 
-7. **Standalone only** — nested in `/ship`, Phase 4 owns the blocker gate and Phase 3 the commit; skip this step. ae-ux BLOCKERS → ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to handle the UX blockers?"* → **Fix now (Recommended)** · **I'll fix them** · **Stop here**. Fix → new evidence row (4b), re-run ae-ux. Clean or accepted → **GIT** commits `feat([feature-name]): STORY-XXX — frontend implementation`.
+7. **Standalone only** — nested in `/ship`, Phase 4 owns the blockers and Phase 3 the commit; skip this step. ae-ux BLOCKERS → `shared/fix-loop.md` (implementer fix rounds, `--phase frontend-fix`, ae-ux re-reviews); its §4 gate fires only on survivors or a decision. Clean → **GIT** commits `feat([feature-name]): STORY-XXX — frontend implementation`.
 
 ### Step N — Auto-mode summary
 
@@ -110,12 +90,13 @@ Run **§C** of `shared/preamble.md`. Nested under `/ship` → parent prints the 
 
 | Checkpoint | Tag |
 |---|---|
-| Frontend plan approval ('go' to implement) | `[AUTO: skip]` — proceed silently when handoff spec exists |
+| Frontend plan approval | **none** — design was approved in `/design`; escalations only (`shared/story-flow.md` §1) |
 | No `/design` handoff spec found | `[AUTO: always-ask]` (hard-override #4) — never build UI against no design |
-| ae-ux fidelity BLOCKERS | `[AUTO: always-ask]` (hard-override #1) — nested: parent `/ship` Phase 4 gate; standalone: step 7 |
+| ae-ux BLOCKERS that survive the fix loop | `[AUTO: always-ask]` (hard-override #1) — nested: parent `/ship` Phase 4; standalone: step 7 |
 
 ### Gotchas
 
 - **ae-ux is the last word on fidelity, not PROD.** PROD's spot-check is a sanity read, not a substitute for the structured report.
 - **No design spec → stop, don't improvise.** Building UI against an imagined design is unreviewable.
-- **Claimed green without running.** UI code changes the tree; Phase 1's evidence row does not cover it. 4b's row does.
+- **Claimed green without running.** UI code changes the tree; Phase 1's evidence row does not cover it. Step 3's row does — and step 4 checks it against the ledger.
+- **No component code in the main session.** The implementer builds; the orchestrator verifies.

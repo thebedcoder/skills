@@ -7,7 +7,7 @@ Loaded on demand only. Two kinds, one helper:
 | `task` | `/feature`, `/ship`, `/fix`, `/improve` on `main` — user picked **New worktree**, or `agentic.worktree=always` | **this** session, moved in with `EnterWorktree` | §W4 enter · §W5 finish at chain end |
 | `story` | `/ship-all`, one per `[P]` story, opt-in | **other** sessions, one per story | §W1 create · §W3 `/ship` inside · §W2 finish |
 
-§W2 also runs from `/worktree` for both kinds. Every other run never opens this file.
+§W2 also runs from `/worktree` for both kinds. Every other run never opens this file. A `[P]` group built in parallel **in this session** uses `shared/parallel-build.md` instead: Claude Code makes each implementer's worktree, `worktree.sh pin` / `adopt` turn it into a `story` worktree of this branch, and one that is not merged there (conflict, failed build) is listed and finished by §W2 like any other.
 
 **Helper:** `${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh` — mechanics only (`pref`, `where`, `create`, `seed-focus`, `list`, `merge`, `remove`). Every decision and every gate below stays here, in the parent. `create`, `list`, `merge`, `remove` run from the **main** worktree root and refuse from a linked one.
 
@@ -69,7 +69,7 @@ CURRENT has `worktree_of:` → this run is one story of a parallel group.
 
 - Phases 1–4 and 6 run unchanged on this branch.
 - Phase 5 (end-user docs + changelogs) and Phase 7 (cleanup) → close their PLAN lines `deferred to merge (worktree)`. `docs/CHANGELOG.md`, `app-docs/`, `DECISIONS.md`, `MEMORY.md` are shared: two branches writing them in parallel conflict at merge and collide on `DEC-NNN` numbers. §W2 step 3 writes them once, in the main tree.
-- Story-scoped files still land here: code, tests, `STORIES.md` checkbox, `PROGRESS.md` entry, `reviews/`.
+- Story-scoped files still land here: code, tests, `STORIES.md` checkbox, `PROGRESS.md` entry, `plans/`, `reviews/`.
 - Release focus as normal — this worktree's `.agentic/focus.md` only.
 - Chain-complete block: `Docs: deferred to merge` · `Cleanup: deferred to merge`, and `Next: run /ship-all in <worktree_of> to merge STORY-XXX back.`
 

@@ -98,7 +98,7 @@ FIXER applies minimal surgical fix. Rules:
 - Change only what diagnosis identified
 - No refactoring unrelated code
 - No "while I'm here" improvements
-- Add/update test that would have caught this bug
+- Add/update test that would have caught this bug — and record it failing **before** the fix: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase red --expect-fail -- <command running that test>`. `EVIDENCE-RED: UNEXPECTED PASS` → the test does not catch this bug; rewrite it. The red row goes into the `━━━ FIX COMPLETE` block beside the green one
 - Guards from the plan only — same data path, each with its own test. A check on some other path is another fix → `improvements.md`
 - Instrumentation from diagnosis step 3 removed before commit
 
@@ -191,6 +191,7 @@ Bug:        [description]
 Root cause: [one line]
 Changed:    [files]
 Test:       ✅ added / updated
+Red first:  ✅ [regression test command] → failed before the fix
 Evidence:   ✅ [command] → [runner summary] · tree [id]
 Review:     ✅ ae-red clean / ⚠️ shipped over RED concerns
 Docs:       ✅ updated / not needed

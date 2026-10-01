@@ -13,6 +13,10 @@ fixture_base "$P" lite
 fixture_branch "$P" feat/multiply
 mkdir -p "$P/docs/features/main/reviews" "$P/.agentic/review"
 fixture_feature_row "$P" main in-progress
+# A real green run on the code BEFORE multiply existed: the classic "passed
+# earlier". Recorded through the script, so the ledger knows it — the verdict
+# must come out stale, not unverified.
+old_row="$(cd "$P" && bash "$EV" run --phase implement -- npm test 2>/dev/null | sed -n 's/^EVIDENCE-ROW: //p')"
 cat >> "$P/src/math.js" <<'JS'
 
 export function multiply(a, b) {
@@ -57,8 +61,8 @@ $1
 - test/math.test.js
 MD
 }
-# A green row copied from a run on older code: the classic "passed earlier".
-write_progress '| implement | `npm test` | exit 0 · pass 1 · fail 0 | 2026-09-29 16:00 | 0a1b2c3d4e5f |'
+# The green row from that older run, copied forward.
+write_progress "$old_row"
 fixture_commit "$P" "feat(main): STORY-001 — multiply"
 
 review_inputs() {

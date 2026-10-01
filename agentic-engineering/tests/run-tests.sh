@@ -7,6 +7,10 @@
 #   tests/run-tests.sh --scenario NAME    one scenario (file stem or prefix, e.g. 02)
 #   tests/run-tests.sh --model haiku      model for behavioral runs (default: sonnet)
 #   tests/run-tests.sh --keep             keep fixture projects (temp dir outside the repo)
+#   tests/run-tests.sh --scenario 13 --against <git-ref>
+#                                         pressure test: run scenarios with the plugin as it
+#                                         was at <ref> (harness + assertions stay current).
+#                                         A new gate's scenario must FAIL here and pass on HEAD.
 #
 # Behavioral output (transcripts, token reports) lands in tests/behavioral/out/<stamp>/.
 set -uo pipefail
@@ -19,6 +23,7 @@ RUN_STATIC=1
 RUN_BEHAVIORAL=1
 SCENARIO=""
 KEEP=0
+AGAINST=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -27,7 +32,8 @@ while [ $# -gt 0 ]; do
     --scenario) SCENARIO="$2"; RUN_STATIC=0; RUN_BEHAVIORAL=1; shift ;;
     --model) export AE_TEST_MODEL="$2"; shift ;;
     --keep) KEEP=1 ;;
-    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    --against) AGAINST="$2"; RUN_STATIC=0; RUN_BEHAVIORAL=1; shift ;;
+    -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -65,6 +71,19 @@ if [ "$RUN_BEHAVIORAL" = 1 ]; then
     stamp="$(date +%Y%m%d-%H%M%S)"
     OUT_ROOT="$HERE/behavioral/out/$stamp"
     mkdir -p "$OUT_ROOT"
+    if [ -n "$AGAINST" ]; then
+      # The plugin as it was at <ref>, extracted outside the repo: no worktree, no
+      # checkout, nothing in the repo changes. Only --plugin-dir points at it.
+      base_dir="$(mktemp -d "${TMPDIR:-/tmp}/ae-against.XXXXXX")"
+      rel="$(git -C "$PLUGIN_ROOT" rev-parse --show-prefix)"; rel="${rel%/}"
+      top="$(git -C "$PLUGIN_ROOT" rev-parse --show-toplevel)"
+      if ! git -C "$top" archive "$AGAINST" -- "$rel" | tar -x -C "$base_dir" 2>/dev/null \
+         || [ ! -d "$base_dir/$rel" ]; then
+        echo "  cannot extract $rel at $AGAINST" >&2; exit 2
+      fi
+      export AE_PLUGIN_UNDER_TEST="$base_dir/$rel"
+      echo "  PRESSURE TEST — plugin under test: $AGAINST. A scenario that passes here does not test your change."
+    fi
     echo "  model: ${AE_TEST_MODEL:-sonnet} · claude $(claude --version 2>/dev/null | head -1) · out: ${OUT_ROOT#"$PLUGIN_ROOT"/}"
     reports=()
     for s in "$HERE"/behavioral/scenarios/*.sh; do

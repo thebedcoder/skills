@@ -16,6 +16,8 @@ Senior engineer reviewing for **code that works but should not exist**. Every pe
 
 **You run in the backend review pass only.** `/ship`'s frontend re-review dispatches the batch with `--frontend-pass` and drops you; `ae-ux` owns component-level duplication.
 
+**Project review memory.** Prompt passes `docs/review-memory.md` → read `## LEAN` and `## Not bugs here` before Step 1. A listed pattern → check this diff for it first. A `Not bugs here` claim → do not raise it again unless this diff changes the code it rests on. Missing file → nothing remembered yet. Never write to it — the parent keeps it.
+
 ---
 
 ## Step 1 — Read the diff

@@ -4,7 +4,9 @@ Loops `/ship` across every unchecked story in all active features.
 
 Read `./docs/INDEX.md`, `./docs/CONSTITUTION.md`, then scan feature `STORIES.md` files. Skip features marked `archived` in INDEX — no stories left there.
 
-Use to ship all remaining stories without manual trigger. User stays in loop — every story pauses for plan approval before code. Only mechanical chaining is automatic.
+Use to ship all remaining stories without a manual trigger. Planning is done, so execution runs (SKILL.md "Planning asks, execution runs"): one question at the start, then story after story with no stop — except a plan escalation, a blocker that survives the fix loop or needs a decision, a hard override, or a stuck implementer.
+
+**Fresh context per story.** Each story's plan (`ae-arch`), build and fix rounds (`ae-impl`) and reviews run in subagents. The main session keeps the plan, two short statuses and the consolidated review per story — no compact gate between stories. If the session auto-compacts anyway, the SessionStart hook re-injects CURRENT and PLAN; re-read this file and resume at the first open PLAN line.
 
 ### Step 0a — Parse `--auto` flag
 
@@ -14,7 +16,7 @@ Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/ship-al
 
 Per "Progress Tracking" in SKILL.md, write one PLAN line per unchecked story into `.agentic/focus.md` before the session starts — subject `STORY-XXX: [title]`, in the recommended order (priority first, dependency second). This is the chain's progress bar; the per-story `/ship` does **not** write a nested plan, it advances this one.
 
-- Mark each story in progress at its plan gate, closed after its ship chain closes.
+- Mark each story in progress when its plan step starts, closed after its ship chain closes.
 - User picks **Skip this story** → close the line with `skipped` noted; story stays unchecked in `STORIES.md`.
 - User picks **End session** → leave remaining lines open; they show as unfinished, which is accurate.
 
@@ -49,30 +51,35 @@ P3 — cuttable:
   - STORY-XXX: [title]
 
 Recommended order: [suggested sequence]
-Parallel [P] within a level have no dependencies — you could open multiple
-Claude Code sessions for those instead of shipping them here.
+Parallel [P] within a level have no dependencies — they build at once here,
+each in its own worktree pinned to this branch, then merge back.
 
-You'll approve each implementation plan before it runs.
+Stories ship one after another without stopping. You're asked only when a plan
+needs a decision, a review blocker survives three fix rounds, or an operation
+is on the always-pause list.
 ```
 
 **Order is priority first, dependency second.** Never start a P2 story while a P1 story is unchecked. Within a level, dependencies decide the sequence and `[P]` stories can go in any order.
 
 **Backward compatibility.** No story in the feature carries a `Priority:` line → the feature predates the field. Drop priority grouping, list stories in file order, print `(unprioritised — feature predates Priority:)` under the count. Never retro-label. Mixed — some labelled, some not → unlabelled ship last, grouped as `Unprioritised`.
 
-⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"Start the ship-all session?"* → **Ship everything (Recommended)** · **Ship the P1 set only** · **Cancel**. Under `--auto`: SKIP and ship everything.
+**Entered from a planning command's Build gate** (`/feature`, `/design`, `/plan-all` — the human just answered *Build now*) → scope was chosen there; skip this gate, and `[P]` groups build in parallel here (below) when `shared/parallel-build.md` §P1 allows, otherwise one after another.
+
+Otherwise ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]` — **the chain's one question, asked once, never mid-chain**: *"Start the ship-all session?"* → **Ship everything (Recommended)** · **Ship the P1 set only** · **Cancel**. Under `--auto`: SKIP and ship everything. When a parallel group exists (below), the same `AskUserQuestion` call carries its question as a second question — one widget, two answers.
 
 **Ship the P1 set only** → chain covers P1 stories, then ends at the normal Session-complete block; P2/P3 listed under `REMAINING 🔜`. That is a clean finish, not an early stop. Unprioritised feature → drop that option; there is no P1 set to offer.
 
-**Parallel group.** Lowest open level has ≥2 `[P]` stories with no unchecked dependency → ⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"STORY-003 and STORY-004 can run in parallel. How should they ship?"* → **Here, one after another (Recommended)** · **One worktree per story** · **Skip the group**. Under `--auto`: SKIP — ship them here, sequentially, as always; worktrees are opt-in only. Second option → run **§W1** of `shared/worktree.md`, which ends this session with the worktrees ready.
+**Parallel group.** Lowest open level has ≥2 `[P]` stories with no unchecked dependency → second question of the start gate, `[AUTO: skip]` `[ASK: single]`: *"STORY-003 and STORY-004 have no dependency on each other. How should they build?"* → **In parallel, here (Recommended)** — one isolated implementer per story, each in a worktree pinned to this branch, merged back as they finish · **One after another** · **Separate sessions** — a worktree per story, you drive each · **Skip the group**. Under `--auto`, or entered from a Build gate: in parallel, here. First option → `shared/parallel-build.md` (its §P1 can still fall back to one after another, saying why). Third → **§W1** of `shared/worktree.md`, which ends this session with the worktrees ready. A `[P]` group in a later level never asks — it follows this answer (*Separate sessions* → in parallel, here).
 
 ---
 
 ### Per story
 
-**Step 1 — Plan** *(always pauses)*
+**A `[P]` group building in parallel** → `shared/parallel-build.md` (§P1 preconditions · §P2 plan · §P3 build · §P4 verify · §P5 merge · §P6 continue) replaces Steps 1–2 up to each story's Phase 1, then every merged story continues its `/ship` chain from Phase 2, one at a time. All other stories:
 
-ARCH + PROD generate plan as in `/ship`, including the Contract claims and Failure
-states sections and the `ae-red` + `ae-sec` pre-review pass over them.
+**Step 1 — Plan** *(no pause — `shared/story-flow.md` §1)*
+
+`ae-arch` plans (session model, fresh context), PROD validates, `ae-red` + `ae-sec` pre-review the Contract claims and Failure states, the brief is written.
 
 ```
 ━━━ STORY-XXX ([X] of [Y]) ━━━
@@ -87,33 +94,20 @@ Pre-review (ae-red + ae-sec on the plan):
 [findings, or "no findings" / "skipped — no external contract, no partial state"]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: skip]` `[ASK: single]`: *"STORY-XXX ([X] of [Y]) — proceed?"* → **Ship it (Recommended)** · **Skip this story** · **End session**. Under `--auto`: SKIP and proceed to the ship chain — **unless** pre-review left an unresolved finding on a Contract claim, which escalates to `[AUTO: always-ask]`. (Each story's internal `/ship --auto` still respects hard-overrides.)
+No per-story gate. The story flow's escalation gate is the only stop here (`[AUTO: always-ask]`): new dependency, public interface change, unresolved pre-review finding on a Contract claim, hard-override operation, missing project state. Its options gain **Skip this story** when it fires inside `/ship-all`.
 
-**Step 2 — Ship chain** *(automatic on 'go')*
+**Step 2 — Ship chain** *(automatic)*
 
-Full `/ship` chain: implement → review → frontend → review → docs → git commits.
+Full `/ship` chain: build (`ae-impl`) → review → frontend → review → docs → git commits. Blockers go through `shared/fix-loop.md`; the chain pauses only on what survives it.
 
-Pauses only on review blockers, same as `/ship`.
-
-**Step 3 — Story complete + compact**
+**Step 3 — Story complete**
 
 ```
-✅ STORY-XXX shipped ([X] of [Y] done)
+✅ STORY-XXX shipped ([X] of [Y] done) — built by ae-impl ([tier]) · [K] fix rounds
 [1 line of what was built]
 ```
 
-Before next story — **the model cannot compact; only the human can.** Print the block, then gate:
-
-```
-/compact Focus on: [feature name], STORY-XXX complete, next story is STORY-XXX,
-branch [name], any open blockers. Discard: file contents read, review reports, diffs.
-```
-
-⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: confirm]`: *"Context is full for this story. Run the compact command above, then choose Continue."* → **Continue (Recommended)** · **End session here**
-
-Continue chosen without compacting → proceed anyway. That is the human's call; do not re-ask, do not refuse to continue.
-
-Then next story plan.
+Close the story's PLAN line, update `note:` to the next story, start its Step 1. No compact gate: the story's work happened in subagents.
 
 ---
 
@@ -162,11 +156,12 @@ Run **§C** of `shared/preamble.md`, counting across every story in the chain: `
 
 | Checkpoint | Tag |
 |---|---|
-| Chain start (ship everything / P1 only / cancel) | `[AUTO: skip]` — ships everything |
-| Per-story 'go' prompt | `[AUTO: skip]` |
+| Chain start (ship everything / P1 only / cancel) + parallel group, one widget | `[AUTO: skip]` — ships everything, sequentially; skipped when entered from a Build gate |
+| Per-story plan approval | **none** — escalations only (`shared/story-flow.md` §1, `[AUTO: always-ask]`) |
+| Blockers that survive the fix loop or need a decision | `[AUTO: always-ask]` (hard-override #1) — `shared/fix-loop.md` §4 |
+| Parallel build: merged result red although each story passed alone | `[AUTO: always-ask]` — `shared/parallel-build.md` §P5 |
 | Constitution conflict surfaced by a story | `[AUTO: always-ask]` (hard-override #3) |
 | Recurring blocker class across multiple stories | `[AUTO: always-ask]` — stop + ask whether to update constitution |
-| Parallel group — here / worktrees / skip | `[AUTO: skip]` — ships the group here, sequentially |
 | Worktree baseline red | `[AUTO: always-ask]` (`shared/worktree.md` §W1) |
 | Finish a shipped worktree — merge / PR / keep / discard | `[AUTO: always-ask]` — removal and branch deletion are destructive |
 | Discard confirmation | `[AUTO: always-ask]` |
@@ -174,17 +169,16 @@ Run **§C** of `shared/preamble.md`, counting across every story in the chain: `
 
 ### Guardrails
 
-- **Never skip plan approval.** 'go' prompt non-negotiable between stories. *(Exception: `--auto` mode skips per-story 'go' prompts but still pauses on hard-overrides.)*
-- **Compact between every story.** Mandatory — context must clear before next story.
-- **Blocker pauses propagate.** Review finds blockers → pause exactly as in `/ship`. After fix, resumes.
-- **'stop' always available** at any plan prompt — ends session cleanly.
+- **No stop between stories.** The human approved the stories in planning; the chain runs. Escalations, surviving blockers, hard overrides and a stuck implementer are the only pauses — each offers **End session**, which ends cleanly.
+- **No story code in the main session.** Every story's plan, build and fixes run in subagents — that is what keeps the context small enough to need no compact gate.
+- **Blocker pauses propagate.** A blocker that survives the fix loop pauses exactly as in `/ship`. After the fix, the chain resumes.
 - **Skipped stories stay unchecked** in `STORIES.md` so `/status` reflects reality.
 
 ### Gotchas
 
-- **Compaction is the human's action, not yours.** `/compact` is a user command; no tool invokes it. After 3-4 stories context fills and quality drops, so always surface the gate — but never claim the chain compacted by itself, and never stall waiting for it.
+- **Never ask for `/compact`.** The story work runs in fresh subagent contexts, so the main session carries only plans, statuses and review summaries. Auto-compaction, if it happens, is recovered from PLAN by the SessionStart hook — re-read this file and resume at the first open line.
 - **One story = its own commit(s).** No batching. User must revert story without touching others.
-- **`[P]` markers are user-facing suggestions, not self-instructions.** Ship-all runs sequential in this session — no interleaving. Parallelism happens only through the opt-in worktree path, in other sessions, one story each.
+- **`[P]` is a claim about files, checked again before a parallel build.** `parallel-build.md` §P2 keeps a story out of the group when its plan shares a file with another's, or its tests cannot run side by side. Only the build runs in parallel — review, frontend, docs and cleanup stay one story at a time.
 - **Worktree cleanup is never automatic.** Merge, PR, keep, discard: the human picks, `--auto` or not. Removing a worktree or deleting its branch without that answer destroys work that exists nowhere else.
 - **Priority order is not a suggestion.** A P2 shipped before an open P1 wastes the MVP slice — what the field protects. `[P]` reorders within a level, never across one.
 - **Don't re-prioritise mid-chain.** A story that turns out harder than priced stays at its level. Re-cutting priorities is `/feature`'s job, and doing it here silently rewrites the plan the user approved.

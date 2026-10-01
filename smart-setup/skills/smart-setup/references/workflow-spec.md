@@ -34,7 +34,7 @@ Known tooling:
 |---|---|---|
 | plan | `/feature`, `/design`, `/plan-all` | `brainstorming` → `writing-plans` |
 | implement | `/ship` (implement → review → docs) | `test-driven-development`, `executing-plans` |
-| audit | `/review` (6-agent parallel), `/analyze` | `requesting-code-review` |
+| audit | `/review` (7-agent parallel), `/analyze` | `requesting-code-review` |
 | bugfix | `/fix` | `systematic-debugging` |
 | docs | `/doc`, `/doc-all` | — |
 | maintain | — | — |

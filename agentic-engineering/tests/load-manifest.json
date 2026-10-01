@@ -1,5 +1,5 @@
 {
-  "_comment": "What each command pulls into the MAIN conversation when it runs, for tests/token-report.py static. 'always' is loaded by every command (the wrapper points the model at SKILL.md policy). Commands without an entry get: wrapper + always + own body + every shared/*.md the body names. Explicit entries list nested command bodies a chain runs inline. Keep this in sync with what the command text actually tells the model to read — the context-diet numbers are only as honest as this file. Branch-only files (shared/auto-mode.md under --auto, shared/worktree.md, shared/visual-capture.md) are not in the default load; `token-report.py static --auto` adds auto-mode.md.",
+  "_comment": "What each command pulls into the MAIN conversation when it runs, for tests/token-report.py static. 'always' is loaded by every command (the wrapper points the model at SKILL.md policy). Commands without an entry get: wrapper + always + own body + every shared/*.md the body names. Explicit entries list nested command bodies a chain runs inline. Keep this in sync with what the command text actually tells the model to read — the context-diet numbers are only as honest as this file. Branch-only files (shared/auto-mode.md under --auto, shared/worktree.md, shared/visual-capture.md, shared/fix-loop.md — read only when a chain's review returns blockers, shared/parallel-build.md — only when /ship-all builds a [P] group at once) are not in the default load; `token-report.py static --auto` adds auto-mode.md.",
   "always": [
     "skills/agentic-engineering/SKILL.md"
   ],
@@ -15,6 +15,8 @@
         "skills/agentic-engineering/shared/focus-release.md"
       ],
       "subagents": [
+        "agents/ae-arch.md",
+        "agents/ae-impl.md",
         "agents/ae-red.md",
         "agents/ae-req.md",
         "agents/ae-test.md",
@@ -45,6 +47,19 @@
         "skills/agentic-engineering/commands/frontend.md",
         "skills/agentic-engineering/commands/cleanup.md",
         "skills/agentic-engineering/shared/focus-release.md"
+      ],
+      "subagents": [
+        "agents/ae-arch.md",
+        "agents/ae-impl.md",
+        "agents/ae-red.md",
+        "agents/ae-req.md",
+        "agents/ae-test.md",
+        "agents/ae-doc.md",
+        "agents/ae-sec.md",
+        "agents/ae-edge.md",
+        "agents/ae-lean.md",
+        "agents/ae-ux.md",
+        "agents/ae-scribe.md"
       ]
     },
     "fix": {
@@ -65,6 +80,7 @@
         "skills/agentic-engineering/commands/cleanup.md"
       ],
       "subagents": [
+        "agents/ae-impl.md",
         "agents/ae-red.md",
         "agents/ae-test.md",
         "agents/ae-lean.md"
@@ -76,6 +92,12 @@
         "skills/agentic-engineering/commands/implement.md",
         "skills/agentic-engineering/shared/story-flow.md",
         "skills/agentic-engineering/shared/focus-release.md"
+      ],
+      "subagents": [
+        "agents/ae-arch.md",
+        "agents/ae-impl.md",
+        "agents/ae-red.md",
+        "agents/ae-sec.md"
       ]
     }
   }

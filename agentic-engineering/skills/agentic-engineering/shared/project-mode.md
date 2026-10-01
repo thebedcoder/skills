@@ -18,7 +18,7 @@ mode: lite   # lite | full
 | `PRD.md`, `EPICS.md` | never | always |
 | `improvements.md`, `specs/`, `app-docs/` | on first write | at init |
 | `CONSTITUTION.md` | short form (~10 lines) | full articles |
-| `STORIES.md`, `PROGRESS.md`, `reviews/` | same | same |
+| `STORIES.md`, `PROGRESS.md`, `plans/`, `reviews/` | same | same |
 | 7-agent review, tests, checkpoints | same | same |
 
 Who reads the marker, and why nothing else may: SKILL.md "Project Mode and Memory Docs". `/cleanup` reads it for one thing — `MEMORY.md`'s line cap.

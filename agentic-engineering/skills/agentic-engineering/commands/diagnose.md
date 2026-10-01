@@ -22,7 +22,7 @@ Confirm identity in the report by quoting the first prompt and start time. Recen
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/transcript-digest.py --check <path>
 ```
 
-Sections: COMMANDS, PLUGIN FILES READ, DISPATCH (Agent calls grouped by assistant message), GATES / AUTO LINES, PLAN WRITES, AUTO-LOG WRITES, TEST RUNS, COMMITS, COMPACTIONS, SUBAGENT TRANSCRIPTS, then CHECKS with mechanical `DEVIATION` lines. `L<n>` = line `n` of the `.jsonl` file, 1-based.
+Sections: COMMANDS, PLUGIN FILES READ, DISPATCH (Agent calls grouped by assistant message), GATES / AUTO LINES, PLAN WRITES, AUTO-LOG WRITES, TEST RUNS, COMMITS, SOURCE EDITS (main thread), COMPACTIONS, SUBAGENT TRANSCRIPTS, then CHECKS with mechanical `DEVIATION` lines. `L<n>` = line `n` of the `.jsonl` file, 1-based.
 
 Run was `--auto` → also read the matching section of `.agentic/auto-log.md` (header `## [time] — /<command> … --auto`) when the transcript's project is this one.
 
@@ -36,8 +36,9 @@ Read the invoked command's body — `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engine
 |---|---|---|
 | Phases | the command's PLAN list (Step 0b) | phase with no matching activity; phases out of order; PLAN line ticked with nothing run behind it |
 | Dispatch | `review.md` Constraints, SKILL.md Agent Roster | reviewers across more than one message; bare `ae-*` names; a reviewer missing from its round; reviewer names in text with no Agent call (inline role-play) |
-| Gates | the command's checkpoint tag table | `--auto`: `always-ask` gate or hard-override with no question and no `HARD-PAUSE`; not `--auto`: gate passed with no question asked |
-| Auto log | `shared/auto-mode.md` → Visibility | decision announced inline but not logged, or logged but never announced; final `🤖` counts ≠ log lines |
+| Build | `shared/story-flow.md` §1–§3, `shared/parallel-build.md` §P3, SKILL.md Execution Model | story chain with source/test edits in the main thread and no `ae-impl` dispatch; an `ae-impl` with `isolation: worktree` and no `pin:` (built on the default branch); `ae-arch` never dispatched before the build; a build with no plan record written to `plans/<ID>-plan.md` first; a ticked story with no `evidence.sh check` after the implementer returned |
+| Gates | the command's checkpoint tag table | `--auto`: `always-ask` gate or hard-override with no question and no `HARD-PAUSE`; not `--auto`: gate passed with no question asked; execution chain stopping at a gate that no longer exists (plan approval, compact between stories) |
+| Auto log | `shared/auto-mode.md` → Visibility | decision or ruling announced inline but not logged, or logged but never announced; a `RULING:` with no `cost if wrong`; final `🤖` counts ≠ log lines |
 | Evidence | `shared/story-flow.md` Verify + Record | story ticked with no `evidence.sh run` after the last code edit |
 | Compaction | SKILL.md "Context Management" | behavior changes right after a `compact_boundary` line — name the boundary and the first divergent action |
 
