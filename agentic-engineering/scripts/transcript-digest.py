@@ -214,12 +214,12 @@ def digest(path, check=False):
 
     if check:
         out.append("CHECKS")
-        devs = deviations(order, groups, commands, plan)
+        devs = deviations(order, groups, commands, plan, reads, commits)
         out.extend(devs or ["  no mechanical deviations — compare the digest with the command contract"])
     return "\n".join(out)
 
 
-def deviations(order, groups, commands, plan):
+def deviations(order, groups, commands, plan, reads=(), commits=()):
     devs = []
     # Review rounds: a maximal run of reviewer-dispatching messages in which no
     # reviewer repeats. Plan pre-review (red+sec), Phase 2 (7) and Phase 4 (6) each
@@ -250,6 +250,15 @@ def deviations(order, groups, commands, plan):
             if re.fullmatch(r"ae-[a-z]+", a):
                 devs.append(f"  DEVIATION dispatch: bare subagent_type '{a}' at L{ln} — must be '{NS}:{a}'; "
                             "a bare name fails and the model role-plays the reviewer inline (SKILL.md Agent Roster)")
+    # /fix reached its commit (Phase 4 comes after review) without a real RED: the
+    # review was written inline by the session that wrote the fix.
+    ran_fix = any(re.search(rf"\b{NS}:fix\b|\s/fix\b", c) for c in commands) or \
+        any(re.search(r"/commands/fix\.md$", r) for r in reads)
+    fix_commit = next((c for c in commits if re.match(r"L\d+ fix(\(|:)", c)), None)
+    dispatched = {a for mid in order for a in groups[mid]["agents"]}
+    if ran_fix and fix_commit and f"{NS}:ae-red" not in dispatched:
+        devs.append(f"  DEVIATION review: /fix committed ({short(fix_commit, 60)}) with no {NS}:ae-red dispatch — "
+                    "Phase 3 RED review was skipped or written inline (commands/fix.md Phase 3)")
     chain = [c for c in commands if re.search(rf"/?{NS}:(ship|fix|improve|feature|ship-all|plan-all|doc-all)\b", c)]
     if chain and not plan:
         devs.append(f"  DEVIATION progress: chain command ({short(chain[0], 60)}) but no .agentic/focus.md PLAN write "

@@ -98,6 +98,23 @@ chain = write([{"type": "user", "message": {"role": "user", "content": "<command
 p = run("--check", chain)
 c.expect("DEVIATION progress" in p.stdout, "chain command with no PLAN write flagged")
 
+# /fix Phase 3: RED must be a real dispatch before the fix( commit.
+FIX_CMD = {"type": "user", "message": {"role": "user", "content": "<command-name>/agentic-engineering:fix</command-name>"}}
+FIX_READ = tool("m0", "t0", "Read", {"file_path": "/p/skills/agentic-engineering/commands/fix.md"})
+PLAN = tool("m1", "t1", "Write", {"file_path": "/w/.agentic/focus.md", "content": "# PLAN\n- [ ] Diagnose\n"})
+COMMIT = tool("m9", "t9", "Bash", {"command": "git commit -m \"fix(math): add adds\""})
+RED = tool("m5", "t5", "Agent", {"subagent_type": "agentic-engineering:ae-red", "prompt": "Mode: fix review"})
+
+p = run("--check", write([FIX_CMD, FIX_READ, PLAN, COMMIT]))
+c.expect("DEVIATION review" in p.stdout and "ae-red" in p.stdout,
+         "/fix committed with no ae-red dispatch → DEVIATION review", p.stdout[-400:])
+p = run("--check", write([FIX_READ, PLAN, COMMIT]))
+c.expect("DEVIATION review" in p.stdout, "headless /fix (body read, no command line) also flagged")
+p = run("--check", write([FIX_CMD, FIX_READ, PLAN, RED, result("t5", "RED — Fix review: clean"), COMMIT]))
+c.expect("DEVIATION review" not in p.stdout, "/fix with ae-red dispatched → no review deviation", p.stdout[-400:])
+p = run("--check", write([FIX_CMD, FIX_READ, PLAN]))
+c.expect("DEVIATION review" not in p.stdout, "/fix stopped before its commit → no review deviation")
+
 # One huge line must not flood the digest.
 huge = write([{"type": "user", "message": {"role": "user", "content": "x" * 2_000_000}},
               tool("m1", "t1", "Bash", {"command": "pytest " + "y" * 100_000})])

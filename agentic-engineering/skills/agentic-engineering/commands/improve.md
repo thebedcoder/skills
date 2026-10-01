@@ -145,7 +145,13 @@ Dispatch reviewers in **single tool-call batch**, not sequentially. Each gets pa
 
 ae-red, ae-test and ae-lean always run. Exactly one of ae-sec / ae-ux / ae-edge joins them — pick by what the diff touches. Ambiguous → ae-edge.
 
-Reviewers have no Bash: capture the diff first exactly as `/review` Step 0c does (`.agentic/review/<slug>.diff`) and pass the path.
+Reviewers have no Bash: capture the change first and pass the printed paths. It is still uncommitted (the commit is Phase 4), so **not** `/review` Step 0c — its branch diff misses uncommitted work, and on a fresh branch it aborts with no base.
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/review-diff.sh improve-<slug>
+```
+
+`DIFF <path> FILES <path>` → every reviewer gets both. Exit 3 (nothing uncommitted) → Phase 2 changed nothing; stop and say so.
 
 `ae-req` does not run: no persisted acceptance criteria for it to check. `ae-test` carries the `Done when:` check instead — its Step 8, which needs the `Done when:` list in the prompt and emits per-condition ✅/❌. `ae-doc` does not run either — convention drift on a scoped diff is ARCH's `Fits existing pattern` job.
 

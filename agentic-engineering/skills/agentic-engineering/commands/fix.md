@@ -1,7 +1,7 @@
 ## `/fix [description]` — Bug Fix Chain
 
 **Chain:** diagnose → fix → review
-**Agents:** FIXER (lead), RED (reviewer)
+**Agents:** FIXER (lead, this session), RED (reviewer — `agentic-engineering:ae-red` subagent)
 
 **Inputs (read first):**
 - `./CLAUDE.md` — conventions
@@ -110,25 +110,24 @@ FIXER applies minimal surgical fix. Rules:
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase fix -- <project test command>
 ```
 
-Red → not fixed; back to diagnosis, new row after the next attempt. Green row → RED's review prompt, `━━━ FIX COMPLETE` block, `Evidence:` trailer on `fix(` commit. Bug in a story with a `PROGRESS.md` entry (review blocker, shipped-story regression) → also append row to that story's `### Evidence` table. `/fix` has no story entry of its own; never invent one.
+Red → not fixed; back to diagnosis, new row after the next attempt. Green row → RED's dispatch prompt (Phase 3), `━━━ FIX COMPLETE` block, `Evidence:` trailer on `fix(` commit. Bug in a story with a `PROGRESS.md` entry (review blocker, shipped-story regression) → also append row to that story's `### Evidence` table. `/fix` has no story entry of its own; never invent one.
 
 **Phase 3 — Review** *(automatic)*
 
-RED runs focused review on changed code only:
+RED is a real subagent here — dispatch `agentic-engineering:ae-red`. Never write the RED block yourself: a review by the agent that wrote the fix is the blind spot this phase exists to cover, and an inline one reads exactly like the real thing.
 
-```
-RED — Fix Review:
+1. **Capture the uncommitted fix.** Reviewer has no Bash, and the fix commits in Phase 4 — `/review`'s branch diff would miss it.
+   ```bash
+   bash ${CLAUDE_PLUGIN_ROOT}/scripts/review-diff.sh fix-<bug-slug>
+   bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh tree
+   ```
+   `DIFF <path> FILES <path>` → pass both. Exit 3 (nothing uncommitted) → the fix never landed; back to Phase 2.
+2. **Dispatch one `agentic-engineering:ae-red`.** Prompt opens `Mode: fix review` and carries: both paths, the diagnosis block (root cause, trace, hypothesis, fix plan, blast radius), regression test file + name, the Phase 2 evidence row, the current tree id.
+3. **Print its report as returned** — `RED — Fix review: …` with root cause, evidence, regression test, blast radius, findings, `Verdict:`.
 
-Does fix actually resolve root cause? [yes/no — explanation]
-Evidence row fresh and green? [yes/no — the row]
-Does fix introduce new risks? [yes/no — detail]
-Is test sufficient to prevent regression? [yes/no — detail]
-Blast radius check: [anything adjacent to re-test?]
-```
+`Verdict: concerns` → pause. Print `⚠️ FIX PAUSED — RED has concerns` + RED's findings, then ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to proceed?"* → **Revise the fix (Recommended)** · **Ship it anyway** · **Revert the fix**. Revise → Phase 2, new evidence row, new capture, new dispatch.
 
-RED raises concerns → pause. Print `⚠️ FIX PAUSED — RED has concerns` + RED's findings, then ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to proceed?"* → **Revise the fix (Recommended)** · **Ship it anyway** · **Revert the fix**.
-
-Clean → continue.
+`Verdict: clean` → continue.
 
 **Phase 4 — End-user docs + Changelogs** *(automatic — final step before fix commit)*
 
@@ -193,6 +192,7 @@ Root cause: [one line]
 Changed:    [files]
 Test:       ✅ added / updated
 Evidence:   ✅ [command] → [runner summary] · tree [id]
+Review:     ✅ ae-red clean / ⚠️ shipped over RED concerns
 Docs:       ✅ updated / not needed
 Changelog:  ✅ both updated
 Git:        ✅ committed on [branch name]
@@ -222,6 +222,7 @@ Run **§C** of `shared/preamble.md`.
 
 - **One bug, one fix, one commit.** Notice other things during investigation? → `improvements.md`. Resist scope creep.
 - **Fix root cause, not symptom.** Wrong total from upstream calc → fix calc, not display. Root cause in different module → still fix there.
+- **RED role-played inline.** "RED — Fix Review" written by the main session is self-review with a reviewer's name on it. Phase 3 dispatches `agentic-engineering:ae-red` every time, `--auto` included; no dispatch → no review happened.
 - **Claimed green without running.** "Fixed" means an `evidence.sh` row from after the last edit shows exit 0. The failing run from diagnosis, a single-test run, or "should pass now" is not that row.
 - **Regression test must fail before fix.** Test → watch fail → fix → watch pass. After-the-fact proves nothing.
 - **Reproduce before confirming.** Can't reproduce → ask user, don't invent hypothesis. "Reproduction path" written from reading code is a guess; the pasted failing output is the reproduction.

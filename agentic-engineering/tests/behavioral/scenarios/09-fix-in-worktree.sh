@@ -6,6 +6,8 @@
 #      worktree, moves in with EnterWorktree, fixes and commits there; the main
 #      folder's files and HEAD are untouched, the task's focus moved out of main,
 #      and the worktree is kept (merge/PR/discard never happen under --auto).
+#      Phase 3 dispatches a real agentic-engineering:ae-red on the captured
+#      uncommitted diff — never a RED block written inline.
 set -uo pipefail
 . "$(dirname "$0")/../../lib/claude.sh"
 . "$(dirname "$0")/../../lib/fixtures.sh"
@@ -54,6 +56,13 @@ ae_check "B: main folder untouched — HEAD, files, no stray changes" bash -c "
   [ -z \"\$(git -C '$B' status --porcelain)\" ]"
 ae_check "B: the task's focus left the main folder" bash -c "
   ! grep -qs '^title: fixing' '$B/.agentic/focus.md'"
+ae_check "B: RED review dispatched as agentic-engineering:ae-red, in fix-review mode" bash -c "
+  python3 '$AE_PLUGIN_ROOT/tests/lib/transcript.py' tools '$AE_OUT/always.jsonl' Agent,Task |
+    grep 'agentic-engineering:ae-red' | grep -q 'Mode: fix review'"
+ae_check "B: the reviewed diff was the uncommitted fix, inside the worktree" bash -c "
+  f=\$(ls '$WT'/.agentic/review/fix-*.diff 2>/dev/null | head -1); [ -n \"\$f\" ] && grep -q '^+.*a + b' \"\$f\""
+ae_check "B: /diagnose reports no review deviation for this run" bash -c "
+  ! python3 '$AE_PLUGIN_ROOT/scripts/transcript-digest.py' '$AE_OUT/always.jsonl' --check | grep -q 'DEVIATION review'"
 ae_check "B: worktree kept under --auto, decision logged" bash -c "
   test -d '$WT' && cat '$B/.agentic/auto-log.md' '$WT/.agentic/auto-log.md' 2>/dev/null | grep -qi 'DECISION.*worktree.*kept'"
 ae_done

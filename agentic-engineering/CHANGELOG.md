@@ -49,6 +49,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
 
 ### Fixed
 
+- **`/fix` reviews with a real `ae-red`.** Phase 3 said "RED runs focused review"
+  without naming a dispatch, and a headless `/fix --auto` wrote the RED block itself
+  — self-review under a reviewer's name. It now dispatches
+  `agentic-engineering:ae-red` in a new **fix-review mode** (`agents/ae-red.md`
+  Mode C): root cause actually resolved, evidence row fresh and green, regression
+  test fails without the fix, blast radius, plus the usual CRITICAL/WARNING
+  findings and a `Verdict:` that drives the existing pause. `/diagnose --check`
+  flags a `/fix` that commits with no `ae-red` dispatch.
+- **`/improve`'s review sees the change.** Its reviewers ran before the commit on
+  a diff captured "exactly as `/review` Step 0c" — committed work only. On a fresh
+  branch that resolves the base to HEAD and aborts; on an older one it reviews the
+  wrong commits. New `scripts/review-diff.sh <name>` captures uncommitted work
+  (tracked, staged, new; not ignored files, `.agentic/` or nested worktrees)
+  against HEAD through a throwaway index — the user's staging is untouched, and an
+  empty change exits 3 instead of passing as a clean review. `/fix` uses it too.
+
 - **`/ship-all` merges finished `[P]` worktrees again.** The 2.2.0 context diet
   dropped Step 0c along with the focus boilerplate around it, so `§W2` (merge, PR,
   keep or discard each shipped story worktree) had no caller and finished
