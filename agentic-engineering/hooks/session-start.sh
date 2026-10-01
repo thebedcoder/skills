@@ -92,6 +92,7 @@ focus="$proj/.agentic/focus.md"
 if [ -f "$focus" ]; then
   # CURRENT fields + PLAN counts + first open PLAN line, one awk pass.
   parsed="$(awk '
+    BEGIN        { sec="c" }   # fields before any heading = CURRENT missing its heading
     /^# CURRENT/ { sec="c"; next }
     /^# PLAN/    { sec="p"; next }
     /^# /        { sec=""; next }

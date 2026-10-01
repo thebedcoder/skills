@@ -260,5 +260,16 @@ check "remove --delete-branch carries the run's auto-log into the main tree" bas
   bash '$WT' remove $TW --delete-branch | grep -q '^CARRIED' &&
   grep -q 'DECISION: diagnosis gate skipped' .agentic/auto-log.md && ! test -d $TW"
 
+# Focus written without its `# CURRENT` heading (seen from a real /fix run): the
+# bare fields are still the task, so they move — under a restored heading.
+printf 'title: fixing: rounding\nset_by: /fix (auto)\n\n# PLAN\n- [ ] Diagnose\n\n# NEXT\n1. export CSV\n' > .agentic/focus.md
+bash "$WT" create fix-rounding fix/rounding --kind task --carry-focus >/dev/null 2>&1
+check "header-less CURRENT carried under a restored heading, NEXT left in main" bash -c "
+  head -1 $W/fix-rounding/.agentic/focus.md | grep -qx '# CURRENT' &&
+  grep -q '^title: fixing: rounding' $W/fix-rounding/.agentic/focus.md &&
+  grep -q '^- \[ \] Diagnose' $W/fix-rounding/.agentic/focus.md &&
+  ! grep -q '^title:' .agentic/focus.md && grep -q '^1. export CSV' .agentic/focus.md"
+bash "$WT" remove $W/fix-rounding --delete-branch >/dev/null 2>&1
+
 echo "  worktree lifecycle: $PASSES passed, $FAILS failed — $([ $FAILS -eq 0 ] && echo PASSED || echo "FAILED ($FAILS)")"
 [ "$FAILS" -eq 0 ]

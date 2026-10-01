@@ -34,7 +34,7 @@ if [[ ! -f .gitignore ]]; then echo ".agentic/" > .gitignore; fi
 grep -qxF ".agentic/" .gitignore || echo ".agentic/" >> .gitignore
 ```
 
-2. Write CURRENT using the **story-id-match heuristic**:
+2. Write CURRENT using the **story-id-match heuristic**. Fields go under a `# CURRENT` heading, then `# PLAN`, then `# NEXT` — shape in `commands/focus.md`. Hook, statusline and worktree carry find the task by heading.
 
 - Existing `CURRENT.title` already references this STORY-ID or branch (typical
   when a parent chain set it) → update `note:` and `set_by:` only. Leave

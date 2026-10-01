@@ -49,6 +49,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
 
 ### Fixed
 
+- **A focus file missing its `# CURRENT` heading still names the task.** A real
+  `/fix` run wrote the CURRENT fields bare, so the new worktree got no task, the
+  main folder kept it, and the session hook and status line showed none. Fields
+  before any heading now count as CURRENT in `worktree.sh --carry-focus` (which
+  restores the heading), the SessionStart hook and `agentic-statusline.sh`, and
+  preamble §B states the heading rule.
+
 - **`/fix` reviews with a real `ae-red`.** Phase 3 said "RED runs focused review"
   without naming a dispatch, and a headless `/fix --auto` wrote the RED block itself
   — self-review under a reviewer's name. It now dispatches

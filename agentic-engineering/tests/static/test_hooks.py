@@ -171,6 +171,12 @@ ctx = context_of("CURRENT without title", *run(d))
 if ctx is not None:
     c.expect("Active task" not in ctx, "no title → no Active task line")
 
+# 9b. Fields written without the `# CURRENT` heading still name the task.
+d = project(INDEX, focus="title: fixing: rounding\nset_by: /fix\n\n# PLAN\n- [ ] Diagnose\n")
+ctx = context_of("CURRENT heading missing", *run(d))
+if ctx is not None:
+    c.expect("fixing: rounding" in ctx and "PLAN 0/1" in ctx, "header-less CURRENT: task and PLAN still reported")
+
 # 10. Empty and garbage stdin.
 d = project(INDEX, focus=FOCUS)
 context_of("empty stdin", *run(d, ""))

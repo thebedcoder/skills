@@ -65,14 +65,25 @@ exclude() {
 }
 
 # Move CURRENT and PLAN out of the main tree's focus into the new worktree: the task
-# now lives there. NEXT stays — it is the main tree's queue.
+# now lives there. NEXT stays — it is the main tree's queue. Fields written before
+# any heading are CURRENT with its `# CURRENT` line missing (a model slip seen in
+# practice); they move too, under a restored heading.
 carry_focus() {
-  local path="$1" src=".agentic/focus.md"
+  local path="$1" src=".agentic/focus.md" has_cur=0
   if [ ! -f "$src" ]; then echo "CARRIED nothing (no .agentic/focus.md)"; return 0; fi
+  grep -q '^# CURRENT[[:space:]]*$' "$src" && has_cur=1
   mkdir -p "$path/.agentic"
-  awk '/^# /{keep=($0 ~ /^# (CURRENT|PLAN)[[:space:]]*$/)} keep' "$src" > "$path/.agentic/focus.md"
+  awk -v has_cur="$has_cur" '
+    /^# / { sec = $0; if (sec ~ /^# (CURRENT|PLAN)[[:space:]]*$/) print; next }
+    sec == "" { if (NF && !has_cur) { if (!hdr) { print "# CURRENT"; hdr = 1 } print }; next }
+    sec ~ /^# (CURRENT|PLAN)[[:space:]]*$/ { print }
+  ' "$src" > "$path/.agentic/focus.md"
   local rest
-  rest="$(awk 'BEGIN{keep=1} /^# /{keep=($0 !~ /^# (CURRENT|PLAN)[[:space:]]*$/)} keep' "$src")"
+  rest="$(awk -v has_cur="$has_cur" '
+    /^# / { sec = $0; keep = (sec !~ /^# (CURRENT|PLAN)[[:space:]]*$/) }
+    sec == "" { if (has_cur) print; next }
+    keep
+  ' "$src")"
   if [ -n "$(printf '%s' "$rest" | tr -d '[:space:]')" ]; then printf '%s\n' "$rest" > "$src"; else rm -f "$src"; fi
   echo "CARRIED CURRENT + PLAN to $path/.agentic/focus.md (NEXT stays here)"
 }
