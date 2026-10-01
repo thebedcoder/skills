@@ -30,14 +30,16 @@ Commands are handled by a cast of named specialist agents. Each has a distinct r
 │ 🧪 TEST   │ Coverage & test quality        │ Flags useless tests    │
 │ 🔍 EDGE   │ Adversarial edge-case probe    │ Hunts what's missing   │
 │ 📖 DOC    │ Convention alignment           │ Notices code drift     │
-│ ✍️ SCRIBE  │ End-user product docs         │ Writes for app users,  │
+│ ✍️ SCRIBE │ End-user product docs          │ Writes for app users,  │
 │           │                                │ not the dev team       │
 │ 🔀 GIT    │ Commits, branches, PRs         │ Conventional always    │
 │ 🔐 SEC    │ Security vulnerabilities       │ High-confidence only   │
+│ ♻️ LEAN   │ Reuse, simplification          │ Searches the repo      │
+│           │                                │ before flagging        │
 └───────────┴────────────────────────────────┴────────────────────────┘
 ```
 
-Seven review agents (RED, REQ, TEST, DOC, SEC, EDGE, LEAN) run as **parallel subagents** after every story — RED, SEC, EDGE and LEAN on Sonnet, REQ, TEST and DOC on Haiku — results back simultaneously, main context stays clean. Now includes `ae-edge`, which adversarially probes backend code for missing edge cases (boundary, null, race, malformed, resource, error-path) and emits failing test code + suggested fixes into the consolidated blocker list.
+Seven review agents (RED, REQ, TEST, DOC, SEC, EDGE, LEAN) run as **parallel subagents** after every story — RED, SEC, EDGE and LEAN on Sonnet, REQ, TEST and DOC on Haiku — dispatched in one batch, results back together, main context stays clean. EDGE adversarially probes backend code for missing edge cases (boundary, null, race, malformed, resource, error-path) and hands back failing test code; LEAN is the only reviewer looking at code that already works, hunting duplicates of what the repo already has.
 
 One UX subagent (ae-ux) runs after the frontend pass with a structured checklist across 6 dimensions.
 
@@ -46,6 +48,10 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 ## Workflow
 
 ```
+  every session ─► SessionStart hook: command router + your active task
+                   (also after /clear and /compact)
+       │
+       ▼
 ┌──────────────┐
 │  /bootstrap  │  New project — pick stack, scaffold, install deps,
 │              │  create base structure, plan core epics.
@@ -59,15 +65,18 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────┐
-│                         FEATURE LOOP                                 │
+│                             FEATURE LOOP                             │
 │                                                                      │
 │  /feature [name]                                                     │
+│    0. PROD intent check — user, outcome, constraint (≤5 questions)   │
 │    1. ARCH proposes 3 approach options                               │
-│    2. PROD generates PRD with [NEEDS CLARIFICATION] markers          │
+│    2. PROD writes the PRD — FR-1…FR-n, [NEEDS CLARIFICATION] marks   │
 │    3. Clarification pass — batch resolve all ambiguous items         │
 │    4. REQ constitution check — violations block story breakdown      │
 │    5. ARCH generates data-model.md (if DB changes)                   │
-│    6. PROD writes stories tagged [P] where parallelisable            │
+│    6. PROD writes prioritised stories, [P] where parallelisable      │
+│    7. REQ spec audit — gaps fixed before any code exists             │
+│    (lite mode: stories + spec audit only)                            │
 │                                                                      │
 │  /design  (if UI)                                                    │
 │    Mobile-first → desktop → handoff spec in ./docs/specs/            │
@@ -76,42 +85,49 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 │    ┌─────────────┐                                                   │
 │    │ implement   │  ARCH plans (Contract claims + Failure states)    │
 │    │             │  → RED + SEC pre-review the PLAN, not the code    │
-│    │             │  → PROD validates → code + tests                  │
+│    │             │  → PROD validates → tests first, then code        │
+│    │             │  → test run recorded as evidence → story ticked   │
 │    └──────┬──────┘                                                   │
 │           │                                                          │
 │    ┌──────▼──────────────────────────────────────────────────┐       │
-│    │              6 PARALLEL REVIEW AGENTS                   │       │
+│    │              7 PARALLEL REVIEW AGENTS                   │       │
 │    │  🔴 RED    bug hunt (null/async/logic/resources)        │       │
-│    │  ✅ REQ    requirements + constitution audit            │       │
-│    │  🧪 TEST   coverage quality + framework patterns        │       │
+│    │  ✅ REQ    requirements, constitution, fresh evidence   │       │
+│    │  🧪 TEST   coverage quality + AC coverage matrix        │       │
 │    │  📖 DOC    convention alignment                         │       │
 │    │  🔐 SEC    security vulnerabilities                     │       │
 │    │  🔍 EDGE   edge case hunting (boundary/race/malformed)  │       │
+│    │  ♻️ LEAN   reuse, simplification, efficiency            │       │
 │    └──────┬──────────────────────────────────────────────────┘       │
-│           │  consolidated: blockers / should-fix / clean             │
-│           │                                                          │
+│           │  consolidated: blockers / should-fix / won't-fix         │
+│           │  blocker fixed → tests re-run → new evidence row         │
 │    ┌──────▼──────┐                                                   │
-│    │  frontend   │  (if story has UI)                                │
-│    │  + ae-ux    │  🎨 fidelity check — states/forms/a11y/responsive │
+│    │  frontend   │  (if story has UI) → 6-agent review               │
+│    │  + ae-ux    │  🎨 fidelity — states, forms, a11y, responsive    │
 │    └──────┬──────┘                                                   │
 │           │                                                          │
-│    ✍️ SCRIBE  updates end-user app-docs + both changelogs            │
-│              (final step before commit — keeps product docs in sync) │
-│    🔀 GIT    commits with conventional message + PR description      │
-│    🧹 CLEAN  records DEC- decisions + refreshes docs/MEMORY.md       │
+│    ✍️ SCRIBE  updates end-user app-docs; both changelogs written     │
+│    🔀 GIT     conventional commits + PR description                  │
+│    🧹 CLEAN   records DEC- decisions + refreshes docs/MEMORY.md      │
 │                                                                      │
-│  /ship-all — chains /ship across all stories                         │
-│    Shows [P] parallel groups upfront                                 │
-│    Prompts you to /compact between stories                                │
+│  /ship-all — chains /ship across stories, in priority order          │
+│    Offers one git worktree per [P] story (opt-in), merges them back  │
+│    Prompts you to /compact between stories                           │
+│                                                                      │
+│  /converge — audits shipped code against the PRD, before /archive    │
 └──────────────────────────────────────────────────────────────────────┘
        │
        ▼
 ┌──────────────┐
-│    /fix      │  Bug reported → FIXER diagnoses → fix → review → docs
+│    /fix      │  Bug → reproduce → trace to the root cause → test one
+│              │  hypothesis → fix + regression test → RED review → docs
 └──────────────┘
 ┌──────────────┐
 │   /improve   │  Non-bug change → ARCH plans → apply → review → docs
 └──────────────┘   (new shortcut, new format, faster path, refactor)
+┌──────────────┐
+│  /diagnose   │  A run misbehaved → compare its transcript with the
+└──────────────┘   command's rules, with line-by-line evidence
 ```
 
 ---
@@ -124,12 +140,12 @@ One UX subagent (ae-ux) runs after the frontend pass with a structured checklist
 | `/init` | Pick project mode (lite or full), then create the docs scaffold, CLAUDE.md, and CONSTITUTION.md |
 | `/feature [name]` | Intent check → research → PRD → clarifications → constitution check → stories → spec audit. In full mode it first checks the request for a user, an outcome and a constraint; if any is missing it asks — one question at a time, five at most — before proposing approaches (skipped under `--auto`, where the gaps become `[NEEDS CLARIFICATION]` markers). PRD acceptance criteria are numbered `FR-1…FR-n` and each story declares which it delivers (`Implements: FR-2, FR-5`), so every requirement is traceable to the work that closes it — an unmapped FR stops the breakdown. Each story also carries a `Priority:` of `P1`/`P2`/`P3`, where the P1 set alone must be deployable. The final stage dispatches `ae-req` in spec-audit mode over the PRD, epics and stories, checking ambiguity, duplication, underspecification, FR coverage, constitution conflicts and terminology drift before a line of code exists. In lite mode: stories only, no PRD or epics — the spec audit still runs, scoped to stories and the constitution |
 | `/design` | Mobile-first mockups via Figma, Pencil.dev, or Markdown |
-| `/ship` | Full story, seven phases: implement → 7-agent review → frontend (+ visual capture) → 6-agent review + UX fidelity → end-user docs & changelogs → PR description → cleanup. Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates the references during the frontend pass — stale or missing references become should-fix warnings. Projects opt into automated capture during `/init` by picking a tool from the 15-entry catalog (`agentic-engineering/capture-tools/`); `/ship` Phase 3 then dispatches per mechanism and auto-populates the table. To require captures, add a "Visual artifacts" article to CONSTITUTION.md — `ae-ux` then escalates missing-artifact findings to blockers. |
+| `/ship` | Full story, seven phases: implement → 7-agent review → frontend (+ visual capture) → 6-agent review + UX fidelity → end-user docs & changelogs → PR description → cleanup. Each phase that changes code ends with a recorded test run, and the story is ticked only after a green one (see "Evidence before completion"). Every shipped story writes an **AC Coverage matrix** to `PROGRESS.md`, mapping each Acceptance Criterion to the tests that prove it. `ae-test` validates the matrix during `/review` — missing AC or stale test references become blockers. The matrix's `Level` column (`unit`/`integration`/`e2e`) lets `/status` and `ae-test` report the pyramid mix per story and per feature, with a soft warning when over half the tests are e2e or zero unit tests exist. UI-touching stories also record a Visual Artifacts table in PROGRESS.md (screenshots/recordings per AC); `ae-ux` validates the references during the frontend pass — stale or missing references become should-fix warnings. Projects opt into automated capture during `/init` by picking a tool from the 15-entry catalog (`agentic-engineering/capture-tools/`); `/ship` Phase 3 then dispatches per mechanism and auto-populates the table. To require captures, add a "Visual artifacts" article to CONSTITUTION.md — `ae-ux` then escalates missing-artifact findings to blockers. |
 | `/ship-all` | Loop `/ship` across all unchecked stories, in priority order — never a `P2` while a `P1` is open. The session-start gate offers shipping the P1 set only, which finishes cleanly with the rest listed as remaining. Features whose stories predate the `Priority:` field ship in file order, unchanged. Two or more `[P]` stories at the next level → optional one-worktree-per-story path with a test baseline, merged back on the next run (see "Parallel stories" below) |
 | `/plan-all` | Plan all unplanned epics from INDEX.md |
 | `/converge [feature]` | Audit a feature's shipped code against its PRD. `/review` is diff-scoped and story-scoped — after eight stories nobody has compared the requirements against the repository, and the checkboxes were written by the same process that claimed completion. `/converge` builds an inventory from the `FR-` ids, resolves each to the code that should exist, and classifies what it finds as `missing`, `partial`, `contradicts` or `unrequested`. Work that is simply queued in an unchecked story is reported as pending, never as a gap; a requirement claimed by a **checked** story with no matching code is the blocker it exists to catch. Findings with remaining work are appended to `STORIES.md` behind an approval gate, marked `Source: converge`. It never edits the PRD, never touches code, and never fixes anything — repairs go back through `/ship` or `/fix` with a full review behind them. Run it before `/archive`, which deletes the artifacts it audits against |
-| `/fix [desc]` | Diagnose bug → fix → review → docs |
-| `/improve [desc]` | A change that is neither a bug nor a whole feature — a new keyboard shortcut, support for a new file format, an extra export option, a faster query, a long module split in two. ARCH plans it against the precedent set by whatever already does the same kind of thing, states 2–4 inline `Done when:` conditions (printed only — never written to `STORIES.md` or a PRD), applies it, then `ae-red` + `ae-test` plus one specialist picked from the diff review it. The Phase 1 `Change type` (`feat` / `perf` / `refactor`) fixes the commit prefix up front, so additive work lands as `feat(` and gets its minor-version bump. Called bare, it picks an `improvement`-typed item out of `BACKLOG.md`. |
+| `/fix [desc]` | Reproduce → diagnose → fix → review → docs. Diagnosis is shown before any code changes: the bug reproduced by a command run now (with its real output), the commits that introduced it if it used to work, the bad value traced back to where it is first produced, a similar piece of code that works and how it differs, and one hypothesis tested at a time. The fix lands with a regression test, then the full suite runs and its result is recorded as evidence. A failed fix goes back to diagnosis instead of a second patch on top; the third failed attempt stops and asks whether this is a design problem rather than one bug |
+| `/improve [desc]` | A change that is neither a bug nor a whole feature — a new keyboard shortcut, support for a new file format, an extra export option, a faster query, a long module split in two. ARCH plans it against the precedent set by whatever already does the same kind of thing, states 2–4 inline `Done when:` conditions (printed only — never written to `STORIES.md` or a PRD), applies it, runs the full test suite and records the result as evidence, then `ae-red` + `ae-test` plus one specialist picked from the diff review it. The Phase 1 `Change type` (`feat` / `perf` / `refactor`) fixes the commit prefix up front, so additive work lands as `feat(` and gets its minor-version bump. Called bare, it picks an `improvement`-typed item out of `BACKLOG.md`. |
 | `/note [desc]` | Capture bug/idea/improvement to BACKLOG.md |
 | `/focus [task\|done\|clear]` | Set, clear, or advance the current-task pointer and step plan for this worktree (`.agentic/focus.md` — shown in the status bar, see below) |
 | `/next [task\|drop N]` | Queue a task to be picked up after the current one finishes |
@@ -187,7 +203,7 @@ A **lite** project (see below) starts with a much smaller subset of this tree �
 
 ### Project mode — lite or full
 
-Not every project is a production system. A landing page does not need a PRD, an epic breakdown, and an end-user documentation site before the first line of CSS. But it still benefits from stories with acceptance criteria, real tests, and a six-agent review.
+Not every project is a production system. A landing page does not need a PRD, an epic breakdown, and an end-user documentation site before the first line of CSS. But it still benefits from stories with acceptance criteria, real tests, and a seven-agent review.
 
 So `/init` asks once, and records the answer in `docs/INDEX.md` frontmatter:
 
@@ -209,9 +225,9 @@ mode: lite
 
 `/init` proposes a mode from what it can observe — test framework, CI config, deploy config, contributor count — and defaults to lite when the signals are ambiguous. You can override at the prompt, and re-running `/init` changes the marker.
 
-In lite mode the shipping path is `/note` → `/ship` rather than `/feature` → `/ship`: capture the thing, then ship it. `/ship` promotes a backlog item into `docs/features/main/` when no feature exists yet. `/feature` still works when you want a group of related stories planned at once — it just skips the research and PRD stages.
+In lite mode the shipping path is `/note` → `/ship` rather than `/feature` → `/ship`: capture the thing, then ship it. `/ship` promotes a backlog item into `docs/features/main/` when no feature exists yet. `/feature` still works when you want a group of related stories planned at once — it just skips the intent check, research and PRD stages.
 
-Only four commands behave differently between modes (`/init`, `/feature`, `/status`, `/cleanup`). Everything else — `/ship`, `/implement`, `/review`, `/fix`, `/doc` — is identical, because it reads `STORIES.md` and `PROGRESS.md`, which both modes produce.
+Only five commands behave differently between modes (`/init`, `/feature`, `/status`, `/cleanup`, and `/converge`, which audits checked stories' acceptance criteria when there is no PRD). Everything else — `/ship`, `/implement`, `/review`, `/fix`, `/doc` — is identical, because it reads `STORIES.md` and `PROGRESS.md`, which both modes produce.
 
 ### Three memory documents
 
@@ -267,18 +283,21 @@ Two required sections in ARCH's implementation plan, both of which outlive it.
 ### Human checkpoints
 
 Interactively, the workflow stops at each of these:
+- Intent check (full-mode `/feature`, only when the request leaves the user, the outcome or a constraint unstated — one question at a time)
 - Approach selection (after 3 options presented)
 - PRD approval (after the clarification pass resolves all `[NEEDS CLARIFICATION]` items)
 - Constitution violations (must be resolved before stories are written)
 - Implementation plan (before any code is written)
 - Design approval (mobile and desktop separately)
-- Review blockers
+- Review blockers — including a story ticked without fresh, green test evidence
+- A third failed fix attempt in `/fix` (rethink the approach, try once more, or log it)
+- Parallel `[P]` stories in `/ship-all`: whether to use worktrees at all, and what to do with each finished one (merge, PR, keep, discard)
 
-**Under `--auto`, the plan and PRD gates are skipped** — they are approval ceremony, and that is what auto mode exists to skip. Three things re-arm them anyway: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the hard-override list below. Constitution violations, review blockers and destructive operations are never skipped under any flag.
+**Under `--auto`, the plan and PRD gates are skipped** — they are approval ceremony, and that is what auto mode exists to skip. The intent check is skipped too; its gaps become `[NEEDS CLARIFICATION]` markers in the PRD. Three things re-arm the plan gate anyway: a plan that adds a dependency or changes a public interface, an unresolved pre-review finding on a Contract claim, and anything on the hard-override list below. Constitution violations, review blockers, the third failed fix, the worktree path and destructive operations are never skipped under any flag.
 
 ### Auto mode (`--auto`)
 
-Long-running commands (`/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/design`) accept a per-invocation `--auto` flag. Ceremonial checkpoints are skipped, unambiguous decisions proceed automatically (citing `CONSTITUTION.md` when it settles the choice), and everything that matters still pauses: review blockers, anything touching CI configs / secrets / DB migrations / mass deletions, constitution conflicts, and any architectural or destructive choice. Every auto-decision is announced inline and logged to `.agentic/auto-log.md` (gitignored), and the command ends with a one-line summary of decisions and hard-pauses.
+Long-running commands (`/feature`, `/fix`, `/improve`, `/ship`, `/ship-all`, `/implement`, `/frontend`, `/design`, `/plan-all`, `/converge`, `/init`) accept a per-invocation `--auto` flag. Ceremonial checkpoints are skipped, unambiguous decisions proceed automatically (citing `CONSTITUTION.md` when it settles the choice), and everything that matters still pauses: review blockers, anything touching CI configs / secrets / DB migrations / mass deletions, constitution conflicts, and any architectural or destructive choice. Every auto-decision is announced inline and logged to `.agentic/auto-log.md` (gitignored), and the command ends with a one-line summary of decisions and hard-pauses. The auto-mode rules themselves live in a separate file that is loaded only when the flag is present, so interactive runs don't pay for them.
 
 ### Parallel stories `[P]`
 
@@ -303,7 +322,7 @@ Both maintained automatically — never skip this step:
 Long sessions stay lean through three mechanisms:
 - **Caveman rules** — agent-to-agent output drops filler words (~75% token reduction), technical terms kept exact
 - **A compact checkpoint** between stories in `ship-all` and between epics in `plan-all`. `/compact` is a user command — the workflow prints the command and asks you to run it; it cannot run it for you
-- **On-demand loading** — only the command file for the current command is loaded into context, not the full skill
+- **On-demand loading** — only the command file for the current command is loaded into context, not the full skill. Pieces that only one branch needs — the auto-mode rules, the worktree path, visual capture, releasing the focus task — sit in their own files and load only when that branch runs. In 2.2.0 this cut what `/ship` and `/feature` load up front by about a fifth; `tests/token-report.py static <command>` shows the current numbers
 
 ### Session hook
 
@@ -323,7 +342,22 @@ Other commands (`/ship`, `/feature`, `/design`) stay in the main context because
 
 ### Tests
 
-`tests/run-tests.sh --static` checks the plugin's structure without an API key — frontmatter, every `${CLAUDE_PLUGIN_ROOT}` path and agent name, the command tables, and the SessionStart hook's JSON — and runs in GitHub Actions on every push. `tests/run-tests.sh --behavioral` drives real headless `claude -p` sessions in throwaway fixture projects and checks the transcript: `/ship` dispatching all seven reviewers in one message, `/ship --auto` still pausing on a table-creating migration, `/converge` flagging a checked story whose code is missing, "fix this failing test" landing in `/fix`, and the hook naming your active task after `/compact`. It prints a per-scenario token report and skips cleanly when no credentials are present. See [`tests/README.md`](tests/README.md).
+The plugin tests itself in two layers. See [`tests/README.md`](tests/README.md) for the full list.
+
+`tests/run-tests.sh --static` needs no API key and runs in GitHub Actions on every push. It checks frontmatter, every `${CLAUDE_PLUGIN_ROOT}` path and agent name, the command tables, and the SessionStart hook's JSON under hostile inputs. It also runs the helper scripts end to end against throwaway git repos: two worktrees merged back with both `PROGRESS.md` entries intact, the evidence fingerprint changing on any code edit but never on a docs edit, and `/diagnose`'s transcript reader catching a sequential reviewer dispatch.
+
+`tests/run-tests.sh --behavioral` drives real headless `claude -p` sessions in throwaway fixture projects and checks what happened, from the transcript and the files left behind rather than the wording of the reply:
+
+- "fix this failing test" lands in `/fix`, which reproduces the failure before diagnosing it
+- `/ship` dispatches all seven reviewers in one message
+- `/ship --auto` still pauses on a table-creating migration
+- `/converge` flags a checked story whose code is missing
+- the session hook names your active task in a fresh session and after `/compact`
+- REQ blocks a story ticked with stale test evidence
+- `/diagnose` spots reviewers dispatched one at a time
+- `/feature` asks one intent question for a vague request and none for a clear one
+
+Each run prints a per-scenario token report. Runs skip cleanly when no credentials are present.
 
 ### Built-in gotchas
 
@@ -453,7 +487,7 @@ curl -fsSL https://raw.githubusercontent.com/thebedcoder/skills/main/install.sh 
 
 ### Claude.ai
 
-Upload `agentic-engineering.skill` via **Settings → Customize → Skills → Upload**. This is the skill only — no subagents, so `/review` runs as a single pass rather than six parallel ones.
+Upload `agentic-engineering.skill` via **Settings → Customize → Skills → Upload**. This is the skill only — no subagents, so `/review` runs as a single pass rather than seven parallel ones. The session hook and the helper scripts (worktrees, test evidence, `/diagnose`) also need the Claude Code plugin install.
 
 **What's inside the plugin:**
 
@@ -462,8 +496,15 @@ agentic-engineering/
 ├── .claude-plugin/plugin.json    ← plugin metadata
 ├── skills/agentic-engineering/
 │   ├── SKILL.md                  ← router + the policy every command inherits
-│   ├── commands/                 ← 22 command bodies, loaded on demand
-│   └── shared/preamble.md        ← blocks many command bodies reuse
+│   ├── commands/                 ← 23 command bodies, loaded on demand
+│   └── shared/                   ← pieces several commands load when needed
+│       ├── preamble.md           ← --auto parsing, focus writes, memory inputs
+│       ├── project-mode.md       ← lite/full mode + the three memory docs
+│       ├── auto-mode.md          ← loaded only under --auto
+│       ├── story-flow.md         ← plan → implement → verify → record
+│       ├── focus-release.md      ← marks the focus task done
+│       ├── worktree.md           ← loaded only on the parallel [P] path
+│       └── visual-capture.md     ← loaded only when capture is configured
 ├── agents/                       ← 9 flat agent files, nothing else
 │   ├── ae-red.md                 ← bug hunter
 │   ├── ae-req.md                 ← requirements + constitution
@@ -475,7 +516,13 @@ agentic-engineering/
 │   ├── ae-ux.md                  ← UX fidelity (runs after the frontend pass)
 │   └── ae-scribe.md              ← end-user docs writer
 ├── references/<agent>/           ← the agents' on-demand reference + language docs
-├── commands/                     ← 21 slash-command wrappers
+├── commands/                     ← 23 slash-command wrappers
+├── hooks/                        ← SessionStart router (hooks.json + session-start.sh)
+├── scripts/                      ← helpers the commands call
+│   ├── worktree.sh               ← create / merge / remove [P] story worktrees
+│   ├── evidence.sh               ← record a test run, check it is still fresh
+│   └── transcript-digest.py      ← /diagnose's transcript reader
+├── tests/                        ← static + behavioral suite, run-tests.sh
 ├── rules-library/                ← 16 rule templates for /init to offer
 ├── capture-tools/                ← 15-entry visual-capture catalog for /init to offer
 ├── adapters/AGENTS.md.template   ← portable rules for non-Claude tools
@@ -553,9 +600,10 @@ ARCH:   Plan for STORY-001: [implementation plan]
 You:    go
 
         → implement + tests
-        → 6 parallel reviews return simultaneously
+        → test run recorded: 14 passed · story ticked
+        → 7 parallel reviews return simultaneously
         → 1 blocker: hardcoded Stripe key in config (SEC)
-        → fix blocker
+        → fix blocker → tests re-run → new evidence row
         → SCRIBE updates changelogs
         → GIT: feat(payments): add Stripe customer creation
 
@@ -570,6 +618,7 @@ Built with Claude Code. Informed by:
 - [Spec Kit](https://github.com/github/spec-kit) — constitution and spec-driven development
 - [getsentry/skills](https://github.com/getsentry/skills) — reference-backed skill architecture
 - [anthropics/claude-code-security-review](https://github.com/anthropics/claude-code-security-review) — confidence-based security review approach
+- [obra/superpowers](https://github.com/obra/superpowers) — session hook, headless transcript testing, worktree lifecycle, evidence before completion, systematic debugging
 
 ---
 
