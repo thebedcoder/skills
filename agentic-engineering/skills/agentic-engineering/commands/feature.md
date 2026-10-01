@@ -12,7 +12,7 @@ Run **§A** of `shared/preamble.md`. Auto-log header for this command: `/feature
 
 ### Step 0 — Auto-write focus
 
-Before anything else, run **§B** of `shared/preamble.md` — `title: researching feature: <name>`, `feature: <name>`, `set_by: /feature`. CURRENT already names this feature → only `note: phase: researching feature <name>` + `set_by:` change.
+Before anything else, run **§B** of `shared/preamble.md` — `title: researching feature: <name>`, `feature: <name>`, `set_by: /feature`. CURRENT already names this feature → only `note: phase: researching feature <name>` + `set_by:` change. Nested in `/plan-all` (`set_by:` contains `/plan-all`) → only `note:` changes; the parent owns CURRENT and PLAN.
 
 ### Step 0c — Read project mode
 
@@ -28,6 +28,8 @@ No `mode:` key → treat as `full`.
 
 
 Lite: REQ still checks every story against CONSTITUTION.md in `/review`; no `PRD.md` or `EPICS.md`, ever.
+
+**PLAN** (standalone only — nested in `/plan-all`, advance the parent's epic line instead): one line per stage this mode runs, from the table above, plus `Commit planning docs`. Tick each as it closes (SKILL.md "Progress Tracking").
 
 ---
 

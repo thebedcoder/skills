@@ -53,6 +53,12 @@ Any shortcut diverging from approved design?]
 
 4. Implement per ARCH's plan, pixel-faithful to handoff.
 
+4b. **Verify.** Full suite from the repo root, non-watch (SKILL.md "Test Execution Rules"):
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase frontend -- <project test command>
+```
+Red → not done; fix before ae-ux runs. Green row → append to the story's `### Evidence` table in `PROGRESS.md`. Nested in `/ship` this is Phase 3's evidence row — same run, not a second one.
+
 5. **ae-ux** runs structured fidelity review.
 
 **This is the only place `ae-ux` is dispatched in the `/ship` chain.** It is not in
@@ -94,14 +100,11 @@ PROD — Final Check:
 Anything technically working but wrong to use?]
 ```
 
+7. **Standalone only** — nested in `/ship`, Phase 4 owns the blocker gate and Phase 3 the commit; skip this step. ae-ux BLOCKERS → ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to handle the UX blockers?"* → **Fix now (Recommended)** · **I'll fix them** · **Stop here**. Fix → new evidence row (4b), re-run ae-ux. Clean or accepted → **GIT** commits `feat([feature-name]): STORY-XXX — frontend implementation`.
+
 ### Step N — Auto-mode summary
 
-If `AUTO=true`:
-
-1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
-2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
-
-If `AUTO=false`: skip. Nested under `/ship` → parent prints the combined summary; skip here.
+Run **§C** of `shared/preamble.md`. Nested under `/ship` → parent prints the combined summary; skip here.
 
 ### Checkpoint tag reference (this file)
 
@@ -109,9 +112,10 @@ If `AUTO=false`: skip. Nested under `/ship` → parent prints the combined summa
 |---|---|
 | Frontend plan approval ('go' to implement) | `[AUTO: skip]` — proceed silently when handoff spec exists |
 | No `/design` handoff spec found | `[AUTO: always-ask]` (hard-override #4) — never build UI against no design |
-| ae-ux fidelity BLOCKERS | `[AUTO: always-ask]` (hard-override #1) — surfaced by parent `/ship` Phase 4 |
+| ae-ux fidelity BLOCKERS | `[AUTO: always-ask]` (hard-override #1) — nested: parent `/ship` Phase 4 gate; standalone: step 7 |
 
 ### Gotchas
 
 - **ae-ux is the last word on fidelity, not PROD.** PROD's spot-check is a sanity read, not a substitute for the structured report.
 - **No design spec → stop, don't improvise.** Building UI against an imagined design is unreviewable.
+- **Claimed green without running.** UI code changes the tree; Phase 1's evidence row does not cover it. 4b's row does.

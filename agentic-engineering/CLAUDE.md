@@ -62,7 +62,7 @@ The `description` frontmatter must stay **≤ 1,024 characters** folded (the Age
 
 ## Untagged `[AUTO:]` gates are deliberate
 
-Gates in `/note`, `/plan-all`, `/bootstrap`, `/focus`, `/init` and `/doc-all` carry an `[ASK:]` tag but no `[AUTO:]` tag. They take the untagged default, `always-ask` (`shared/auto-mode.md`). That is a decision, not an omission — do not add tags to them on sight.
+Gates in `/note`, `/plan-all`, `/bootstrap`, `/focus`, `/init`, `/doc-all` and `/archive` carry an `[ASK:]` tag but no `[AUTO:]` tag. They take the untagged default, `always-ask` (`shared/auto-mode.md`). That is a decision, not an omission — do not add tags to them on sight.
 
 ## Caveman communication rules (authoring style)
 

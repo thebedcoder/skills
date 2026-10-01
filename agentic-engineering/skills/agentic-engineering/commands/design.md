@@ -2,7 +2,7 @@
 
 **Agents:** UX (lead — inline hat, not `ae-ux`: mockups need the design tool and the human), PROD (flow validator)
 
-Read `./CLAUDE.md` + `./docs/features/[feature-name]/PRD.md` before starting. PRD must be approved before running.
+Read `./CLAUDE.md` + the feature's source of truth: `./docs/features/[feature-name]/PRD.md` (must be approved), or — no PRD, normal in lite projects — its `STORIES.md` acceptance criteria. Existence check, not a mode check. Neither file → stop: `Run /feature [name] first — nothing to design against.`
 
 ### Step 0a — Parse `--auto` flag
 
@@ -24,7 +24,7 @@ UX — Design Tool: [figma | pencil | none]
 
 ### Stage 1: Flow Mapping
 
-**PROD** extracts user flows from PRD + lists every screen:
+**PROD** extracts user flows from the PRD (or the stories' acceptance criteria) + lists every screen:
 
 ```
 PROD — Screen Inventory: [Feature Name]
@@ -50,7 +50,7 @@ Any transition or modal needing own frame?
 Any state painful to implement without design?]
 ```
 
-⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: multi]`: *"Which screens should I design?"* — one option per screen from PROD's inventory, all pre-checked, `minSelected: 1`. Unchecking is how the user trims scope before any design work starts. Under `--auto`: SKIP if screen list is fully derivable from the PRD with no gaps; otherwise ASK.
+⚠️ **Human checkpoint** `[AUTO: ask-if-ambiguous]` `[ASK: multi]`: *"Which screens should I design?"* — one option per screen from PROD's inventory, all pre-checked, `minSelected: 1`. Unchecking is how the user trims scope before any design work starts. Under `--auto`: SKIP if screen list is fully derivable from the PRD or stories with no gaps; otherwise ASK.
 
 ---
 
@@ -144,7 +144,7 @@ Any mobile pattern breaking on desktop?]
 **PROD** signs off:
 ```
 PROD — Handoff Review:
-[Does design cover every user flow in PRD?
+[Does design cover every user flow in the PRD or stories?
 Any acceptance criterion design doesn't address?]
 ```
 
@@ -152,18 +152,13 @@ After approval: *"Design complete. Run `/ship` to start building."*
 
 ### Step N — Auto-mode summary
 
-If `AUTO=true`:
-
-1. Count `DECISION:`, `SKIPPED:`, and `HARD-PAUSE:` lines appended to `.agentic/auto-log.md` during this run.
-2. Print: `🤖 Auto mode: <D> decisions, <S> skips, <H> hard-pauses. See .agentic/auto-log.md`
-
-If `AUTO=false`: skip.
+Run **§C** of `shared/preamble.md`.
 
 ### Checkpoint tag reference (this file)
 
 | Checkpoint | Tag |
 |---|---|
-| Confirm screen list | `[AUTO: ask-if-ambiguous]` — skip when screen list fully derivable from PRD |
+| Confirm screen list | `[AUTO: ask-if-ambiguous]` — skip when screen list fully derivable from PRD or stories |
 | Mobile designs review | `[AUTO: always-ask]` — visual review is human-only |
 | Desktop designs review | `[AUTO: always-ask]` — visual review is human-only |
 | Design tool selection (from CLAUDE.md) | `[AUTO: ask-if-ambiguous]` — defer to project's existing setting |

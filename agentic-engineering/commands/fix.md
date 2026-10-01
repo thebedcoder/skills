@@ -1,5 +1,5 @@
 ---
-description: Diagnose a bug, fix it surgically, and run a focused review — stays on current branch
+description: Reproduce and diagnose a bug, fix it surgically with a regression test, and have ae-red review it — on main it first offers a branch or a worktree
 argument-hint: <bug description> [--auto]
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/fix.md` — that file holds the real instructions; this wrapper holds none.

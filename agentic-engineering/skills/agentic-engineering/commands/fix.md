@@ -110,7 +110,7 @@ FIXER applies minimal surgical fix. Rules:
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.sh run --phase fix -- <project test command>
 ```
 
-Red → not fixed; back to diagnosis, new row after the next attempt. Green row → RED's dispatch prompt (Phase 3), `━━━ FIX COMPLETE` block, `Evidence:` trailer on `fix(` commit. Bug in a story with a `PROGRESS.md` entry (review blocker, shipped-story regression) → also append row to that story's `### Evidence` table. `/fix` has no story entry of its own; never invent one.
+Non-watch runner only — `vitest run`, `jest`, `pytest`, `go test ./...` (SKILL.md "Test Execution Rules"); a watch process outlives the Bash timeout and freezes the host. Same for the reproduction run in Phase 1. Red → not fixed; back to diagnosis, new row after the next attempt. Green row → RED's dispatch prompt (Phase 3), `━━━ FIX COMPLETE` block, `Evidence:` trailer on `fix(` commit. Bug in a story with a `PROGRESS.md` entry (review blocker, shipped-story regression) → also append row to that story's `### Evidence` table. `/fix` has no story entry of its own; never invent one.
 
 **Phase 3 — Review** *(automatic)*
 

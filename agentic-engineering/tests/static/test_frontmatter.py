@@ -46,8 +46,17 @@ for path in sorted(glob.glob(os.path.join(PLUGIN_ROOT, "commands", "*.md"))):
         problems.append(f"body does not point at {target}")
     if "$ARGUMENTS" not in text:
         problems.append("body does not forward $ARGUMENTS")
-    if not os.path.isfile(os.path.join(SKILL_DIR, "commands", f"{name}.md")):
+    body_path = os.path.join(SKILL_DIR, "commands", f"{name}.md")
+    if not os.path.isfile(body_path):
         problems.append("no real command body behind this wrapper")
+    elif "--auto" in str(data.get("argument-hint", "")):
+        # A flag the hint offers but the body never parses is silently ignored:
+        # /init and /plan-all advertised --auto for a release without reading it.
+        body = open(body_path, encoding="utf-8").read()
+        if "§A" not in body:
+            problems.append("argument-hint offers --auto but the body never runs preamble §A to parse it")
+        if "§C" not in body and "Auto-mode summary" not in body:
+            problems.append("argument-hint offers --auto but the body never prints the auto-mode summary (§C)")
     c.expect(not problems, f"{rel(path)}", "\n".join(problems))
 
 # --- agents -------------------------------------------------------------------

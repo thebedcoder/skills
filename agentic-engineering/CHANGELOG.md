@@ -59,6 +59,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and thi
 
 ### Fixed
 
+- **Command audit.** A read of all 24 commands against each other, the README and
+  the agents:
+  - `/review`'s severity table had no row for REQ's unmet criteria or TEST's
+    `Missing coverage:` entries (an AC with no test, a matrix row naming a missing
+    test, a test that cannot fail) while forbidding a fourth bucket. Both now map
+    to Blocker, and an unlisted reviewer "blocker" is never dropped.
+  - `/design` required an approved `PRD.md`, which lite projects never have. It
+    now works from `STORIES.md` when no PRD exists (existence check, not a mode
+    check).
+  - `/frontend` run on its own wrote UI code with no test run, no evidence row, no
+    blocker gate and no commit. It now verifies through `evidence.sh` (the row
+    `/ship` Phase 3 already cited) and, standalone, gates ae-ux blockers and
+    commits.
+  - `/plan-all` offered `--auto` but never parsed it; it now does and passes it to
+    every `/feature`, writes and releases its CURRENT task, and prints the auto
+    summary. Nested `/feature` runs leave the parent's CURRENT and PLAN alone, and
+    a standalone `/feature` now writes the PLAN `/focus` always said it did.
+  - `/init` no longer offers an `--auto` it never read; `test_frontmatter.py` now
+    fails any command whose hint offers `--auto` without §A and §C.
+  - `/fix` states the non-watch test rule. `/status` lists the workflow's
+    worktrees. `/note` routes ideas to `/ship` or `/feature`.
+  - Stale text: `/review`'s description said 6 agents and its hint lacked
+    `--frontend-pass`; `/fix`'s said "stays on current branch"; `/doc-all --full`
+    promised architecture docs; README's `/archive` row described the old one-shot
+    flow; the constitution template `/init` writes listed six `--auto` commands.
+
 - **`ae-req` no longer blocks on fresh evidence.** In 3 of 4 implementation audits,
   on both tiers, it marked Evidence ❌ BLOCKER on a fresh, green row because the
   tests looked weak. Part 3 now answers only "did the suite run green on this

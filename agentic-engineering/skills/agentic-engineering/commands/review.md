@@ -115,11 +115,11 @@ Save full review to `./docs/features/[feature-name]/reviews/STORY-XXX-review.md`
 
 | Reviewer says | Bucket |
 |---|---|
-| RED `CRITICAL`, SEC `Critical` / `High`, EDGE `Blocker`, REQ constitution violation, REQ `EVIDENCE: ❌`, LEAN verbatim-duplication `Blocker` | Blocker |
-| RED `WARNING`, SEC `Medium`, EDGE / TEST `should-cover`, DOC drift, **all LEAN `should-fix`** | Should-fix |
+| RED `CRITICAL`, SEC `Critical` / `High`, EDGE `Blocker`, REQ criterion `NOT MET`, REQ constitution violation, REQ `EVIDENCE: ❌`, TEST `Missing coverage:` entries — an AC with no test, a matrix row naming a test that does not exist, a test that cannot fail for its AC — LEAN verbatim-duplication `Blocker` | Blocker |
+| RED `WARNING`, SEC `Medium`, EDGE / TEST `should-cover` / `should-fix`, TEST test-quality notes, DOC drift, **all LEAN `should-fix`** | Should-fix |
 | anything the agent itself marked won't-fix, or matching a prior `improvements.md` entry | Won't-fix |
 
-`should-cover` and `should-fix` are the same bucket. Never invent a fourth.
+`should-cover` and `should-fix` are the same bucket. Never invent a fourth — and never drop a finding because its label is missing from this table: a reviewer's own `blocker` wording goes to Blocker, anything softer to Should-fix.
 
 ⚠️ **Human checkpoint** `[AUTO: always-ask]` `[ASK: single]`: *"How do you want to handle the blockers?"* → **Fix now (Recommended)** · **Show me the full report first** · **Log and move on**. No blockers → skip the gate entirely and print the clean summary.
 

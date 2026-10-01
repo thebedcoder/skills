@@ -1,6 +1,5 @@
 ---
 description: Create docs scaffold and CLAUDE.md for the current project
-argument-hint: "[--auto]"
 ---
 Read `${CLAUDE_PLUGIN_ROOT}/skills/agentic-engineering/commands/init.md` — that file holds the real instructions; this wrapper holds none.
 
